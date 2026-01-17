@@ -1157,7 +1157,7 @@ public class LuaScriptEngineService : IScriptEngineService, IDisposable
             );
 
             var documentation = LuaDocumentationGenerator.GenerateDocumentation(
-                "DarkLilly",
+                "LillyQuest",
                 _engineConfig.EngineVersion,
                 _scriptModules,
                 new(_constants),

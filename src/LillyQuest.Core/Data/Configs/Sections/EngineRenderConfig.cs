@@ -2,7 +2,7 @@ namespace LillyQuest.Core.Data.Configs.Sections;
 
 public class EngineRenderConfig
 {
-    public string Title { get; set; } = "DarkLilly Engine";
+    public string Title { get; set; } = "LillyQuest Engine";
     public int Width { get; set; } = 1280;
     public int Height { get; set; } = 720;
     public bool IsResizable { get; set; } = true;
