@@ -2,7 +2,7 @@
 
 LillyQuest is a C# engine for building roguelike/roguelite open-world games. It is built on Silk.NET and currently ships with an OpenGL renderer, with room to evolve the rendering backend in the future.
 
-This is a hobby project. A core goal is to keep momentum by publishing a weekly devlog article on orivega.io.
+This is a hobby project. A core goal is to keep momentum by publishing a weekly devlog article on https://orivega.io.
 
 ## Goals and Features
 
