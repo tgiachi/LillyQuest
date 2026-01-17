@@ -1,0 +1,6 @@
+<Solution>
+    <Project Path="src/LillyQuest.Engine/LillyQuest.Engine.csproj" />
+  <Project Path="src/LillyQuest.Core/LillyQuest.Core.csproj" />
+  <Project Path="src/LillyQuest.Game/LillyQuest.Game.csproj" />
+  <Project Path="src/LillyQuest.Rendering/LillyQuest.Rendering.csproj" />
+</Solution>
