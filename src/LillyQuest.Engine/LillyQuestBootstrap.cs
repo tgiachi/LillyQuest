@@ -36,6 +36,7 @@ public class LillyQuestBootstrap
 
     public void Initialize()
     {
+        _renderContext.ClearColor = LyColor.CornflowerBlue;
         _logger.Information("Initializing LillyQuest Engine...");
 
         var options = WindowOptions.Default;
@@ -54,11 +55,13 @@ public class LillyQuestBootstrap
 
     private void WindowOnRender(double obj)
     {
-
+        _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+        _gl.ClearColor(_renderContext.ClearColor.ToSystemColor());
     }
 
     private void WindowOnClosing()
     {
+        _logger.Information("Shutting down LillyQuest Engine...");
     }
 
     private unsafe void WindowOnLoad()

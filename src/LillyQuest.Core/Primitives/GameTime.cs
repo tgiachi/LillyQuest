@@ -24,4 +24,7 @@ public sealed class GameTime
         ElapsedGameTime = TimeSpan.FromSeconds(deltaSeconds);
         TotalGameTime += ElapsedGameTime;
     }
+
+    public override string ToString()
+        => $"TotalGameTime: {TotalGameTime}, ElapsedGameTime: {ElapsedGameTime}";
 }
