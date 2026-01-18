@@ -7,7 +7,7 @@ namespace LillyQuest.Engine.Interfaces.Plugins;
 /// <summary>
 /// Defines the contract for engine plugins.
 /// </summary>
-public interface IDarkLillyPlugin
+public interface ILillyQuestPlugin
 {
     /// <summary>
     /// Gets plugin metadata.
