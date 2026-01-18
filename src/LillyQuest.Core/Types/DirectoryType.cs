@@ -7,8 +7,6 @@ public enum DirectoryType
     AssetsFonts,
     AssetsShaders,
     AssetsTextures,
-    AssetsMaterials,
-    AssetsModels,
     AssetsAudio,
     AssetsMusic,
     Scripts,

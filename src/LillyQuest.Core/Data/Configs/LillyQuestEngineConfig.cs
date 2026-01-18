@@ -4,7 +4,7 @@ namespace LillyQuest.Core.Data.Configs;
 
 public class LillyQuestEngineConfig
 {
-    public string RootDirectory { get; init; }
+    public string RootDirectory { get; set; }
 
     public EngineKeyBinding[] KeyBindings { get; init; } = [];
 
