@@ -7,15 +7,46 @@ namespace LillyQuest.Tests;
 /// </summary>
 public class StringUtilsTests
 {
-    #region CamelCase Tests
+#region DotCase Tests
 
-    [Test]
-    [TestCase("HelloWorld", "helloWorld")]
-    [TestCase("API_RESPONSE", "apiResponse")]
-    [TestCase("user-id", "userId")]
-    [TestCase("user_id", "userId")]
-    [TestCase("helloWorld", "helloWorld")]
-    [TestCase("HELLO", "hello")]
+    [Test, TestCase("HelloWorld", "hello.world"), TestCase("API_RESPONSE", "api.response"), TestCase("userId", "user.id")]
+    public void ToDotCase_WithVariousInputs_ConvertsCorrectly(string input, string expected)
+    {
+        var result = StringUtils.ToDotCase(input);
+
+        Assert.That(result, Is.EqualTo(expected));
+    }
+
+#endregion
+
+#region PathCase Tests
+
+    [Test, TestCase("HelloWorld", "hello/world"), TestCase("API_RESPONSE", "api/response"), TestCase("userId", "user/id")]
+    public void ToPathCase_WithVariousInputs_ConvertsCorrectly(string input, string expected)
+    {
+        var result = StringUtils.ToPathCase(input);
+
+        Assert.That(result, Is.EqualTo(expected));
+    }
+
+#endregion
+
+#region UpperSnakeCase Tests
+
+    [Test, TestCase("HelloWorld", "HELLO_WORLD"), TestCase("apiResponse", "API_RESPONSE"), TestCase("user-id", "USER_ID")]
+    public void ToUpperSnakeCase_WithVariousInputs_ConvertsCorrectly(string input, string expected)
+    {
+        var result = StringUtils.ToUpperSnakeCase(input);
+
+        Assert.That(result, Is.EqualTo(expected));
+    }
+
+#endregion
+
+#region CamelCase Tests
+
+    [Test, TestCase("HelloWorld", "helloWorld"), TestCase("API_RESPONSE", "apiResponse"), TestCase("user-id", "userId"),
+     TestCase("user_id", "userId"), TestCase("helloWorld", "helloWorld"), TestCase("HELLO", "hello")]
     public void ToCamelCase_WithVariousInputs_ConvertsCorrectly(string input, string expected)
     {
         var result = StringUtils.ToCamelCase(input);
@@ -39,9 +70,7 @@ public class StringUtilsTests
         Assert.That(result, Is.Empty);
     }
 
-    [Test]
-    [TestCase("a")]
-    [TestCase("A")]
+    [Test, TestCase("a"), TestCase("A")]
     public void ToCamelCase_WithSingleCharacter_ReturnsLowercased(string input)
     {
         var result = StringUtils.ToCamelCase(input);
@@ -49,16 +78,12 @@ public class StringUtilsTests
         Assert.That(result, Is.EqualTo(input.ToLowerInvariant()));
     }
 
-    #endregion
+#endregion
 
-    #region PascalCase Tests
+#region PascalCase Tests
 
-    [Test]
-    [TestCase("hello_world", "HelloWorld")]
-    [TestCase("api-response", "ApiResponse")]
-    [TestCase("userId", "UserId")]
-    [TestCase("user_id", "UserId")]
-    [TestCase("HelloWorld", "HelloWorld")]
+    [Test, TestCase("hello_world", "HelloWorld"), TestCase("api-response", "ApiResponse"), TestCase("userId", "UserId"),
+     TestCase("user_id", "UserId"), TestCase("HelloWorld", "HelloWorld")]
     public void ToPascalCase_WithVariousInputs_ConvertsCorrectly(string input, string expected)
     {
         var result = StringUtils.ToPascalCase(input);
@@ -82,9 +107,7 @@ public class StringUtilsTests
         Assert.That(result, Is.Empty);
     }
 
-    [Test]
-    [TestCase("a")]
-    [TestCase("z")]
+    [Test, TestCase("a"), TestCase("z")]
     public void ToPascalCase_WithSingleCharacter_ReturnsUppercased(string input)
     {
         var result = StringUtils.ToPascalCase(input);
@@ -92,16 +115,12 @@ public class StringUtilsTests
         Assert.That(result, Is.EqualTo(input.ToUpperInvariant()));
     }
 
-    #endregion
+#endregion
 
-    #region SnakeCase Tests
+#region SnakeCase Tests
 
-    [Test]
-    [TestCase("HelloWorld", "hello_world")]
-    [TestCase("APIResponse", "api_response")]
-    [TestCase("userId", "user_id")]
-    [TestCase("API_RESPONSE", "api_response")]
-    [TestCase("hello-world", "hello_world")]
+    [Test, TestCase("HelloWorld", "hello_world"), TestCase("APIResponse", "api_response"), TestCase("userId", "user_id"),
+     TestCase("API_RESPONSE", "api_response"), TestCase("hello-world", "hello_world")]
     public void ToSnakeCase_WithVariousInputs_ConvertsCorrectly(string input, string expected)
     {
         var result = StringUtils.ToSnakeCase(input);
@@ -125,15 +144,12 @@ public class StringUtilsTests
         Assert.That(result, Is.Empty);
     }
 
-    #endregion
+#endregion
 
-    #region KebabCase Tests
+#region KebabCase Tests
 
-    [Test]
-    [TestCase("HelloWorld", "hello-world")]
-    [TestCase("API_RESPONSE", "api-response")]
-    [TestCase("userId", "user-id")]
-    [TestCase("hello_world", "hello-world")]
+    [Test, TestCase("HelloWorld", "hello-world"), TestCase("API_RESPONSE", "api-response"), TestCase("userId", "user-id"),
+     TestCase("hello_world", "hello-world")]
     public void ToKebabCase_WithVariousInputs_ConvertsCorrectly(string input, string expected)
     {
         var result = StringUtils.ToKebabCase(input);
@@ -157,45 +173,12 @@ public class StringUtilsTests
         Assert.That(result, Is.Empty);
     }
 
-    #endregion
+#endregion
 
-    #region DotCase Tests
+#region TitleCase Tests
 
-    [Test]
-    [TestCase("HelloWorld", "hello.world")]
-    [TestCase("API_RESPONSE", "api.response")]
-    [TestCase("userId", "user.id")]
-    public void ToDotCase_WithVariousInputs_ConvertsCorrectly(string input, string expected)
-    {
-        var result = StringUtils.ToDotCase(input);
-
-        Assert.That(result, Is.EqualTo(expected));
-    }
-
-    #endregion
-
-    #region PathCase Tests
-
-    [Test]
-    [TestCase("HelloWorld", "hello/world")]
-    [TestCase("API_RESPONSE", "api/response")]
-    [TestCase("userId", "user/id")]
-    public void ToPathCase_WithVariousInputs_ConvertsCorrectly(string input, string expected)
-    {
-        var result = StringUtils.ToPathCase(input);
-
-        Assert.That(result, Is.EqualTo(expected));
-    }
-
-    #endregion
-
-    #region TitleCase Tests
-
-    [Test]
-    [TestCase("hello_world", "Hello World")]
-    [TestCase("API_RESPONSE", "Api Response")]
-    [TestCase("user-id", "User Id")]
-    [TestCase("userId", "User Id")]
+    [Test, TestCase("hello_world", "Hello World"), TestCase("API_RESPONSE", "Api Response"), TestCase("user-id", "User Id"),
+     TestCase("userId", "User Id")]
     public void ToTitleCase_WithVariousInputs_ConvertsCorrectly(string input, string expected)
     {
         var result = StringUtils.ToTitleCase(input);
@@ -219,14 +202,11 @@ public class StringUtilsTests
         Assert.That(result, Is.Empty);
     }
 
-    #endregion
+#endregion
 
-    #region SentenceCase Tests
+#region SentenceCase Tests
 
-    [Test]
-    [TestCase("hello world", "Hello world")]
-    [TestCase("API_RESPONSE", "Api response")]
-    [TestCase("userId", "Userid")]
+    [Test, TestCase("hello world", "Hello world"), TestCase("API_RESPONSE", "Api response"), TestCase("userId", "Userid")]
     public void ToSentenceCase_WithVariousInputs_ConvertsCorrectly(string input, string expected)
     {
         var result = StringUtils.ToSentenceCase(input);
@@ -250,14 +230,11 @@ public class StringUtilsTests
         Assert.That(result, Is.Empty);
     }
 
-    #endregion
+#endregion
 
-    #region TrainCase Tests
+#region TrainCase Tests
 
-    [Test]
-    [TestCase("hello_world", "Hello-World")]
-    [TestCase("apiResponse", "Api-Response")]
-    [TestCase("user_id", "User-Id")]
+    [Test, TestCase("hello_world", "Hello-World"), TestCase("apiResponse", "Api-Response"), TestCase("user_id", "User-Id")]
     public void ToTrainCase_WithVariousInputs_ConvertsCorrectly(string input, string expected)
     {
         var result = StringUtils.ToTrainCase(input);
@@ -281,24 +258,9 @@ public class StringUtilsTests
         Assert.That(result, Is.Empty);
     }
 
-    #endregion
+#endregion
 
-    #region UpperSnakeCase Tests
-
-    [Test]
-    [TestCase("HelloWorld", "HELLO_WORLD")]
-    [TestCase("apiResponse", "API_RESPONSE")]
-    [TestCase("user-id", "USER_ID")]
-    public void ToUpperSnakeCase_WithVariousInputs_ConvertsCorrectly(string input, string expected)
-    {
-        var result = StringUtils.ToUpperSnakeCase(input);
-
-        Assert.That(result, Is.EqualTo(expected));
-    }
-
-    #endregion
-
-    #region Edge Cases
+#region Edge Cases
 
     [Test]
     public void CaseConversions_WithConsecutiveCapitals_HandleCorrectly()
@@ -356,5 +318,5 @@ public class StringUtilsTests
         Assert.That(backToCamel, Is.EqualTo("userId"));
     }
 
-    #endregion
+#endregion
 }
