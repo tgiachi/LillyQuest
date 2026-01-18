@@ -24,6 +24,12 @@ public interface IGameEntity
     bool IsActive { get; set; }
 
     /// <summary>
+    /// Gets or sets the rendering order (depth/z-order) of this entity.
+    /// Higher values are rendered on top of lower values. Can be changed dynamically.
+    /// </summary>
+    uint Order { get; set; }
+
+    /// <summary>
     /// Gets the collection of components attached to this entity.
     /// </summary>
     IEnumerable<IGameComponent> Components { get; }
