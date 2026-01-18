@@ -22,11 +22,18 @@ public class LillyQuestBootstrap
     private readonly DirectoriesConfig _directoriesConfig;
 
     private readonly GameTime _gameTime = new();
+    private readonly GameTime _fixedGameTime = new();
+    private double _fixedUpdateAccumulator;
 
     private readonly LillyQuestEngineConfig _engineConfig;
 
     private GL _gl;
     private IWindow _window;
+
+    /// <summary>
+    /// Event invoked at fixed timestep intervals during the game loop.
+    /// </summary>
+    public event Action<GameTime>? FixedUpdate;
 
     public LillyQuestBootstrap(LillyQuestEngineConfig engineConfig)
     {
@@ -106,9 +113,17 @@ public class LillyQuestBootstrap
         _logger.Information("Extensions: {Ext}", extensions);
     }
 
-    private void WindowOnUpdate(double obj)
+    private void WindowOnUpdate(double deltaSeconds)
     {
-        _gameTime.Update(obj);
+        _gameTime.Update(deltaSeconds);
+
+        _fixedUpdateAccumulator += deltaSeconds;
+        while (_fixedUpdateAccumulator >= _engineConfig.FixedTimestep)
+        {
+            _fixedUpdateAccumulator -= _engineConfig.FixedTimestep;
+            _fixedGameTime.Update(_engineConfig.FixedTimestep);
+            FixedUpdate?.Invoke(_fixedGameTime);
+        }
     }
 
     public void Run()

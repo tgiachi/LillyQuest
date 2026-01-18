@@ -11,4 +11,9 @@ public class LillyQuestEngineConfig
     public EngineRenderConfig Render { get; init; } = new();
 
     public EngineLoggingConfig Logging { get; init; } = new();
+
+    /// <summary>
+    /// Fixed timestep in seconds for FixedUpdate calls. Default is 1/60 seconds (60 Hz).
+    /// </summary>
+    public double FixedTimestep { get; init; } = 1.0 / 60.0;
 }
