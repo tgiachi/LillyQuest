@@ -97,10 +97,13 @@ public class LillyQuestBootstrap
         var glsl = SilkMarshal.PtrToString((nint)_gl.GetString(StringName.ShadingLanguageVersion));
         var version = SilkMarshal.PtrToString((nint)_gl.GetString(StringName.Version));
 
+        var extensions = SilkMarshal.PtrToString((nint)_gl.GetString(StringName.Extensions));
+
         _logger.Information("Vendor: {Vendor}", vendor);
         _logger.Information("Renderer: {Renderer}", renderer);
         _logger.Information("OpenGL Version: {Version}", version);
         _logger.Information("GLSL Version: {GLSL}", glsl);
+        _logger.Information("Extensions: {Ext}", extensions);
     }
 
     private void WindowOnUpdate(double obj)
