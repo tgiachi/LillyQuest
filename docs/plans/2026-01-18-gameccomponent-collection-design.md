@@ -126,10 +126,19 @@ Responsibilities:
 ```csharp
 public interface IGameEntity
 {
+    uint Id { get; }
+    string Name { get; }
+    bool IsActive { get; set; }
+    uint Order { get; set; }  // Mutable depth/z-order for rendering
     IEnumerable<IGameComponent> Components { get; }
     // Implementation returns GameComponentCollection
 }
 ```
+
+**Note on Order:**
+- Mutable `uint` property for render depth control
+- Render system sorts entities by Order every frame (no events needed)
+- Can be changed dynamically during gameplay
 
 ### With `IGameEntityManager`
 ```csharp
