@@ -4,11 +4,28 @@ using LillyQuest.Engine.Interfaces.Entities;
 namespace LillyQuest.Engine.Interfaces.Managers;
 
 /// <summary>
+/// Delegate for entity lifecycle events.
+/// </summary>
+/// <param name="entity">The entity that was added or removed.</param>
+public delegate void GameEntityLifecycleHandler(IGameEntity entity);
+
+/// <summary>
 /// Manages the lifecycle and querying of game entities and their components.
 /// Provides methods to add and remove entities, as well as query components by type.
 /// </summary>
 public interface IGameEntityManager
 {
+    /// <summary>
+    /// Fired when an entity is added to the manager.
+    /// Event fires after the entity is fully indexed and sorted.
+    /// </summary>
+    event GameEntityLifecycleHandler? OnGameEntityAdded;
+
+    /// <summary>
+    /// Fired when an entity is removed from the manager.
+    /// Event fires after the entity is fully deindexed.
+    /// </summary>
+    event GameEntityLifecycleHandler? OnGameEntityRemoved;
     /// <summary>
     /// Adds an entity to the manager.
     /// </summary>

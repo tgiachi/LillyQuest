@@ -6,7 +6,8 @@ namespace LillyQuest.Engine.Managers;
 
 /// <summary>
 /// Manages the lifecycle and querying of game entities.
-/// Maintains a global index of components by type for efficient type-based queries.
+/// Maintains a global index of components by type, sorted by entity Order.
+/// Fires lifecycle events on entity add/remove.
 /// </summary>
 public class GameEntityManager : IGameEntityManager
 {
@@ -14,21 +15,38 @@ public class GameEntityManager : IGameEntityManager
     private readonly Dictionary<Type, List<IGameComponent>> _globalTypeIndex = [];
 
     /// <summary>
+    /// Fired when an entity is added to the manager.
+    /// Event fires after the entity is fully indexed and sorted.
+    /// </summary>
+    public event GameEntityLifecycleHandler? OnGameEntityAdded;
+
+    /// <summary>
+    /// Fired when an entity is removed from the manager.
+    /// Event fires after the entity is fully deindexed.
+    /// </summary>
+    public event GameEntityLifecycleHandler? OnGameEntityRemoved;
+
+    /// <summary>
     /// Adds an entity to the manager and indexes all its components.
+    /// Components are indexed and sorted by entity Order.
+    /// OnGameEntityAdded event is fired after indexing completes.
     /// </summary>
     public void AddEntity(IGameEntity entity)
     {
         _entities.Add(entity);
         IndexEntity(entity);
+        OnGameEntityAdded?.Invoke(entity);
     }
 
     /// <summary>
     /// Removes an entity from the manager and deindexes all its components.
+    /// OnGameEntityRemoved event is fired after deindexing completes.
     /// </summary>
     public void RemoveEntity(IGameEntity entity)
     {
         _entities.Remove(entity);
         DeindexEntity(entity);
+        OnGameEntityRemoved?.Invoke(entity);
     }
 
     /// <summary>
@@ -49,9 +67,11 @@ public class GameEntityManager : IGameEntityManager
 
     /// <summary>
     /// Indexes all components of an entity in the global type index.
+    /// After indexing, sorts all type lists by entity Order to maintain ordering.
     /// </summary>
     private void IndexEntity(IGameEntity entity)
     {
+        // Add components to their type lists
         foreach (var component in entity.Components)
         {
             var componentType = component.GetType();
@@ -61,6 +81,14 @@ public class GameEntityManager : IGameEntityManager
                 _globalTypeIndex[componentType] = components;
             }
             components.Add(component);
+        }
+
+        // Sort all affected type lists by entity Order
+        foreach (var component in entity.Components)
+        {
+            var componentType = component.GetType();
+            var typeList = _globalTypeIndex[componentType];
+            typeList.Sort((a, b) => a.Owner!.Order.CompareTo(b.Owner!.Order));
         }
     }
 
