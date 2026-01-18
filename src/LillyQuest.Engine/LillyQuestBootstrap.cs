@@ -14,7 +14,7 @@ public class LillyQuestBootstrap
 {
     private readonly ILogger _logger = Log.ForContext<LillyQuestBootstrap>();
 
-    private readonly IContainer _container = new Container();
+    private IContainer _container = new Container();
     private readonly EngineRenderContext _renderContext = new();
 
     private readonly GameTime _gameTime = new();
@@ -32,7 +32,11 @@ public class LillyQuestBootstrap
         _container.RegisterInstance(_renderContext);
     }
 
-    public void RegisterServices(Func<IContainer, IContainer> registerServices) { }
+    public void RegisterServices(Func<IContainer, IContainer> registerServices)
+    {
+        _container = registerServices(_container);
+
+    }
 
     public void Initialize()
     {

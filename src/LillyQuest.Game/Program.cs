@@ -1,5 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
+using ConsoleAppFramework;
 using LillyQuest.Core.Data.Configs;
 using LillyQuest.Engine;
 using Serilog;
@@ -8,8 +9,13 @@ var loggerConfiguration = new LoggerConfiguration().WriteTo.Console();
 
 Log.Logger = loggerConfiguration.CreateLogger();
 
-Console.WriteLine("Hello, World!");
-var lillyQuestBootstrap = new LillyQuestBootstrap(new LillyQuestEngineConfig());
+await ConsoleApp.RunAsync(
+    args,
+    () =>
+    {
+        var lillyQuestBootstrap = new LillyQuestBootstrap(new LillyQuestEngineConfig());
 
-lillyQuestBootstrap.Initialize();
-lillyQuestBootstrap.Run();
+        lillyQuestBootstrap.Initialize();
+        lillyQuestBootstrap.Run();
+    }
+);
