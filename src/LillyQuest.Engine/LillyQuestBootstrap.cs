@@ -15,6 +15,8 @@ namespace LillyQuest.Engine;
 
 public class LillyQuestBootstrap
 {
+    public delegate void TickEventHandler(GameTime gameTime);
+
     private readonly ILogger _logger = Log.ForContext<LillyQuestBootstrap>();
 
     private IContainer _container = new Container();
@@ -33,7 +35,17 @@ public class LillyQuestBootstrap
     /// <summary>
     /// Event invoked at fixed timestep intervals during the game loop.
     /// </summary>
-    public event Action<GameTime>? FixedUpdate;
+    public event TickEventHandler? FixedUpdate;
+
+    /// <summary>
+    ///  Event invoked every frame during the game loop for updating game logic.
+    /// </summary>
+    public event TickEventHandler? Update;
+
+    /// <summary>
+    ///  Event invoked every frame during the rendering phase of the game loop. fm
+    /// </summary>
+    public event TickEventHandler? Render;
 
     public LillyQuestBootstrap(LillyQuestEngineConfig engineConfig)
     {
@@ -85,6 +97,8 @@ public class LillyQuestBootstrap
     {
         _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
         _gl.ClearColor(_renderContext.ClearColor.ToSystemColor());
+
+        Render?.Invoke(_gameTime);
     }
 
     private void WindowOnClosing()
@@ -116,8 +130,10 @@ public class LillyQuestBootstrap
     private void WindowOnUpdate(double deltaSeconds)
     {
         _gameTime.Update(deltaSeconds);
+        Update?.Invoke(_gameTime);
 
         _fixedUpdateAccumulator += deltaSeconds;
+
         while (_fixedUpdateAccumulator >= _engineConfig.FixedTimestep)
         {
             _fixedUpdateAccumulator -= _engineConfig.FixedTimestep;
