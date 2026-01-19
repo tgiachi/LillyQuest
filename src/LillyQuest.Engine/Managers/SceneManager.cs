@@ -11,6 +11,7 @@ namespace LillyQuest.Engine.Managers;
 /// <summary>
 /// Core scene management with state machine and entity lifecycle.
 /// Handles scene registration, transitions with fade effects, and entity lifecycle.
+/// Supports both single-scene switching (SwitchScene) and stack-based layering (PushScene/PopScene).
 /// </summary>
 public class SceneManager : BaseSystem, ISceneManager, IUpdateSystem
 {
@@ -19,7 +20,7 @@ public class SceneManager : BaseSystem, ISceneManager, IUpdateSystem
     private readonly HashSet<string> _globalsRegisteredScenes = new();
     private readonly Dictionary<string, List<IGameEntity>> _sceneGameEntities = new();
 
-    private IScene? _currentScene;
+    private Stack<IScene> _sceneStack = new();
     private IScene? _nextScene;
     private SceneTransitionState _transitionState = SceneTransitionState.Idle;
     private float _fadeTimer;
@@ -36,13 +37,14 @@ public class SceneManager : BaseSystem, ISceneManager, IUpdateSystem
     public event ISceneManager.SceneLoadingHandler? OnSceneLoading;
 
     /// <summary>
-    /// Gets the currently active scene.
+    /// Gets the currently active scene (top of stack), or null if empty.
     /// </summary>
-    public IScene CurrentScene
-    {
-        get => _currentScene ?? throw new InvalidOperationException("No scene is currently active.");
-        private set => _currentScene = value;
-    }
+    public IScene? CurrentScene => _sceneStack.Count > 0 ? _sceneStack.Peek() : null;
+
+    /// <summary>
+    /// Gets all scenes in the stack (immutable view).
+    /// </summary>
+    public IReadOnlyList<IScene> SceneStack => _sceneStack.ToList().AsReadOnly();
 
     /// <summary>
     /// Creates a new SceneManager with default priority 10 (early execution).
@@ -108,16 +110,19 @@ public class SceneManager : BaseSystem, ISceneManager, IUpdateSystem
     }
 
     /// <summary>
-    /// Immediately switches to a scene without transition.
+    /// Sets the current active scene (clears stack and pushes new scene).
+    /// Used internally during initialization - does not call lifecycle methods.
     /// </summary>
     public void SetCurrentScene(IScene scene)
     {
-        if (_currentScene == scene)
+        // Clear stack
+        while (_sceneStack.Count > 0)
         {
-            return;
+            _sceneStack.Pop();
         }
 
-        _currentScene = scene;
+        // Push new scene without calling lifecycle
+        _sceneStack.Push(scene);
         _transitionState = SceneTransitionState.Idle;
         _fadeTimer = 0f;
         _fadeDuration = 0f;
@@ -137,7 +142,7 @@ public class SceneManager : BaseSystem, ISceneManager, IUpdateSystem
     /// </summary>
     public void SwitchScene(IScene scene, float fadeDuration = 1.0f)
     {
-        if (_currentScene == scene && _transitionState == SceneTransitionState.Idle)
+        if (_sceneStack.Count > 0 && _sceneStack.Peek() == scene && _transitionState == SceneTransitionState.Idle)
         {
             return;
         }
@@ -154,6 +159,77 @@ public class SceneManager : BaseSystem, ISceneManager, IUpdateSystem
         else
         {
             _transitionState = SceneTransitionState.FadingOut;
+        }
+    }
+
+    /// <summary>
+    /// Pushes a scene onto the stack without fade transition.
+    /// </summary>
+    public void PushScene(string sceneName)
+    {
+        var scene = LoadScene(sceneName);
+
+        // Register globals only once (they persist across entire session)
+        if (!_globalsRegisteredScenes.Contains(scene.Name))
+        {
+            scene.RegisterGlobals(EntityManager);
+            _globalsRegisteredScenes.Add(scene.Name);
+        }
+
+        // Call OnLoad lifecycle method
+        scene.OnLoad();
+
+        // Add scene entities to entity manager
+        var sceneEntities = new List<IGameEntity>();
+        foreach (var entity in scene.GetSceneGameEntities())
+        {
+            EntityManager.AddEntity(entity);
+            sceneEntities.Add(entity);
+        }
+
+        if (sceneEntities.Count > 0)
+        {
+            _sceneGameEntities[scene.Name] = sceneEntities;
+        }
+
+        // Push onto stack
+        _sceneStack.Push(scene);
+
+        // Fire events
+        OnSceneLoading?.Invoke(scene);
+        OnSceneChanged?.Invoke(scene);
+    }
+
+    /// <summary>
+    /// Pops the top scene from the stack.
+    /// </summary>
+    public void PopScene()
+    {
+        if (_sceneStack.Count == 0)
+        {
+            throw new InvalidOperationException("Cannot pop from empty scene stack.");
+        }
+
+        var scene = _sceneStack.Pop();
+
+        // Call OnUnload lifecycle method
+        scene.OnUnload();
+
+        // Remove scene entities from entity manager
+        if (_sceneGameEntities.TryGetValue(scene.Name, out var entities))
+        {
+            foreach (var entity in entities)
+            {
+                EntityManager.RemoveEntity(entity);
+            }
+            _sceneGameEntities.Remove(scene.Name);
+        }
+
+        // Fire event with new top scene (or null if stack empty)
+        var newTopScene = CurrentScene;
+        if (newTopScene != null)
+        {
+            OnSceneChanged?.Invoke(newTopScene);
         }
     }
 
@@ -208,7 +284,7 @@ public class SceneManager : BaseSystem, ISceneManager, IUpdateSystem
 
     /// <summary>
     /// Performs the actual scene transition logic.
-    /// Unloads old scene, loads new scene, and fires events.
+    /// Clears the stack, unloads old scene, loads new scene.
     /// </summary>
     private void PerformSceneTransition()
     {
@@ -217,42 +293,35 @@ public class SceneManager : BaseSystem, ISceneManager, IUpdateSystem
             return;
         }
 
-        var oldScene = _currentScene;
-
-        // Unload old scene if exists
-        if (_currentScene != null)
+        // Unload and remove all scenes currently in stack
+        while (_sceneStack.Count > 0)
         {
-            _currentScene.OnUnload();
+            var oldScene = _sceneStack.Pop();
+            oldScene.OnUnload();
 
-            // Remove scene entities from entity manager
-            if (_sceneGameEntities.TryGetValue(_currentScene.Name, out var entities))
+            if (_sceneGameEntities.TryGetValue(oldScene.Name, out var entities))
             {
                 foreach (var entity in entities)
                 {
                     EntityManager.RemoveEntity(entity);
                 }
-                _sceneGameEntities.Remove(_currentScene.Name);
+                _sceneGameEntities.Remove(oldScene.Name);
             }
         }
 
-        // Set new scene
-        _currentScene = _nextScene;
-        _nextScene = null;
-
         // Register globals only once
-        if (!_globalsRegisteredScenes.Contains(_currentScene.Name))
+        if (!_globalsRegisteredScenes.Contains(_nextScene.Name))
         {
-            _currentScene.RegisterGlobals(EntityManager);
-            _globalsRegisteredScenes.Add(_currentScene.Name);
+            _nextScene.RegisterGlobals(EntityManager);
+            _globalsRegisteredScenes.Add(_nextScene.Name);
         }
 
         // Load new scene
-        _currentScene.OnLoad();
+        _nextScene.OnLoad();
 
         // Add scene entities to entity manager
         var sceneEntities = new List<IGameEntity>();
-
-        foreach (var entity in _currentScene.GetSceneGameEntities())
+        foreach (var entity in _nextScene.GetSceneGameEntities())
         {
             EntityManager.AddEntity(entity);
             sceneEntities.Add(entity);
@@ -260,11 +329,15 @@ public class SceneManager : BaseSystem, ISceneManager, IUpdateSystem
 
         if (sceneEntities.Count > 0)
         {
-            _sceneGameEntities[_currentScene.Name] = sceneEntities;
+            _sceneGameEntities[_nextScene.Name] = sceneEntities;
         }
 
+        // Push new scene to now-empty stack
+        _sceneStack.Push(_nextScene);
+        _nextScene = null;
+
         // Fire events
-        OnSceneLoading?.Invoke(_currentScene);
-        OnSceneChanged?.Invoke(_currentScene);
+        OnSceneLoading?.Invoke(CurrentScene!);
+        OnSceneChanged?.Invoke(CurrentScene!);
     }
 }

@@ -29,9 +29,14 @@ public interface ISceneManager
     event SceneLoadingHandler? OnSceneLoading;
 
     /// <summary>
-    /// Gets the current active scene.
+    /// Gets the current active scene (top of stack), or null if stack is empty.
     /// </summary>
-    IScene CurrentScene { get; }
+    IScene? CurrentScene { get; }
+
+    /// <summary>
+    /// Gets all scenes currently in the stack (bottom to top).
+    /// </summary>
+    IReadOnlyList<IScene> SceneStack { get; }
 
     /// <summary>
     /// Returns the current fade alpha (0-1) for transitions.
@@ -46,18 +51,38 @@ public interface ISceneManager
     /// <summary>
     /// Registers a scene with the scene manager.
     /// </summary>
-    /// <param name="scene"></param>
     void RegisterScene(IScene scene);
 
     /// <summary>
-    /// Sets the current active scene.
+    /// Sets the current active scene without any transition or stack manipulation.
+    /// Used internally during scene initialization.
     /// </summary>
     void SetCurrentScene(IScene scene);
 
     /// <summary>
-    /// Switches to another scene by name, optionally with a fade duration.
+    /// Switches to another scene by name with fade transition.
+    /// Clears the entire stack and pushes the new scene.
+    /// Fires OnSceneChanged with the new scene once transition completes.
     /// </summary>
     void SwitchScene(string sceneName, float fadeDuration = 1.0f);
+
+    /// <summary>
+    /// Pushes a scene onto the stack without fade transition.
+    /// Calls RegisterGlobals() once per scene (persists across entire session).
+    /// Calls OnLoad() on the scene and fires OnSceneChanged with the new top scene.
+    /// Adds all scene entities to the EntityManager.
+    /// The previous top scene becomes paused in the background.
+    /// </summary>
+    void PushScene(string sceneName);
+
+    /// <summary>
+    /// Pops the top scene from the stack.
+    /// Calls OnUnload() on the removed scene and removes its entities from the EntityManager.
+    /// Fires OnSceneChanged with the new top scene (if stack becomes non-empty).
+    /// CurrentScene is updated immediately to reflect the new top of stack (or null if stack becomes empty).
+    /// Throws InvalidOperationException if the stack is empty.
+    /// </summary>
+    void PopScene();
 
     /// <summary>
     /// Updates the scene transition state machine.
