@@ -59,10 +59,12 @@ public class GameEntityManager : IGameEntityManager
     public IEnumerable<TFeature> QueryOfType<TFeature>() where TFeature : IGameObjectFeature
     {
         var featureType = typeof(TFeature);
+
         if (_globalTypeIndex.TryGetValue(featureType, out var features))
         {
             return features.Cast<TFeature>();
         }
+
         return [];
     }
 
@@ -76,6 +78,7 @@ public class GameEntityManager : IGameEntityManager
         foreach (var feature in entity.Features)
         {
             var featureType = feature.GetType();
+
             if (!_globalTypeIndex.TryGetValue(featureType, out var features))
             {
                 features = [];
@@ -89,13 +92,16 @@ public class GameEntityManager : IGameEntityManager
         {
             var featureType = feature.GetType();
             var typeList = _globalTypeIndex[featureType];
-            typeList.Sort((a, b) =>
-            {
-                // Find the entities that own these features
-                var aEntity = _entities.FirstOrDefault(e => e.Features.Contains(a));
-                var bEntity = _entities.FirstOrDefault(e => e.Features.Contains(b));
-                return aEntity?.Order.CompareTo(bEntity?.Order) ?? 0;
-            });
+            typeList.Sort(
+                (a, b) =>
+                {
+                    // Find the entities that own these features
+                    var aEntity = _entities.FirstOrDefault(e => e.Features.Contains(a));
+                    var bEntity = _entities.FirstOrDefault(e => e.Features.Contains(b));
+
+                    return aEntity?.Order.CompareTo(bEntity?.Order) ?? 0;
+                }
+            );
         }
     }
 
@@ -107,9 +113,11 @@ public class GameEntityManager : IGameEntityManager
         foreach (var feature in entity.Features)
         {
             var featureType = feature.GetType();
+
             if (_globalTypeIndex.TryGetValue(featureType, out var features))
             {
                 features.Remove(feature);
+
                 // Remove empty lists to save memory
                 if (features.Count == 0)
                 {
