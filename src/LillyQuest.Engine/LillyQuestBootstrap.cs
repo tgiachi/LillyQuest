@@ -4,6 +4,9 @@ using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Data.Directories;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
+using LillyQuest.Engine.Interfaces.Managers;
+using LillyQuest.Engine.Managers;
+using LillyQuest.Engine.Systems;
 using Serilog;
 using Silk.NET.Core.Native;
 using Silk.NET.Input;
@@ -52,6 +55,7 @@ public class LillyQuestBootstrap
         _engineConfig = engineConfig;
         _container.RegisterInstance(_engineConfig);
         _container.RegisterInstance(_renderContext);
+        _container.RegisterInstance(this);
 
         if (string.IsNullOrEmpty(_engineConfig.RootDirectory))
         {
@@ -86,6 +90,27 @@ public class LillyQuestBootstrap
         _window.Closing += WindowOnClosing;
         _window.Render += WindowOnRender;
         _window.Resize += WindowOnResize;
+
+        RegisterInternalServices();
+    }
+
+    private void RegisterInternalServices()
+    {
+        _container.Register<IGameEntityManager, GameEntityManager>(Reuse.Singleton);
+        _container.Register<ISystemManager, SystemManager>(Reuse.Singleton);
+
+        _container.Register<UpdateSystem>(Reuse.Singleton);
+    }
+
+    private void StartInternalServices()
+    {
+        var systemManager = _container.Resolve<ISystemManager>();
+
+        var updateSystem = _container.Resolve<UpdateSystem>();
+
+        systemManager.AddUpdateSystem(updateSystem);
+
+
     }
 
     private void WindowOnResize(Vector2D<int> obj)
@@ -125,6 +150,8 @@ public class LillyQuestBootstrap
         _logger.Information("OpenGL Version: {Version}", version);
         _logger.Information("GLSL Version: {GLSL}", glsl);
         _logger.Information("Extensions: {Ext}", extensions);
+
+        StartInternalServices();
     }
 
     private void WindowOnUpdate(double deltaSeconds)

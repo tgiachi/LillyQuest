@@ -27,6 +27,7 @@ public class SystemManager : ISystemManager
     {
         // Create a snapshot to avoid collection modified exception
         var renderSystemsCopy = _renderSystems.Values.ToList();
+
         foreach (var renderSystem in renderSystemsCopy)
         {
             renderSystem.Render(gameTime);
@@ -37,6 +38,7 @@ public class SystemManager : ISystemManager
     {
         // Create a snapshot to avoid collection modified exception
         var updateSystemsCopy = _updateSystems.Values.ToList();
+
         foreach (var updateSystem in updateSystemsCopy)
         {
             updateSystem.FixedUpdate(gameTime);
@@ -47,6 +49,7 @@ public class SystemManager : ISystemManager
     {
         // Create a snapshot to avoid collection modified exception
         var updateSystemsCopy = _updateSystems.Values.ToList();
+
         foreach (var updateSystem in updateSystemsCopy)
         {
             updateSystem.Update(gameTime);
@@ -61,11 +64,15 @@ public class SystemManager : ISystemManager
             renderSystem.Name,
             renderSystem.Priority
         );
+
+        renderSystem.Initialize();
     }
 
     public void AddUpdateSystem(IUpdateSystem updateSystem)
     {
         _updateSystems.Add(updateSystem.Priority, updateSystem);
         _logger.Information("Added update system {Name} priority: {Priority}", updateSystem.Name, updateSystem.Priority);
+
+        updateSystem.Initialize();
     }
 }
