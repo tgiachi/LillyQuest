@@ -26,39 +26,6 @@ public class SystemManager : ISystemManager
         _bootstrap.Render += OnRender;
     }
 
-    private void OnRender(GameTime gameTime)
-    {
-        // Create a snapshot to avoid collection modified exception
-        var renderSystemsCopy = _renderSystems.Values.ToList();
-
-        foreach (var renderSystem in renderSystemsCopy)
-        {
-            renderSystem.Render(gameTime);
-        }
-    }
-
-    private void OnFixedUpdate(GameTime gameTime)
-    {
-        // Create a snapshot to avoid collection modified exception
-        var updateSystemsCopy = _updateSystems.Values.ToList();
-
-        foreach (var updateSystem in updateSystemsCopy)
-        {
-            updateSystem.FixedUpdate(gameTime);
-        }
-    }
-
-    private void OnUpdate(GameTime gameTime)
-    {
-        // Create a snapshot to avoid collection modified exception
-        var updateSystemsCopy = _updateSystems.Values.ToList();
-
-        foreach (var updateSystem in updateSystemsCopy)
-        {
-            updateSystem.Update(gameTime);
-        }
-    }
-
     public void AddRenderSystem(IRenderSystem renderSystem)
     {
         renderSystem.Initialize(_renderContext);
@@ -68,13 +35,6 @@ public class SystemManager : ISystemManager
             renderSystem.Name,
             renderSystem.Priority
         );
-    }
-
-    public void AddUpdateSystem(IUpdateSystem updateSystem)
-    {
-        updateSystem.Initialize(_renderContext);
-        _updateSystems.Add(updateSystem.Priority, updateSystem);
-        _logger.Information("Added update system {Name} priority: {Priority}", updateSystem.Name, updateSystem.Priority);
     }
 
     public void AddSystem<T>(T system) where T : ISystem
@@ -93,6 +53,46 @@ public class SystemManager : ISystemManager
                 _logger.Warning("System {Name} does not implement IRenderSystem or IUpdateSystem", system.Name);
 
                 break;
+        }
+    }
+
+    public void AddUpdateSystem(IUpdateSystem updateSystem)
+    {
+        updateSystem.Initialize(_renderContext);
+        _updateSystems.Add(updateSystem.Priority, updateSystem);
+        _logger.Information("Added update system {Name} priority: {Priority}", updateSystem.Name, updateSystem.Priority);
+    }
+
+    private void OnFixedUpdate(GameTime gameTime)
+    {
+        // Create a snapshot to avoid collection modified exception
+        var updateSystemsCopy = _updateSystems.Values.ToList();
+
+        foreach (var updateSystem in updateSystemsCopy)
+        {
+            updateSystem.FixedUpdate(gameTime);
+        }
+    }
+
+    private void OnRender(GameTime gameTime)
+    {
+        // Create a snapshot to avoid collection modified exception
+        var renderSystemsCopy = _renderSystems.Values.ToList();
+
+        foreach (var renderSystem in renderSystemsCopy)
+        {
+            renderSystem.Render(gameTime);
+        }
+    }
+
+    private void OnUpdate(GameTime gameTime)
+    {
+        // Create a snapshot to avoid collection modified exception
+        var updateSystemsCopy = _updateSystems.Values.ToList();
+
+        foreach (var updateSystem in updateSystemsCopy)
+        {
+            updateSystem.Update(gameTime);
         }
     }
 }

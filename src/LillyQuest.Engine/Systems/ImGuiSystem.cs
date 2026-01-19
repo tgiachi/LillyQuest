@@ -13,16 +13,6 @@ public class ImGuiSystem : BaseSystem, IUpdateSystem, IRenderSystem
     private ImGuiController _imGuiController;
 
     public ImGuiSystem(IGameEntityManager entityManager) : base("ImGui System", 1000, entityManager) { }
-
-    protected override void OnInitialize()
-    {
-        _imGuiController = new ImGuiController(RenderContext.Gl, RenderContext.Window, RenderContext.InputContext);
-        base.OnInitialize();
-    }
-
-    public void Update(GameTime gameTime)
-    {
-    }
     public void FixedUpdate(GameTime gameTime) { }
 
     public void Render(GameTime gameTime)
@@ -42,7 +32,13 @@ public class ImGuiSystem : BaseSystem, IUpdateSystem, IRenderSystem
         }
 
         _imGuiController.Render();
-
     }
 
+    public void Update(GameTime gameTime) { }
+
+    protected override void OnInitialize()
+    {
+        _imGuiController = new(RenderContext.Gl, RenderContext.Window, RenderContext.InputContext);
+        base.OnInitialize();
+    }
 }

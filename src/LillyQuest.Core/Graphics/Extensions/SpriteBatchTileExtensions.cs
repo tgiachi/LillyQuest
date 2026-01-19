@@ -31,7 +31,8 @@ public static class SpriteBatchTileExtensions
             LyColor color,
             float rotation = 0f,
             Vector2? origin = null,
-            float depth = 0f)
+            float depth = 0f
+        )
         {
             var tileData = tileset.GetTile(tileIndex);
             var sourceRect = ConvertSourceRect(tileData.SourceRect);
@@ -39,7 +40,7 @@ public static class SpriteBatchTileExtensions
             spriteBatch.Draw(
                 tileset.Texture,
                 position,
-                new Vector2(tileset.TileWidth, tileset.TileHeight),
+                new(tileset.TileWidth, tileset.TileHeight),
                 color,
                 rotation,
                 origin ?? Vector2.Zero,
@@ -67,7 +68,8 @@ public static class SpriteBatchTileExtensions
             LyColor color,
             float rotation = 0f,
             Vector2? origin = null,
-            float depth = 0f)
+            float depth = 0f
+        )
         {
             var tileData = tileset.GetTile(tileX, tileY);
             var sourceRect = ConvertSourceRect(tileData.SourceRect);
@@ -75,7 +77,7 @@ public static class SpriteBatchTileExtensions
             spriteBatch.Draw(
                 tileset.Texture,
                 position,
-                new Vector2(tileset.TileWidth, tileset.TileHeight),
+                new(tileset.TileWidth, tileset.TileHeight),
                 color,
                 rotation,
                 origin ?? Vector2.Zero,
@@ -103,7 +105,8 @@ public static class SpriteBatchTileExtensions
             LyColor color,
             float rotation = 0f,
             Vector2? origin = null,
-            float depth = 0f)
+            float depth = 0f
+        )
         {
             var tileData = tileset.GetTile(tileIndex);
             var sourceRect = ConvertSourceRect(tileData.SourceRect);
@@ -141,7 +144,8 @@ public static class SpriteBatchTileExtensions
             LyColor color,
             float rotation = 0f,
             Vector2? origin = null,
-            float depth = 0f)
+            float depth = 0f
+        )
         {
             var tileData = tileset.GetTile(tileX, tileY);
             var sourceRect = ConvertSourceRect(tileData.SourceRect);
@@ -173,7 +177,8 @@ public static class SpriteBatchTileExtensions
             Tileset tileset,
             TileRenderData tileRenderData,
             Vector2 position,
-            float depth = 0f)
+            float depth = 0f
+        )
         {
             // Draw background color (if not transparent)
             if (tileRenderData.BackgroundColor.A > 0)
@@ -184,8 +189,12 @@ public static class SpriteBatchTileExtensions
 
             // Draw tile with foreground color
             spriteBatch.DrawTile(
-                tileset, tileRenderData.TileIndex, position,
-                tileRenderData.ForegroundColor, depth: depth + 0.001f);
+                tileset,
+                tileRenderData.TileIndex,
+                position,
+                tileRenderData.ForegroundColor,
+                depth: depth + 0.001f
+            );
         }
 
         /// <summary>
@@ -201,7 +210,8 @@ public static class SpriteBatchTileExtensions
             TileRenderData tileRenderData,
             Vector2 position,
             Vector2 size,
-            float depth = 0f)
+            float depth = 0f
+        )
         {
             // Draw background color (if not transparent)
             if (tileRenderData.BackgroundColor.A > 0)
@@ -211,10 +221,26 @@ public static class SpriteBatchTileExtensions
 
             // Draw tile with foreground color
             spriteBatch.DrawTile(
-                tileset, tileRenderData.TileIndex, position, size,
-                tileRenderData.ForegroundColor, depth: depth + 0.001f);
+                tileset,
+                tileRenderData.TileIndex,
+                position,
+                size,
+                tileRenderData.ForegroundColor,
+                depth: depth + 0.001f
+            );
         }
     }
+
+    /// <summary>
+    /// Converts Rectangle<int> to Rectangle<float> for SpriteBatch compatibility.
+    /// </summary>
+    private static Rectangle<float> ConvertSourceRect(Rectangle<int> rect)
+        => new(
+            rect.Origin.X,
+            rect.Origin.Y,
+            rect.Size.X,
+            rect.Size.Y
+        );
 
     /// <summary>
     /// Draws a solid colored rectangle.
@@ -224,21 +250,9 @@ public static class SpriteBatchTileExtensions
         Vector2 position,
         Vector2 size,
         LyColor color,
-        float depth)
+        float depth
+    )
     {
         spriteBatch.DrawRectangle(position, size, color, depth);
-    }
-
-    /// <summary>
-    /// Converts Rectangle<int> to Rectangle<float> for SpriteBatch compatibility.
-    /// </summary>
-    private static Rectangle<float> ConvertSourceRect(Rectangle<int> rect)
-    {
-        return new Rectangle<float>(
-            rect.Origin.X,
-            rect.Origin.Y,
-            rect.Size.X,
-            rect.Size.Y
-        );
     }
 }

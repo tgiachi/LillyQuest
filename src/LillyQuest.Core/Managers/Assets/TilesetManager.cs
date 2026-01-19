@@ -1,4 +1,3 @@
-using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
 using Serilog;
@@ -12,9 +11,7 @@ public class TilesetManager : ITilesetManager
     private readonly Dictionary<string, Tileset> _tilesets = new();
 
     public TilesetManager(ITextureManager textureManager)
-    {
-        _textureManager = textureManager;
-    }
+        => _textureManager = textureManager;
 
     public void Dispose()
     {
@@ -32,9 +29,6 @@ public class TilesetManager : ITilesetManager
 
     public bool HasTileset(string name)
         => _tilesets.ContainsKey(name);
-
-    public bool TryGetTileset(string name, out Tileset tileset)
-        => _tilesets.TryGetValue(name, out tileset);
 
     public void LoadTileset(string name, string filePath, int tileWidth, int tileHeight, int spacing, int margin)
     {
@@ -81,6 +75,9 @@ public class TilesetManager : ITilesetManager
         _tilesets[name] = tileset;
         _logger.Information("Tileset {Name} loaded from data with magenta chroma key.", name);
     }
+
+    public bool TryGetTileset(string name, out Tileset tileset)
+        => _tilesets.TryGetValue(name, out tileset);
 
     public void UnloadTileset(string name)
     {

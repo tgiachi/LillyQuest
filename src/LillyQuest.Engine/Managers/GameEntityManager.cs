@@ -8,11 +8,14 @@ namespace LillyQuest.Engine.Managers;
 /// Manages the lifecycle and querying of game objects and their features.
 /// Maintains a global index of features by type, sorted by entity Order.
 /// Fires lifecycle events on object add/remove.
+/// Generates unique IDs for entities and maintains thread safety with locks.
 /// </summary>
 public class GameEntityManager : IGameEntityManager
 {
+    private uint _idCounter;
     private readonly List<IGameEntity> _entities = [];
     private readonly Dictionary<Type, List<IGameObjectFeature>> _globalTypeIndex = [];
+    private readonly Lock _sync = new();
 
     /// <summary>
     /// Fired when a game object is added to the manager.
@@ -28,27 +31,29 @@ public class GameEntityManager : IGameEntityManager
 
     /// <summary>
     /// Adds a game object to the manager and indexes all its features.
+    /// Generates a unique ID for the entity if not already set.
     /// Features are indexed and sorted by entity Order.
     /// OnGameEntityAdded event is fired after indexing completes.
     /// </summary>
     public void AddEntity(IGameEntity entity)
     {
-        _entities.Add(entity);
+        uint id;
+
+        lock (_sync)
+        {
+            id = _idCounter++;
+            entity.Id = id;
+            _entities.Add(entity);
+        }
+
+        if (string.IsNullOrEmpty(entity.Name))
+        {
+            entity.Name = entity.GetType().Name;
+        }
+
         entity.Initialize();
         IndexEntity(entity);
         OnGameEntityAdded?.Invoke(entity);
-    }
-
-    /// <summary>
-    /// Removes a game object from the manager and deindexes all its features.
-    /// OnGameEntityRemoved event is fired after deindexing completes.
-    /// </summary>
-    public void RemoveEntity(IGameEntity entity)
-    {
-        _entities.Remove(entity);
-        DeindexEntity(entity);
-        entity.Shutdown();
-        OnGameEntityRemoved?.Invoke(entity);
     }
 
     /// <summary>
@@ -66,6 +71,40 @@ public class GameEntityManager : IGameEntityManager
         }
 
         return [];
+    }
+
+    /// <summary>
+    /// Removes a game object from the manager and deindexes all its features.
+    /// OnGameEntityRemoved event is fired after deindexing completes.
+    /// </summary>
+    public void RemoveEntity(IGameEntity entity)
+    {
+        _entities.Remove(entity);
+        DeindexEntity(entity);
+        entity.Shutdown();
+        OnGameEntityRemoved?.Invoke(entity);
+    }
+
+    /// <summary>
+    /// Deindexes all features of a game object from the global type index.
+    /// </summary>
+    private void DeindexEntity(IGameEntity entity)
+    {
+        foreach (var feature in entity.Features)
+        {
+            var featureType = feature.GetType();
+
+            if (_globalTypeIndex.TryGetValue(featureType, out var features))
+            {
+                features.Remove(feature);
+
+                // Remove empty lists to save memory
+                if (features.Count == 0)
+                {
+                    _globalTypeIndex.Remove(featureType);
+                }
+            }
+        }
     }
 
     /// <summary>
@@ -102,28 +141,6 @@ public class GameEntityManager : IGameEntityManager
                     return aEntity?.Order.CompareTo(bEntity?.Order) ?? 0;
                 }
             );
-        }
-    }
-
-    /// <summary>
-    /// Deindexes all features of a game object from the global type index.
-    /// </summary>
-    private void DeindexEntity(IGameEntity entity)
-    {
-        foreach (var feature in entity.Features)
-        {
-            var featureType = feature.GetType();
-
-            if (_globalTypeIndex.TryGetValue(featureType, out var features))
-            {
-                features.Remove(feature);
-
-                // Remove empty lists to save memory
-                if (features.Count == 0)
-                {
-                    _globalTypeIndex.Remove(featureType);
-                }
-            }
         }
     }
 }

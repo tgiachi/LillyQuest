@@ -45,6 +45,7 @@ public class GameEntity : IGameEntity
             {
                 // Add to new parent
                 var newChildren = (_parent as GameEntity)?._children;
+
                 if (newChildren != null && !newChildren.Contains(this))
                 {
                     newChildren.Add(this);
@@ -80,6 +81,29 @@ public class GameEntity : IGameEntity
     }
 
     /// <summary>
+    /// Adds a feature to this game object.
+    /// </summary>
+    /// <param name="feature">The feature to add.</param>
+    public void AddFeature(IGameObjectFeature feature)
+    {
+        _features.Add(feature);
+    }
+
+    /// <summary>
+    /// Gets a feature of the specified type, or null if not found.
+    /// O(1) lookup time.
+    /// </summary>
+    public TFeature? GetFeature<TFeature>() where TFeature : class, IGameObjectFeature
+        => _features.GetFeature<TFeature>();
+
+    /// <summary>
+    /// Checks if a feature of the specified type exists in this game object.
+    /// O(1) lookup time.
+    /// </summary>
+    public bool HasFeature<TFeature>() where TFeature : class, IGameObjectFeature
+        => _features.HasFeature<TFeature>();
+
+    /// <summary>
     /// Called when this game object is initialized.
     /// </summary>
     public virtual void Initialize()
@@ -92,6 +116,12 @@ public class GameEntity : IGameEntity
             }
         }
     }
+
+    /// <summary>
+    /// Removes a feature from this game object.
+    /// </summary>
+    public bool RemoveFeature(IGameObjectFeature feature)
+        => _features.Remove(feature);
 
     /// <summary>
     /// Called when this game object is shut down.
@@ -116,47 +146,13 @@ public class GameEntity : IGameEntity
     }
 
     /// <summary>
-    /// Adds a feature to this game object.
-    /// </summary>
-    /// <param name="feature">The feature to add.</param>
-    public void AddFeature(IGameObjectFeature feature)
-    {
-        _features.Add(feature);
-    }
-
-    /// <summary>
-    /// Gets a feature of the specified type, or null if not found.
-    /// O(1) lookup time.
-    /// </summary>
-    public TFeature? GetFeature<TFeature>() where TFeature : class, IGameObjectFeature
-    {
-        return _features.GetFeature<TFeature>();
-    }
-
-    /// <summary>
-    /// Checks if a feature of the specified type exists in this game object.
-    /// O(1) lookup time.
-    /// </summary>
-    public bool HasFeature<TFeature>() where TFeature : class, IGameObjectFeature
-    {
-        return _features.HasFeature<TFeature>();
-    }
-
-    /// <summary>
     /// Attempts to get a feature of the specified type without throwing an exception.
     /// O(1) lookup time.
     /// </summary>
     public bool TryGetFeature<TFeature>(out TFeature? feature) where TFeature : class, IGameObjectFeature
     {
         feature = GetFeature<TFeature>();
-        return feature != null;
-    }
 
-    /// <summary>
-    /// Removes a feature from this game object.
-    /// </summary>
-    public bool RemoveFeature(IGameObjectFeature feature)
-    {
-        return _features.Remove(feature);
+        return feature != null;
     }
 }

@@ -26,7 +26,7 @@ public sealed class RenderTexture : IDisposable
         _framebuffer = _gl.GenFramebuffer();
         _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _framebuffer);
 
-        ColorTexture = new Texture2D(_gl, width, height, false);
+        ColorTexture = new(_gl, width, height, false);
         _gl.FramebufferTexture2D(
             FramebufferTarget.Framebuffer,
             FramebufferAttachment.ColorAttachment0,
@@ -46,6 +46,7 @@ public sealed class RenderTexture : IDisposable
         );
 
         var status = _gl.CheckFramebufferStatus(FramebufferTarget.Framebuffer);
+
         if (status != GLEnum.FramebufferComplete)
         {
             _logger.Error("RenderTexture framebuffer incomplete: {Status}", status);
@@ -56,9 +57,6 @@ public sealed class RenderTexture : IDisposable
 
     public void Bind()
         => _gl.BindFramebuffer(FramebufferTarget.Framebuffer, _framebuffer);
-
-    public void Unbind()
-        => _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 
     public void Dispose()
     {
@@ -78,4 +76,7 @@ public sealed class RenderTexture : IDisposable
 
         GC.SuppressFinalize(this);
     }
+
+    public void Unbind()
+        => _gl.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
 }

@@ -26,7 +26,7 @@ public struct TileRenderData
     {
         TileIndex = tileIndex;
         ForegroundColor = foregroundColor;
-        BackgroundColor = backgroundColor ?? new LyColor(0, 0, 0, 0);  // Transparent by default
+        BackgroundColor = backgroundColor ?? new LyColor(0, 0, 0, 0); // Transparent by default
     }
 
     public override string ToString()

@@ -10,6 +10,110 @@ namespace LillyQuest.Core.Interfaces.Assets;
 public static class AssetManagerExtensions
 {
     /// <summary>
+    /// Loads a bitmap font from an embedded resource.
+    /// </summary>
+    /// <param name="manager">The font manager instance</param>
+    /// <param name="assetName">Unique name for the font asset</param>
+    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Fonts/default.png")</param>
+    /// <param name="tileWidth">Width of each character tile in pixels</param>
+    /// <param name="tileHeight">Height of each character tile in pixels</param>
+    /// <param name="spacing">Space between tiles in pixels</param>
+    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
+    public static void LoadBmpFontFromEmbeddedResource(
+        this IFontManager manager,
+        string assetName,
+        string resourcePath,
+        int tileWidth,
+        int tileHeight,
+        int spacing = 0,
+        Assembly? assembly = null
+    )
+    {
+        assembly ??= Assembly.GetCallingAssembly();
+        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
+        manager.LoadBmpFont(assetName, data, tileWidth, tileHeight, spacing);
+    }
+
+    /// <summary>
+    /// Loads a font from an embedded resource.
+    /// </summary>
+    /// <param name="manager">The font manager instance</param>
+    /// <param name="assetName">Unique name for the font asset</param>
+    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Fonts/arial.ttf")</param>
+    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
+    public static void LoadFontFromEmbeddedResource(
+        this IFontManager manager,
+        string assetName,
+        string resourcePath,
+        Assembly? assembly = null
+    )
+    {
+        assembly ??= Assembly.GetCallingAssembly();
+        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
+        manager.LoadFont(assetName, data);
+    }
+
+    /// <summary>
+    /// Loads a music track from an embedded resource.
+    /// </summary>
+    /// <param name="manager">The audio manager instance</param>
+    /// <param name="musicName">Unique name for the music asset</param>
+    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Music/theme.ogg")</param>
+    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
+    public static void LoadMusicFromEmbeddedResource(
+        this IAudioManager manager,
+        string musicName,
+        string resourcePath,
+        Assembly? assembly = null
+    )
+    {
+        assembly ??= Assembly.GetCallingAssembly();
+        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
+        manager.LoadMusicFromBuffer(musicName, data);
+    }
+
+    /// <summary>
+    /// Loads a shader from embedded resources.
+    /// </summary>
+    /// <param name="manager">The shader manager instance</param>
+    /// <param name="shaderName">Cache key for the shader</param>
+    /// <param name="vertexResourcePath">Path to the vertex shader embedded resource</param>
+    /// <param name="fragmentResourcePath">Path to the fragment shader embedded resource</param>
+    /// <param name="assembly">The assembly containing the embedded resources. If null, uses the calling assembly</param>
+    public static void LoadShaderFromEmbeddedResource(
+        this IShaderManager manager,
+        string shaderName,
+        string vertexResourcePath,
+        string fragmentResourcePath,
+        Assembly? assembly = null
+    )
+    {
+        assembly ??= Assembly.GetCallingAssembly();
+        var vertexData = ResourceUtils.GetEmbeddedResourceContent(vertexResourcePath, assembly);
+        var fragmentData = ResourceUtils.GetEmbeddedResourceContent(fragmentResourcePath, assembly);
+        manager.LoadShader(shaderName, vertexData, fragmentData);
+    }
+
+    /// <summary>
+    /// Loads a sound effect from an embedded resource.
+    /// </summary>
+    /// <param name="manager">The audio manager instance</param>
+    /// <param name="soundName">Unique name for the sound asset</param>
+    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Sounds/explosion.wav")</param>
+    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
+    public static void LoadSoundFromEmbeddedResource(
+        this IAudioManager manager,
+        string soundName,
+        string resourcePath,
+        Assembly? assembly = null
+    )
+    {
+        assembly ??= Assembly.GetCallingAssembly();
+        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
+        manager.LoadSoundFromBuffer(soundName, data);
+    }
+
+    /// <summary>
     /// Loads a texture from an embedded resource.
     /// </summary>
     /// <param name="manager">The texture manager instance</param>
@@ -20,7 +124,8 @@ public static class AssetManagerExtensions
         this ITextureManager manager,
         string assetName,
         string resourcePath,
-        Assembly? assembly = null)
+        Assembly? assembly = null
+    )
     {
         assembly ??= Assembly.GetCallingAssembly();
         var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
@@ -40,110 +145,12 @@ public static class AssetManagerExtensions
         string assetName,
         string resourcePath,
         byte tolerance = 0,
-        Assembly? assembly = null)
+        Assembly? assembly = null
+    )
     {
         assembly ??= Assembly.GetCallingAssembly();
         var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
         manager.LoadTextureFromPngWithChromaKey(assetName, data, tolerance);
-    }
-
-    /// <summary>
-    /// Loads a bitmap font from an embedded resource.
-    /// </summary>
-    /// <param name="manager">The font manager instance</param>
-    /// <param name="assetName">Unique name for the font asset</param>
-    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Fonts/default.png")</param>
-    /// <param name="tileWidth">Width of each character tile in pixels</param>
-    /// <param name="tileHeight">Height of each character tile in pixels</param>
-    /// <param name="spacing">Space between tiles in pixels</param>
-    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
-    public static void LoadBmpFontFromEmbeddedResource(
-        this IFontManager manager,
-        string assetName,
-        string resourcePath,
-        int tileWidth,
-        int tileHeight,
-        int spacing = 0,
-        Assembly? assembly = null)
-    {
-        assembly ??= Assembly.GetCallingAssembly();
-        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
-        manager.LoadBmpFont(assetName, data, tileWidth, tileHeight, spacing);
-    }
-
-    /// <summary>
-    /// Loads a font from an embedded resource.
-    /// </summary>
-    /// <param name="manager">The font manager instance</param>
-    /// <param name="assetName">Unique name for the font asset</param>
-    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Fonts/arial.ttf")</param>
-    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
-    public static void LoadFontFromEmbeddedResource(
-        this IFontManager manager,
-        string assetName,
-        string resourcePath,
-        Assembly? assembly = null)
-    {
-        assembly ??= Assembly.GetCallingAssembly();
-        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
-        manager.LoadFont(assetName, data);
-    }
-
-    /// <summary>
-    /// Loads a shader from embedded resources.
-    /// </summary>
-    /// <param name="manager">The shader manager instance</param>
-    /// <param name="shaderName">Cache key for the shader</param>
-    /// <param name="vertexResourcePath">Path to the vertex shader embedded resource</param>
-    /// <param name="fragmentResourcePath">Path to the fragment shader embedded resource</param>
-    /// <param name="assembly">The assembly containing the embedded resources. If null, uses the calling assembly</param>
-    public static void LoadShaderFromEmbeddedResource(
-        this IShaderManager manager,
-        string shaderName,
-        string vertexResourcePath,
-        string fragmentResourcePath,
-        Assembly? assembly = null)
-    {
-        assembly ??= Assembly.GetCallingAssembly();
-        var vertexData = ResourceUtils.GetEmbeddedResourceContent(vertexResourcePath, assembly);
-        var fragmentData = ResourceUtils.GetEmbeddedResourceContent(fragmentResourcePath, assembly);
-        manager.LoadShader(shaderName, vertexData, fragmentData);
-    }
-
-    /// <summary>
-    /// Loads a sound effect from an embedded resource.
-    /// </summary>
-    /// <param name="manager">The audio manager instance</param>
-    /// <param name="soundName">Unique name for the sound asset</param>
-    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Sounds/explosion.wav")</param>
-    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
-    public static void LoadSoundFromEmbeddedResource(
-        this IAudioManager manager,
-        string soundName,
-        string resourcePath,
-        Assembly? assembly = null)
-    {
-        assembly ??= Assembly.GetCallingAssembly();
-        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
-        manager.LoadSoundFromBuffer(soundName, data);
-    }
-
-    /// <summary>
-    /// Loads a music track from an embedded resource.
-    /// </summary>
-    /// <param name="manager">The audio manager instance</param>
-    /// <param name="musicName">Unique name for the music asset</param>
-    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Music/theme.ogg")</param>
-    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
-    public static void LoadMusicFromEmbeddedResource(
-        this IAudioManager manager,
-        string musicName,
-        string resourcePath,
-        Assembly? assembly = null)
-    {
-        assembly ??= Assembly.GetCallingAssembly();
-        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
-        manager.LoadMusicFromBuffer(musicName, data);
     }
 
     /// <summary>
@@ -165,7 +172,8 @@ public static class AssetManagerExtensions
         int tileHeight,
         int spacing = 0,
         int margin = 0,
-        Assembly? assembly = null)
+        Assembly? assembly = null
+    )
     {
         assembly ??= Assembly.GetCallingAssembly();
         var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);

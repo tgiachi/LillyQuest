@@ -17,7 +17,7 @@ public static class SceneManagerExtensions
     public static IContainer RegisterScene<TScene>(this IContainer container, bool isInitial = false) where TScene : IScene
     {
         container.Register<TScene>(Reuse.Singleton);
-        container.AddToRegisterTypedList(new SceneRegitrationObject(typeof(TScene), isInitial));
+        container.AddToRegisterTypedList(new SceneRegistrationObject(typeof(TScene), isInitial));
 
         return container;
     }

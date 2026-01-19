@@ -168,26 +168,6 @@ public class TextureManager : ITextureManager
         );
     }
 
-    private static void ReplaceChromaKey(byte[] pixelData, byte tolerance)
-    {
-        // Pixel format is RGBA (4 bytes per pixel)
-        for (int i = 0; i < pixelData.Length; i += 4)
-        {
-            byte r = pixelData[i];
-            byte g = pixelData[i + 1];
-            byte b = pixelData[i + 2];
-
-            // Check if pixel is magenta (255, 0, 255) within tolerance
-            if (r >= 255 - tolerance &&
-                g <= tolerance &&
-                b >= 255 - tolerance)
-            {
-                // Set alpha to 0 (fully transparent)
-                pixelData[i + 3] = 0;
-            }
-        }
-    }
-
     public bool TryGetTexture(string assetName, out Texture2D texture)
         => _textures.TryGetValue(assetName, out texture);
 
@@ -213,5 +193,25 @@ public class TextureManager : ITextureManager
         DefaultBlackTexture = new(_gl, blackPixel, 1, 1);
 
         _logger.Debug("Generated black and white textures");
+    }
+
+    private static void ReplaceChromaKey(byte[] pixelData, byte tolerance)
+    {
+        // Pixel format is RGBA (4 bytes per pixel)
+        for (var i = 0; i < pixelData.Length; i += 4)
+        {
+            var r = pixelData[i];
+            var g = pixelData[i + 1];
+            var b = pixelData[i + 2];
+
+            // Check if pixel is magenta (255, 0, 255) within tolerance
+            if (r >= 255 - tolerance &&
+                g <= tolerance &&
+                b >= 255 - tolerance)
+            {
+                // Set alpha to 0 (fully transparent)
+                pixelData[i + 3] = 0;
+            }
+        }
     }
 }

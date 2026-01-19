@@ -142,6 +142,12 @@ public interface IScriptEngineService
     void RegisterGlobalFunction(string name, Delegate func);
 
     /// <summary>
+    /// Starts the script engine service asynchronously.
+    /// </summary>
+    /// <returns></returns>
+    Task StartAsync();
+
+    /// <summary>
     /// Converts a .NET method name to a JavaScript-compatible function name.
     /// </summary>
     /// <param name="name">The .NET method name to convert.</param>
@@ -154,11 +160,4 @@ public interface IScriptEngineService
     /// <param name="name">The name of the global to unregister.</param>
     /// <returns>True if the global was found and removed, false otherwise.</returns>
     bool UnregisterGlobal(string name);
-
-
-    /// <summary>
-    ///  Starts the script engine service asynchronously.
-    /// </summary>
-    /// <returns></returns>
-    Task StartAsync();
 }

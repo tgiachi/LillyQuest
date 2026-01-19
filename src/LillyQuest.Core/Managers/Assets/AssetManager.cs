@@ -23,7 +23,8 @@ public class AssetManager : IAssetManager
         IFontManager fontManager,
         IShaderManager shaderManager,
         IAudioManager audioManager,
-        ITilesetManager tilesetManager)
+        ITilesetManager tilesetManager
+    )
     {
         TextureManager = textureManager;
         FontManager = fontManager;

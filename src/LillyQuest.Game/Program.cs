@@ -1,7 +1,6 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using ConsoleAppFramework;
-using LillyQuest.Core.Data.Configs;
 using LillyQuest.Engine;
 using Serilog;
 
@@ -13,7 +12,7 @@ await ConsoleApp.RunAsync(
     args,
     () =>
     {
-        var lillyQuestBootstrap = new LillyQuestBootstrap(new LillyQuestEngineConfig());
+        var lillyQuestBootstrap = new LillyQuestBootstrap(new());
 
         lillyQuestBootstrap.Initialize();
         lillyQuestBootstrap.Run();

@@ -20,25 +20,13 @@ public class DirectoriesConfigTests
         Logs
     }
 
-    [SetUp]
-    public void Setup()
-    {
-        // Create a unique temporary directory for each test
-        _testRootDirectory = Path.Combine(Path.GetTempPath(), $"LillyQuestTest_{Guid.NewGuid()}");
-
-        if (Directory.Exists(_testRootDirectory))
-        {
-            Directory.Delete(_testRootDirectory, recursive: true);
-        }
-    }
-
     [TearDown]
     public void Cleanup()
     {
         // Clean up test directories
         if (Directory.Exists(_testRootDirectory))
         {
-            Directory.Delete(_testRootDirectory, recursive: true);
+            Directory.Delete(_testRootDirectory, true);
         }
     }
 
@@ -266,6 +254,18 @@ public class DirectoriesConfigTests
         var config = new DirectoriesConfig(_testRootDirectory, Array.Empty<string>());
 
         Assert.That(config.Root, Is.EqualTo(_testRootDirectory));
+    }
+
+    [SetUp]
+    public void Setup()
+    {
+        // Create a unique temporary directory for each test
+        _testRootDirectory = Path.Combine(Path.GetTempPath(), $"LillyQuestTest_{Guid.NewGuid()}");
+
+        if (Directory.Exists(_testRootDirectory))
+        {
+            Directory.Delete(_testRootDirectory, true);
+        }
     }
 
     [Test]

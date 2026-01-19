@@ -1,4 +1,3 @@
-using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Data.Assets.Tiles;
 
 namespace LillyQuest.Core.Interfaces.Assets;
@@ -25,14 +24,6 @@ public interface ITilesetManager : IDisposable
     bool HasTileset(string name);
 
     /// <summary>
-    /// Attempts to get a loaded tileset safely.
-    /// </summary>
-    /// <param name="name">Name of the tileset</param>
-    /// <param name="tileset">Tileset found, null if not found</param>
-    /// <returns>true if the tileset was found, false otherwise</returns>
-    bool TryGetTileset(string name, out Tileset tileset);
-
-    /// <summary>
     /// Loads a tileset from file.
     /// </summary>
     /// <param name="name">Unique name to assign to the tileset</param>
@@ -53,6 +44,14 @@ public interface ITilesetManager : IDisposable
     /// <param name="spacing">Space between tiles in pixels</param>
     /// <param name="margin">Margin around tiles in pixels</param>
     void LoadTileset(string name, Span<byte> content, int tileWidth, int tileHeight, int spacing, int margin);
+
+    /// <summary>
+    /// Attempts to get a loaded tileset safely.
+    /// </summary>
+    /// <param name="name">Name of the tileset</param>
+    /// <param name="tileset">Tileset found, null if not found</param>
+    /// <returns>true if the tileset was found, false otherwise</returns>
+    bool TryGetTileset(string name, out Tileset tileset);
 
     /// <summary>
     /// Unloads a tileset from memory.

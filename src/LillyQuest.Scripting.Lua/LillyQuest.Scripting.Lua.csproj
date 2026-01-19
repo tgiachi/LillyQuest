@@ -17,7 +17,7 @@
 
 
     <ItemGroup>
-      <ProjectReference Include="..\LillyQuest.Core\LillyQuest.Core.csproj" />
+        <ProjectReference Include="..\LillyQuest.Core\LillyQuest.Core.csproj"/>
     </ItemGroup>
 
 

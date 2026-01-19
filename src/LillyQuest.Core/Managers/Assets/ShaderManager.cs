@@ -19,6 +19,7 @@ public class ShaderManager : IShaderManager
     /// Creates a new shader manager for the provided OpenGL context.
     /// </summary>
     /// <param name= renderContext">Context.
+    /// 
     /// </param>
     public ShaderManager(EngineRenderContext renderContext)
         => _gl = renderContext.Gl;

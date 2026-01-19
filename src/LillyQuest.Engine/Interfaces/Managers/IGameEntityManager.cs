@@ -34,15 +34,15 @@ public interface IGameEntityManager
     void AddEntity(IGameEntity entity);
 
     /// <summary>
-    /// Removes a game object from the manager.
-    /// </summary>
-    /// <param name="entity">The game object to remove.</param>
-    void RemoveEntity(IGameEntity entity);
-
-    /// <summary>
     /// Queries all features of a specific type across all game objects.
     /// </summary>
     /// <typeparam name="TFeature">The type of feature to query.</typeparam>
     /// <returns>A lazy sequence of features matching the specified type.</returns>
     IEnumerable<TFeature> QueryOfType<TFeature>() where TFeature : IGameObjectFeature;
+
+    /// <summary>
+    /// Removes a game object from the manager.
+    /// </summary>
+    /// <param name="entity">The game object to remove.</param>
+    void RemoveEntity(IGameEntity entity);
 }

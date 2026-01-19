@@ -91,7 +91,7 @@ public class Texture2D : IDisposable
         }
     }
 
-    public unsafe Texture2D(GL gl, int width, int height)
+    public Texture2D(GL gl, int width, int height)
         : this(gl, width, height, true) { }
 
     public unsafe Texture2D(GL gl, int width, int height, bool useMipmaps)

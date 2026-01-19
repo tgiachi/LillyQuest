@@ -13,7 +13,7 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Silk.NET.GLFW" Version="2.22.0"/>
-        <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.22.0" />
+        <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.22.0"/>
         <PackageReference Include="Silk.NET.Windowing" Version="2.22.0"/>
         <PackageReference Include="Silk.NET.Windowing.Common" Version="2.22.0"/>
         <PackageReference Include="Silk.NET.Windowing.Glfw" Version="2.22.0"/>
@@ -21,8 +21,8 @@
 
     <ItemGroup>
         <ProjectReference Include="..\LillyQuest.Core\LillyQuest.Core.csproj"/>
-        <ProjectReference Include="..\LillyQuest.Scripting.Lua\LillyQuest.Scripting.Lua.csproj" />
-        <ProjectReference Include="..\LillyQuest.Services\LillyQuest.Services.csproj" />
+        <ProjectReference Include="..\LillyQuest.Scripting.Lua\LillyQuest.Scripting.Lua.csproj"/>
+        <ProjectReference Include="..\LillyQuest.Services\LillyQuest.Services.csproj"/>
     </ItemGroup>
 
 </Project>

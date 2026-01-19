@@ -10,21 +10,19 @@ public class UpdateSystem : BaseSystem, IUpdateSystem
 {
     public UpdateSystem(IGameEntityManager entityManager) : base("Update System", 0, entityManager) { }
 
-    public void Update(GameTime gameTime)
-    {
-        foreach(var updateableFeature in EntityManager.QueryOfType<IUpdateFeature>())
-        {
-            updateableFeature.Update(gameTime);
-        }
-
-    }
-
     public void FixedUpdate(GameTime gameTime)
     {
         foreach (var updateableFeature in EntityManager.QueryOfType<IFixedUpdateFeature>())
         {
             updateableFeature.FixedUpdate(gameTime);
         }
+    }
 
+    public void Update(GameTime gameTime)
+    {
+        foreach (var updateableFeature in EntityManager.QueryOfType<IUpdateFeature>())
+        {
+            updateableFeature.Update(gameTime);
+        }
     }
 }

@@ -9,7 +9,7 @@ public abstract class BaseSystem : ISystem
     public string Name { get; }
     public uint Priority { get; }
 
-    private bool _initialized = false;
+    private bool _initialized;
 
     protected IGameEntityManager EntityManager { get; }
 
@@ -35,12 +35,7 @@ public abstract class BaseSystem : ISystem
         OnInitialize();
     }
 
-    protected virtual void OnInitialize()
-    {
+    public virtual void Shutdown() { }
 
-    }
-
-    public virtual void Shutdown()
-    {
-    }
+    protected virtual void OnInitialize() { }
 }

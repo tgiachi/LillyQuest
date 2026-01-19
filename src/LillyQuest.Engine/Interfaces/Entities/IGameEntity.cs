@@ -40,16 +40,6 @@ public interface IGameEntity
     IEnumerable<IGameObjectFeature> Features { get; }
 
     /// <summary>
-    /// Called when this game object is initialized.
-    /// </summary>
-    void Initialize();
-
-    /// <summary>
-    /// Called when this game object is shut down.
-    /// </summary>
-    void Shutdown();
-
-    /// <summary>
     /// Gets a feature of the specified type attached to this game object.
     /// </summary>
     /// <typeparam name="T">The type of feature to retrieve</typeparam>
@@ -63,6 +53,16 @@ public interface IGameEntity
     /// <typeparam name="T">The type of feature to check</typeparam>
     /// <returns>true if the game object has a feature of type T, false otherwise</returns>
     bool HasFeature<T>() where T : class, IGameObjectFeature;
+
+    /// <summary>
+    /// Called when this game object is initialized.
+    /// </summary>
+    void Initialize();
+
+    /// <summary>
+    /// Called when this game object is shut down.
+    /// </summary>
+    void Shutdown();
 
     /// <summary>
     /// Attempts to get a feature of the specified type without throwing an exception.
