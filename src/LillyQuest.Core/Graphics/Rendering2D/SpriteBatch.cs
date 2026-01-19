@@ -1165,6 +1165,7 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
             FlushBuffer();
         }
 
+        _gl.Disable(EnableCap.ScissorTest);
         _gl.Enable(EnableCap.DepthTest);
         IsActive = false;
         _lastTexture = null;

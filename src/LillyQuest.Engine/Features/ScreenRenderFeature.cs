@@ -28,17 +28,23 @@ public class ScreenRenderFeature : IRenderFeature
         if (!_screen.IsVisible)
             return;
 
-        // Get GL context from RenderContext
+        // Validate dimensions
+        if (_screen.Size.X <= 0 || _screen.Size.Y <= 0)
+            return;
+
+        // Get GL context and viewport
         var gl = spriteBatch.RenderContext.Gl;
+        var viewportHeight = spriteBatch.Viewport.Size.Y;
 
         // End current batch
         spriteBatch.End();
 
         // Enable scissor test with screen bounds
+        // Convert from top-left origin (Screen) to bottom-left origin (OpenGL)
         gl.Enable(EnableCap.ScissorTest);
         gl.Scissor(
             (int)_screen.Position.X,
-            (int)_screen.Position.Y,
+            viewportHeight - (int)_screen.Position.Y - (int)_screen.Size.Y,
             (uint)_screen.Size.X,
             (uint)_screen.Size.Y
         );
