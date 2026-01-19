@@ -94,7 +94,6 @@ public class LillyQuestBootstrap
         _window.Render += WindowOnRender;
         _window.Resize += WindowOnResize;
 
-        LoadDefaultResources();
         RegisterInternalServices();
     }
 
@@ -116,6 +115,14 @@ public class LillyQuestBootstrap
     {
         _container.Register<IGameEntityManager, GameEntityManager>(Reuse.Singleton);
         _container.Register<ISystemManager, SystemManager>(Reuse.Singleton);
+
+        _container.Register<ITextureManager, TextureManager>(Reuse.Singleton);
+        _container.Register<IShaderManager, ShaderManager>(Reuse.Singleton);
+        _container.Register<IFontManager, FontManager>(Reuse.Singleton);
+        _container.Register<IAudioManager, AudioManager>(Reuse.Singleton);
+        _container.Register<ITilesetManager, TilesetManager>(Reuse.Singleton);
+
+
         _container.Register<IAssetManager, AssetManager>(Reuse.Singleton);
 
         _container.Register<UpdateSystem>(Reuse.Singleton);
@@ -168,6 +175,7 @@ public class LillyQuestBootstrap
         _logger.Information("GLSL Version: {GLSL}", glsl);
         _logger.Information("Extensions: {Ext}", extensions);
 
+        LoadDefaultResources();
         StartInternalServices();
     }
 
