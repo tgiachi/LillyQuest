@@ -3,6 +3,7 @@ using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Interfaces.Managers;
+using LillyQuest.Engine.Interfaces.Scenes;
 using LillyQuest.Engine.Interfaces.Systems;
 using LillyQuest.Engine.Systems.Base;
 
@@ -17,6 +18,7 @@ public class RenderSystem : BaseSystem, IRenderSystem
     private readonly IShaderManager _shaderManager;
     private readonly IFontManager _fontManager;
     private readonly ITextureManager _textureManager;
+    private readonly ISceneManager _sceneManager;
 
     private SpriteBatch? _spriteBatch;
 
@@ -36,21 +38,23 @@ public class RenderSystem : BaseSystem, IRenderSystem
         IGameEntityManager entityManager,
         IShaderManager shaderManager,
         IFontManager fontManager,
-        ITextureManager textureManager
+        ITextureManager textureManager,
+        ISceneManager sceneManager
     )
         : base("Render System", 100, entityManager)
     {
         _shaderManager = shaderManager;
         _fontManager = fontManager;
         _textureManager = textureManager;
+        _sceneManager = sceneManager;
     }
 
     /// <summary>
-    /// Renders all IRenderFeature instances sorted by RenderOrder.
+    /// Renders all IRenderFeature instances from all scenes in the stack (bottom-to-top) sorted by RenderOrder.
     /// </summary>
     public void Render(GameTime gameTime)
     {
-        // Query all render features
+        // Query all render features from the entity manager
         var features = EntityManager.QueryOfType<IRenderFeature>()
                                     .Where(f => f.IsEnabled)
                                     .OrderBy(f => f.RenderOrder)
