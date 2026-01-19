@@ -8,7 +8,7 @@ using Silk.NET.OpenGL.Extensions.ImGui;
 
 namespace LillyQuest.Engine.Systems;
 
-public class ImGuiSystem : BaseSystem, IUpdateSystem, IRenderSystem
+public class ImGuiSystem : BaseSystem, IUpdateSystem, IRenderSystem, IDisposable
 {
     private ImGuiController _imGuiController;
 
@@ -40,5 +40,11 @@ public class ImGuiSystem : BaseSystem, IUpdateSystem, IRenderSystem
     {
         _imGuiController = new(RenderContext.Gl, RenderContext.Window, RenderContext.InputContext);
         base.OnInitialize();
+    }
+
+    public void Dispose()
+    {
+        _imGuiController.Dispose();
+        GC.SuppressFinalize(this);
     }
 }
