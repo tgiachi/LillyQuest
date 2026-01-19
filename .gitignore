@@ -582,3 +582,6 @@ docs/log.txt
 src/**/Generated/
 
 definitions.lua
+
+# Git worktrees (isolated development workspaces)
+.worktrees/
