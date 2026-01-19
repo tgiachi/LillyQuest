@@ -1,5 +1,6 @@
 using ImGuiNET;
 using LillyQuest.Core.Primitives;
+using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Systems;
 using LillyQuest.Engine.Systems.Base;
@@ -21,14 +22,24 @@ public class ImGuiSystem : BaseSystem, IUpdateSystem, IRenderSystem
 
     public void Update(GameTime gameTime)
     {
-    //    _imGuiController.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
     }
     public void FixedUpdate(GameTime gameTime) { }
 
     public void Render(GameTime gameTime)
     {
         _imGuiController.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+
         ImGui.ShowDemoWindow();
+
+        foreach (var feature in EntityManager.QueryOfType<IImGuiFeature>())
+        {
+            if (feature.IsOpened)
+            {
+                ImGui.Begin(feature.WindowTitle);
+                feature.DrawImGui();
+                ImGui.End();
+            }
+        }
 
         _imGuiController.Render();
 
