@@ -301,18 +301,33 @@ public class SceneManager : BaseSystem, ISceneManager, IUpdateSystem
         }
 
         // Unload and remove all scenes currently in stack
+        // Collect all scenes to unload first (ensures complete cleanup regardless of errors)
+        var scenesToUnload = new List<IScene>();
         while (_sceneStack.Count > 0)
         {
-            var oldScene = _sceneStack.Pop();
-            oldScene.OnUnload();
+            scenesToUnload.Add(_sceneStack.Pop());
+        }
 
-            if (_sceneGameEntities.TryGetValue(oldScene.Name, out var entities))
+        // Now unload each scene, ensuring all are processed even if one fails
+        foreach (var oldScene in scenesToUnload)
+        {
+            try
             {
-                foreach (var entity in entities)
+                oldScene.OnUnload();
+
+                if (_sceneGameEntities.TryGetValue(oldScene.Name, out var entities))
                 {
-                    EntityManager.RemoveEntity(entity);
+                    foreach (var entity in entities)
+                    {
+                        EntityManager.RemoveEntity(entity);
+                    }
+                    _sceneGameEntities.Remove(oldScene.Name);
                 }
-                _sceneGameEntities.Remove(oldScene.Name);
+            }
+            catch (Exception ex)
+            {
+                // Log but continue - ensure all scenes are cleaned up even if one fails
+                System.Diagnostics.Debug.WriteLine($"Warning: Error unloading scene '{oldScene.Name}': {ex.Message}");
             }
         }
 
@@ -344,6 +359,7 @@ public class SceneManager : BaseSystem, ISceneManager, IUpdateSystem
         _nextScene = null;
 
         // Fire events
+        // CurrentScene is guaranteed non-null here (we just pushed _nextScene to stack on line 368)
         OnSceneLoading?.Invoke(CurrentScene!);
         OnSceneChanged?.Invoke(CurrentScene!);
     }
