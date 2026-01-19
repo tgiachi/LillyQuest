@@ -2,6 +2,8 @@
 using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Data.Directories;
+using LillyQuest.Core.Interfaces.Assets;
+using LillyQuest.Core.Managers.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
 using LillyQuest.Engine.Interfaces.Managers;
@@ -98,13 +100,14 @@ public class LillyQuestBootstrap
     private void LoadDefaultResources()
     {
         _logger.Information("Loading default resources...");
-        
+
     }
 
     private void RegisterInternalServices()
     {
         _container.Register<IGameEntityManager, GameEntityManager>(Reuse.Singleton);
         _container.Register<ISystemManager, SystemManager>(Reuse.Singleton);
+        _container.Register<IAssetManager, AssetManager>(Reuse.Singleton);
 
         _container.Register<UpdateSystem>(Reuse.Singleton);
     }
