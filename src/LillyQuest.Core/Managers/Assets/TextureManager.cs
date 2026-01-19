@@ -105,6 +105,89 @@ public class TextureManager : ITextureManager
         );
     }
 
+    public void LoadTextureFromPngWithChromaKey(string assetName, Span<byte> pngData, byte tolerance = 0)
+    {
+        if (_textures.ContainsKey(assetName))
+        {
+            _logger.Warning("Texture with asset name {AssetName} already loaded.", assetName);
+
+            return;
+        }
+
+        if (pngData.Length == 0)
+        {
+            throw new ArgumentException("PNG data cannot be empty.", nameof(pngData));
+        }
+
+        using var image = Image.Load<Rgba32>(pngData);
+        var pixelData = new byte[image.Width * image.Height * 4];
+        image.CopyPixelDataTo(pixelData);
+
+        // Replace magenta (255, 0, 255) with transparent
+        ReplaceChromaKey(pixelData, tolerance);
+
+        var texture = new Texture2D(_gl, pixelData, (uint)image.Width, (uint)image.Height);
+        _textures[assetName] = texture;
+
+        _logger.Information(
+            "Texture {AssetName} loaded from PNG data with chroma key replacement and dimensions {Width}x{Height}.",
+            assetName,
+            image.Width,
+            image.Height
+        );
+    }
+
+    public void LoadTextureWithChromaKey(string assetName, string filePath, byte tolerance = 0)
+    {
+        if (_textures.ContainsKey(assetName))
+        {
+            _logger.Warning("Texture with asset name {AssetName} already loaded.", assetName);
+
+            return;
+        }
+
+        if (!File.Exists(filePath))
+        {
+            throw new FileNotFoundException($"Texture file not found: {filePath}");
+        }
+
+        using var image = Image.Load<Rgba32>(filePath);
+        var pixelData = new byte[image.Width * image.Height * 4];
+        image.CopyPixelDataTo(pixelData);
+
+        // Replace magenta (255, 0, 255) with transparent
+        ReplaceChromaKey(pixelData, tolerance);
+
+        var texture = new Texture2D(_gl, pixelData, (uint)image.Width, (uint)image.Height);
+        _textures[assetName] = texture;
+
+        _logger.Information(
+            "Texture {AssetName} loaded from {FilePath} with chroma key replacement.",
+            assetName,
+            filePath
+        );
+    }
+
+    private static void ReplaceChromaKey(byte[] pixelData, byte tolerance)
+    {
+        // Pixel format is RGBA (4 bytes per pixel)
+        for (int i = 0; i < pixelData.Length; i += 4)
+        {
+            byte r = pixelData[i];
+            byte g = pixelData[i + 1];
+            byte b = pixelData[i + 2];
+
+            // Check if pixel is magenta (255, 0, 255) within tolerance
+            if (r >= 255 - tolerance &&
+                g <= tolerance &&
+                b >= 255 - tolerance)
+            {
+                // Set alpha to 0 (fully transparent)
+                pixelData[i + 3] = 0;
+            }
+        }
+    }
+
     public bool TryGetTexture(string assetName, out Texture2D texture)
         => _textures.TryGetValue(assetName, out texture);
 

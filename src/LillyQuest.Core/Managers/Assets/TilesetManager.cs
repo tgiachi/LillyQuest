@@ -51,12 +51,12 @@ public class TilesetManager : ITilesetManager
         }
 
         var textureName = $"{name}_texture";
-        _textureManager.LoadTexture(textureName, filePath);
+        _textureManager.LoadTextureWithChromaKey(textureName, filePath);
         var texture = _textureManager.GetTexture(textureName);
 
         var tileset = new Tileset(filePath, tileWidth, tileHeight, spacing, margin, texture);
         _tilesets[name] = tileset;
-        _logger.Information("Tileset {Name} loaded from {FilePath}.", name, filePath);
+        _logger.Information("Tileset {Name} loaded from {FilePath} with magenta chroma key.", name, filePath);
     }
 
     public void LoadTileset(string name, Span<byte> content, int tileWidth, int tileHeight, int spacing, int margin)
@@ -74,12 +74,12 @@ public class TilesetManager : ITilesetManager
         }
 
         var textureName = $"{name}_texture";
-        _textureManager.LoadTextureFromPng(textureName, content);
+        _textureManager.LoadTextureFromPngWithChromaKey(textureName, content);
         var texture = _textureManager.GetTexture(textureName);
 
         var tileset = new Tileset($"[embedded]_{name}", tileWidth, tileHeight, spacing, margin, texture);
         _tilesets[name] = tileset;
-        _logger.Information("Tileset {Name} loaded from data.", name);
+        _logger.Information("Tileset {Name} loaded from data with magenta chroma key.", name);
     }
 
     public void UnloadTileset(string name)
