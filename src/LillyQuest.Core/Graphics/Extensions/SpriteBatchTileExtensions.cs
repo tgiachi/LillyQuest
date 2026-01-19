@@ -1,7 +1,6 @@
 using System.Numerics;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Graphics.Rendering2D;
-using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using Silk.NET.Maths;
 
@@ -160,59 +159,61 @@ public static class SpriteBatchTileExtensions
         }
     }
 
-    /// <summary>
-    /// Draws a tile with background color and foreground tint.
-    /// </summary>
     /// <param name="spriteBatch">The sprite batch instance</param>
-    /// <param name="tileset">The tileset to draw from</param>
-    /// <param name="tileRenderData">Tile render data with background and foreground colors</param>
-    /// <param name="position">World position to draw at</param>
-    /// <param name="depth">Depth for layering</param>
-    public static void DrawTileWithBackground(
-        this SpriteBatch spriteBatch,
-        Tileset tileset,
-        TileRenderData tileRenderData,
-        Vector2 position,
-        float depth = 0f)
+    extension(SpriteBatch spriteBatch)
     {
-        // Draw background color (if not transparent)
-        if (tileRenderData.BackgroundColor.A > 0)
+        /// <summary>
+        /// Draws a tile with background color and foreground tint.
+        /// </summary>
+        /// <param name="tileset">The tileset to draw from</param>
+        /// <param name="tileRenderData">Tile render data with background and foreground colors</param>
+        /// <param name="position">World position to draw at</param>
+        /// <param name="depth">Depth for layering</param>
+        public void DrawTileWithBackground(
+            Tileset tileset,
+            TileRenderData tileRenderData,
+            Vector2 position,
+            float depth = 0f)
         {
-            var bgSize = new Vector2(tileset.TileWidth, tileset.TileHeight);
-            DrawSolidRectangle(spriteBatch, position, bgSize, tileRenderData.BackgroundColor, depth);
+            // Draw background color (if not transparent)
+            if (tileRenderData.BackgroundColor.A > 0)
+            {
+                var bgSize = new Vector2(tileset.TileWidth, tileset.TileHeight);
+                DrawSolidRectangle(spriteBatch, position, bgSize, tileRenderData.BackgroundColor, depth);
+            }
+
+            // Draw tile with foreground color
+            spriteBatch.DrawTile(
+                tileset, tileRenderData.TileIndex, position,
+                tileRenderData.ForegroundColor, depth: depth + 0.001f);
         }
 
-        // Draw tile with foreground color
-        DrawTile(spriteBatch, tileset, tileRenderData.TileIndex, position,
-            tileRenderData.ForegroundColor, depth: depth + 0.001f);
-    }
-
-    /// <summary>
-    /// Draws a tile with background color and foreground tint at custom size.
-    /// </summary>
-    /// <param name="spriteBatch">The sprite batch instance</param>
-    /// <param name="tileset">The tileset to draw from</param>
-    /// <param name="tileRenderData">Tile render data with background and foreground colors</param>
-    /// <param name="position">World position to draw at</param>
-    /// <param name="size">Size to draw the tile and background at</param>
-    /// <param name="depth">Depth for layering</param>
-    public static void DrawTileWithBackground(
-        this SpriteBatch spriteBatch,
-        Tileset tileset,
-        TileRenderData tileRenderData,
-        Vector2 position,
-        Vector2 size,
-        float depth = 0f)
-    {
-        // Draw background color (if not transparent)
-        if (tileRenderData.BackgroundColor.A > 0)
+        /// <summary>
+        /// Draws a tile with background color and foreground tint at custom size.
+        /// </summary>
+        /// <param name="tileset">The tileset to draw from</param>
+        /// <param name="tileRenderData">Tile render data with background and foreground colors</param>
+        /// <param name="position">World position to draw at</param>
+        /// <param name="size">Size to draw the tile and background at</param>
+        /// <param name="depth">Depth for layering</param>
+        public void DrawTileWithBackground(
+            Tileset tileset,
+            TileRenderData tileRenderData,
+            Vector2 position,
+            Vector2 size,
+            float depth = 0f)
         {
-            DrawSolidRectangle(spriteBatch, position, size, tileRenderData.BackgroundColor, depth);
-        }
+            // Draw background color (if not transparent)
+            if (tileRenderData.BackgroundColor.A > 0)
+            {
+                DrawSolidRectangle(spriteBatch, position, size, tileRenderData.BackgroundColor, depth);
+            }
 
-        // Draw tile with foreground color
-        DrawTile(spriteBatch, tileset, tileRenderData.TileIndex, position, size,
-            tileRenderData.ForegroundColor, depth: depth + 0.001f);
+            // Draw tile with foreground color
+            spriteBatch.DrawTile(
+                tileset, tileRenderData.TileIndex, position, size,
+                tileRenderData.ForegroundColor, depth: depth + 0.001f);
+        }
     }
 
     /// <summary>
