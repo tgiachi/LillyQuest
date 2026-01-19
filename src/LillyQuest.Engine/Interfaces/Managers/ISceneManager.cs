@@ -29,9 +29,9 @@ public interface ISceneManager
     event SceneLoadingHandler? OnSceneLoading;
 
     /// <summary>
-    /// Gets the current active scene.
+    /// Gets the current active scene. Returns null if the scene stack is empty.
     /// </summary>
-    IScene CurrentScene { get; }
+    IScene? CurrentScene { get; }
 
     /// <summary>
     /// Returns the current fade alpha (0-1) for transitions.
@@ -58,6 +58,22 @@ public interface ISceneManager
     /// Switches to another scene by name, optionally with a fade duration.
     /// </summary>
     void SwitchScene(string sceneName, float fadeDuration = 1.0f);
+
+    /// <summary>
+    /// Gets all scenes in the scene stack (bottom to top).
+    /// </summary>
+    IReadOnlyList<IScene> SceneStack { get; }
+
+    /// <summary>
+    /// Adds a scene to the top of the stack without fade transition.
+    /// Only the top scene updates; all scenes render bottom-to-top.
+    /// </summary>
+    void PushScene(string sceneName);
+
+    /// <summary>
+    /// Removes the top scene from the stack. Throws if the stack is empty.
+    /// </summary>
+    void PopScene();
 
     /// <summary>
     /// Updates the scene transition state machine.
