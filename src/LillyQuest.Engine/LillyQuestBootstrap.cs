@@ -2,6 +2,7 @@
 using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Data.Directories;
+using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Managers.Assets;
 using LillyQuest.Core.Primitives;
@@ -99,8 +100,16 @@ public class LillyQuestBootstrap
 
     private void LoadDefaultResources()
     {
+        var assetManager = _container.Resolve<IAssetManager>();
+
         _logger.Information("Loading default resources...");
 
+        assetManager.ShaderManager.LoadShaderFromEmbeddedResource(
+            "texture2d",
+            "Assets/Shaders/spritebatch.vert",
+            "Assets/Shaders/spritebatch.frag",
+            typeof(SpriteBatch).Assembly
+        );
     }
 
     private void RegisterInternalServices()
@@ -119,8 +128,6 @@ public class LillyQuestBootstrap
         var updateSystem = _container.Resolve<UpdateSystem>();
 
         systemManager.AddUpdateSystem(updateSystem);
-
-
     }
 
     private void WindowOnResize(Vector2D<int> obj)
