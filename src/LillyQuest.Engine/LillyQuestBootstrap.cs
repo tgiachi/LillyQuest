@@ -52,6 +52,7 @@ public class LillyQuestBootstrap
 
     private GL _gl;
     private IWindow _window;
+    private InputFocusSystem _inputFocusSystem;
 
     /// <summary>
     /// Event invoked at fixed timestep intervals during the game loop.
@@ -245,6 +246,7 @@ public class LillyQuestBootstrap
     private void StartInternalServices()
     {
         var systemManager = _container.Resolve<ISystemManager>();
+        var entityManager = _container.Resolve<IGameEntityManager>();
 
         var updateSystem = _container.Resolve<UpdateSystem>();
         var imGuiSystem = _container.Resolve<ImGuiSystem>();
@@ -253,6 +255,10 @@ public class LillyQuestBootstrap
 
         systemManager.AddSystem(updateSystem);
         systemManager.AddSystem((SceneManager)sceneManager);
+
+        _inputFocusSystem = new InputFocusSystem(entityManager, sceneManager);
+        systemManager.AddSystem(_inputFocusSystem);
+
         systemManager.AddSystem(renderSystem);
         systemManager.AddSystem(imGuiSystem);
 
@@ -291,6 +297,70 @@ public class LillyQuestBootstrap
 
         LoadDefaultResources();
         StartInternalServices();
+
+        // Setup input handlers
+        SetupInputHandlers();
+    }
+
+    private void SetupInputHandlers()
+    {
+        if (_renderContext.InputContext == null)
+        {
+            _logger.Warning("InputContext is null, input handlers not setup");
+            return;
+        }
+
+        if (_renderContext.InputContext.Mice.Count == 0 ||
+            _renderContext.InputContext.Keyboards.Count == 0)
+        {
+            _logger.Warning("No mice or keyboards available");
+            return;
+        }
+
+        var mouse = _renderContext.InputContext.Mice[0];
+        var keyboard = _renderContext.InputContext.Keyboards[0];
+
+        // Mouse events
+        mouse.MouseDown += (m, button) =>
+        {
+            var pos = mouse.Position;
+            _inputFocusSystem.HandleMouseClick((int)pos.X, (int)pos.Y);
+            _inputFocusSystem.DispatchMouseInput((int)pos.X, (int)pos.Y,
+                feature => feature.OnMouseDown((int)pos.X, (int)pos.Y, new[] { button }));
+        };
+
+        mouse.MouseMove += (m, pos) =>
+        {
+            _inputFocusSystem.DispatchMouseInput((int)pos.X, (int)pos.Y,
+                feature => feature.OnMouseMove((int)pos.X, (int)pos.Y));
+        };
+
+        mouse.MouseUp += (m, button) =>
+        {
+            var pos = mouse.Position;
+            _inputFocusSystem.DispatchMouseInput((int)pos.X, (int)pos.Y,
+                feature => feature.OnMouseUp((int)pos.X, (int)pos.Y, new[] { button }));
+        };
+
+        mouse.Scroll += (m, wheel) =>
+        {
+            var pos = mouse.Position;
+            _inputFocusSystem.DispatchMouseInput((int)pos.X, (int)pos.Y,
+                feature => feature.OnMouseWheel((int)pos.X, (int)pos.Y, wheel.Y));
+        };
+
+        // Keyboard events
+        keyboard.KeyDown += (kb, key, scancode) =>
+        {
+            _inputFocusSystem.DispatchKeyboardInput(
+                feature => feature.OnKeyPress(KeyModifierType.None, new[] { key }));
+        };
+
+        keyboard.KeyUp += (kb, key, scancode) =>
+        {
+            _inputFocusSystem.DispatchKeyboardInput(
+                feature => feature.OnKeyRelease(KeyModifierType.None, new[] { key }));
+        };
     }
 
     private void WindowOnRender(double obj)
