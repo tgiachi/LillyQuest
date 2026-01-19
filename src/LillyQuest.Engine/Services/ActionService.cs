@@ -1,8 +1,8 @@
-using DarkLilly.Core.Utils;
-using DarkLilly.Engine.Interfaces.Services;
+using LillyQuest.Core.Utils;
+using LillyQuest.Engine.Interfaces.Services;
 using Serilog;
 
-namespace DarkLilly.Engine.Services;
+namespace LillyQuest.Engine.Services;
 
 /// <summary>
 /// Provides action registration and execution by name.

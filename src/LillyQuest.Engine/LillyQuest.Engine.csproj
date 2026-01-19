@@ -22,7 +22,6 @@
     <ItemGroup>
         <ProjectReference Include="..\LillyQuest.Core\LillyQuest.Core.csproj"/>
         <ProjectReference Include="..\LillyQuest.Scripting.Lua\LillyQuest.Scripting.Lua.csproj"/>
-        <ProjectReference Include="..\LillyQuest.Services\LillyQuest.Services.csproj"/>
     </ItemGroup>
 
 </Project>

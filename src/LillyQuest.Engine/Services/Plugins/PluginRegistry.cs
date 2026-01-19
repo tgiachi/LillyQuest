@@ -1,15 +1,15 @@
-using DarkLilly.Core.Data.Plugins;
-using DarkLilly.Engine.Exceptions.Plugins;
-using DarkLilly.Engine.Interfaces.Plugins;
+using LillyQuest.Core.Data.Plugins;
+using LillyQuest.Engine.Exceptions.Plugins;
+using LillyQuest.Engine.Interfaces.Plugins;
 
-namespace DarkLilly.Engine.Services.Plugins;
+namespace LillyQuest.Engine.Services.Plugins;
 
 /// <summary>
 /// Central registry for managing plugin lifecycle and tracking loaded plugins.
 /// </summary>
 public class PluginRegistry
 {
-    private readonly List<IDarkLillyPlugin> _loadedPlugins = [];
+    private readonly List<ILillyQuestPlugin> _loadedPlugins = [];
     private readonly List<PluginInfo> _loadedPluginData = [];
     private readonly PluginDependencyValidator _dependencyValidator;
     private readonly List<string> _scriptEngineLoadFunctions = [];
@@ -43,10 +43,10 @@ public class PluginRegistry
     /// <summary>
     /// Gets the dependency chain for a specific plugin.
     /// </summary>
-    public IReadOnlyList<IDarkLillyPlugin> GetDependencyChain(string pluginId)
+    public IReadOnlyList<ILillyQuestPlugin> GetDependencyChain(string pluginId)
     {
         var plugin = GetPluginById(pluginId);
-        var chain = new List<IDarkLillyPlugin> { plugin };
+        var chain = new List<ILillyQuestPlugin> { plugin };
 
         if (plugin.PluginInfo.Dependencies != null)
         {
@@ -63,7 +63,7 @@ public class PluginRegistry
     /// <summary>
     /// Gets plugins that depend on the specified plugin.
     /// </summary>
-    public IReadOnlyList<IDarkLillyPlugin> GetDependentsOf(string pluginId)
+    public IReadOnlyList<ILillyQuestPlugin> GetDependentsOf(string pluginId)
     {
         return _loadedPlugins
                .Where(p => p.PluginInfo.Dependencies?.Contains(pluginId) ?? false)
@@ -80,13 +80,13 @@ public class PluginRegistry
     /// <summary>
     /// Gets all currently loaded plugins.
     /// </summary>
-    public IReadOnlyList<IDarkLillyPlugin> GetLoadedPlugins()
+    public IReadOnlyList<ILillyQuestPlugin> GetLoadedPlugins()
         => _loadedPlugins.AsReadOnly();
 
     /// <summary>
     /// Gets a specific plugin by ID.
     /// </summary>
-    public IDarkLillyPlugin GetPluginById(string pluginId)
+    public ILillyQuestPlugin GetPluginById(string pluginId)
     {
         var plugin = _loadedPlugins.FirstOrDefault(p => p.PluginInfo.Id == pluginId);
 
@@ -105,7 +105,7 @@ public class PluginRegistry
     /// <summary>
     /// Registers a plugin after validating its dependencies.
     /// </summary>
-    public void RegisterPlugin(IDarkLillyPlugin plugin)
+    public void RegisterPlugin(ILillyQuestPlugin plugin)
     {
         ArgumentNullException.ThrowIfNull(plugin);
 

@@ -1,7 +1,7 @@
-using DarkLilly.Core.Types;
+using LillyQuest.Core.Types;
 using Silk.NET.Input;
 
-namespace DarkLilly.Engine.Types;
+namespace LillyQuest.Engine.Types;
 
 /// <summary>
 /// Represents a resolved shortcut binding for an action.

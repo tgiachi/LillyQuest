@@ -1,8 +1,8 @@
-using DarkLilly.Core.Types;
-using DarkLilly.Engine.Interfaces.GameObjects.Features.Base;
+using LillyQuest.Core.Types;
+using LillyQuest.Engine.Interfaces.GameObjects.Features;
 using Silk.NET.Input;
 
-namespace DarkLilly.Engine.Interfaces.GameObjects.Features.Input;
+namespace LillyQuest.Engine.Interfaces.Features.Input;
 
 public interface IKeyboardInputFeature : IGameObjectFeature
 {

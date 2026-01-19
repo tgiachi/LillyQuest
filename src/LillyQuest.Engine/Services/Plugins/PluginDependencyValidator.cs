@@ -1,7 +1,7 @@
-using DarkLilly.Core.Data.Plugins;
-using DarkLilly.Engine.Exceptions.Plugins;
+using LillyQuest.Core.Data.Plugins;
+using LillyQuest.Engine.Exceptions.Plugins;
 
-namespace DarkLilly.Engine.Services.Plugins;
+namespace LillyQuest.Engine.Services.Plugins;
 
 /// <summary>
 /// Validates plugin dependencies and detects circular dependency chains.

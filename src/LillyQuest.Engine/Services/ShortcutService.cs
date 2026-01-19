@@ -1,10 +1,10 @@
-using DarkLilly.Core.Types;
-using DarkLilly.Core.Utils;
-using DarkLilly.Engine.Interfaces.Services;
-using DarkLilly.Engine.Types;
+using LillyQuest.Core.Types;
+using LillyQuest.Core.Utils;
+using LillyQuest.Engine.Interfaces.Services;
+using LillyQuest.Engine.Types;
 using Silk.NET.Input;
 
-namespace DarkLilly.Engine.Services;
+namespace LillyQuest.Engine.Services;
 
 /// <summary>
 /// Provides shortcut registration and dispatch to actions.

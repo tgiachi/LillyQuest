@@ -1,6 +1,6 @@
-using DarkLilly.Core.Data.Plugins;
+using LillyQuest.Core.Data.Plugins;
 
-namespace DarkLilly.Engine.Exceptions.Plugins;
+namespace LillyQuest.Engine.Exceptions.Plugins;
 
 /// <summary>
 /// Exception thrown when a plugin fails to load or validate.

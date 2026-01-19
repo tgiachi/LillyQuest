@@ -1,7 +1,7 @@
 using LillyQuest.Core.Types;
 using Silk.NET.Input;
 
-namespace LillyQuest.Services.Interfaces.Services;
+namespace LillyQuest.Engine.Interfaces.Services;
 
 /// <summary>
 /// Defines shortcut registration and dispatch behavior.

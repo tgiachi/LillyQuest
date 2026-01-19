@@ -1,4 +1,4 @@
-namespace LillyQuest.Services.Interfaces.Services;
+namespace LillyQuest.Engine.Interfaces.Services;
 
 /// <summary>
 /// Defines action registration and execution by name.

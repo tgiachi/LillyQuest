@@ -14,7 +14,9 @@ using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Features;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Scenes;
+using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Managers;
+using LillyQuest.Engine.Services;
 using LillyQuest.Engine.Systems;
 using LillyQuest.Scripting.Lua.Data.Config;
 using LillyQuest.Scripting.Lua.Extensions.Scripts;
@@ -222,6 +224,9 @@ public class LillyQuestBootstrap
         _container.Register<ITilesetManager, TilesetManager>(Reuse.Singleton);
 
         _container.Register<IAssetManager, AssetManager>(Reuse.Singleton);
+
+        _container.Register<IActionService,ActionService>(Reuse.Singleton);
+        _container.Register<IShortcutService, ShortcutService>(Reuse.Singleton);
 
         _container.Register<UpdateSystem>(Reuse.Singleton);
         _container.Register<ImGuiSystem>(Reuse.Singleton);
