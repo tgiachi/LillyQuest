@@ -44,6 +44,13 @@ public class SceneManager : BaseSystem, ISceneManager, IUpdateSystem
     /// <summary>
     /// Gets all scenes in the stack (immutable view).
     /// </summary>
+    /// <remarks>
+    /// Note: This property creates a new list on each access (O(n) allocation).
+    /// <c>Stack&lt;T&gt;</c> does not have an <c>AsReadOnly()</c> method, so
+    /// <c>ToList().AsReadOnly()</c> is required to satisfy the <c>IReadOnlyList&lt;IScene&gt;</c>
+    /// interface contract. If the scene stack is accessed frequently, consider caching the result
+    /// or redesigning the interface to accept <c>IReadOnlyCollection&lt;IScene&gt;</c>.
+    /// </remarks>
     public IReadOnlyList<IScene> SceneStack => _sceneStack.ToList().AsReadOnly();
 
     /// <summary>
