@@ -161,10 +161,15 @@ public class LillyQuestBootstrap
                 }
             }
 
+
             if (initialScene != null)
             {
                 sceneManager.SwitchScene(initialScene.Name, 0f); // No fade on startup
             }
+        }
+        else
+        {
+            _logger.Warning("No scenes registered with the engine.");
         }
     }
 
