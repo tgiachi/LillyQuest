@@ -1,47 +1,48 @@
-using LillyQuest.Engine.Interfaces.Components;
 using LillyQuest.Engine.Interfaces.Entities;
+using LillyQuest.Engine.Interfaces.GameObjects.Features;
 
 namespace LillyQuest.Engine.Interfaces.Managers;
 
 /// <summary>
-/// Delegate for entity lifecycle events.
+/// Delegate for game object lifecycle events.
 /// </summary>
-/// <param name="entity">The entity that was added or removed.</param>
+/// <param name="entity">The game object that was added or removed.</param>
 public delegate void GameEntityLifecycleHandler(IGameEntity entity);
 
 /// <summary>
-/// Manages the lifecycle and querying of game entities and their components.
-/// Provides methods to add and remove entities, as well as query components by type.
+/// Manages the lifecycle and querying of game objects and their features.
+/// Provides methods to add and remove objects, as well as query features by type.
 /// </summary>
 public interface IGameEntityManager
 {
     /// <summary>
-    /// Fired when an entity is added to the manager.
-    /// Event fires after the entity is fully indexed and sorted.
+    /// Fired when a game object is added to the manager.
+    /// Event fires after the object is fully indexed and sorted.
     /// </summary>
     event GameEntityLifecycleHandler? OnGameEntityAdded;
 
     /// <summary>
-    /// Fired when an entity is removed from the manager.
-    /// Event fires after the entity is fully deindexed.
+    /// Fired when a game object is removed from the manager.
+    /// Event fires after the object is fully deindexed.
     /// </summary>
     event GameEntityLifecycleHandler? OnGameEntityRemoved;
+
     /// <summary>
-    /// Adds an entity to the manager.
+    /// Adds a game object to the manager.
     /// </summary>
-    /// <param name="entity">The entity to add.</param>
+    /// <param name="entity">The game object to add.</param>
     void AddEntity(IGameEntity entity);
 
     /// <summary>
-    /// Removes an entity from the manager.
+    /// Removes a game object from the manager.
     /// </summary>
-    /// <param name="entity">The entity to remove.</param>
+    /// <param name="entity">The game object to remove.</param>
     void RemoveEntity(IGameEntity entity);
 
     /// <summary>
-    /// Gets all components of a specific type that are attached to any entity.
+    /// Queries all features of a specific type across all game objects.
     /// </summary>
-    /// <typeparam name="TGameComponent">The type of component to retrieve.</typeparam>
-    /// <returns>A collection of components of the specified type.</returns>
-    IEnumerable<TGameComponent> GetAllComponentsOfType<TGameComponent>() where TGameComponent : IGameComponent;
+    /// <typeparam name="TFeature">The type of feature to query.</typeparam>
+    /// <returns>A lazy sequence of features matching the specified type.</returns>
+    IEnumerable<TFeature> QueryOfType<TFeature>() where TFeature : IGameObjectFeature;
 }

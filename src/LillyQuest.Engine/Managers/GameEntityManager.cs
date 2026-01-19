@@ -1,112 +1,119 @@
-using LillyQuest.Engine.Interfaces.Components;
 using LillyQuest.Engine.Interfaces.Entities;
+using LillyQuest.Engine.Interfaces.GameObjects.Features;
 using LillyQuest.Engine.Interfaces.Managers;
 
 namespace LillyQuest.Engine.Managers;
 
 /// <summary>
-/// Manages the lifecycle and querying of game entities.
-/// Maintains a global index of components by type, sorted by entity Order.
-/// Fires lifecycle events on entity add/remove.
+/// Manages the lifecycle and querying of game objects and their features.
+/// Maintains a global index of features by type, sorted by entity Order.
+/// Fires lifecycle events on object add/remove.
 /// </summary>
 public class GameEntityManager : IGameEntityManager
 {
     private readonly List<IGameEntity> _entities = [];
-    private readonly Dictionary<Type, List<IGameComponent>> _globalTypeIndex = [];
+    private readonly Dictionary<Type, List<IGameObjectFeature>> _globalTypeIndex = [];
 
     /// <summary>
-    /// Fired when an entity is added to the manager.
-    /// Event fires after the entity is fully indexed and sorted.
+    /// Fired when a game object is added to the manager.
+    /// Event fires after the object is fully indexed and sorted.
     /// </summary>
     public event GameEntityLifecycleHandler? OnGameEntityAdded;
 
     /// <summary>
-    /// Fired when an entity is removed from the manager.
-    /// Event fires after the entity is fully deindexed.
+    /// Fired when a game object is removed from the manager.
+    /// Event fires after the object is fully deindexed.
     /// </summary>
     public event GameEntityLifecycleHandler? OnGameEntityRemoved;
 
     /// <summary>
-    /// Adds an entity to the manager and indexes all its components.
-    /// Components are indexed and sorted by entity Order.
+    /// Adds a game object to the manager and indexes all its features.
+    /// Features are indexed and sorted by entity Order.
     /// OnGameEntityAdded event is fired after indexing completes.
     /// </summary>
     public void AddEntity(IGameEntity entity)
     {
         _entities.Add(entity);
+        entity.Initialize();
         IndexEntity(entity);
         OnGameEntityAdded?.Invoke(entity);
     }
 
     /// <summary>
-    /// Removes an entity from the manager and deindexes all its components.
+    /// Removes a game object from the manager and deindexes all its features.
     /// OnGameEntityRemoved event is fired after deindexing completes.
     /// </summary>
     public void RemoveEntity(IGameEntity entity)
     {
         _entities.Remove(entity);
         DeindexEntity(entity);
+        entity.Shutdown();
         OnGameEntityRemoved?.Invoke(entity);
     }
 
     /// <summary>
-    /// Gets all components of a specific type across all entities.
+    /// Queries all features of a specific type across all game objects.
     /// </summary>
-    /// <typeparam name="TGameComponent">The type of component to retrieve.</typeparam>
-    /// <returns>A collection of components of the specified type.</returns>
-    public IEnumerable<TGameComponent> GetAllComponentsOfType<TGameComponent>()
-        where TGameComponent : IGameComponent
+    /// <typeparam name="TFeature">The type of feature to query.</typeparam>
+    /// <returns>A lazy sequence of features matching the specified type.</returns>
+    public IEnumerable<TFeature> QueryOfType<TFeature>() where TFeature : IGameObjectFeature
     {
-        var componentType = typeof(TGameComponent);
-        if (_globalTypeIndex.TryGetValue(componentType, out var components))
+        var featureType = typeof(TFeature);
+        if (_globalTypeIndex.TryGetValue(featureType, out var features))
         {
-            return components.Cast<TGameComponent>();
+            return features.Cast<TFeature>();
         }
         return [];
     }
 
     /// <summary>
-    /// Indexes all components of an entity in the global type index.
+    /// Indexes all features of a game object in the global type index.
     /// After indexing, sorts all type lists by entity Order to maintain ordering.
     /// </summary>
     private void IndexEntity(IGameEntity entity)
     {
-        // Add components to their type lists
-        foreach (var component in entity.Components)
+        // Add features to their type lists
+        foreach (var feature in entity.Features)
         {
-            var componentType = component.GetType();
-            if (!_globalTypeIndex.TryGetValue(componentType, out var components))
+            var featureType = feature.GetType();
+            if (!_globalTypeIndex.TryGetValue(featureType, out var features))
             {
-                components = [];
-                _globalTypeIndex[componentType] = components;
+                features = [];
+                _globalTypeIndex[featureType] = features;
             }
-            components.Add(component);
+            features.Add(feature);
         }
 
         // Sort all affected type lists by entity Order
-        foreach (var component in entity.Components)
+        foreach (var feature in entity.Features)
         {
-            var componentType = component.GetType();
-            var typeList = _globalTypeIndex[componentType];
-            typeList.Sort((a, b) => a.Owner!.Order.CompareTo(b.Owner!.Order));
+            var featureType = feature.GetType();
+            var typeList = _globalTypeIndex[featureType];
+            typeList.Sort((a, b) =>
+            {
+                // Find the entities that own these features
+                var aEntity = _entities.FirstOrDefault(e => e.Features.Contains(a));
+                var bEntity = _entities.FirstOrDefault(e => e.Features.Contains(b));
+                return aEntity?.Order.CompareTo(bEntity?.Order) ?? 0;
+            });
         }
     }
 
     /// <summary>
-    /// Deindexes all components of an entity from the global type index.
+    /// Deindexes all features of a game object from the global type index.
     /// </summary>
     private void DeindexEntity(IGameEntity entity)
     {
-        foreach (var component in entity.Components)
+        foreach (var feature in entity.Features)
         {
-            var componentType = component.GetType();
-            if (_globalTypeIndex.TryGetValue(componentType, out var components))
+            var featureType = feature.GetType();
+            if (_globalTypeIndex.TryGetValue(featureType, out var features))
             {
-                components.Remove(component);
+                features.Remove(feature);
                 // Remove empty lists to save memory
-                if (components.Count == 0)
+                if (features.Count == 0)
                 {
-                    _globalTypeIndex.Remove(componentType);
+                    _globalTypeIndex.Remove(featureType);
                 }
             }
         }

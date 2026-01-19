@@ -1,6 +1,6 @@
 using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Managers;
-using LillyQuest.Engine.Interfaces.Components;
+using LillyQuest.Engine.Interfaces.GameObjects.Features;
 using LillyQuest.Engine.Interfaces.Entities;
 
 namespace LillyQuest.Tests;
@@ -10,45 +10,44 @@ namespace LillyQuest.Tests;
 /// </summary>
 public class GameEntityManagerEnhancementTests
 {
-    private sealed class OrderedComponent : IGameComponent
+    private sealed class OrderedFeature : IGameObjectFeature
     {
-        public IGameEntity? Owner { get; set; }
-        public void Initialize() { }
+        public bool IsEnabled { get; set; } = true;
     }
 
     [Test]
-    public void GetAllComponentsOfType_MultipleEntitiesDifferentOrders_ReturnsOrderedByEntityOrder()
+    public void QueryOfType_MultipleEntitiesDifferentOrders_ReturnsOrderedByEntityOrder()
     {
         var manager = new GameEntityManager();
 
         // Entity with Order 10
         var entity1 = new GameEntity(1, "Entity1");
-        entity1.Order = 10u;
-        var comp1 = new OrderedComponent();
-        entity1.AddComponent(comp1);
+        entity1.Order = 10;
+        var feat1 = new OrderedFeature();
+        entity1.AddFeature(feat1);
         manager.AddEntity(entity1);
 
         // Entity with Order 5
         var entity2 = new GameEntity(2, "Entity2");
-        entity2.Order = 5u;
-        var comp2 = new OrderedComponent();
-        entity2.AddComponent(comp2);
+        entity2.Order = 5;
+        var feat2 = new OrderedFeature();
+        entity2.AddFeature(feat2);
         manager.AddEntity(entity2);
 
         // Entity with Order 20
         var entity3 = new GameEntity(3, "Entity3");
-        entity3.Order = 20u;
-        var comp3 = new OrderedComponent();
-        entity3.AddComponent(comp3);
+        entity3.Order = 20;
+        var feat3 = new OrderedFeature();
+        entity3.AddFeature(feat3);
         manager.AddEntity(entity3);
 
-        var components = manager.GetAllComponentsOfType<OrderedComponent>().ToList();
+        var features = manager.QueryOfType<OrderedFeature>().ToList();
 
         // Should be ordered by Entity.Order: 5, 10, 20
-        Assert.That(components, Has.Count.EqualTo(3));
-        Assert.That(components[0], Is.SameAs(comp2)); // Order 5
-        Assert.That(components[1], Is.SameAs(comp1)); // Order 10
-        Assert.That(components[2], Is.SameAs(comp3)); // Order 20
+        Assert.That(features, Has.Count.EqualTo(3));
+        Assert.That(features[0], Is.SameAs(feat2)); // Order 5
+        Assert.That(features[1], Is.SameAs(feat1)); // Order 10
+        Assert.That(features[2], Is.SameAs(feat3)); // Order 20
     }
 
     [Test]
@@ -94,95 +93,95 @@ public class GameEntityManagerEnhancementTests
     }
 
     [Test]
-    public void GetAllComponentsOfType_AfterRemoveEntity_RemainsOrdered()
+    public void QueryOfType_AfterRemoveEntity_RemainsOrdered()
     {
         var manager = new GameEntityManager();
 
         var entity1 = new GameEntity(1, "Entity1");
-        entity1.Order = 10u;
-        var comp1 = new OrderedComponent();
-        entity1.AddComponent(comp1);
+        entity1.Order = 10;
+        var feat1 = new OrderedFeature();
+        entity1.AddFeature(feat1);
         manager.AddEntity(entity1);
 
         var entity2 = new GameEntity(2, "Entity2");
-        entity2.Order = 5u;
-        var comp2 = new OrderedComponent();
-        entity2.AddComponent(comp2);
+        entity2.Order = 5;
+        var feat2 = new OrderedFeature();
+        entity2.AddFeature(feat2);
         manager.AddEntity(entity2);
 
         var entity3 = new GameEntity(3, "Entity3");
-        entity3.Order = 20u;
-        var comp3 = new OrderedComponent();
-        entity3.AddComponent(comp3);
+        entity3.Order = 20;
+        var feat3 = new OrderedFeature();
+        entity3.AddFeature(feat3);
         manager.AddEntity(entity3);
 
         // Remove middle entity
         manager.RemoveEntity(entity1);
 
-        var components = manager.GetAllComponentsOfType<OrderedComponent>().ToList();
+        var features = manager.QueryOfType<OrderedFeature>().ToList();
 
         // Should still be ordered: 5, 20
-        Assert.That(components, Has.Count.EqualTo(2));
-        Assert.That(components[0], Is.SameAs(comp2)); // Order 5
-        Assert.That(components[1], Is.SameAs(comp3)); // Order 20
+        Assert.That(features, Has.Count.EqualTo(2));
+        Assert.That(features[0], Is.SameAs(feat2)); // Order 5
+        Assert.That(features[1], Is.SameAs(feat3)); // Order 20
     }
 
     [Test]
-    public void AddEntity_MultipleEntitiesWithSameComponentType_AllOrderedByEntityOrder()
+    public void AddEntity_MultipleEntitiesWithSameFeatureType_AllOrderedByEntityOrder()
     {
         var manager = new GameEntityManager();
 
         // Entity1 with Order 20
         var entity1 = new GameEntity(1, "Entity1");
-        entity1.Order = 20u;
-        var comp1 = new OrderedComponent();
-        entity1.AddComponent(comp1);
+        entity1.Order = 20;
+        var feat1 = new OrderedFeature();
+        entity1.AddFeature(feat1);
         manager.AddEntity(entity1);
 
         // Entity2 with Order 10
         var entity2 = new GameEntity(2, "Entity2");
-        entity2.Order = 10u;
-        var comp2 = new OrderedComponent();
-        entity2.AddComponent(comp2);
+        entity2.Order = 10;
+        var feat2 = new OrderedFeature();
+        entity2.AddFeature(feat2);
         manager.AddEntity(entity2);
 
         // Entity3 with Order 15
         var entity3 = new GameEntity(3, "Entity3");
-        entity3.Order = 15u;
-        var comp3 = new OrderedComponent();
-        entity3.AddComponent(comp3);
+        entity3.Order = 15;
+        var feat3 = new OrderedFeature();
+        entity3.AddFeature(feat3);
         manager.AddEntity(entity3);
 
-        var components = manager.GetAllComponentsOfType<OrderedComponent>().ToList();
+        var features = manager.QueryOfType<OrderedFeature>().ToList();
 
         // Should be ordered by entity Order: 10, 15, 20
-        Assert.That(components, Has.Count.EqualTo(3));
-        Assert.That(components[0], Is.SameAs(comp2)); // Order 10
-        Assert.That(components[1], Is.SameAs(comp3)); // Order 15
-        Assert.That(components[2], Is.SameAs(comp1)); // Order 20
+        Assert.That(features, Has.Count.EqualTo(3));
+        Assert.That(features[0], Is.SameAs(feat2)); // Order 10
+        Assert.That(features[1], Is.SameAs(feat3)); // Order 15
+        Assert.That(features[2], Is.SameAs(feat1)); // Order 20
     }
 
     [Test]
-    public void OnGameEntityAdded_EventFiresAfterComponentsAreIndexed()
+    public void OnGameEntityAdded_EventFiresAfterFeaturesAreIndexed()
     {
         var manager = new GameEntityManager();
         var entity = new GameEntity(1, "Entity");
-        entity.Order = 10u;
-        var component = new OrderedComponent();
-        entity.AddComponent(component);
+        entity.Order = 10;
+        var feature = new OrderedFeature();
+        entity.AddFeature(feature);
 
-        var componentsCountDuringEvent = -1;
+        var featuresCountDuringEvent = -1;
 
         manager.OnGameEntityAdded += (e) =>
         {
-            // During event, the component should already be indexed and available
-            var components = manager.GetAllComponentsOfType<OrderedComponent>().ToList();
-            componentsCountDuringEvent = components.Count;
+            // During event, the feature should already be indexed and available
+            var features = manager.QueryOfType<OrderedFeature>().ToList();
+            featuresCountDuringEvent = features.Count;
         };
 
         manager.AddEntity(entity);
 
-        Assert.That(componentsCountDuringEvent, Is.EqualTo(1));
+        Assert.That(featuresCountDuringEvent, Is.EqualTo(1));
     }
 
     [Test]

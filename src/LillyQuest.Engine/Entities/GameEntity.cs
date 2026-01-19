@@ -1,47 +1,78 @@
 using LillyQuest.Engine.Collections;
-using LillyQuest.Engine.Interfaces.Components;
 using LillyQuest.Engine.Interfaces.Entities;
+using LillyQuest.Engine.Interfaces.GameObjects.Features;
 
 namespace LillyQuest.Engine.Entities;
 
 /// <summary>
 /// Concrete implementation of IGameEntity.
-/// Represents a game entity that can contain components and has rendering order properties.
+/// Represents a game object that can contain features, has a hierarchical structure, and supports lifecycle events.
 /// </summary>
 public class GameEntity : IGameEntity
 {
-    private readonly GameComponentCollection _components = [];
+    private readonly GameFeatureCollection _features = [];
+    private readonly List<IGameEntity> _children = [];
+    private IGameEntity? _parent;
 
     /// <summary>
-    /// Gets the unique identifier of this entity.
+    /// Gets or sets the unique identifier of this game object.
     /// </summary>
-    public uint Id { get; }
+    public uint Id { get; set; }
 
     /// <summary>
-    /// Gets the name of this entity.
+    /// Gets or sets the name of this game object.
     /// </summary>
-    public string Name { get; }
+    public string Name { get; set; }
 
     /// <summary>
-    /// Gets or sets a value indicating whether this entity is currently active.
+    /// Gets or sets the parent game object in the hierarchy.
     /// </summary>
-    public bool IsActive { get; set; } = true;
+    public IGameEntity? Parent
+    {
+        get => _parent;
+        set
+        {
+            if (_parent != null)
+            {
+                // Remove from old parent
+                var oldChildren = (_parent as GameEntity)?._children;
+                oldChildren?.Remove(this);
+            }
+
+            _parent = value;
+
+            if (_parent != null)
+            {
+                // Add to new parent
+                var newChildren = (_parent as GameEntity)?._children;
+                if (newChildren != null && !newChildren.Contains(this))
+                {
+                    newChildren.Add(this);
+                }
+            }
+        }
+    }
 
     /// <summary>
-    /// Gets or sets the rendering order (depth/z-order) of this entity.
+    /// Gets the collection of child game objects.
     /// </summary>
-    public uint Order { get; set; }
+    public IEnumerable<IGameEntity> Children => _children.AsReadOnly();
 
     /// <summary>
-    /// Gets the collection of components attached to this entity.
+    /// Gets or sets the rendering order (depth/z-order) of this game object.
     /// </summary>
-    public IEnumerable<IGameComponent> Components => _components;
+    public int Order { get; set; }
+
+    /// <summary>
+    /// Gets the collection of features attached to this game object.
+    /// </summary>
+    public IEnumerable<IGameObjectFeature> Features => _features;
 
     /// <summary>
     /// Initializes a new instance of the GameEntity class.
     /// </summary>
-    /// <param name="id">The unique identifier for this entity.</param>
-    /// <param name="name">The name of this entity.</param>
+    /// <param name="id">The unique identifier for this game object.</param>
+    /// <param name="name">The name of this game object.</param>
     public GameEntity(uint id, string name)
     {
         Id = id;
@@ -49,41 +80,83 @@ public class GameEntity : IGameEntity
     }
 
     /// <summary>
-    /// Adds a component to this entity.
+    /// Called when this game object is initialized.
     /// </summary>
-    /// <param name="component">The component to add.</param>
-    /// <exception cref="InvalidOperationException">Thrown if a component of the same type already exists.</exception>
-    public void AddComponent(IGameComponent component)
+    public virtual void Initialize()
     {
-        component.Owner = this;
-        _components.Add(component);
-        component.Initialize();
+        foreach (var feature in _features)
+        {
+            if (feature is IGameObjectFeature f)
+            {
+                // Features may have their own initialization logic
+            }
+        }
     }
 
     /// <summary>
-    /// Retrieves a component of the specified type, or null if not found.
+    /// Called when this game object is shut down.
+    /// </summary>
+    public virtual void Shutdown()
+    {
+        // Clean up children
+        foreach (var child in _children)
+        {
+            child.Shutdown();
+        }
+        _children.Clear();
+
+        // Dispose features
+        foreach (var feature in _features)
+        {
+            if (feature is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
+        }
+    }
+
+    /// <summary>
+    /// Adds a feature to this game object.
+    /// </summary>
+    /// <param name="feature">The feature to add.</param>
+    public void AddFeature(IGameObjectFeature feature)
+    {
+        _features.Add(feature);
+    }
+
+    /// <summary>
+    /// Gets a feature of the specified type, or null if not found.
     /// O(1) lookup time.
     /// </summary>
-    public TComponent? GetComponent<TComponent>() where TComponent : class, IGameComponent
+    public TFeature? GetFeature<TFeature>() where TFeature : class, IGameObjectFeature
     {
-        return _components.GetComponent<TComponent>();
+        return _features.GetFeature<TFeature>();
     }
 
     /// <summary>
-    /// Checks if a component of the specified type exists in this entity.
+    /// Checks if a feature of the specified type exists in this game object.
     /// O(1) lookup time.
     /// </summary>
-    public bool HasComponent<TComponent>() where TComponent : class, IGameComponent
+    public bool HasFeature<TFeature>() where TFeature : class, IGameObjectFeature
     {
-        return _components.HasComponent<TComponent>();
+        return _features.HasFeature<TFeature>();
     }
 
     /// <summary>
-    /// Removes a component from this entity.
-    /// Returns true if the component was found and removed, false otherwise.
+    /// Attempts to get a feature of the specified type without throwing an exception.
+    /// O(1) lookup time.
     /// </summary>
-    public bool RemoveComponent(IGameComponent component)
+    public bool TryGetFeature<TFeature>(out TFeature? feature) where TFeature : class, IGameObjectFeature
     {
-        return _components.Remove(component);
+        feature = GetFeature<TFeature>();
+        return feature != null;
+    }
+
+    /// <summary>
+    /// Removes a feature from this game object.
+    /// </summary>
+    public bool RemoveFeature(IGameObjectFeature feature)
+    {
+        return _features.Remove(feature);
     }
 }

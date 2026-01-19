@@ -1,6 +1,6 @@
 using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Managers;
-using LillyQuest.Engine.Interfaces.Components;
+using LillyQuest.Engine.Interfaces.GameObjects.Features;
 using LillyQuest.Engine.Interfaces.Entities;
 
 namespace LillyQuest.Tests;
@@ -10,22 +10,19 @@ namespace LillyQuest.Tests;
 /// </summary>
 public class GameEntityManagerTests
 {
-    private sealed class TransformComponent : IGameComponent
+    private sealed class TransformFeature : IGameObjectFeature
     {
-        public IGameEntity? Owner { get; set; }
-        public void Initialize() { }
+        public bool IsEnabled { get; set; } = true;
     }
 
-    private sealed class RenderComponent : IGameComponent
+    private sealed class RenderFeature : IGameObjectFeature
     {
-        public IGameEntity? Owner { get; set; }
-        public void Initialize() { }
+        public bool IsEnabled { get; set; } = true;
     }
 
-    private sealed class PhysicsComponent : IGameComponent
+    private sealed class PhysicsFeature : IGameObjectFeature
     {
-        public IGameEntity? Owner { get; set; }
-        public void Initialize() { }
+        public bool IsEnabled { get; set; } = true;
     }
 
     [Test]
@@ -36,75 +33,75 @@ public class GameEntityManagerTests
 
         manager.AddEntity(entity);
 
-        var allComponents = manager.GetAllComponentsOfType<TransformComponent>();
+        var allFeatures = manager.QueryOfType<TransformFeature>();
         // Should not throw, entity is tracked
-        Assert.That(allComponents, Is.Not.Null);
+        Assert.That(allFeatures, Is.Not.Null);
     }
 
     [Test]
-    public void GetAllComponentsOfType_EmptyManager_ReturnsEmpty()
+    public void QueryOfType_EmptyManager_ReturnsEmpty()
     {
         var manager = new GameEntityManager();
 
-        var components = manager.GetAllComponentsOfType<TransformComponent>().ToList();
+        var features = manager.QueryOfType<TransformFeature>().ToList();
 
-        Assert.That(components, Is.Empty);
+        Assert.That(features, Is.Empty);
     }
 
     [Test]
-    public void GetAllComponentsOfType_SingleEntitySingleComponent_ReturnsThatComponent()
+    public void QueryOfType_SingleEntitySingleFeature_ReturnsThatFeature()
     {
         var manager = new GameEntityManager();
         var entity = new GameEntity(1, "Entity1");
-        var transform = new TransformComponent();
-        entity.AddComponent(transform);
+        var transform = new TransformFeature();
+        entity.AddFeature(transform);
         manager.AddEntity(entity);
 
-        var components = manager.GetAllComponentsOfType<TransformComponent>().ToList();
+        var features = manager.QueryOfType<TransformFeature>().ToList();
 
-        Assert.That(components, Has.Count.EqualTo(1));
-        Assert.That(components[0], Is.SameAs(transform));
+        Assert.That(features, Has.Count.EqualTo(1));
+        Assert.That(features[0], Is.SameAs(transform));
     }
 
     [Test]
-    public void GetAllComponentsOfType_MultipleEntitiesSameComponent_ReturnsAll()
+    public void QueryOfType_MultipleEntitiesSameFeature_ReturnsAll()
     {
         var manager = new GameEntityManager();
         var entity1 = new GameEntity(1, "Entity1");
         var entity2 = new GameEntity(2, "Entity2");
 
-        var transform1 = new TransformComponent();
-        var transform2 = new TransformComponent();
+        var transform1 = new TransformFeature();
+        var transform2 = new TransformFeature();
 
-        entity1.AddComponent(transform1);
-        entity2.AddComponent(transform2);
+        entity1.AddFeature(transform1);
+        entity2.AddFeature(transform2);
 
         manager.AddEntity(entity1);
         manager.AddEntity(entity2);
 
-        var components = manager.GetAllComponentsOfType<TransformComponent>().ToList();
+        var features = manager.QueryOfType<TransformFeature>().ToList();
 
-        Assert.That(components, Has.Count.EqualTo(2));
-        Assert.That(components, Contains.Item(transform1));
-        Assert.That(components, Contains.Item(transform2));
+        Assert.That(features, Has.Count.EqualTo(2));
+        Assert.That(features, Contains.Item(transform1));
+        Assert.That(features, Contains.Item(transform2));
     }
 
     [Test]
-    public void GetAllComponentsOfType_MultipleComponentTypes_ReturnOnlyRequested()
+    public void QueryOfType_MultipleFeatureTypes_ReturnOnlyRequested()
     {
         var manager = new GameEntityManager();
         var entity = new GameEntity(1, "Entity1");
 
-        var transform = new TransformComponent();
-        var render = new RenderComponent();
+        var transform = new TransformFeature();
+        var render = new RenderFeature();
 
-        entity.AddComponent(transform);
-        entity.AddComponent(render);
+        entity.AddFeature(transform);
+        entity.AddFeature(render);
 
         manager.AddEntity(entity);
 
-        var transforms = manager.GetAllComponentsOfType<TransformComponent>().ToList();
-        var renders = manager.GetAllComponentsOfType<RenderComponent>().ToList();
+        var transforms = manager.QueryOfType<TransformFeature>().ToList();
+        var renders = manager.QueryOfType<RenderFeature>().ToList();
 
         Assert.That(transforms, Has.Count.EqualTo(1));
         Assert.That(transforms[0], Is.SameAs(transform));
@@ -113,76 +110,76 @@ public class GameEntityManagerTests
     }
 
     [Test]
-    public void RemoveEntity_RemovesEntityAndItsComponents()
+    public void RemoveEntity_RemovesEntityAndItsFeatures()
     {
         var manager = new GameEntityManager();
         var entity = new GameEntity(1, "Entity1");
-        var transform = new TransformComponent();
-        entity.AddComponent(transform);
+        var transform = new TransformFeature();
+        entity.AddFeature(transform);
         manager.AddEntity(entity);
 
         manager.RemoveEntity(entity);
 
-        var components = manager.GetAllComponentsOfType<TransformComponent>().ToList();
-        Assert.That(components, Is.Empty);
+        var features = manager.QueryOfType<TransformFeature>().ToList();
+        Assert.That(features, Is.Empty);
     }
 
     [Test]
-    public void RemoveEntity_KeepsOtherEntitiesComponents()
+    public void RemoveEntity_KeepsOtherEntitiesFeatures()
     {
         var manager = new GameEntityManager();
         var entity1 = new GameEntity(1, "Entity1");
         var entity2 = new GameEntity(2, "Entity2");
 
-        var transform1 = new TransformComponent();
-        var transform2 = new TransformComponent();
+        var transform1 = new TransformFeature();
+        var transform2 = new TransformFeature();
 
-        entity1.AddComponent(transform1);
-        entity2.AddComponent(transform2);
+        entity1.AddFeature(transform1);
+        entity2.AddFeature(transform2);
 
         manager.AddEntity(entity1);
         manager.AddEntity(entity2);
 
         manager.RemoveEntity(entity1);
 
-        var components = manager.GetAllComponentsOfType<TransformComponent>().ToList();
-        Assert.That(components, Has.Count.EqualTo(1));
-        Assert.That(components[0], Is.SameAs(transform2));
+        var features = manager.QueryOfType<TransformFeature>().ToList();
+        Assert.That(features, Has.Count.EqualTo(1));
+        Assert.That(features[0], Is.SameAs(transform2));
     }
 
     [Test]
-    public void GetAllComponentsOfType_ComplexScenario_CorrectlyIndexes()
+    public void QueryOfType_ComplexScenario_CorrectlyIndexes()
     {
         var manager = new GameEntityManager();
 
         // Entity 1: Transform + Render
         var entity1 = new GameEntity(1, "Entity1");
-        var t1 = new TransformComponent();
-        var r1 = new RenderComponent();
-        entity1.AddComponent(t1);
-        entity1.AddComponent(r1);
+        var t1 = new TransformFeature();
+        var r1 = new RenderFeature();
+        entity1.AddFeature(t1);
+        entity1.AddFeature(r1);
         manager.AddEntity(entity1);
 
         // Entity 2: Transform + Physics
         var entity2 = new GameEntity(2, "Entity2");
-        var t2 = new TransformComponent();
-        var p2 = new PhysicsComponent();
-        entity2.AddComponent(t2);
-        entity2.AddComponent(p2);
+        var t2 = new TransformFeature();
+        var p2 = new PhysicsFeature();
+        entity2.AddFeature(t2);
+        entity2.AddFeature(p2);
         manager.AddEntity(entity2);
 
         // Entity 3: Render + Physics
         var entity3 = new GameEntity(3, "Entity3");
-        var r3 = new RenderComponent();
-        var p3 = new PhysicsComponent();
-        entity3.AddComponent(r3);
-        entity3.AddComponent(p3);
+        var r3 = new RenderFeature();
+        var p3 = new PhysicsFeature();
+        entity3.AddFeature(r3);
+        entity3.AddFeature(p3);
         manager.AddEntity(entity3);
 
         // Verify indices
-        var transforms = manager.GetAllComponentsOfType<TransformComponent>().ToList();
-        var renders = manager.GetAllComponentsOfType<RenderComponent>().ToList();
-        var physics = manager.GetAllComponentsOfType<PhysicsComponent>().ToList();
+        var transforms = manager.QueryOfType<TransformFeature>().ToList();
+        var renders = manager.QueryOfType<RenderFeature>().ToList();
+        var physics = manager.QueryOfType<PhysicsFeature>().ToList();
 
         Assert.That(transforms, Has.Count.EqualTo(2));
         Assert.That(renders, Has.Count.EqualTo(2));
