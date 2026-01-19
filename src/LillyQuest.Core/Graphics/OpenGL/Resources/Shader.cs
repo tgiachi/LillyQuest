@@ -25,7 +25,6 @@ public class Shader : IDisposable
         var vertex = LoadShaderFromFile(ShaderType.VertexShader, vertexPath);
         var fragment = LoadShaderFromFile(ShaderType.FragmentShader, fragmentPath);
         Handle = LinkProgram(vertex, fragment);
-        ValidateProgram();
     }
 
     public Shader(string name, GL gl, Stream vertexStream, Stream fragmentStream)
@@ -36,7 +35,6 @@ public class Shader : IDisposable
         var vertex = LoadShaderFromStream(ShaderType.VertexShader, vertexStream);
         var fragment = LoadShaderFromStream(ShaderType.FragmentShader, fragmentStream);
         Handle = LinkProgram(vertex, fragment);
-        ValidateProgram();
     }
 
     public void Dispose()
