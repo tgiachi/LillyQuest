@@ -109,6 +109,18 @@ public class LillyQuestBootstrap
             "Assets/Shaders/spritebatch.frag",
             typeof(SpriteBatch).Assembly
         );
+
+        assetManager.FontManager.LoadFontFromEmbeddedResource(
+            "default_font",
+            "Assets/Fonts/default_font.ttf",
+            typeof(SpriteBatch).Assembly
+        );
+
+        assetManager.FontManager.LoadFontFromEmbeddedResource(
+            "default_font_log",
+            "Assets/Fonts/default_log_font.ttf",
+            typeof(SpriteBatch).Assembly
+        );
     }
 
     private void RegisterInternalServices()
@@ -121,7 +133,6 @@ public class LillyQuestBootstrap
         _container.Register<IFontManager, FontManager>(Reuse.Singleton);
         _container.Register<IAudioManager, AudioManager>(Reuse.Singleton);
         _container.Register<ITilesetManager, TilesetManager>(Reuse.Singleton);
-
 
         _container.Register<IAssetManager, AssetManager>(Reuse.Singleton);
 
