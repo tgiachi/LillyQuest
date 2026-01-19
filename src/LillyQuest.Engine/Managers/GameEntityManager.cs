@@ -1,3 +1,4 @@
+using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Interfaces.Entities;
 using LillyQuest.Engine.Interfaces.GameObjects.Features;
 using LillyQuest.Engine.Interfaces.Managers;
@@ -30,25 +31,31 @@ public class GameEntityManager : IGameEntityManager
     public event GameEntityLifecycleHandler? OnGameEntityRemoved;
 
     /// <summary>
-    /// Adds a game object to the manager and indexes all its features.
-    /// Generates a unique ID for the entity if not already set.
-    /// Features are indexed and sorted by entity Order.
-    /// OnGameEntityAdded event is fired after indexing completes.
+    /// Creates a new game entity with the specified name.
+    /// The entity is not added to the manager; use AddEntity() to add it.
     /// </summary>
-    public void AddEntity(IGameEntity entity)
+    public IGameEntity CreateEntity(string name)
     {
         uint id;
 
         lock (_sync)
         {
             id = _idCounter++;
-            entity.Id = id;
-            _entities.Add(entity);
         }
 
-        if (string.IsNullOrEmpty(entity.Name))
+        return new GameEntity(id, name);
+    }
+
+    /// <summary>
+    /// Adds a game object to the manager and indexes all its features.
+    /// Features are indexed and sorted by entity Order.
+    /// OnGameEntityAdded event is fired after indexing completes.
+    /// </summary>
+    public void AddEntity(IGameEntity entity)
+    {
+        lock (_sync)
         {
-            entity.Name = entity.GetType().Name;
+            _entities.Add(entity);
         }
 
         entity.Initialize();

@@ -28,6 +28,14 @@ public interface IGameEntityManager
     event GameEntityLifecycleHandler? OnGameEntityRemoved;
 
     /// <summary>
+    /// Creates a new game entity with the specified name.
+    /// The entity is not added to the manager; use AddEntity() to add it.
+    /// </summary>
+    /// <param name="name">The name of the entity.</param>
+    /// <returns>A new game entity instance.</returns>
+    IGameEntity CreateEntity(string name);
+
+    /// <summary>
     /// Adds a game object to the manager.
     /// </summary>
     /// <param name="entity">The game object to add.</param>
