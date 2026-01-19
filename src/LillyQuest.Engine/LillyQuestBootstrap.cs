@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.Diagnostics;
+using System.Numerics;
 using DryIoc;
 using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Contexts;
@@ -37,6 +38,9 @@ public class LillyQuestBootstrap
     private readonly GameTime _gameTime = new();
     private readonly GameTime _fixedGameTime = new();
     private double _fixedUpdateAccumulator;
+
+    public TimeSpan RenderTime { get; set; }
+    public TimeSpan UpdateTime { get; set; }
 
     private readonly LillyQuestEngineConfig _engineConfig;
 
@@ -177,9 +181,11 @@ public class LillyQuestBootstrap
 
     private void WindowOnRender(double obj)
     {
+        var sw = Stopwatch.GetTimestamp();
         BeginFrame();
         Render?.Invoke(_gameTime);
         EndFrame();
+        RenderTime = Stopwatch.GetElapsedTime(sw);
     }
 
     /// <summary>
@@ -232,9 +238,10 @@ public class LillyQuestBootstrap
 
     private void WindowOnUpdate(double deltaSeconds)
     {
+        var sw = Stopwatch.GetTimestamp();
         _gameTime.Update(deltaSeconds);
         Update?.Invoke(_gameTime);
-
+        UpdateTime = Stopwatch.GetElapsedTime(sw);
         _fixedUpdateAccumulator += deltaSeconds;
 
         while (_fixedUpdateAccumulator >= _engineConfig.FixedTimestep)
