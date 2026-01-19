@@ -91,7 +91,14 @@ public class LillyQuestBootstrap
         _window.Render += WindowOnRender;
         _window.Resize += WindowOnResize;
 
+        LoadDefaultResources();
         RegisterInternalServices();
+    }
+
+    private void LoadDefaultResources()
+    {
+        _logger.Information("Loading default resources...");
+        
     }
 
     private void RegisterInternalServices()
