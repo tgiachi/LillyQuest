@@ -72,12 +72,7 @@ public class GameEntityManager : IGameEntityManager
     {
         var featureType = typeof(TFeature);
 
-        if (_globalTypeIndex.TryGetValue(featureType, out var features))
-        {
-            return features.Cast<TFeature>();
-        }
-
-        return [];
+        return _globalTypeIndex.TryGetValue(featureType, out var features) ? features.Cast<TFeature>() : [];
     }
 
     /// <summary>

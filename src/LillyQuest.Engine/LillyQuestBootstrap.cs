@@ -300,6 +300,7 @@ public class LillyQuestBootstrap
     private void WindowOnResize(Vector2D<int> obj)
     {
         _logger.Information("Window Resized to {Width}x{Height}", obj.X, obj.Y);
+        _renderContext.Gl.Viewport(0, 0, (uint)obj.X, (uint) obj.Y);
     }
 
     private void WindowOnUpdate(double deltaSeconds)
