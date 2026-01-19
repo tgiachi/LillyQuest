@@ -137,6 +137,7 @@ public class LillyQuestBootstrap
         _container.Register<IAssetManager, AssetManager>(Reuse.Singleton);
 
         _container.Register<UpdateSystem>(Reuse.Singleton);
+        _container.Register<ImGuiSystem>(Reuse.Singleton);
     }
 
     private void StartInternalServices()
@@ -144,8 +145,10 @@ public class LillyQuestBootstrap
         var systemManager = _container.Resolve<ISystemManager>();
 
         var updateSystem = _container.Resolve<UpdateSystem>();
+        var imGuiSystem = _container.Resolve<ImGuiSystem>();
 
-        systemManager.AddUpdateSystem(updateSystem);
+        systemManager.AddSystem(updateSystem);
+        systemManager.AddSystem(imGuiSystem);
     }
 
     private void WindowOnResize(Vector2D<int> obj)

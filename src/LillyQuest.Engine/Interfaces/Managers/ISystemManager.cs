@@ -7,4 +7,6 @@ public interface ISystemManager
     void AddRenderSystem(IRenderSystem renderSystem);
 
     void AddUpdateSystem(IUpdateSystem updateSystem);
+
+    void AddSystem<T>(T system) where T : ISystem;
 }

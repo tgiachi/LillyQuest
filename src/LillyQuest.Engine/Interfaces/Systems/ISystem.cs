@@ -1,3 +1,5 @@
+using LillyQuest.Core.Data.Contexts;
+
 namespace LillyQuest.Engine.Interfaces.Systems;
 
 /// <summary>
@@ -22,7 +24,7 @@ public interface ISystem
     /// Called when the system is first registered with the SystemManager.
     /// Use this to initialize resources, dependencies, and state.
     /// </summary>
-    void Initialize();
+    void Initialize(EngineRenderContext renderContext);
 
     /// <summary>
     /// Called when the system is unregistered or the engine is shutting down.

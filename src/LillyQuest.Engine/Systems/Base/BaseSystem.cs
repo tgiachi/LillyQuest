@@ -1,14 +1,19 @@
+using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Systems;
 
-namespace LillyQuest.Engine.Systems;
+namespace LillyQuest.Engine.Systems.Base;
 
 public abstract class BaseSystem : ISystem
 {
     public string Name { get; }
     public uint Priority { get; }
 
+    private bool _initialized = false;
+
     protected IGameEntityManager EntityManager { get; }
+
+    protected EngineRenderContext RenderContext { get; private set; }
 
     protected BaseSystem(string name, uint priority, IGameEntityManager entityManager)
     {
@@ -17,9 +22,24 @@ public abstract class BaseSystem : ISystem
         EntityManager = entityManager;
     }
 
-    public virtual void Initialize()
+    public void Initialize(EngineRenderContext renderContext)
     {
+        if (_initialized)
+        {
+            return;
+        }
+        RenderContext = renderContext;
+
+        _initialized = true;
+
+        OnInitialize();
     }
+
+    protected virtual void OnInitialize()
+    {
+
+    }
+
     public virtual void Shutdown()
     {
     }
