@@ -1,4 +1,5 @@
-﻿using DryIoc;
+﻿using System.Numerics;
+using DryIoc;
 using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Data.Directories;
@@ -10,6 +11,10 @@ using LillyQuest.Core.Types;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Managers;
 using LillyQuest.Engine.Systems;
+using LillyQuest.Scripting.Lua.Data.Config;
+using LillyQuest.Scripting.Lua.Extensions.Scripts;
+using LillyQuest.Scripting.Lua.Interfaces;
+using LillyQuest.Scripting.Lua.Services;
 using Serilog;
 using Silk.NET.Core.Native;
 using Silk.NET.Input;
@@ -138,6 +143,15 @@ public class LillyQuestBootstrap
 
         _container.Register<UpdateSystem>(Reuse.Singleton);
         _container.Register<ImGuiSystem>(Reuse.Singleton);
+
+        _container.RegisterInstance(
+            new LuaEngineConfig(
+                _directoriesConfig[DirectoryType.Scripts],
+                _directoriesConfig[DirectoryType.Scripts],
+                "0.5.0"
+            )
+        );
+        _container.Register<IScriptEngineService, LuaScriptEngineService>(Reuse.Singleton);
     }
 
     private void StartInternalServices()
@@ -149,6 +163,11 @@ public class LillyQuestBootstrap
 
         systemManager.AddSystem(updateSystem);
         systemManager.AddSystem(imGuiSystem);
+
+        _container.RegisterLuaUserData<Vector2>();
+
+        var scriptEngine = _container.Resolve<IScriptEngineService>();
+        scriptEngine.StartAsync().GetAwaiter().GetResult();
     }
 
     private void WindowOnResize(Vector2D<int> obj)
@@ -158,10 +177,28 @@ public class LillyQuestBootstrap
 
     private void WindowOnRender(double obj)
     {
-        _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-        _gl.ClearColor(_renderContext.ClearColor.ToSystemColor());
-
+        BeginFrame();
         Render?.Invoke(_gameTime);
+        EndFrame();
+    }
+
+    /// <summary>
+    /// Prepares the rendering context for a new frame.
+    /// Clears buffers and sets up the rendering state.
+    /// </summary>
+    private void BeginFrame()
+    {
+        _gl.ClearColor(_renderContext.ClearColor.ToSystemColor());
+        _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+    }
+
+    /// <summary>
+    /// Finalizes the frame after rendering.
+    /// Can be used for post-processing, debug rendering, or cleanup.
+    /// </summary>
+    private void EndFrame()
+    {
+        // Future: post-processing, debug render, ImGui rendering, etc
     }
 
     private void WindowOnClosing()

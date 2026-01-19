@@ -79,16 +79,18 @@ public class LuaScriptEngineService : IScriptEngineService, IDisposable
     /// <param name="versionService">The version service.</param>
     public LuaScriptEngineService(
         DirectoriesConfig directoriesConfig,
-        List<ScriptModuleData> scriptModules,
         IContainer serviceProvider,
         LuaEngineConfig engineConfig,
+        List<ScriptModuleData> scriptModules = null,
         List<ScriptUserData> loadedUserData = null
     )
     {
         JsonUtils.RegisterJsonContext(LillyLuaScriptJsonContext.Default);
 
+        scriptModules ??= new();
+        loadedUserData ??= new();
+
         ArgumentNullException.ThrowIfNull(directoriesConfig);
-        ArgumentNullException.ThrowIfNull(scriptModules);
         ArgumentNullException.ThrowIfNull(serviceProvider);
 
         _scriptModules = scriptModules;
