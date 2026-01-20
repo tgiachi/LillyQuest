@@ -47,6 +47,11 @@ public class TestSceneB : IScene
                 }
             )
         );
+    }
+
+    public void OnLoad()
+    {
+        _logger.Information("TestSceneB loaded");
 
         var testScreen1 = new TestScreen()
         {
@@ -55,24 +60,20 @@ public class TestSceneB : IScene
         };
         var testScreen2 = new TestScreen
         {
-            Size = new (200, 200),
-            Position = new (700, 100)
-
+            Size = new(200, 200),
+            Position = new(700, 100)
         };
-
 
         _screenManager.PushScreen(testScreen1);
         _screenManager.PushScreen(testScreen2);
     }
 
-    public void OnLoad()
-    {
-        _logger.Information("TestSceneB loaded");
-    }
-
     public void OnUnload()
     {
         _logger.Information("TestSceneB unloaded");
+
+        _screenManager.PopScreen();
+        _screenManager.PopScreen();
     }
 
     public void RegisterGlobals(IGameEntityManager gameObjectManager)

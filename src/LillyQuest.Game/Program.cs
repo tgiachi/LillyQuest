@@ -3,13 +3,21 @@
 using ConsoleAppFramework;
 using LillyQuest.Engine;
 using LillyQuest.Engine.Extensions;
+using LillyQuest.Engine.Logging;
 using LillyQuest.Game.Scenes;
 using Serilog;
 using Serilog.Sinks.SystemConsole.Themes;
 
-var loggerConfiguration = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console(theme: AnsiConsoleTheme.Code);
+var logDispatcher = new LogEventDispatcher();
 
-Log.Logger = loggerConfiguration.CreateLogger();
+Log.Logger = new LoggerConfiguration()
+             .MinimumLevel
+             .Debug()
+             .WriteTo
+             .Console()
+             .WriteTo
+             .Sink(new LogEventBufferSink(logDispatcher))
+             .CreateLogger();
 
 await ConsoleApp.RunAsync(
     args,
@@ -18,7 +26,7 @@ await ConsoleApp.RunAsync(
         var lillyQuestBootstrap = new LillyQuestBootstrap(
             new()
             {
-                IsDebugMode = false
+                IsDebugMode = true
             }
         );
 

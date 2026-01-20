@@ -13,7 +13,7 @@ public class TestScreen : BaseScreen
     private SpriteGameEntity _spriteGameEntity;
 
     private float accumulator = 0f;
-    private const float interval = 1f; // 1 second interval
+    private const float interval = 0.1f; // 1 second interval
 
     public override void OnLoad()
     {
@@ -35,7 +35,7 @@ public class TestScreen : BaseScreen
         if (accumulator >= interval)
         {
             // Move the sprite entity by 10 units to the right every second
-            Position += new Vector2(10, 0);
+            Position += new Vector2(Random.Shared.Next(-10,10), Random.Shared.Next(-10,10));
             accumulator -= interval; // Reset the accumulator
         }
 
