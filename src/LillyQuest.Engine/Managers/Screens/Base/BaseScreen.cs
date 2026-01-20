@@ -19,8 +19,8 @@ namespace LillyQuest.Engine.Managers.Screens.Base;
 /// </summary>
 public abstract class BaseScreen : IScreen
 {
-    protected readonly ILogger _logger;
-    protected readonly List<IGameEntity> _entities = [];
+    private readonly ILogger _logger = Log.ForContext<BaseScreen>();
+    private readonly List<IGameEntity> _entities = [];
 
     /// <summary>
     /// Gets or sets the screen's top-left position on the viewport.
@@ -49,7 +49,6 @@ public abstract class BaseScreen : IScreen
 
     protected BaseScreen()
     {
-        _logger = Log.ForContext(GetType());
         ConsumerId = GetType().Name;
     }
 
