@@ -4,6 +4,10 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <Authors>tom</Authors>
+        <Version>0.1.0</Version>
+        <RepositoryUrl>https://github.com/tgiachi/LillyQuest/</RepositoryUrl>
+        <License>LICENZE</License>
     </PropertyGroup>
 
     <ItemGroup>
