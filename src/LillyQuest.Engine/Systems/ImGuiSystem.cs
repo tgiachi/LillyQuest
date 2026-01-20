@@ -4,7 +4,7 @@ using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Systems.Base;
-using LillyQuest.Engine.Systems.ImGui;
+using LillyQuest.Engine.Themes;
 using LillyQuest.Engine.Types;
 using Silk.NET.OpenGL.Extensions.ImGui;
 
@@ -12,7 +12,7 @@ namespace LillyQuest.Engine.Systems;
 
 /// <summary>
 /// System for rendering ImGui UI elements.
-/// Applies the Cyan theme by default on initialization.
+/// Applies the Dark Fantasy theme (gold, purple, mystical colors) by default on initialization.
 /// </summary>
 public class ImGuiSystem : BaseSystem<IIMGuiEntity>
 {
@@ -36,8 +36,8 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>
             _renderContext.InputContext
         );
 
-        // Apply Cyan theme
-        ImGuiThemeProvider.ApplyCyanTheme();
+        // Apply Dark Fantasy theme (gold, purple, mystical blue)
+        ImGuiThemeProvider.ApplyDarkFantasyTheme();
 
         base.Initialize();
     }
@@ -52,9 +52,9 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>
 
         foreach (var entity in typedEntities)
         {
-            ImGuiNET.ImGui.Begin(entity.Name);
+            ImGui.Begin(entity.Name);
             entity.DrawIMGui();
-            ImGuiNET.ImGui.End();
+            ImGui.End();
         }
 
         _imguiController.Render();
