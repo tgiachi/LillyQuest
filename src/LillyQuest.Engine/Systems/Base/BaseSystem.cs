@@ -31,6 +31,6 @@ public abstract class BaseSystem<TEntityFeature> : ISystem where TEntityFeature 
 
     protected virtual void ProcessTypedEntities(GameTime gameTime, IGameEntityManager entityManager, IReadOnlyList<TEntityFeature> typedEntities)
     {
-        
+
     }
 }
