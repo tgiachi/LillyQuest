@@ -20,13 +20,13 @@ public class DebugSystemGameObject : GameEntity, IIMGuiEntity, IUpdateableEntity
     private double _averageFrameTime;
     private double _currentFps;
 
-    public string Name => "Debug System Monitor";
 
     public DebugSystemGameObject(LillyQuestBootstrap bootstrap, ISystemManager systemManager)
     {
         _bootstrap = bootstrap;
         _systemManager = systemManager;
         IsActive = true;
+        Name = "Debug System Monitor";
     }
 
     /// <summary>

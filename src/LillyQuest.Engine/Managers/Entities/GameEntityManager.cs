@@ -1,3 +1,4 @@
+using LillyQuest.Core.Extensions.Strings;
 using LillyQuest.Engine.Collections;
 using LillyQuest.Engine.Interfaces.Entities;
 using LillyQuest.Engine.Interfaces.Managers;
@@ -58,12 +59,29 @@ public sealed class GameEntityManager : IGameEntityManager
             throw new InvalidOperationException($"Entity id {entity.Id} is already assigned.");
         }
 
+
+
+        if (string.IsNullOrEmpty(entity.Name))
+        {
+            entity.Name = $"{entity.GetType().Name}_{entity.Id}".ToSnakeCase();
+
+            if (entity.Parent is not null)
+            {
+                entity.Name = $"{entity.Parent.Name}_{entity.Name}_{entity.Id}".ToSnakeCase();
+            }
+        }
+        else
+        {
+            entity.Name = entity.Name.ToSnakeCase();
+        }
+
         _logger.Debug(
             "Assigned ID {EntityId} to entity {EntityName} (Parent: {Parent})",
             entity.Id,
             entity.Name,
             entity.Parent?.Name ?? "null"
         );
+
 
         _entitiesById[entity.Id] = entity;
 

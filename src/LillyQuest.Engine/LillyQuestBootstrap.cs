@@ -247,7 +247,6 @@ public class LillyQuestBootstrap
         StartSceneManager();
 
         var entityManager = _container.Resolve<IGameEntityManager>();
-        entityManager.AddEntity(new TestGameEntity());
 
         entityManager.AddEntity(new DebugSystemGameObject(this, systemManager));
         entityManager.AddEntity(new DebugEntityGameObject(entityManager));

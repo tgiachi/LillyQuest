@@ -14,12 +14,11 @@ public class DebugEntityGameObject : GameEntity, IIMGuiEntity
     private readonly IGameEntityManager _entityManager;
     private bool _showInactive = true;
 
-    public string Name => "Entity Hierarchy";
-
     public DebugEntityGameObject(IGameEntityManager entityManager)
     {
         _entityManager = entityManager;
         IsActive = true;
+        Name = "Debug Entity Hierarchy";
     }
 
     /// <summary>
@@ -38,9 +37,9 @@ public class DebugEntityGameObject : GameEntity, IIMGuiEntity
 
         // Show only root entities (those without a parent)
         var rootEntities = _entityManager.OrderedEntities
-            .Where(e => e.Parent == null && (_showInactive || e.IsActive))
-            .OrderBy(e => e.Order)
-            .ThenBy(e => e.Id);
+                                         .Where(e => e.Parent == null && (_showInactive || e.IsActive))
+                                         .OrderBy(e => e.Order)
+                                         .ThenBy(e => e.Id);
 
         foreach (var entity in rootEntities)
         {
@@ -55,10 +54,11 @@ public class DebugEntityGameObject : GameEntity, IIMGuiEntity
     {
         // Show child count in node label
         var childCount = entity.Children.Count;
-        var hasVisibleChildren = childCount > 0 && (
-            _showInactive ||
-            entity.Children.Any(c => c.IsActive)
-        );
+        var hasVisibleChildren = childCount > 0 &&
+                                 (
+                                     _showInactive ||
+                                     entity.Children.Any(c => c.IsActive)
+                                 );
 
         var nodeLabel = $"{entity.Name} (ID: {entity.Id}, Order: {entity.Order})";
         var nodeFlags = ImGuiTreeNodeFlags.DefaultOpen;
@@ -98,9 +98,9 @@ public class DebugEntityGameObject : GameEntity, IIMGuiEntity
         if (isOpen && hasVisibleChildren)
         {
             var children = entity.Children
-                .Where(c => _showInactive || c.IsActive)
-                .OrderBy(c => c.Order)
-                .ThenBy(c => c.Id);
+                                 .Where(c => _showInactive || c.IsActive)
+                                 .OrderBy(c => c.Order)
+                                 .ThenBy(c => c.Id);
 
             foreach (var child in children)
             {
