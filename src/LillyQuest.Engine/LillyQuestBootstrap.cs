@@ -39,8 +39,9 @@ public class LillyQuestBootstrap
 {
     private readonly Type[] _renderSystems =
     [
-        typeof(InputSystem),  // First: capture and dispatch input
-        typeof(UpdateSystem), // Then: update entities with input consumed
+        typeof(AnimationSystem), // First: update animations
+        typeof(InputSystem),     // Then: capture and dispatch input
+        typeof(UpdateSystem),    // Then: update entities with input consumed
         typeof(ImGuiSystem),
         typeof(FixedUpdateSystem),
         typeof(Render2dSystem),
