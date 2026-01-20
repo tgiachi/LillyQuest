@@ -11,6 +11,8 @@ namespace LillyQuest.Game.Scenes;
 /// <summary>
 /// Test scene B for validating scene transitions and entity management.
 /// </summary>
+
+//TODO: Create BaseScreenScene with common code for scenes that use screens. NB: create List<IScreen> _sceneScreens similar to _sceneEntities to manage screens per scene.
 public class TestSceneB : IScene
 {
     private readonly ILogger _logger = Log.ForContext<TestSceneB>();
