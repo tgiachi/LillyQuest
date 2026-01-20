@@ -191,6 +191,7 @@ public abstract class BaseScreen : IScreen
     public virtual void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
     {
         spriteBatch.SetScissor((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
+        spriteBatch.DrawRectangle(Position, Size, LyColor.Black.WithAlpha(120));
 
         foreach (var entity in _entities)
         {

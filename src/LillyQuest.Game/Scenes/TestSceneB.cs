@@ -3,6 +3,7 @@ using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Interfaces.Entities;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Scenes;
+using LillyQuest.Game.Screens;
 using Serilog;
 
 namespace LillyQuest.Game.Scenes;
@@ -14,7 +15,14 @@ public class TestSceneB : IScene
 {
     private readonly ILogger _logger = Log.ForContext<TestSceneB>();
     private readonly List<IGameEntity> _sceneEntities = new();
+
+    private readonly IScreenManager _screenManager;
     private ISceneManager? _sceneManager;
+
+    public TestSceneB(IScreenManager screenManager)
+    {
+        _screenManager = screenManager;
+    }
 
     public string Name => "test_scene_b";
 
@@ -39,6 +47,8 @@ public class TestSceneB : IScene
                 }
             )
         );
+
+        _screenManager.SetRootScreen(new TestScreen());
     }
 
     public void OnLoad()

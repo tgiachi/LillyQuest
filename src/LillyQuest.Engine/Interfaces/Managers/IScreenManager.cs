@@ -8,22 +8,54 @@ using Silk.NET.Input;
 namespace LillyQuest.Engine.Interfaces.Managers;
 
 /// <summary>
-/// Manages screen hierarchy for input dispatch and rendering.
+/// Manages screen stack for input dispatch and rendering.
 /// Screens contain UI entities similar to how Scenes contain game entities.
-/// Handles hit-testing, focus, and hierarchical input consumption.
+/// Supports multiple screens rendered together with focus-based input dispatch.
+/// Input goes only to the focused (top) screen in the stack.
 /// </summary>
 public interface IScreenManager
 {
     /// <summary>
-    /// Gets the root screen, or null if no screens are active.
+    /// Gets the currently focused screen (top of the stack), or null if no screens are active.
+    /// Only the focused screen receives input events.
+    /// </summary>
+    IScreen? FocusedScreen { get; }
+
+    /// <summary>
+    /// Gets all screens in the stack (read-only).
+    /// Index 0 is bottom (rendered first), last index is top (focused, rendered last).
+    /// </summary>
+    IReadOnlyList<IScreen> ScreenStack { get; }
+
+    /// <summary>
+    /// Gets the root screen (compatibility). Same as bottom of stack.
     /// </summary>
     IScreen? RootScreen { get; }
 
     /// <summary>
-    /// Sets the root screen of the hierarchy.
-    /// Calls OnUnload on old screen and OnLoad on new screen.
+    /// Sets the root screen, replacing all existing screens.
+    /// Calls OnUnload on old screens and OnLoad on new screen.
     /// </summary>
     void SetRootScreen(IScreen? screen);
+
+    /// <summary>
+    /// Adds a screen to the top of the stack (becomes focused/has input).
+    /// Calls OnLoad on the screen.
+    /// </summary>
+    void PushScreen(IScreen screen);
+
+    /// <summary>
+    /// Removes the focused screen (top of stack) from the stack.
+    /// Calls OnUnload on the screen. Focus moves to screen below.
+    /// </summary>
+    void PopScreen();
+
+    /// <summary>
+    /// Removes a specific screen from the stack.
+    /// Calls OnUnload on the screen if found.
+    /// Useful when changing scenes to clean up associated screens.
+    /// </summary>
+    void RemoveScreen(IScreen screen);
 
     /// <summary>
     /// Updates the current screen and all its entities.

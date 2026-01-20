@@ -12,35 +12,40 @@ using Silk.NET.Input;
 namespace LillyQuest.Engine.Managers.Screens;
 
 /// <summary>
-/// Manages the screen hierarchy for input dispatch and rendering.
-/// Implements hierarchical input consumption (modal screens block input to screens below).
+/// Manages the screen stack for input dispatch and rendering.
+/// Supports multiple screens rendered together with focus-based input dispatch.
+/// Only the focused (top) screen receives input events.
 /// Screens contain UI entities that are updated and rendered like game entities.
 /// </summary>
 public sealed class ScreenManager : IScreenManager
 {
     private readonly ILogger _logger = Log.ForContext<ScreenManager>();
+    private readonly Stack<IScreen> _screenStack = [];
 
-    public IScreen? RootScreen { get; private set; }
+    public IScreen? FocusedScreen => _screenStack.Count > 0 ? _screenStack.Peek() : null;
+    public IReadOnlyList<IScreen> ScreenStack => _screenStack.ToList().AsReadOnly();
+    public IScreen? RootScreen => _screenStack.Count > 0 ? _screenStack.LastOrDefault() : null;
 
     /// <summary>
-    /// Dispatches key press events to screen and its entities.
+    /// Dispatches key press events to the focused screen and its entities.
+    /// Only the focused (top) screen receives input.
     /// </summary>
     public bool DispatchKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
-        if (RootScreen is not { IsActive: true })
+        if (FocusedScreen is not { IsActive: true })
         {
             return false;
         }
 
         // Try screen itself
-        if (RootScreen.OnKeyPress(modifier, keys))
+        if (FocusedScreen.OnKeyPress(modifier, keys))
         {
             return true;
         }
 
         // Try screen entities (UI components)
         return DispatchToScreenEntities(
-            RootScreen,
+            FocusedScreen,
             entity =>
             {
                 if (entity is IInputConsumer inputConsumer)
@@ -58,12 +63,12 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
-        if (RootScreen is not { IsActive: true })
+        if (FocusedScreen is not { IsActive: true })
         {
             return false;
         }
 
-        if (RootScreen.OnKeyRelease(modifier, keys))
+        if (FocusedScreen.OnKeyRelease(modifier, keys))
         {
             return true;
         }
@@ -87,12 +92,12 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
-        if (RootScreen == null || !RootScreen.IsActive)
+        if (FocusedScreen == null || !FocusedScreen.IsActive)
         {
             return false;
         }
 
-        if (RootScreen.OnKeyRepeat(modifier, keys))
+        if (FocusedScreen.OnKeyRepeat(modifier, keys))
         {
             return true;
         }
@@ -116,19 +121,19 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
-        if (RootScreen == null || !RootScreen.IsActive)
+        if (FocusedScreen == null || !FocusedScreen.IsActive)
         {
             return false;
         }
 
         // Hit-test screen first
-        if (RootScreen.HitTest(x, y) && RootScreen.OnMouseDown(x, y, buttons))
+        if (FocusedScreen.HitTest(x, y) && FocusedScreen.OnMouseDown(x, y, buttons))
         {
             return true;
         }
 
         // Hit-test entities (top to bottom)
-        var entities = RootScreen.GetScreenGameObjects().ToList();
+        var entities = FocusedScreen.GetScreenGameObjects().ToList();
 
         for (var i = entities.Count - 1; i >= 0; i--)
         {
@@ -151,12 +156,12 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseMove(int x, int y)
     {
-        if (RootScreen is not { IsActive: true })
+        if (FocusedScreen is not { IsActive: true })
         {
             return false;
         }
 
-        if (RootScreen.OnMouseMove(x, y))
+        if (FocusedScreen.OnMouseMove(x, y))
         {
             return true;
         }
@@ -180,12 +185,12 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseUp(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
-        if (RootScreen == null || !RootScreen.IsActive)
+        if (FocusedScreen == null || !FocusedScreen.IsActive)
         {
             return false;
         }
 
-        if (RootScreen.OnMouseUp(x, y, buttons))
+        if (FocusedScreen.OnMouseUp(x, y, buttons))
         {
             return true;
         }
@@ -209,19 +214,19 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseWheel(int x, int y, float delta)
     {
-        if (RootScreen == null || !RootScreen.IsActive)
+        if (FocusedScreen == null || !FocusedScreen.IsActive)
         {
             return false;
         }
 
         // Hit-test screen first
-        if (RootScreen.HitTest(x, y) && RootScreen.OnMouseWheel(x, y, delta))
+        if (FocusedScreen.HitTest(x, y) && FocusedScreen.OnMouseWheel(x, y, delta))
         {
             return true;
         }
 
         // Try entities (top to bottom)
-        var entities = RootScreen.GetScreenGameObjects().ToList();
+        var entities = FocusedScreen.GetScreenGameObjects().ToList();
 
         for (var i = entities.Count - 1; i >= 0; i--)
         {
@@ -240,51 +245,133 @@ public sealed class ScreenManager : IScreenManager
     }
 
     /// <summary>
-    /// Renders the current screen and its entities.
+    /// Renders all screens in the stack (bottom to top).
     /// </summary>
     public void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
     {
-        if (RootScreen is not { IsActive: true })
+        if (_screenStack.Count == 0)
         {
             return;
         }
 
-        RootScreen.Render(spriteBatch, renderContext);
+        // Render screens from bottom to top (reverse order)
+        var screensToRender = _screenStack.Reverse().ToList();
+        foreach (var screen in screensToRender)
+        {
+            if (screen.IsActive)
+            {
+                screen.Render(spriteBatch, renderContext);
+            }
+        }
     }
 
     /// <summary>
-    /// Sets the root screen of the hierarchy.
+    /// Sets the root screen, replacing all screens in the stack.
+    /// Calls OnUnload on all existing screens and OnLoad on the new screen.
     /// </summary>
     public void SetRootScreen(IScreen? screen)
     {
-        if (RootScreen != screen)
+        // Unload all screens
+        while (_screenStack.Count > 0)
         {
-            RootScreen?.OnUnload();
-            RootScreen = screen;
+            var oldScreen = _screenStack.Pop();
+            oldScreen.OnUnload();
+        }
 
-            if (screen != null)
-            {
-                screen.OnLoad();
-                _logger.Information("Set root screen to {ScreenId}", screen.ConsumerId);
-            }
-            else
-            {
-                _logger.Information("Cleared root screen");
-            }
+        if (screen != null)
+        {
+            _screenStack.Push(screen);
+            screen.OnLoad();
+            _logger.Information("Set root screen to {ScreenId}", screen.ConsumerId);
+        }
+        else
+        {
+            _logger.Information("Cleared all screens");
         }
     }
 
     /// <summary>
-    /// Updates the current screen and its entities.
+    /// Adds a screen to the top of the stack (becomes focused).
+    /// Calls OnLoad on the screen.
+    /// </summary>
+    public void PushScreen(IScreen screen)
+    {
+        _screenStack.Push(screen);
+        screen.OnLoad();
+        _logger.Debug("Pushed screen {ScreenId}, stack size: {StackSize}", screen.ConsumerId, _screenStack.Count);
+    }
+
+    /// <summary>
+    /// Removes the focused screen (top of stack).
+    /// Calls OnUnload on the screen. Focus moves to screen below.
+    /// </summary>
+    public void PopScreen()
+    {
+        if (_screenStack.Count == 0)
+        {
+            _logger.Warning("Attempted to pop screen from empty stack");
+            return;
+        }
+
+        var screen = _screenStack.Pop();
+        screen.OnUnload();
+        _logger.Debug("Popped screen {ScreenId}, stack size: {StackSize}", screen.ConsumerId, _screenStack.Count);
+    }
+
+    /// <summary>
+    /// Removes a specific screen from the stack.
+    /// Calls OnUnload on the screen if found.
+    /// </summary>
+    public void RemoveScreen(IScreen screen)
+    {
+        var list = _screenStack.ToList();
+        if (!list.Contains(screen))
+        {
+            _logger.Warning("Screen {ScreenId} not found in stack", screen.ConsumerId);
+            return;
+        }
+
+        _screenStack.Clear();
+        foreach (var s in list)
+        {
+            if (s != screen)
+            {
+                _screenStack.Push(s);
+            }
+            else
+            {
+                s.OnUnload();
+                _logger.Debug("Removed screen {ScreenId} from stack", screen.ConsumerId);
+            }
+        }
+
+        // Re-push remaining screens in correct order
+        var tempStack = _screenStack.ToList();
+        _screenStack.Clear();
+        for (int i = tempStack.Count - 1; i >= 0; i--)
+        {
+            _screenStack.Push(tempStack[i]);
+        }
+    }
+
+    /// <summary>
+    /// Updates all screens in the stack.
     /// </summary>
     public void Update(GameTime gameTime)
     {
-        if (RootScreen is not { IsActive: true })
+        if (_screenStack.Count == 0)
         {
             return;
         }
 
-        RootScreen.Update(gameTime);
+        // Update all screens
+        foreach (var screen in _screenStack)
+        {
+            if (screen.IsActive)
+            {
+                screen.Update(gameTime);
+            }
+        }
     }
 
     /// <summary>
