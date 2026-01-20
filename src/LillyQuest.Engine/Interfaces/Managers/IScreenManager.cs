@@ -1,10 +1,15 @@
+using LillyQuest.Core.Data.Contexts;
+using LillyQuest.Core.Graphics.Rendering2D;
+using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Data.Input;
+using LillyQuest.Engine.Interfaces.Screens;
 using Silk.NET.Input;
 
 namespace LillyQuest.Engine.Interfaces.Managers;
 
 /// <summary>
 /// Manages screen hierarchy for input dispatch and rendering.
+/// Screens contain UI entities similar to how Scenes contain game entities.
 /// Handles hit-testing, focus, and hierarchical input consumption.
 /// </summary>
 public interface IScreenManager
@@ -13,6 +18,22 @@ public interface IScreenManager
     /// Gets the root screen, or null if no screens are active.
     /// </summary>
     IScreen? RootScreen { get; }
+
+    /// <summary>
+    /// Sets the root screen of the hierarchy.
+    /// Calls OnUnload on old screen and OnLoad on new screen.
+    /// </summary>
+    void SetRootScreen(IScreen? screen);
+
+    /// <summary>
+    /// Updates the current screen and all its entities.
+    /// </summary>
+    void Update(GameTime gameTime);
+
+    /// <summary>
+    /// Renders the current screen and all its entities.
+    /// </summary>
+    void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext);
 
     /// <summary>
     /// Performs hierarchical input dispatch to the screen tree.

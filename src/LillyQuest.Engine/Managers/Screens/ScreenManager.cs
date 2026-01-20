@@ -1,5 +1,11 @@
+using LillyQuest.Core.Data.Contexts;
+using LillyQuest.Core.Graphics.Rendering2D;
+using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Data.Input;
+using LillyQuest.Engine.Interfaces.Entities;
+using LillyQuest.Engine.Interfaces.Input;
 using LillyQuest.Engine.Interfaces.Managers;
+using LillyQuest.Engine.Interfaces.Screens;
 using Serilog;
 using Silk.NET.Input;
 
@@ -8,161 +14,300 @@ namespace LillyQuest.Engine.Managers.Screens;
 /// <summary>
 /// Manages the screen hierarchy for input dispatch and rendering.
 /// Implements hierarchical input consumption (modal screens block input to screens below).
+/// Screens contain UI entities that are updated and rendered like game entities.
 /// </summary>
 public sealed class ScreenManager : IScreenManager
 {
     private readonly ILogger _logger = Log.ForContext<ScreenManager>();
-    private IScreen? _rootScreen;
+    private readonly SpriteBatch _spriteBatch;
 
-    public IScreen? RootScreen => _rootScreen;
+    public IScreen? RootScreen { get; private set; }
+
+    public ScreenManager(SpriteBatch spriteBatch)
+        => _spriteBatch = spriteBatch;
+
+    /// <summary>
+    /// Dispatches key press events to screen and its entities.
+    /// </summary>
+    public bool DispatchKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
+    {
+        if (RootScreen is not { IsActive: true })
+        {
+            return false;
+        }
+
+        // Try screen itself
+        if (RootScreen.OnKeyPress(modifier, keys))
+        {
+            return true;
+        }
+
+        // Try screen entities (UI components)
+        return DispatchToScreenEntities(
+            RootScreen,
+            entity =>
+            {
+                if (entity is IInputConsumer inputConsumer)
+                {
+                    return inputConsumer.OnKeyPress(modifier, keys);
+                }
+
+                return false;
+            }
+        );
+    }
+
+    /// <summary>
+    /// Dispatches key release events to screen and its entities.
+    /// </summary>
+    public bool DispatchKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
+    {
+        if (RootScreen is not { IsActive: true })
+        {
+            return false;
+        }
+
+        if (RootScreen.OnKeyRelease(modifier, keys))
+        {
+            return true;
+        }
+
+        return DispatchToScreenEntities(
+            RootScreen,
+            entity =>
+            {
+                if (entity is IInputConsumer inputConsumer)
+                {
+                    return inputConsumer.OnKeyRelease(modifier, keys);
+                }
+
+                return false;
+            }
+        );
+    }
+
+    /// <summary>
+    /// Dispatches key repeat events to screen and its entities.
+    /// </summary>
+    public bool DispatchKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
+    {
+        if (RootScreen == null || !RootScreen.IsActive)
+        {
+            return false;
+        }
+
+        if (RootScreen.OnKeyRepeat(modifier, keys))
+        {
+            return true;
+        }
+
+        return DispatchToScreenEntities(
+            RootScreen,
+            entity =>
+            {
+                if (entity is IInputConsumer inputConsumer)
+                {
+                    return inputConsumer.OnKeyRepeat(modifier, keys);
+                }
+
+                return false;
+            }
+        );
+    }
+
+    /// <summary>
+    /// Dispatches mouse down events to screen and its entities (with hit-testing).
+    /// </summary>
+    public bool DispatchMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons)
+    {
+        if (RootScreen == null || !RootScreen.IsActive)
+        {
+            return false;
+        }
+
+        // Hit-test screen first
+        if (RootScreen.HitTest(x, y) && RootScreen.OnMouseDown(x, y, buttons))
+        {
+            return true;
+        }
+
+        // Hit-test entities (top to bottom)
+        var entities = RootScreen.GetScreenGameObjects().ToList();
+
+        for (var i = entities.Count - 1; i >= 0; i--)
+        {
+            var entity = entities[i];
+
+            if (entity is IInputConsumer inputConsumer)
+            {
+                if (inputConsumer.HitTest(x, y) && inputConsumer.OnMouseDown(x, y, buttons))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Dispatches mouse move events to screen and its entities.
+    /// </summary>
+    public bool DispatchMouseMove(int x, int y)
+    {
+        if (RootScreen is not { IsActive: true })
+        {
+            return false;
+        }
+
+        if (RootScreen.OnMouseMove(x, y))
+        {
+            return true;
+        }
+
+        return DispatchToScreenEntities(
+            RootScreen,
+            entity =>
+            {
+                if (entity is IInputConsumer inputConsumer)
+                {
+                    return inputConsumer.OnMouseMove(x, y);
+                }
+
+                return false;
+            }
+        );
+    }
+
+    /// <summary>
+    /// Dispatches mouse up events to screen and its entities.
+    /// </summary>
+    public bool DispatchMouseUp(int x, int y, IReadOnlyList<MouseButton> buttons)
+    {
+        if (RootScreen == null || !RootScreen.IsActive)
+        {
+            return false;
+        }
+
+        if (RootScreen.OnMouseUp(x, y, buttons))
+        {
+            return true;
+        }
+
+        return DispatchToScreenEntities(
+            RootScreen,
+            entity =>
+            {
+                if (entity is IInputConsumer inputConsumer)
+                {
+                    return inputConsumer.OnMouseUp(x, y, buttons);
+                }
+
+                return false;
+            }
+        );
+    }
+
+    /// <summary>
+    /// Dispatches mouse wheel events to screen and its entities.
+    /// </summary>
+    public bool DispatchMouseWheel(int x, int y, float delta)
+    {
+        if (RootScreen == null || !RootScreen.IsActive)
+        {
+            return false;
+        }
+
+        // Hit-test screen first
+        if (RootScreen.HitTest(x, y) && RootScreen.OnMouseWheel(x, y, delta))
+        {
+            return true;
+        }
+
+        // Try entities (top to bottom)
+        var entities = RootScreen.GetScreenGameObjects().ToList();
+
+        for (var i = entities.Count - 1; i >= 0; i--)
+        {
+            var entity = entities[i];
+
+            if (entity is IInputConsumer inputConsumer)
+            {
+                if (inputConsumer.HitTest(x, y) && inputConsumer.OnMouseWheel(x, y, delta))
+                {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Renders the current screen and its entities.
+    /// </summary>
+    public void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
+    {
+        if (RootScreen is not { IsActive: true })
+        {
+            return;
+        }
+
+        RootScreen.Render(spriteBatch, renderContext);
+    }
 
     /// <summary>
     /// Sets the root screen of the hierarchy.
     /// </summary>
     public void SetRootScreen(IScreen? screen)
     {
-        if (_rootScreen != screen)
+        if (RootScreen != screen)
         {
-            _rootScreen?.OnHide();
-            _rootScreen = screen;
-            _rootScreen?.OnShow();
-            _logger.Information("Set root screen to {ScreenId}", screen?.ConsumerId ?? "null");
-        }
-    }
+            RootScreen?.OnUnload();
+            RootScreen = screen;
 
-    /// <summary>
-    /// Hierarchical dispatch for key press events.
-    /// Searches from top of hierarchy downward, stops at first consumer that handles input.
-    /// </summary>
-    public bool DispatchKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
-    {
-        if (_rootScreen == null || !_rootScreen.IsActive)
-            return false;
-
-        return DispatchToHierarchy(_rootScreen, consumer => consumer.OnKeyPress(modifier, keys));
-    }
-
-    /// <summary>
-    /// Hierarchical dispatch for key repeat events.
-    /// </summary>
-    public bool DispatchKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
-    {
-        if (_rootScreen == null || !_rootScreen.IsActive)
-            return false;
-
-        return DispatchToHierarchy(_rootScreen, consumer => consumer.OnKeyRepeat(modifier, keys));
-    }
-
-    /// <summary>
-    /// Hierarchical dispatch for key release events.
-    /// </summary>
-    public bool DispatchKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
-    {
-        if (_rootScreen == null || !_rootScreen.IsActive)
-            return false;
-
-        return DispatchToHierarchy(_rootScreen, consumer => consumer.OnKeyRelease(modifier, keys));
-    }
-
-    /// <summary>
-    /// Hierarchical dispatch for mouse move events.
-    /// </summary>
-    public bool DispatchMouseMove(int x, int y)
-    {
-        if (_rootScreen == null || !_rootScreen.IsActive)
-            return false;
-
-        return DispatchToHierarchy(_rootScreen, consumer => consumer.OnMouseMove(x, y));
-    }
-
-    /// <summary>
-    /// Hierarchical dispatch for mouse down events.
-    /// Uses hit-testing to find the topmost screen at the click position.
-    /// </summary>
-    public bool DispatchMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons)
-    {
-        if (_rootScreen == null || !_rootScreen.IsActive)
-            return false;
-
-        return DispatchToHierarchyWithHitTest(_rootScreen, x, y, consumer => consumer.OnMouseDown(x, y, buttons));
-    }
-
-    /// <summary>
-    /// Hierarchical dispatch for mouse up events.
-    /// </summary>
-    public bool DispatchMouseUp(int x, int y, IReadOnlyList<MouseButton> buttons)
-    {
-        if (_rootScreen == null || !_rootScreen.IsActive)
-            return false;
-
-        return DispatchToHierarchy(_rootScreen, consumer => consumer.OnMouseUp(x, y, buttons));
-    }
-
-    /// <summary>
-    /// Hierarchical dispatch for mouse wheel events.
-    /// </summary>
-    public bool DispatchMouseWheel(int x, int y, float delta)
-    {
-        if (_rootScreen == null || !_rootScreen.IsActive)
-            return false;
-
-        return DispatchToHierarchyWithHitTest(_rootScreen, x, y, consumer => consumer.OnMouseWheel(x, y, delta));
-    }
-
-    /// <summary>
-    /// Dispatches to hierarchy depth-first (children first, then parent).
-    /// If any consumer handles the input, stops propagation.
-    /// </summary>
-    private bool DispatchToHierarchy(
-        LillyQuest.Engine.Interfaces.Input.IInputConsumer consumer,
-        Func<LillyQuest.Engine.Interfaces.Input.IInputConsumer, bool> dispatchAction)
-    {
-        if (!consumer.IsActive)
-            return false;
-
-        // Try children first (depth-first)
-        var children = consumer.GetChildren();
-        if (children != null)
-        {
-            foreach (var child in children)
+            if (screen != null)
             {
-                if (DispatchToHierarchy(child, dispatchAction))
-                    return true;  // Consumed by child
+                screen.OnLoad();
+                _logger.Information("Set root screen to {ScreenId}", screen.ConsumerId);
+            }
+            else
+            {
+                _logger.Information("Cleared root screen");
             }
         }
-
-        // Then try parent
-        return dispatchAction(consumer);
     }
 
     /// <summary>
-    /// Dispatches with hit-testing (children first, then parent).
-    /// Only calls dispatchAction if HitTest passes.
+    /// Updates the current screen and its entities.
     /// </summary>
-    private bool DispatchToHierarchyWithHitTest(
-        LillyQuest.Engine.Interfaces.Input.IInputConsumer consumer,
-        int x,
-        int y,
-        Func<LillyQuest.Engine.Interfaces.Input.IInputConsumer, bool> dispatchAction)
+    public void Update(GameTime gameTime)
     {
-        if (!consumer.IsActive)
-            return false;
-
-        // Try children first (top-to-bottom in hierarchy)
-        var children = consumer.GetChildren();
-        if (children != null)
+        if (RootScreen is not { IsActive: true })
         {
-            for (int i = children.Count - 1; i >= 0; i--)  // Reverse order = top-most first
-            {
-                if (DispatchToHierarchyWithHitTest(children[i], x, y, dispatchAction))
-                    return true;  // Consumed by child
-            }
+            return;
         }
 
-        // Then try parent if hit-test passes
-        if (consumer.HitTest(x, y))
+        RootScreen.Update(gameTime);
+    }
+
+    /// <summary>
+    /// Dispatches an input action to all screen entities.
+    /// </summary>
+    private bool DispatchToScreenEntities(
+        IScreen screen,
+        Func<IGameEntity, bool> dispatchAction
+    )
+    {
+        var entities = screen.GetScreenGameObjects().ToList();
+
+        // Try from top to bottom (last entity is topmost)
+        for (var i = entities.Count - 1; i >= 0; i--)
         {
-            return dispatchAction(consumer);
+            if (dispatchAction(entities[i]))
+            {
+                return true; // Entity consumed input
+            }
         }
 
         return false;

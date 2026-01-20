@@ -39,10 +39,11 @@ public class LillyQuestBootstrap
 {
     private readonly Type[] _renderSystems =
     [
-        typeof(InputSystem),      // First: capture and dispatch input
-        typeof(UpdateSystem),     // Then: update entities with input consumed
+        typeof(InputSystem),  // First: capture and dispatch input
+        typeof(UpdateSystem), // Then: update entities with input consumed
         typeof(ImGuiSystem),
-        typeof(FixedUpdateSystem)
+        typeof(FixedUpdateSystem),
+        typeof(Render2dSystem)
     ];
 
     public delegate void TickEventHandler(GameTime gameTime);
@@ -146,8 +147,18 @@ public class LillyQuestBootstrap
     private void EndFrame()
     {
         var sceneManager = _container.Resolve<ISceneManager>();
+        var screenManager = _container.Resolve<IScreenManager>();
+        var spriteBatch = _container.Resolve<SpriteBatch>();
 
+        spriteBatch.Begin();
+
+        // Render screens and their entities
+        screenManager.Render(spriteBatch, _renderContext);
+
+        // Render fade overlay on top
         sceneManager.RenderFadeOverlay(_window.Size);
+
+        spriteBatch.End();
     }
 
     private void LoadDefaultResources()
@@ -196,7 +207,9 @@ public class LillyQuestBootstrap
 
         _container.Register<IGameEntityManager, GameEntityManager>(Reuse.Singleton);
         _container.Register<ISystemManager, SystemManager>(Reuse.Singleton);
-        _container.Register<IScreenManager, ScreenManager>(Reuse.Singleton);
+        _container.Register<IScreenManager, ScreenManager>(
+            Reuse.Singleton,
+            made: Parameters.Of.Type(typeof(SpriteBatch)));
 
         _container.Register<ISceneManager, SceneTransitionManager>(Reuse.Singleton);
 
@@ -311,8 +324,13 @@ public class LillyQuestBootstrap
         var sw = Stopwatch.GetTimestamp();
         _gameTime.Update(deltaSeconds);
 
+        // Update scene transitions
         var sceneManager = _container.Resolve<ISceneManager>();
         sceneManager.Update(_gameTime);
+
+        // Update screens and their entities
+        var screenManager = _container.Resolve<IScreenManager>();
+        screenManager.Update(_gameTime);
 
         Update?.Invoke(_gameTime);
         UpdateTime = Stopwatch.GetElapsedTime(sw);

@@ -95,16 +95,16 @@ public sealed class InputSystem : IInputSystem
 
     private void DispatchKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
-        // 1. ShortcutService (global shortcuts) - convert modifier type
+        // 1. ShortcutService (global shortcuts)
         _shortcutService.HandleKeyPress(modifier, keys);
 
-        // 2. ScreenManager (hierarchical UI dispatch)
+        // 2. ScreenManager (UI screen + screen entities)
         if (_screenManager.DispatchKeyPress(modifier, keys))
         {
             return; // UI consumed it
         }
 
-        // 3. Entities with features
+        // 3. Game world entities with features
         foreach (var entity in _entityManager.GetQueryOf<IKeyboardInputFeature>())
         {
             entity.OnKeyPress(modifier, keys);
