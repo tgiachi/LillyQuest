@@ -50,6 +50,9 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
 
     public Rectangle<int> Viewport { get; set; } = new(0, 0, 1200, 800);
 
+    public Rectangle<int> ScissorRect { get; private set; }
+    private bool _scissorEnabled;
+
     public unsafe SpriteBatch(
         EngineRenderContext context,
         IShaderManager shaderManager,
@@ -113,6 +116,21 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         _gl.Enable(EnableCap.Blend);
         _gl.BlendFunc(BlendingFactor.One, BlendingFactor.OneMinusSrcAlpha);
 
+        // Abilita scissor test se configurato
+        if (_scissorEnabled && ScissorRect.Size.X > 0 && ScissorRect.Size.Y > 0)
+        {
+            _gl.Enable(EnableCap.ScissorTest);
+            // Converti da coordinate top-left a OpenGL bottom-left
+            int viewportHeight = Viewport.Size.Y;
+            int scissorY = viewportHeight - ScissorRect.Origin.Y - ScissorRect.Size.Y;
+            _gl.Scissor(
+                ScissorRect.Origin.X,
+                scissorY,
+                (uint)ScissorRect.Size.X,
+                (uint)ScissorRect.Size.Y
+            );
+        }
+
         ShaderProgram.Use();
         ShaderProgram.SetUniform("TextureSampler", 0);
 
@@ -137,6 +155,59 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         {
             _sortedBatch.Clear();
         }
+    }
+
+    /// <summary>
+    /// Abilita lo scissor test con il rettangolo specificato.
+    /// Flushes il buffer attuale prima di cambiare lo scissor state.
+    /// Coordinate: (x, y) dall'angolo in alto-sinistra.
+    /// </summary>
+    /// <param name="x">Posizione X del rettangolo di scissor.</param>
+    /// <param name="y">Posizione Y del rettangolo di scissor.</param>
+    /// <param name="width">Larghezza del rettangolo di scissor.</param>
+    /// <param name="height">Altezza del rettangolo di scissor.</param>
+    public void SetScissor(int x, int y, int width, int height)
+    {
+        if (IsActive)
+        {
+            FlushBuffer();  // Flushes il batch attuale con lo scissor precedente
+
+            _gl.Enable(EnableCap.ScissorTest);
+
+            // Converti da coordinate top-left a OpenGL bottom-left
+            int viewportHeight = Viewport.Size.Y;
+            int scissorY = viewportHeight - y - height;
+
+            _gl.Scissor(x, scissorY, (uint)width, (uint)height);
+        }
+
+        ScissorRect = new(x, y, width, height);
+        _scissorEnabled = true;
+    }
+
+    /// <summary>
+    /// Abilita lo scissor test con un rettangolo.
+    /// Flushes il buffer attuale prima di cambiare lo scissor state.
+    /// </summary>
+    public void SetScissor(Rectangle<int> rect)
+    {
+        SetScissor(rect.Origin.X, rect.Origin.Y, rect.Size.X, rect.Size.Y);
+    }
+
+    /// <summary>
+    /// Disabilita lo scissor test.
+    /// Flushes il buffer attuale con lo scissor ancora attivo prima di disabilitare.
+    /// </summary>
+    public void DisableScissor()
+    {
+        if (IsActive)
+        {
+            FlushBuffer();  // Flushes il batch attuale con lo scissor ancora attivo
+            _gl.Disable(EnableCap.ScissorTest);
+        }
+
+        _scissorEnabled = false;
+        ScissorRect = new(0, 0, 0, 0);
     }
 
     public void Dispose()
@@ -1169,6 +1240,8 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         _gl.Enable(EnableCap.DepthTest);
         IsActive = false;
         _lastTexture = null;
+        _scissorEnabled = false;
+        ScissorRect = new(0, 0, 0, 0);
     }
 
     protected virtual void Dispose(bool disposing)

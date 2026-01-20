@@ -4,13 +4,15 @@ namespace LillyQuest.Engine.Entities;
 
 public class TestGameEntity : GameEntity, IIMGuiEntity
 {
+    private readonly Action? _drawAction;
 
-    public TestGameEntity()
+    public TestGameEntity(string? name = null, Action? drawAction = null)
     {
-        Name = "TestGame";
+        Name  = name ?? "Test Entity";
+        _drawAction = drawAction;
     }
     public void DrawIMGui()
     {
-
+        _drawAction?.Invoke();
     }
 }
