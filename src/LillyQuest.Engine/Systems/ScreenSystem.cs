@@ -10,7 +10,7 @@ namespace LillyQuest.Engine.Systems;
 
 public class ScreenSystem : ISystem
 {
-    public uint Order => 6;
+    public uint Order => 160;
     public string Name => "Screen system";
     public SystemQueryType QueryType => SystemQueryType.Renderable;
 

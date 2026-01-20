@@ -9,7 +9,7 @@ namespace LillyQuest.Engine.Systems;
 public class FixedUpdateSystem : BaseSystem<IFixedUpdateableEntity>
 {
     public FixedUpdateSystem() : base(
-        4,
+        140,
         "Fixed update system",
         SystemQueryType.FixedUpdateable
     ) { }

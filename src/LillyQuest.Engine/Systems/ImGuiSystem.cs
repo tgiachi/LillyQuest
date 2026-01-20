@@ -20,7 +20,7 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>
     private ImGuiController _imguiController;
 
     public ImGuiSystem(EngineRenderContext renderContext) : base(
-        3,
+        130,
         "Immediate UI system",
         SystemQueryType.DebugRenderable
     )

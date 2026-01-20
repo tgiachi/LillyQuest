@@ -23,7 +23,7 @@ public class Render2dSystem : BaseSystem<IRenderableEntity>
         IShaderManager shaderManager,
         EngineRenderContext renderContext,
         IFontManager fontManager
-    ) : base(5, "Render 2d System", SystemQueryType.Renderable)
+    ) : base(150, "Render 2d System", SystemQueryType.Renderable)
     {
         _textureManager = textureManager;
         _shaderManager = shaderManager;

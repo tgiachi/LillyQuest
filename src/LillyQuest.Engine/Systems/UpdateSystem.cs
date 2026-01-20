@@ -9,7 +9,7 @@ namespace LillyQuest.Engine.Systems;
 public class UpdateSystem : BaseSystem<IUpdateableEntity>
 {
     public UpdateSystem() : base(
-        2,
+        120,
         "Update system",
         SystemQueryType.Updateable
     ) { }

@@ -17,7 +17,7 @@ public class AnimationSystem : ISystem
     private readonly List<TweenSequence> _activeSequences = [];
     private readonly ILogger _logger = Log.ForContext<AnimationSystem>();
 
-    public uint Order => 0;
+    public uint Order => 100;
     public string Name => "AnimationSystem";
     public SystemQueryType QueryType => SystemQueryType.Updateable;
 
