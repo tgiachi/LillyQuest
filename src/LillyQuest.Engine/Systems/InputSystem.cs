@@ -33,7 +33,7 @@ public sealed class InputSystem : IInputSystem
     private readonly ILogger _logger = Log.ForContext<InputSystem>();
 
     // ISystem properties
-    public uint Order => 0;
+    public uint Order => 1;
     public string Name => "InputSystem";
     public SystemQueryType QueryType => SystemQueryType.Updateable;
 

@@ -8,7 +8,7 @@ namespace LillyQuest.Engine.Systems;
 
 public class SceneSystem : ISystem
 {
-    public uint Order => 102;
+    public uint Order => 7;
     public string Name => "Scene transition system";
     public SystemQueryType QueryType => SystemQueryType.Renderable;
     private readonly EngineRenderContext _renderContext;

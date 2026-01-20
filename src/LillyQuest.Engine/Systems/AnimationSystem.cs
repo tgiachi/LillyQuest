@@ -14,7 +14,7 @@ namespace LillyQuest.Engine.Systems;
 /// </summary>
 public class AnimationSystem : ISystem
 {
-    private List<TweenSequence> _activeSequences = [];
+    private readonly List<TweenSequence> _activeSequences = [];
     private readonly ILogger _logger = Log.ForContext<AnimationSystem>();
 
     public uint Order => 0;
