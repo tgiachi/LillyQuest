@@ -247,9 +247,11 @@ public class LillyQuestBootstrap
         StartSceneManager();
 
         var entityManager = _container.Resolve<IGameEntityManager>();
+        var inputSystem = _container.Resolve<InputSystem>();
 
         entityManager.AddEntity(new DebugSystemGameObject(this, systemManager));
         entityManager.AddEntity(new DebugEntityGameObject(entityManager));
+        entityManager.AddEntity(new DebugInputGameObject(inputSystem));
     }
 
     private void StartSceneManager()
@@ -292,7 +294,7 @@ public class LillyQuestBootstrap
         _logger.Information("Renderer: {Renderer}", renderer);
         _logger.Information("OpenGL Version: {Version}", version);
         _logger.Information("GLSL Version: {GLSL}", glsl);
-        _logger.Information("Extensions: {Ext}", extensions);
+        _logger.Information("Extensions: {Ext}", extensions ?? "None");
 
         LoadDefaultResources();
         StartInternalServices();

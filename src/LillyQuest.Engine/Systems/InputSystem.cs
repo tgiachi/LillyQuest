@@ -48,12 +48,17 @@ public sealed class InputSystem : IInputSystem
     // Mouse state tracking
     private Vector2 _mousePosition;
     private ScrollWheel[] _previousScrollWheels = [];
+    private ScrollWheel[] _currentScrollWheels = [];
     private readonly HashSet<MouseButton> _currentMouseButtons = [];
     private readonly HashSet<MouseButton> _previousMouseButtons = [];
     private readonly List<MouseButton> _pressedMouseButtons = [];
     private readonly List<MouseButton> _releasedMouseButtons = [];
 
     public bool IsMouseCaptured => _renderContext.InputContext.Mice[0].Cursor.CursorMode == CursorMode.Disabled;
+    public IReadOnlySet<Key> CurrentKeys => _currentKeys;
+    public Vector2 MousePosition => _mousePosition;
+    public IReadOnlySet<MouseButton> CurrentMouseButtons => _currentMouseButtons;
+    public IReadOnlyList<ScrollWheel> ScrollWheels => _currentScrollWheels;
 
     public InputSystem(
         EngineRenderContext renderContext,
@@ -321,6 +326,7 @@ public sealed class InputSystem : IInputSystem
 
         // ==================== MOUSE SCROLL ====================
         var scrollWheels = mouseState.GetScrollWheels();
+        _currentScrollWheels = scrollWheels.ToArray();
 
         if (_previousScrollWheels.Length != scrollWheels.Length)
         {
