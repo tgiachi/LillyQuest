@@ -19,12 +19,8 @@ namespace LillyQuest.Engine.Managers.Screens;
 public sealed class ScreenManager : IScreenManager
 {
     private readonly ILogger _logger = Log.ForContext<ScreenManager>();
-    private readonly SpriteBatch _spriteBatch;
 
     public IScreen? RootScreen { get; private set; }
-
-    public ScreenManager(SpriteBatch spriteBatch)
-        => _spriteBatch = spriteBatch;
 
     /// <summary>
     /// Dispatches key press events to screen and its entities.

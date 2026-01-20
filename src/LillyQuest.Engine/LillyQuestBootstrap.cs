@@ -43,7 +43,8 @@ public class LillyQuestBootstrap
         typeof(UpdateSystem), // Then: update entities with input consumed
         typeof(ImGuiSystem),
         typeof(FixedUpdateSystem),
-        typeof(Render2dSystem)
+        typeof(Render2dSystem),
+        typeof(ScreenSystem)
     ];
 
     public delegate void TickEventHandler(GameTime gameTime);
@@ -147,18 +148,10 @@ public class LillyQuestBootstrap
     private void EndFrame()
     {
         var sceneManager = _container.Resolve<ISceneManager>();
-        var screenManager = _container.Resolve<IScreenManager>();
-        var spriteBatch = _container.Resolve<SpriteBatch>();
 
-        spriteBatch.Begin();
-
-        // Render screens and their entities
-        screenManager.Render(spriteBatch, _renderContext);
-
-        // Render fade overlay on top
+        // make sure to render the fade overlay last
         sceneManager.RenderFadeOverlay(_window.Size);
 
-        spriteBatch.End();
     }
 
     private void LoadDefaultResources()

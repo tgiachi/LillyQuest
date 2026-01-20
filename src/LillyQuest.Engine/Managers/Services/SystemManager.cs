@@ -86,7 +86,7 @@ public class SystemManager : ISystemManager
 
         _logger.Information(
             "Added system [{QueryType}] {Name} with order {Order} ",
-            system.QueryType,
+            queryType,
             system.Name,
             system.Order
         );
