@@ -3,8 +3,9 @@
 using ConsoleAppFramework;
 using LillyQuest.Engine;
 using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 
-var loggerConfiguration = new LoggerConfiguration().WriteTo.Console();
+var loggerConfiguration = new LoggerConfiguration().MinimumLevel.Debug().WriteTo.Console(theme: AnsiConsoleTheme.Code);
 
 Log.Logger = loggerConfiguration.CreateLogger();
 

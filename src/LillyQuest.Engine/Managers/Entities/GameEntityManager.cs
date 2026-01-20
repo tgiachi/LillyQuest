@@ -1,11 +1,13 @@
 using LillyQuest.Engine.Collections;
 using LillyQuest.Engine.Interfaces.Entities;
 using LillyQuest.Engine.Interfaces.Managers;
+using Serilog;
 
 namespace LillyQuest.Engine.Managers.Entities;
 
 public sealed class GameEntityManager : IGameEntityManager
 {
+    private readonly ILogger _logger = Log.ForContext<GameEntityManager>();
     private readonly GameEntityCollection _collection = new();
     private readonly Dictionary<uint, IGameEntity> _entitiesById = new();
     private uint _nextId = 1;
@@ -56,16 +58,21 @@ public sealed class GameEntityManager : IGameEntityManager
             throw new InvalidOperationException($"Entity id {entity.Id} is already assigned.");
         }
 
+        _logger.Debug(
+            "Assigned ID {EntityId} to entity {EntityName} (Parent: {Parent})",
+            entity.Id,
+            entity.Name,
+            entity.Parent?.Name ?? "null"
+        );
+
         _entitiesById[entity.Id] = entity;
 
-        if (entity.Children is null)
+        if (entity.Children is not null)
         {
-            entity.Children = new List<IGameEntity>();
-        }
-
-        foreach (var child in entity.Children)
-        {
-            AssignIdsRecursively(child);
+            foreach (var child in entity.Children)
+            {
+                AssignIdsRecursively(child);
+            }
         }
     }
 
@@ -82,6 +89,12 @@ public sealed class GameEntityManager : IGameEntityManager
         if (entity.Id != 0)
         {
             _entitiesById.Remove(entity.Id);
+            _logger.Debug(
+                "Removed entity ID {EntityId} {EntityName} (Parent: {Parent})",
+                entity.Id,
+                entity.Name,
+                entity.Parent?.Name ?? "null"
+            );
         }
     }
 }
