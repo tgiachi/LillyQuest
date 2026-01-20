@@ -5,10 +5,9 @@ namespace LillyQuest.Engine.Entities;
 public class GameEntity : IGameEntity
 {
     public uint Id { get; set; }
-
     public uint Order { get; set; }
 
-    public string Name { get; set; } = string.Empty;
+    public string Name { get; set; }
 
     public bool IsActive { get; set; } = true;
 

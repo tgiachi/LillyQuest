@@ -9,6 +9,7 @@ using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Managers.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
+using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Interfaces.Systems;
@@ -226,6 +227,9 @@ public class LillyQuestBootstrap
 
         var scriptEngine = _container.Resolve<IScriptEngineService>();
         scriptEngine.StartAsync().GetAwaiter().GetResult();
+
+        var entityManager = _container.Resolve<IGameEntityManager>();
+        entityManager.AddEntity(new TestGameEntity());
     }
 
     private void WindowOnClosing()
