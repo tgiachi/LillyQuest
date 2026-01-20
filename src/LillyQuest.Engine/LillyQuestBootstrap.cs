@@ -9,7 +9,10 @@ using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Managers.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
+using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Services;
+using LillyQuest.Engine.Managers.Entities;
+using LillyQuest.Engine.Managers.Services;
 using LillyQuest.Engine.Services;
 using LillyQuest.Scripting.Lua.Data.Config;
 using LillyQuest.Scripting.Lua.Extensions.Scripts;
@@ -129,7 +132,6 @@ public class LillyQuestBootstrap
         // Future: post-processing, debug render, ImGui rendering, etc
     }
 
-
     private void LoadDefaultResources()
     {
         var assetManager = _container.Resolve<IAssetManager>();
@@ -168,20 +170,19 @@ public class LillyQuestBootstrap
 
     private void RegisterInternalServices()
     {
-
-
         _container.Register<ITextureManager, TextureManager>(Reuse.Singleton);
         _container.Register<IShaderManager, ShaderManager>(Reuse.Singleton);
         _container.Register<IFontManager, FontManager>(Reuse.Singleton);
         _container.Register<IAudioManager, AudioManager>(Reuse.Singleton);
         _container.Register<ITilesetManager, TilesetManager>(Reuse.Singleton);
 
+        _container.Register<IGameEntityManager, GameEntityManager>(Reuse.Singleton);
+        _container.Register<ISystemManager, SystemManager>(Reuse.Singleton);
+
         _container.Register<IAssetManager, AssetManager>(Reuse.Singleton);
 
-        _container.Register<IActionService,ActionService>(Reuse.Singleton);
+        _container.Register<IActionService, ActionService>(Reuse.Singleton);
         _container.Register<IShortcutService, ShortcutService>(Reuse.Singleton);
-
-
 
         _container.RegisterInstance(
             new LuaEngineConfig(
@@ -195,7 +196,9 @@ public class LillyQuestBootstrap
 
     private void StartInternalServices()
     {
+        _logger.Information("Starting LillyQuest Engine...");
 
+        var systemManager = _container.Resolve<ISystemManager>();
 
         _container.RegisterLuaUserData<Vector2>();
 
@@ -230,9 +233,7 @@ public class LillyQuestBootstrap
 
         LoadDefaultResources();
         StartInternalServices();
-
     }
-
 
     private void WindowOnRender(double obj)
     {
@@ -246,7 +247,7 @@ public class LillyQuestBootstrap
     private void WindowOnResize(Vector2D<int> obj)
     {
         _logger.Information("Window Resized to {Width}x{Height}", obj.X, obj.Y);
-        _renderContext.Gl.Viewport(0, 0, (uint)obj.X, (uint) obj.Y);
+        _renderContext.Gl.Viewport(0, 0, (uint)obj.X, (uint)obj.Y);
     }
 
     private void WindowOnUpdate(double deltaSeconds)

@@ -16,7 +16,5 @@ public class GameEntity : IGameEntity
 
     public IGameEntity? Parent { get; set; }
 
-    public void Initialize()
-    {
-    }
+    public void Initialize() { }
 }

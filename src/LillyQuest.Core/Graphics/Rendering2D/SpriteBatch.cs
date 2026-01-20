@@ -21,8 +21,8 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     private const int GROWTH_FACTOR = 2;
 
     private readonly GL _gl;
-    private readonly EngineRenderContext _renderContext;
-    public EngineRenderContext RenderContext => _renderContext;
+    public EngineRenderContext RenderContext { get; }
+
     private BufferObject<VertexPositionColorTexture> _vertexBuffer;
     private BufferObject<short> _indexBuffer;
     private readonly VertexArrayObject<short> _vao;
@@ -59,7 +59,7 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         ITextureManager? textureManager = null
     )
     {
-        _renderContext = context;
+        RenderContext = context;
         _gl = context.Gl;
         context.Window.Resize += OnResize;
         ShaderProgram = shaderManager.GetShader(shaderName);

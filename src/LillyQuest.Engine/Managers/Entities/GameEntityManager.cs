@@ -14,7 +14,7 @@ public sealed class GameEntityManager : IGameEntityManager
 
     public void AddEntity(IGameEntity entity)
     {
-        AddEntityInternal(entity, parent: null);
+        AddEntityInternal(entity, null);
     }
 
     public void AddEntity(IGameEntity entity, IGameEntity parent)
@@ -23,22 +23,18 @@ public sealed class GameEntityManager : IGameEntityManager
         AddEntityInternal(entity, parent);
     }
 
+    public IGameEntity? GetEntityById(uint id)
+        => _entitiesById.GetValueOrDefault(id);
+
+    public IReadOnlyList<TInterface> GetQueryOf<TInterface>() where TInterface : class
+        => _collection.GetQueryOf<TInterface>();
+
     public void RemoveEntity(IGameEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
 
         RemoveSubtreeFromMap(entity);
         _collection.Remove(entity);
-    }
-
-    public IGameEntity? GetEntityById(uint id)
-    {
-        return _entitiesById.GetValueOrDefault(id);
-    }
-
-    public IReadOnlyList<TInterface> GetQueryOf<TInterface>() where TInterface : class
-    {
-        return _collection.GetQueryOf<TInterface>();
     }
 
     private void AddEntityInternal(IGameEntity entity, IGameEntity? parent)

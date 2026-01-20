@@ -1,14 +1,19 @@
+using LillyQuest.Core.Data.Contexts;
+using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Interfaces.Entities;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Managers.Entities;
-using LillyQuest.Core.Data.Contexts;
-using LillyQuest.Core.Graphics.Rendering2D;
 
 namespace LillyQuest.Tests;
 
 public class GameEntityManagerTests
 {
+    private sealed class RenderableTestEntity : GameEntity, IRenderableEntity
+    {
+        public void Render(SpriteBatch spriteBatch, EngineRenderContext context) { }
+    }
+
     [Test]
     public void AddEntity_AssignsId_WhenZero()
     {
@@ -21,6 +26,18 @@ public class GameEntityManagerTests
 
         Assert.That(first.Id, Is.EqualTo(1));
         Assert.That(second.Id, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void AddEntity_DuplicateIdDifferentEntity_Throws()
+    {
+        var manager = new GameEntityManager();
+        var first = new GameEntity { Id = 10 };
+        var second = new GameEntity { Id = 10 };
+
+        manager.AddEntity(first);
+
+        Assert.Throws<InvalidOperationException>(() => manager.AddEntity(second));
     }
 
     [Test]
@@ -82,24 +99,5 @@ public class GameEntityManagerTests
         Assert.That(manager.GetEntityById(root.Id), Is.Null);
         Assert.That(manager.GetEntityById(child.Id), Is.Null);
         Assert.That(manager.OrderedEntities, Is.Empty);
-    }
-
-    [Test]
-    public void AddEntity_DuplicateIdDifferentEntity_Throws()
-    {
-        var manager = new GameEntityManager();
-        var first = new GameEntity { Id = 10 };
-        var second = new GameEntity { Id = 10 };
-
-        manager.AddEntity(first);
-
-        Assert.Throws<InvalidOperationException>(() => manager.AddEntity(second));
-    }
-
-    private sealed class RenderableTestEntity : GameEntity, IRenderableEntity
-    {
-        public void Render(SpriteBatch spriteBatch, EngineRenderContext context)
-        {
-        }
     }
 }

@@ -11,27 +11,6 @@ public sealed class GameEntityCollection
     private long _nextInsertionIndex;
 
     public IReadOnlyList<IGameEntity> OrderedEntities => _ordered;
-    
-    public IReadOnlyList<TInterface> GetQueryOf<TInterface>() where TInterface : class
-    {
-        var type = typeof(TInterface);
-        if (_queryCache.TryGetValue(type, out var cached))
-        {
-            return (IReadOnlyList<TInterface>)cached;
-        }
-
-        var results = new List<TInterface>();
-        foreach (var entity in _ordered)
-        {
-            if (entity is TInterface match)
-            {
-                results.Add(match);
-            }
-        }
-
-        _queryCache[type] = results;
-        return results;
-    }
 
     public void Add(IGameEntity entity, IGameEntity? parent = null)
     {
@@ -72,6 +51,30 @@ public sealed class GameEntityCollection
         _queryCache.Clear();
     }
 
+    public IReadOnlyList<TInterface> GetQueryOf<TInterface>() where TInterface : class
+    {
+        var type = typeof(TInterface);
+
+        if (_queryCache.TryGetValue(type, out var cached))
+        {
+            return (IReadOnlyList<TInterface>)cached;
+        }
+
+        var results = new List<TInterface>();
+
+        foreach (var entity in _ordered)
+        {
+            if (entity is TInterface match)
+            {
+                results.Add(match);
+            }
+        }
+
+        _queryCache[type] = results;
+
+        return results;
+    }
+
     public void Remove(IGameEntity entity)
     {
         ArgumentNullException.ThrowIfNull(entity);
@@ -85,6 +88,26 @@ public sealed class GameEntityCollection
         _roots.Remove(entity);
         RebuildOrderedEntities();
         _queryCache.Clear();
+    }
+
+    private void AddEntityDepthFirst(IGameEntity entity)
+    {
+        _ordered.Add(entity);
+
+        EnsureChildrenList(entity);
+
+        if (entity.Children.Count == 0)
+        {
+            return;
+        }
+
+        var orderedChildren = new List<IGameEntity>(entity.Children);
+        orderedChildren.Sort(CompareEntities);
+
+        foreach (var child in orderedChildren)
+        {
+            AddEntityDepthFirst(child);
+        }
     }
 
     private void AddRoot(IGameEntity entity)
@@ -110,6 +133,42 @@ public sealed class GameEntityCollection
         }
     }
 
+    private int CompareEntities(IGameEntity left, IGameEntity right)
+    {
+        var orderCompare = left.Order.CompareTo(right.Order);
+
+        if (orderCompare != 0)
+        {
+            return orderCompare;
+        }
+
+        var leftIndex = GetOrAssignInsertionIndex(left);
+        var rightIndex = GetOrAssignInsertionIndex(right);
+
+        return leftIndex.CompareTo(rightIndex);
+    }
+
+    private static void EnsureChildrenList(IGameEntity entity)
+    {
+        if (entity.Children == null)
+        {
+            entity.Children = new List<IGameEntity>();
+        }
+    }
+
+    private long GetOrAssignInsertionIndex(IGameEntity entity)
+    {
+        if (_insertionIndices.TryGetValue(entity, out var index))
+        {
+            return index;
+        }
+
+        index = _nextInsertionIndex++;
+        _insertionIndices[entity] = index;
+
+        return index;
+    }
+
     private void RebuildOrderedEntities()
     {
         _ordered.Clear();
@@ -125,59 +184,6 @@ public sealed class GameEntityCollection
         foreach (var root in orderedRoots)
         {
             AddEntityDepthFirst(root);
-        }
-    }
-
-    private void AddEntityDepthFirst(IGameEntity entity)
-    {
-        _ordered.Add(entity);
-
-        EnsureChildrenList(entity);
-
-        if (entity.Children.Count == 0)
-        {
-            return;
-        }
-
-        var orderedChildren = new List<IGameEntity>(entity.Children);
-        orderedChildren.Sort(CompareEntities);
-
-        foreach (var child in orderedChildren)
-        {
-            AddEntityDepthFirst(child);
-        }
-    }
-
-    private int CompareEntities(IGameEntity left, IGameEntity right)
-    {
-        var orderCompare = left.Order.CompareTo(right.Order);
-        if (orderCompare != 0)
-        {
-            return orderCompare;
-        }
-
-        var leftIndex = GetOrAssignInsertionIndex(left);
-        var rightIndex = GetOrAssignInsertionIndex(right);
-        return leftIndex.CompareTo(rightIndex);
-    }
-
-    private long GetOrAssignInsertionIndex(IGameEntity entity)
-    {
-        if (_insertionIndices.TryGetValue(entity, out var index))
-        {
-            return index;
-        }
-
-        index = _nextInsertionIndex++;
-        _insertionIndices[entity] = index;
-        return index;
-    }
-
-    private static void EnsureChildrenList(IGameEntity entity)
-    {
-        if (entity.Children == null)
-        {
-            entity.Children = new List<IGameEntity>();
         }
     }
 }

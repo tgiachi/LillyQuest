@@ -24,8 +24,4 @@
         <ProjectReference Include="..\LillyQuest.Scripting.Lua\LillyQuest.Scripting.Lua.csproj"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <Folder Include="Managers\" />
-    </ItemGroup>
-
 </Project>

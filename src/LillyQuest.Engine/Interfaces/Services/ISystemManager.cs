@@ -1,0 +1,25 @@
+using LillyQuest.Engine.Interfaces.Systems;
+using LillyQuest.Engine.Types;
+
+namespace LillyQuest.Engine.Interfaces.Services;
+
+/// <summary>
+/// Manages system registration and tracks execution metrics by query type.
+/// </summary>
+public interface ISystemManager
+{
+    /// <summary>
+    /// Registers a system so it can run for its declared query types.
+    /// </summary>
+    void AddSystem<TSystem>(TSystem system) where TSystem : ISystem;
+
+    /// <summary>
+    /// Gets the last recorded processing time for a query type.
+    /// </summary>
+    TimeSpan GetSystemProcessingTime(SystemQueryType queryType);
+
+    /// <summary>
+    /// Unregisters a system from all its declared query types.
+    /// </summary>
+    void RemoveSystem<TSystem>(TSystem system) where TSystem : ISystem;
+}

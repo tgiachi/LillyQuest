@@ -2,7 +2,6 @@ namespace LillyQuest.Engine.Interfaces.Entities;
 
 public interface IGameEntity
 {
-
     uint Id { get; set; }
 
     uint Order { get; set; }
