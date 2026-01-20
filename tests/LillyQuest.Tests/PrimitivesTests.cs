@@ -13,7 +13,7 @@ public class GameTimeTests
         var gameTime = new GameTime();
 
         Assert.That(gameTime.TotalGameTime, Is.EqualTo(TimeSpan.Zero));
-        Assert.That(gameTime.ElapsedGameTime, Is.EqualTo(TimeSpan.Zero));
+        Assert.That(gameTime.Elapsed, Is.EqualTo(TimeSpan.Zero));
     }
 
     [Test]
@@ -25,7 +25,7 @@ public class GameTimeTests
         var gameTime = new GameTime(totalTime, elapsedTime);
 
         Assert.That(gameTime.TotalGameTime, Is.EqualTo(totalTime));
-        Assert.That(gameTime.ElapsedGameTime, Is.EqualTo(elapsedTime));
+        Assert.That(gameTime.Elapsed, Is.EqualTo(elapsedTime));
     }
 
     [Test]
@@ -36,7 +36,7 @@ public class GameTimeTests
         var result = gameTime.ToString();
 
         Assert.That(result, Contains.Substring("TotalGameTime"));
-        Assert.That(result, Contains.Substring("ElapsedGameTime"));
+        Assert.That(result, Contains.Substring("Elapsed"));
     }
 
     [Test]
@@ -51,7 +51,7 @@ public class GameTimeTests
         }
 
         Assert.That(gameTime.TotalGameTime.TotalSeconds, Is.GreaterThan(0.99).And.LessThan(1.01));
-        Assert.That(gameTime.ElapsedGameTime.TotalSeconds, Is.EqualTo(deltaPerFrame).Within(0.0001));
+        Assert.That(gameTime.Elapsed.TotalSeconds, Is.EqualTo(deltaPerFrame).Within(0.0001));
     }
 
     [Test]
@@ -62,7 +62,7 @@ public class GameTimeTests
 
         gameTime.Update(largeFrameTime);
 
-        Assert.That(gameTime.ElapsedGameTime.TotalSeconds, Is.EqualTo(largeFrameTime).Within(0.0001));
+        Assert.That(gameTime.Elapsed.TotalSeconds, Is.EqualTo(largeFrameTime).Within(0.0001));
         Assert.That(gameTime.TotalGameTime.TotalSeconds, Is.EqualTo(largeFrameTime).Within(0.0001));
     }
 
@@ -83,7 +83,7 @@ public class GameTimeTests
 
         gameTime.Update(deltaSeconds);
 
-        Assert.That(gameTime.ElapsedGameTime.TotalSeconds, Is.EqualTo(deltaSeconds).Within(0.0001));
+        Assert.That(gameTime.Elapsed.TotalSeconds, Is.EqualTo(deltaSeconds).Within(0.0001));
         Assert.That(gameTime.TotalGameTime.TotalSeconds, Is.EqualTo(deltaSeconds).Within(0.0001));
     }
 
@@ -94,7 +94,7 @@ public class GameTimeTests
 
         gameTime.Update(0);
 
-        Assert.That(gameTime.ElapsedGameTime, Is.EqualTo(TimeSpan.Zero));
+        Assert.That(gameTime.Elapsed, Is.EqualTo(TimeSpan.Zero));
         Assert.That(gameTime.TotalGameTime.TotalSeconds, Is.EqualTo(10));
     }
 }

@@ -39,7 +39,7 @@ public class DebugSystemGameObject : GameEntity, IIMGuiEntity, IUpdateableEntity
     /// </summary>
     public void Update(GameTime gameTime)
     {
-        var frameTime = gameTime.ElapsedGameTime.TotalMilliseconds;
+        var frameTime = gameTime.Elapsed.TotalMilliseconds;
 
         // Add new frame time sample
         _frameTimeSamples.Enqueue(frameTime);

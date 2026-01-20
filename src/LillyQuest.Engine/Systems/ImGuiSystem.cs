@@ -48,7 +48,7 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>
         IReadOnlyList<IIMGuiEntity> typedEntities
     )
     {
-        _imguiController.Update((float)gameTime.ElapsedGameTime.TotalSeconds);
+        _imguiController.Update((float)gameTime.Elapsed.TotalSeconds);
 
         foreach (var entity in typedEntities)
         {

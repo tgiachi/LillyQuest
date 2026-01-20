@@ -31,7 +31,7 @@ public class AnimationSystem : ISystem
     /// </summary>
     public void ProcessEntities(GameTime gameTime, IGameEntityManager entityManager)
     {
-        var deltaTime = (float)gameTime.ElapsedGameTime.TotalSeconds;
+        var deltaTime = (float)gameTime.Elapsed.TotalSeconds;
 
         foreach (var sequence in _activeSequences.ToList())
         {

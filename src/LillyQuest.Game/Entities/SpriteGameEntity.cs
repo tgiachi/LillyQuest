@@ -11,8 +11,10 @@ public class SpriteGameEntity : GameEntity, IRenderableEntity
 {
     public Vector2 Position { get; set; }
 
+    public Vector2 Size { get; set; }
+
     public void Render(SpriteBatch spriteBatch, EngineRenderContext context)
     {
-        spriteBatch.DrawTexture("logo", Position, new(810, 847), LyColor.White);
+        spriteBatch.DrawTexture("logo", Position, Size, LyColor.White);
     }
 }

@@ -48,11 +48,18 @@ public class TestSceneB : IScene
             )
         );
 
-        var testScreen1 = new TestScreen();
-        var testScreen2 = new TestScreen();
+        var testScreen1 = new TestScreen()
+        {
+            Size = new(200, 200),
+            Position = new(100, 100)
+        };
+        var testScreen2 = new TestScreen
+        {
+            Size = new (200, 200),
+            Position = new (700, 100)
 
-        testScreen2.Size = new (200, 200);
-        testScreen1.Position = new (400, 400);
+        };
+
 
         _screenManager.PushScreen(testScreen1);
         _screenManager.PushScreen(testScreen2);

@@ -39,6 +39,9 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     private readonly Texture2D _shapeTexture;
     private readonly bool _ownsShapeTexture;
 
+    private readonly Stack<Vector2> _translationStack = [];
+    private Vector2 _currentTranslation = Vector2.Zero;
+
     public ITexture2DManager TextureManager => _textureManager;
     public bool IsActive { get; private set; }
 
@@ -154,6 +157,33 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         else if (BeginMode == BatchingMode.SortByDepthThenTexture)
         {
             _sortedBatch.Clear();
+        }
+    }
+
+    /// <summary>
+    /// Pushes a translation offset onto the translation stack.
+    /// All subsequent draw calls will be offset by this amount.
+    /// Must be paired with PopTranslation().
+    /// </summary>
+    public void PushTranslation(Vector2 offset)
+    {
+        _translationStack.Push(_currentTranslation);
+        _currentTranslation += offset;
+    }
+
+    /// <summary>
+    /// Pops the most recent translation offset from the translation stack.
+    /// Restores the previous translation state.
+    /// </summary>
+    public void PopTranslation()
+    {
+        if (_translationStack.Count > 0)
+        {
+            _currentTranslation = _translationStack.Pop();
+        }
+        else
+        {
+            _currentTranslation = Vector2.Zero;
         }
     }
 
@@ -295,6 +325,9 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         float depth
     )
     {
+        // Apply current translation
+        position += _currentTranslation;
+
         var fsColor = ToFsColor(color);
         var topLeft = new Vector3(position.X - origin.X, position.Y - origin.Y, depth);
         var topRight = new Vector3(position.X - origin.X + size.X, position.Y - origin.Y, depth);
@@ -366,6 +399,7 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
             return;
         }
 
+        center += _currentTranslation;
         var angleStep = MathF.Tau / segments;
         var prev = center + new Vector2(radius, 0f);
 
@@ -445,6 +479,9 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         ArgumentNullException.ThrowIfNull(fontName);
         ArgumentNullException.ThrowIfNull(text);
 
+        // Apply current translation
+        position += _currentTranslation;
+
         var font = _fontManager.GetFont(fontName, size);
         var fsColor = ToFsColor(color);
 
@@ -510,6 +547,9 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(colors);
 
+        // Apply current translation
+        position += _currentTranslation;
+
         var font = _fontManager.GetFont(fontName, size);
         var fsColors = ToFsColors(colors);
 
@@ -551,6 +591,9 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     )
     {
         ArgumentNullException.ThrowIfNull(fontName);
+
+        // Apply current translation
+        position += _currentTranslation;
 
         var font = _fontManager.GetFont(fontName, size);
         var fsColor = ToFsColor(color);
@@ -595,6 +638,9 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         ArgumentNullException.ThrowIfNull(fontName);
         ArgumentNullException.ThrowIfNull(colors);
 
+        // Apply current translation
+        position += _currentTranslation;
+
         var font = _fontManager.GetFont(fontName, size);
         var fsColors = ToFsColors(colors);
 
@@ -637,6 +683,9 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     {
         ArgumentNullException.ThrowIfNull(fontName);
         ArgumentNullException.ThrowIfNull(text);
+
+        // Apply current translation
+        position += _currentTranslation;
 
         var font = _fontManager.GetFont(fontName, size);
         var fsColor = ToFsColor(color);
@@ -681,6 +730,9 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         ArgumentNullException.ThrowIfNull(fontName);
         ArgumentNullException.ThrowIfNull(text);
         ArgumentNullException.ThrowIfNull(colors);
+
+        // Apply current translation
+        position += _currentTranslation;
 
         var font = _fontManager.GetFont(fontName, size);
         var fsColors = ToFsColors(colors);
@@ -716,6 +768,9 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     {
         ArgumentNullException.ThrowIfNull(fontName);
         ArgumentNullException.ThrowIfNull(text);
+
+        // Apply current translation
+        position += _currentTranslation;
 
         var font = _fontManager.GetBitmapFont(fontName);
         var glyphHeight = size > 0 ? size : font.TileHeight;
@@ -809,6 +864,10 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     /// </summary>
     public void DrawLine(Vector2 start, Vector2 end, LyColor color, float thickness = 5f, float depth = 0f)
     {
+        // Apply current translation
+        start += _currentTranslation;
+        end += _currentTranslation;
+
         var direction = end - start;
         var length = direction.Length();
 
@@ -821,7 +880,31 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         var size = new Vector2(length, thickness);
         var origin = new Vector2(0f, thickness / 2f);
 
-        Draw(_shapeTexture, start, size, color, rotation, origin, depth);
+        // Call Draw directly on the internal buffer to avoid double translation
+        // Since we already applied translation above
+        var fsColor = ToFsColor(color);
+        var topLeft = new Vector3(start.X - origin.X, start.Y - origin.Y, depth);
+        var topRight = new Vector3(start.X - origin.X + size.X, start.Y - origin.Y, depth);
+        var bottomLeft = new Vector3(start.X - origin.X, start.Y - origin.Y + size.Y, depth);
+        var bottomRight = new Vector3(start.X - origin.X + size.X, start.Y - origin.Y + size.Y, depth);
+
+        if (rotation != 0f)
+        {
+            var cos = MathF.Cos(rotation);
+            var sin = MathF.Sin(rotation);
+
+            topLeft = RotatePoint(topLeft, origin, cos, sin);
+            topRight = RotatePoint(topRight, origin, cos, sin);
+            bottomLeft = RotatePoint(bottomLeft, origin, cos, sin);
+            bottomRight = RotatePoint(bottomRight, origin, cos, sin);
+        }
+
+        var tlVertex = new VertexPositionColorTexture(topLeft, fsColor, new(0, 0));
+        var trVertex = new VertexPositionColorTexture(topRight, fsColor, new(1, 0));
+        var blVertex = new VertexPositionColorTexture(bottomLeft, fsColor, new(0, 1));
+        var brVertex = new VertexPositionColorTexture(bottomRight, fsColor, new(1, 1));
+
+        DrawQuad(_shapeTexture, ref tlVertex, ref trVertex, ref blVertex, ref brVertex);
     }
 
     /// <summary>
@@ -1203,6 +1286,11 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     /// </summary>
     public void DrawTriangleFilled(Vector2 p1, Vector2 p2, Vector2 p3, LyColor color, float depth = 0f)
     {
+        // Apply current translation
+        p1 += _currentTranslation;
+        p2 += _currentTranslation;
+        p3 += _currentTranslation;
+
         var fsColor = ToFsColor(color);
         var v1 = new VertexPositionColorTexture(new(p1.X, p1.Y, depth), fsColor, Vector2.Zero);
         var v2 = new VertexPositionColorTexture(new(p2.X, p2.Y, depth), fsColor, Vector2.Zero);

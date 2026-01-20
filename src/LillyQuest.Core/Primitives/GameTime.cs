@@ -3,19 +3,19 @@ namespace LillyQuest.Core.Primitives;
 public sealed class GameTime
 {
     public TimeSpan TotalGameTime { get; set; }
-    public TimeSpan ElapsedGameTime { get; set; }
+    public TimeSpan Elapsed { get; set; }
 
     public GameTime()
         : this(TimeSpan.Zero, TimeSpan.Zero) { }
 
-    public GameTime(TimeSpan totalGameTime, TimeSpan elapsedGameTime)
+    public GameTime(TimeSpan totalGameTime, TimeSpan elapsed)
     {
         TotalGameTime = totalGameTime;
-        ElapsedGameTime = elapsedGameTime;
+        Elapsed = elapsed;
     }
 
     public override string ToString()
-        => $"TotalGameTime: {TotalGameTime}, ElapsedGameTime: {ElapsedGameTime}";
+        => $"TotalGameTime: {TotalGameTime}, Elapsed: {Elapsed}";
 
     public void Update(double deltaSeconds)
     {
@@ -24,7 +24,7 @@ public sealed class GameTime
             throw new ArgumentOutOfRangeException(nameof(deltaSeconds), deltaSeconds, "Delta must be non-negative.");
         }
 
-        ElapsedGameTime = TimeSpan.FromSeconds(deltaSeconds);
-        TotalGameTime += ElapsedGameTime;
+        Elapsed = TimeSpan.FromSeconds(deltaSeconds);
+        TotalGameTime += Elapsed;
     }
 }

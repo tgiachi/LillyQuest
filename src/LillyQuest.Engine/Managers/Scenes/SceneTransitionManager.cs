@@ -135,7 +135,7 @@ public sealed class SceneTransitionManager : ISceneManager
             return;
         }
 
-        _fadeProgress += (float)gameTime.ElapsedGameTime.TotalSeconds / _fadeDuration;
+        _fadeProgress += (float)gameTime.Elapsed.TotalSeconds / _fadeDuration;
 
         switch (TransitionState)
         {

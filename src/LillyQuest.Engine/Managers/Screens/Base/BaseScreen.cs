@@ -43,6 +43,12 @@ public abstract class BaseScreen : IScreen
     public bool IsActive { get; set; } = true;
 
     /// <summary>
+    /// Gets or sets the margin around the screen content (Left, Top, Right, Bottom).
+    /// Margins are applied to the scissor region, preventing content from rendering in these areas.
+    /// </summary>
+    public Vector4 Margin { get; set; } = Vector4.Zero;
+
+    /// <summary>
     /// Gets the unique identifier for this screen (used for logging and debugging).
     /// </summary>
     public string ConsumerId { get; protected set; }
@@ -190,8 +196,20 @@ public abstract class BaseScreen : IScreen
     /// </summary>
     public virtual void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
     {
-        spriteBatch.SetScissor((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
-        spriteBatch.DrawRectangle(Position, Size, LyColor.Black.WithAlpha(120));
+        // Calculate scissor region with margins applied
+        var scissorX = (int)(Position.X + Margin.X);
+        var scissorY = (int)(Position.Y + Margin.Y);
+        var scissorWidth = (int)(Size.X - Margin.X - Margin.Z);
+        var scissorHeight = (int)(Size.Y - Margin.Y - Margin.W);
+
+        // Ensure scissor dimensions are not negative
+        scissorWidth = Math.Max(0, scissorWidth);
+        scissorHeight = Math.Max(0, scissorHeight);
+
+        spriteBatch.SetScissor(scissorX, scissorY, scissorWidth, scissorHeight);
+        spriteBatch.PushTranslation(Position);
+
+        spriteBatch.DrawRectangle(Vector2.Zero, Size, LyColor.Black.WithAlpha(120));
 
         foreach (var entity in _entities)
         {
@@ -201,6 +219,7 @@ public abstract class BaseScreen : IScreen
             }
         }
 
+        spriteBatch.PopTranslation();
         spriteBatch.DisableScissor();
     }
 
