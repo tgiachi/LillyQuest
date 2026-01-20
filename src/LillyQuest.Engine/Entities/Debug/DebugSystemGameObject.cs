@@ -20,6 +20,11 @@ public class DebugSystemGameObject : GameEntity, IIMGuiEntity, IUpdateableEntity
     private double _averageFrameTime;
     private double _currentFps;
 
+    private readonly SystemQueryType[] _allQueryTypes =
+    [
+        SystemQueryType.Updateable, SystemQueryType.FixedUpdateable, SystemQueryType.Renderable,
+        SystemQueryType.DebugRenderable
+    ];
 
     public DebugSystemGameObject(LillyQuestBootstrap bootstrap, ISystemManager systemManager)
     {
@@ -62,7 +67,7 @@ public class DebugSystemGameObject : GameEntity, IIMGuiEntity, IUpdateableEntity
         {
             ImGui.Text($"FPS: {_currentFps:F1}");
             ImGui.Text($"Frame Time: {_averageFrameTime:F2}ms (avg)");
-            ImGui.ProgressBar((float)(_averageFrameTime / 16.67f), new System.Numerics.Vector2(-1, 0), "");
+            ImGui.ProgressBar((float)(_averageFrameTime / 16.67f), new(-1, 0), "");
         }
 
         // Bootstrap timing section
@@ -80,7 +85,7 @@ public class DebugSystemGameObject : GameEntity, IIMGuiEntity, IUpdateableEntity
         {
             var totalSystemTime = 0.0;
 
-            foreach (SystemQueryType queryType in Enum.GetValues<SystemQueryType>())
+            foreach (SystemQueryType queryType in _allQueryTypes)
             {
                 var processingTime = _systemManager.GetSystemProcessingTime(queryType);
                 ImGui.Text($"{queryType}: {processingTime.TotalMilliseconds:F2}ms");

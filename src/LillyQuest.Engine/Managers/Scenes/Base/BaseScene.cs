@@ -20,7 +20,7 @@ public abstract class BaseScene : IScene
 
     protected void AddEntity(IGameEntity entity)
     {
-        entity.Name = $"Scene_{Name}_{entity.Name}";
+        entity.Name = $"[S:{Name}]_{entity.Name}";
         _sceneGameObjects.Add(entity);
     }
 
