@@ -16,4 +16,6 @@ public class LillyQuestEngineConfig
     /// Fixed timestep in seconds for FixedUpdate calls. Default is 1/60 seconds (60 Hz).
     /// </summary>
     public double FixedTimestep { get; init; } = 1.0 / 60.0;
+
+    public bool IsDebugMode { get; init; }
 }

@@ -15,7 +15,12 @@ await ConsoleApp.RunAsync(
     args,
     () =>
     {
-        var lillyQuestBootstrap = new LillyQuestBootstrap(new());
+        var lillyQuestBootstrap = new LillyQuestBootstrap(
+            new()
+            {
+                IsDebugMode = false
+            }
+        );
 
         lillyQuestBootstrap.Initialize();
 

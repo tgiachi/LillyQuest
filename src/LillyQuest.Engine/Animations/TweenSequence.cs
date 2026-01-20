@@ -5,7 +5,7 @@ namespace LillyQuest.Engine.Animations;
 /// </summary>
 public class TweenSequence
 {
-    private Queue<(List<Tween> tweens, bool isParallel)> _queue = [];
+    private readonly Queue<(List<Tween> tweens, bool isParallel)> _queue = [];
     private List<Tween>? _currentGroup;
     private bool _hasStarted;
     private Action? _onComplete;
@@ -26,7 +26,9 @@ public class TweenSequence
     public void Update(float deltaTime)
     {
         if (!_hasStarted)
+        {
             _hasStarted = true;
+        }
 
         if (_currentGroup == null && _queue.Count > 0)
         {
@@ -37,7 +39,9 @@ public class TweenSequence
         if (_currentGroup != null)
         {
             foreach (var tween in _currentGroup)
+            {
                 tween.Update(deltaTime);
+            }
 
             if (_currentGroup.All(t => t.IsComplete))
             {

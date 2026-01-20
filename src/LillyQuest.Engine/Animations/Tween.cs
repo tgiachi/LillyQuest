@@ -36,7 +36,9 @@ public class Tween
         _onUpdate(progress);
 
         if (IsComplete)
+        {
             _onComplete?.Invoke();
+        }
     }
 
     /// <summary>
