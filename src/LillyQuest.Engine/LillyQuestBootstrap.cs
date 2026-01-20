@@ -46,7 +46,6 @@ public class LillyQuestBootstrap
         typeof(Render2dSystem),
         typeof(ScreenSystem),
         typeof(SceneSystem)
-
     ];
 
     public delegate void TickEventHandler(GameTime gameTime);
@@ -147,11 +146,7 @@ public class LillyQuestBootstrap
     /// Finalizes the frame after rendering.
     /// Can be used for post-processing, debug rendering, or cleanup.
     /// </summary>
-    private void EndFrame()
-    {
-
-
-    }
+    private void EndFrame() { }
 
     private void LoadDefaultResources()
     {
@@ -187,6 +182,12 @@ public class LillyQuestBootstrap
             0,
             typeof(SpriteBatch).Assembly
         );
+
+        assetManager.TextureManager.LoadTextureFromEmbeddedResource(
+            "logo",
+            "Assets/Textures/lillyquest_logo.png",
+            typeof(SpriteBatch).Assembly
+        );
     }
 
     private void RegisterInternalServices()
@@ -201,7 +202,8 @@ public class LillyQuestBootstrap
         _container.Register<ISystemManager, SystemManager>(Reuse.Singleton);
         _container.Register<IScreenManager, ScreenManager>(
             Reuse.Singleton,
-            made: Parameters.Of.Type(typeof(SpriteBatch)));
+            made: Parameters.Of.Type(typeof(SpriteBatch))
+        );
 
         _container.Register<ISceneManager, SceneTransitionManager>(Reuse.Singleton);
 
@@ -244,14 +246,24 @@ public class LillyQuestBootstrap
         var scriptEngine = _container.Resolve<IScriptEngineService>();
         scriptEngine.StartAsync().GetAwaiter().GetResult();
 
-        StartSceneManager();
+        if (_engineConfig.IsDebugMode)
+        {
+            InitDebugMode();
+        }
 
+        StartSceneManager();
+    }
+
+    private void InitDebugMode()
+    {
         var entityManager = _container.Resolve<IGameEntityManager>();
         var inputSystem = _container.Resolve<InputSystem>();
+        var systemManager = _container.Resolve<ISystemManager>();
 
         entityManager.AddEntity(new DebugSystemGameObject(this, systemManager));
         entityManager.AddEntity(new DebugEntityGameObject(entityManager));
         entityManager.AddEntity(new DebugInputGameObject(inputSystem));
+        entityManager.AddEntity(new DebugLabelGameObject(_renderContext));
     }
 
     private void StartSceneManager()
