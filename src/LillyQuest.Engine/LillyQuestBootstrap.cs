@@ -15,6 +15,7 @@ using LillyQuest.Engine.Extensions;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Scenes;
 using LillyQuest.Engine.Managers.Scenes;
+using LillyQuest.Engine.Managers.Screens;
 using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Interfaces.Systems;
 using LillyQuest.Engine.Managers.Entities;
@@ -38,7 +39,8 @@ public class LillyQuestBootstrap
 {
     private readonly Type[] _renderSystems =
     [
-        typeof(UpdateSystem),
+        typeof(InputSystem),      // First: capture and dispatch input
+        typeof(UpdateSystem),     // Then: update entities with input consumed
         typeof(ImGuiSystem),
         typeof(FixedUpdateSystem)
     ];
@@ -115,8 +117,6 @@ public class LillyQuestBootstrap
         _window.Resize += WindowOnResize;
 
         RegisterInternalServices();
-
-
     }
 
     public void RegisterServices(Func<IContainer, IContainer> registerServices)
@@ -196,12 +196,9 @@ public class LillyQuestBootstrap
 
         _container.Register<IGameEntityManager, GameEntityManager>(Reuse.Singleton);
         _container.Register<ISystemManager, SystemManager>(Reuse.Singleton);
+        _container.Register<IScreenManager, ScreenManager>(Reuse.Singleton);
 
         _container.Register<ISceneManager, SceneTransitionManager>(Reuse.Singleton);
-
-
-
-
 
         _container.Register<IAssetManager, AssetManager>(Reuse.Singleton);
 
@@ -242,7 +239,14 @@ public class LillyQuestBootstrap
         var scriptEngine = _container.Resolve<IScriptEngineService>();
         scriptEngine.StartAsync().GetAwaiter().GetResult();
 
-        // Load initial scene if registered
+        StartSceneManager();
+
+        var entityManager = _container.Resolve<IGameEntityManager>();
+        entityManager.AddEntity(new TestGameEntity());
+    }
+
+    private void StartSceneManager()
+    {
         if (_container.IsRegistered<List<SceneRegistrationObject>>())
         {
             var sceneRegistrations = _container.Resolve<List<SceneRegistrationObject>>();
@@ -252,13 +256,10 @@ public class LillyQuestBootstrap
             {
                 var sceneManager = _container.Resolve<ISceneManager>();
                 var sceneInstance = (IScene)_container.Resolve(initialScene.SceneType);
-                sceneManager.SwitchScene(sceneInstance.Name, fadeDuration: 0.0f);
+                sceneManager.SwitchScene(sceneInstance.Name, fadeDuration: 0.5f);
                 _logger.Information("Loaded initial scene '{SceneName}'", sceneInstance.Name);
             }
         }
-
-        var entityManager = _container.Resolve<IGameEntityManager>();
-        entityManager.AddEntity(new TestGameEntity());
     }
 
     private void WindowOnClosing()

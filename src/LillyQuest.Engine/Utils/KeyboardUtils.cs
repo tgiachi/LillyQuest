@@ -1,7 +1,7 @@
-using LillyQuest.Core.Types;
+using LillyQuest.Engine.Data.Input;
 using Silk.NET.Input;
 
-namespace LillyQuest.Core.Utils;
+namespace LillyQuest.Engine.Utils;
 
 /// <summary>
 /// Provides helper methods to translate keyboard modifiers and input text to characters.

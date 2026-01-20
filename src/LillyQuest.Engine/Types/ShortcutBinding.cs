@@ -1,4 +1,5 @@
 using LillyQuest.Core.Types;
+using LillyQuest.Engine.Data.Input;
 using Silk.NET.Input;
 
 namespace LillyQuest.Engine.Types;
