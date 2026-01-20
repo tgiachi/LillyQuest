@@ -26,6 +26,9 @@ public class TestSceneA : BaseScene
                 }
             )
         );
+
+        AddEntity(new Test2GameEntity());
+
         base.OnInitialize(sceneManager);
     }
 }
