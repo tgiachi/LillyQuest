@@ -116,11 +116,11 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         _gl.Enable(EnableCap.Blend);
         _gl.BlendFunc(BlendingFactor.One, BlendingFactor.OneMinusSrcAlpha);
 
-        // Abilita scissor test se configurato
+        // Enable scissor test if configured
         if (_scissorEnabled && ScissorRect.Size.X > 0 && ScissorRect.Size.Y > 0)
         {
             _gl.Enable(EnableCap.ScissorTest);
-            // Converti da coordinate top-left a OpenGL bottom-left
+            // Convert from top-left coordinates to OpenGL bottom-left
             int viewportHeight = Viewport.Size.Y;
             int scissorY = viewportHeight - ScissorRect.Origin.Y - ScissorRect.Size.Y;
             _gl.Scissor(
@@ -158,23 +158,23 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     }
 
     /// <summary>
-    /// Abilita lo scissor test con il rettangolo specificato.
-    /// Flushes il buffer attuale prima di cambiare lo scissor state.
-    /// Coordinate: (x, y) dall'angolo in alto-sinistra.
+    /// Enable scissor test with the specified rectangle.
+    /// Flushes the current buffer before changing scissor state.
+    /// Coordinates: (x, y) from top-left corner.
     /// </summary>
-    /// <param name="x">Posizione X del rettangolo di scissor.</param>
-    /// <param name="y">Posizione Y del rettangolo di scissor.</param>
-    /// <param name="width">Larghezza del rettangolo di scissor.</param>
-    /// <param name="height">Altezza del rettangolo di scissor.</param>
+    /// <param name="x">X position of the scissor rectangle.</param>
+    /// <param name="y">Y position of the scissor rectangle.</param>
+    /// <param name="width">Width of the scissor rectangle.</param>
+    /// <param name="height">Height of the scissor rectangle.</param>
     public void SetScissor(int x, int y, int width, int height)
     {
         if (IsActive)
         {
-            FlushBuffer();  // Flushes il batch attuale con lo scissor precedente
+            FlushBuffer();  // Flush current batch with previous scissor state
 
             _gl.Enable(EnableCap.ScissorTest);
 
-            // Converti da coordinate top-left a OpenGL bottom-left
+            // Convert from top-left coordinates to OpenGL bottom-left
             int viewportHeight = Viewport.Size.Y;
             int scissorY = viewportHeight - y - height;
 
@@ -186,8 +186,8 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     }
 
     /// <summary>
-    /// Abilita lo scissor test con un rettangolo.
-    /// Flushes il buffer attuale prima di cambiare lo scissor state.
+    /// Enable scissor test with a rectangle.
+    /// Flushes the current buffer before changing scissor state.
     /// </summary>
     public void SetScissor(Rectangle<int> rect)
     {
@@ -195,14 +195,14 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     }
 
     /// <summary>
-    /// Disabilita lo scissor test.
-    /// Flushes il buffer attuale con lo scissor ancora attivo prima di disabilitare.
+    /// Disable scissor test.
+    /// Flushes the current buffer with scissor still active before disabling.
     /// </summary>
     public void DisableScissor()
     {
         if (IsActive)
         {
-            FlushBuffer();  // Flushes il batch attuale con lo scissor ancora attivo
+            FlushBuffer();  // Flush current batch with scissor still active
             _gl.Disable(EnableCap.ScissorTest);
         }
 

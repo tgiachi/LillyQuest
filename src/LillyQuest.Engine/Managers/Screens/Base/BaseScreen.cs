@@ -1,4 +1,6 @@
 using System.Numerics;
+using LillyQuest.Core.Data.Contexts;
+using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Data.Input;
 using LillyQuest.Engine.Interfaces.Entities;
@@ -52,66 +54,6 @@ public abstract class BaseScreen : IScreen
     }
 
     /// <summary>
-    /// Gets all UI entities contained in this screen.
-    /// </summary>
-    public IEnumerable<IGameEntity> GetScreenGameObjects() => _entities;
-
-    /// <summary>
-    /// Called once when the screen is first created/initialized.
-    /// Override this to create UI entities and set up the screen layout.
-    /// </summary>
-    public virtual void OnInitialize(IScreenManager screenManager)
-    {
-        _logger.Debug("Screen {ScreenId} initialized", ConsumerId);
-    }
-
-    /// <summary>
-    /// Called when the screen becomes active/visible.
-    /// Override to perform startup logic (animations, resource loading, etc).
-    /// </summary>
-    public virtual void OnLoad()
-    {
-        _logger.Debug("Screen {ScreenId} loaded", ConsumerId);
-    }
-
-    /// <summary>
-    /// Called when the screen is being deactivated/hidden.
-    /// Override to perform cleanup logic.
-    /// </summary>
-    public virtual void OnUnload()
-    {
-        _logger.Debug("Screen {ScreenId} unloaded", ConsumerId);
-    }
-
-    /// <summary>
-    /// Updates the screen and all its entities each frame.
-    /// </summary>
-    public virtual void Update(GameTime gameTime)
-    {
-        foreach (var entity in _entities)
-        {
-            if (entity is IUpdateableEntity updateable && entity.IsActive)
-            {
-                updateable.Update(gameTime);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Renders the screen and all its entities.
-    /// </summary>
-    public virtual void Render(LillyQuest.Core.Graphics.Rendering2D.SpriteBatch spriteBatch, LillyQuest.Core.Data.Contexts.EngineRenderContext renderContext)
-    {
-        foreach (var entity in _entities)
-        {
-            if (entity is IRenderableEntity renderable && entity.IsActive)
-            {
-                renderable.Render(spriteBatch, renderContext);
-            }
-        }
-    }
-
-    /// <summary>
     /// Adds a UI entity to this screen.
     /// </summary>
     public void AddEntity(IGameEntity entity)
@@ -124,17 +66,6 @@ public abstract class BaseScreen : IScreen
     }
 
     /// <summary>
-    /// Removes a UI entity from this screen.
-    /// </summary>
-    public void RemoveEntity(IGameEntity entity)
-    {
-        if (_entities.Remove(entity))
-        {
-            _logger.Debug("Entity {EntityId} removed from screen {ScreenId}", entity.Id, ConsumerId);
-        }
-    }
-
-    /// <summary>
     /// Clears all entities from this screen.
     /// </summary>
     public void ClearEntities()
@@ -142,6 +73,23 @@ public abstract class BaseScreen : IScreen
         _entities.Clear();
         _logger.Debug("All entities cleared from screen {ScreenId}", ConsumerId);
     }
+
+    /// <summary>
+    /// Gets screen entities that implement IInputConsumer.
+    /// Used by InputSystem for hierarchical input dispatch.
+    /// </summary>
+    public IReadOnlyList<IInputConsumer>? GetChildren()
+    {
+        var consumers = _entities.OfType<IInputConsumer>().ToList();
+
+        return consumers.Count > 0 ? consumers : null;
+    }
+
+    /// <summary>
+    /// Gets all UI entities contained in this screen.
+    /// </summary>
+    public IEnumerable<IGameEntity> GetScreenGameObjects()
+        => _entities;
 
     /// <summary>
     /// Performs hit-testing at the given screen coordinates.
@@ -158,48 +106,115 @@ public abstract class BaseScreen : IScreen
     }
 
     /// <summary>
+    /// Called once when the screen is first created/initialized.
+    /// Override this to create UI entities and set up the screen layout.
+    /// </summary>
+    public virtual void OnInitialize(IScreenManager screenManager)
+    {
+        _logger.Debug("Screen {ScreenId} initialized", ConsumerId);
+    }
+
+    /// <summary>
     /// Called when a key is pressed. Can be overridden for screen-level input handling.
     /// Returns true if the input was consumed (prevents propagation to entities).
     /// </summary>
-    public virtual bool OnKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys) => false;
-
-    /// <summary>
-    /// Called when a key repeats (after initial delay). Can be overridden for screen-level input handling.
-    /// </summary>
-    public virtual bool OnKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys) => false;
+    public virtual bool OnKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => false;
 
     /// <summary>
     /// Called when a key is released. Can be overridden for screen-level input handling.
     /// </summary>
-    public virtual bool OnKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys) => false;
+    public virtual bool OnKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => false;
 
     /// <summary>
-    /// Called when the mouse moves. Can be overridden for screen-level input handling.
+    /// Called when a key repeats (after initial delay). Can be overridden for screen-level input handling.
     /// </summary>
-    public virtual bool OnMouseMove(int x, int y) => false;
+    public virtual bool OnKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => false;
+
+    /// <summary>
+    /// Called when the screen becomes active/visible.
+    /// Override to perform startup logic (animations, resource loading, etc).
+    /// </summary>
+    public virtual void OnLoad()
+    {
+        _logger.Debug("Screen {ScreenId} loaded", ConsumerId);
+    }
 
     /// <summary>
     /// Called when a mouse button is pressed. Can be overridden for screen-level input handling.
     /// </summary>
-    public virtual bool OnMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons) => false;
+    public virtual bool OnMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons)
+        => false;
+
+    /// <summary>
+    /// Called when the mouse moves. Can be overridden for screen-level input handling.
+    /// </summary>
+    public virtual bool OnMouseMove(int x, int y)
+        => false;
 
     /// <summary>
     /// Called when a mouse button is released. Can be overridden for screen-level input handling.
     /// </summary>
-    public virtual bool OnMouseUp(int x, int y, IReadOnlyList<MouseButton> buttons) => false;
+    public virtual bool OnMouseUp(int x, int y, IReadOnlyList<MouseButton> buttons)
+        => false;
 
     /// <summary>
     /// Called when the mouse wheel scrolls. Can be overridden for screen-level input handling.
     /// </summary>
-    public virtual bool OnMouseWheel(int x, int y, float delta) => false;
+    public virtual bool OnMouseWheel(int x, int y, float delta)
+        => false;
 
     /// <summary>
-    /// Gets screen entities that implement IInputConsumer.
-    /// Used by InputSystem for hierarchical input dispatch.
+    /// Called when the screen is being deactivated/hidden.
+    /// Override to perform cleanup logic.
     /// </summary>
-    public IReadOnlyList<IInputConsumer>? GetChildren()
+    public virtual void OnUnload()
     {
-        var consumers = _entities.OfType<IInputConsumer>().ToList();
-        return consumers.Count > 0 ? consumers : null;
+        _logger.Debug("Screen {ScreenId} unloaded", ConsumerId);
+    }
+
+    /// <summary>
+    /// Removes a UI entity from this screen.
+    /// </summary>
+    public void RemoveEntity(IGameEntity entity)
+    {
+        if (_entities.Remove(entity))
+        {
+            _logger.Debug("Entity {EntityId} removed from screen {ScreenId}", entity.Id, ConsumerId);
+        }
+    }
+
+    /// <summary>
+    /// Renders the screen and all its entities.
+    /// </summary>
+    public virtual void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
+    {
+        spriteBatch.SetScissor((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
+
+        foreach (var entity in _entities)
+        {
+            if (entity is IRenderableEntity renderable && entity.IsActive)
+            {
+                renderable.Render(spriteBatch, renderContext);
+            }
+        }
+
+        spriteBatch.DisableScissor();
+    }
+
+    /// <summary>
+    /// Updates the screen and all its entities each frame.
+    /// </summary>
+    public virtual void Update(GameTime gameTime)
+    {
+        foreach (var entity in _entities)
+        {
+            if (entity is IUpdateableEntity updateable && entity.IsActive)
+            {
+                updateable.Update(gameTime);
+            }
+        }
     }
 }
