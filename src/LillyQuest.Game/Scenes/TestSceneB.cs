@@ -48,7 +48,14 @@ public class TestSceneB : IScene
             )
         );
 
-        _screenManager.SetRootScreen(new TestScreen());
+        var testScreen1 = new TestScreen();
+        var testScreen2 = new TestScreen();
+
+        testScreen2.Size = new (200, 200);
+        testScreen1.Position = new (400, 400);
+
+        _screenManager.PushScreen(testScreen1);
+        _screenManager.PushScreen(testScreen2);
     }
 
     public void OnLoad()
