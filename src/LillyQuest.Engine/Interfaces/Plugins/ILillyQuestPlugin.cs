@@ -1,6 +1,5 @@
 using DryIoc;
 using LillyQuest.Core.Data.Plugins;
-using LillyQuest.Engine.Interfaces.Managers;
 
 namespace LillyQuest.Engine.Interfaces.Plugins;
 
@@ -24,7 +23,7 @@ public interface ILillyQuestPlugin
     /// </summary>
     /// <param name="gameEntityManager">Game object manager for runtime access.</param>
     /// <param name="container">The DI container.</param>
-    void Ready(IGameEntityManager gameEntityManager, IContainer container);
+    // void Ready(IGameEntityManager gameEntityManager, IContainer container);
 
     /// <summary>
     /// Registers plugin services in the container.

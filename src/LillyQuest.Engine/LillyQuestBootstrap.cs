@@ -6,18 +6,11 @@ using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Data.Directories;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
-using LillyQuest.Core.Internal.Data.Registrations;
 using LillyQuest.Core.Managers.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
-using LillyQuest.Engine.Entities;
-using LillyQuest.Engine.Features;
-using LillyQuest.Engine.Interfaces.Managers;
-using LillyQuest.Engine.Interfaces.Scenes;
 using LillyQuest.Engine.Interfaces.Services;
-using LillyQuest.Engine.Managers;
 using LillyQuest.Engine.Services;
-using LillyQuest.Engine.Systems;
 using LillyQuest.Scripting.Lua.Data.Config;
 using LillyQuest.Scripting.Lua.Extensions.Scripts;
 using LillyQuest.Scripting.Lua.Interfaces;
@@ -52,7 +45,6 @@ public class LillyQuestBootstrap
 
     private GL _gl;
     private IWindow _window;
-    private InputFocusSystem _inputFocusSystem;
 
     /// <summary>
     /// Event invoked at fixed timestep intervals during the game loop.
@@ -137,44 +129,6 @@ public class LillyQuestBootstrap
         // Future: post-processing, debug render, ImGui rendering, etc
     }
 
-    private void InitializeScenes()
-    {
-        var sceneManager = _container.Resolve<ISceneManager>();
-        var entityManager = _container.Resolve<IGameEntityManager>();
-
-        // Create and register the scene transition feature (fade overlay)
-        var transitionEntity = entityManager.CreateEntity("SceneTransition");
-        var transitionFeature = new SceneTransitionFeature(sceneManager);
-        ((GameEntity)transitionEntity).AddFeature(transitionFeature);
-        entityManager.AddEntity(transitionEntity);
-
-        if (_container.IsRegistered<List<SceneRegistrationObject>>())
-        {
-            var sceneRegistrations = _container.Resolve<List<SceneRegistrationObject>>();
-            IScene? initialScene = null;
-
-            foreach (var registration in sceneRegistrations)
-            {
-                var scene = (IScene)_container.Resolve(registration.SceneType);
-                sceneManager.RegisterScene(scene);
-
-                if (registration.IsInitial)
-                {
-                    initialScene = scene;
-                }
-            }
-
-
-            if (initialScene != null)
-            {
-                sceneManager.SwitchScene(initialScene.Name, 0f); // No fade on startup
-            }
-        }
-        else
-        {
-            _logger.Warning("No scenes registered with the engine.");
-        }
-    }
 
     private void LoadDefaultResources()
     {
@@ -214,9 +168,7 @@ public class LillyQuestBootstrap
 
     private void RegisterInternalServices()
     {
-        _container.Register<IGameEntityManager, GameEntityManager>(Reuse.Singleton);
-        _container.Register<ISystemManager, SystemManager>(Reuse.Singleton);
-        _container.Register<ISceneManager, SceneManager>(Reuse.Singleton);
+
 
         _container.Register<ITextureManager, TextureManager>(Reuse.Singleton);
         _container.Register<IShaderManager, ShaderManager>(Reuse.Singleton);
@@ -229,9 +181,7 @@ public class LillyQuestBootstrap
         _container.Register<IActionService,ActionService>(Reuse.Singleton);
         _container.Register<IShortcutService, ShortcutService>(Reuse.Singleton);
 
-        _container.Register<UpdateSystem>(Reuse.Singleton);
-        _container.Register<ImGuiSystem>(Reuse.Singleton);
-        _container.Register<RenderSystem>(Reuse.Singleton);
+
 
         _container.RegisterInstance(
             new LuaEngineConfig(
@@ -245,24 +195,7 @@ public class LillyQuestBootstrap
 
     private void StartInternalServices()
     {
-        var systemManager = _container.Resolve<ISystemManager>();
-        var entityManager = _container.Resolve<IGameEntityManager>();
 
-        var updateSystem = _container.Resolve<UpdateSystem>();
-        var imGuiSystem = _container.Resolve<ImGuiSystem>();
-        var sceneManager = _container.Resolve<ISceneManager>();
-        var renderSystem = _container.Resolve<RenderSystem>();
-
-        systemManager.AddSystem(updateSystem);
-        systemManager.AddSystem((SceneManager)sceneManager);
-
-        _inputFocusSystem = new InputFocusSystem(entityManager, sceneManager);
-        systemManager.AddSystem(_inputFocusSystem);
-
-        systemManager.AddSystem(renderSystem);
-        systemManager.AddSystem(imGuiSystem);
-
-        InitializeScenes();
 
         _container.RegisterLuaUserData<Vector2>();
 
@@ -298,70 +231,8 @@ public class LillyQuestBootstrap
         LoadDefaultResources();
         StartInternalServices();
 
-        // Setup input handlers
-        SetupInputHandlers();
     }
 
-    private void SetupInputHandlers()
-    {
-        if (_renderContext.InputContext == null)
-        {
-            _logger.Warning("InputContext is null, input handlers not setup");
-            return;
-        }
-
-        if (_renderContext.InputContext.Mice.Count == 0 ||
-            _renderContext.InputContext.Keyboards.Count == 0)
-        {
-            _logger.Warning("No mice or keyboards available");
-            return;
-        }
-
-        var mouse = _renderContext.InputContext.Mice[0];
-        var keyboard = _renderContext.InputContext.Keyboards[0];
-
-        // Mouse events
-        mouse.MouseDown += (m, button) =>
-        {
-            var pos = mouse.Position;
-            _inputFocusSystem.HandleMouseClick((int)pos.X, (int)pos.Y);
-            _inputFocusSystem.DispatchMouseInput((int)pos.X, (int)pos.Y,
-                feature => feature.OnMouseDown((int)pos.X, (int)pos.Y, new[] { button }));
-        };
-
-        mouse.MouseMove += (m, pos) =>
-        {
-            _inputFocusSystem.DispatchMouseInput((int)pos.X, (int)pos.Y,
-                feature => feature.OnMouseMove((int)pos.X, (int)pos.Y));
-        };
-
-        mouse.MouseUp += (m, button) =>
-        {
-            var pos = mouse.Position;
-            _inputFocusSystem.DispatchMouseInput((int)pos.X, (int)pos.Y,
-                feature => feature.OnMouseUp((int)pos.X, (int)pos.Y, new[] { button }));
-        };
-
-        mouse.Scroll += (m, wheel) =>
-        {
-            var pos = mouse.Position;
-            _inputFocusSystem.DispatchMouseInput((int)pos.X, (int)pos.Y,
-                feature => feature.OnMouseWheel((int)pos.X, (int)pos.Y, wheel.Y));
-        };
-
-        // Keyboard events
-        keyboard.KeyDown += (kb, key, scancode) =>
-        {
-            _inputFocusSystem.DispatchKeyboardInput(
-                feature => feature.OnKeyPress(KeyModifierType.None, new[] { key }));
-        };
-
-        keyboard.KeyUp += (kb, key, scancode) =>
-        {
-            _inputFocusSystem.DispatchKeyboardInput(
-                feature => feature.OnKeyRelease(KeyModifierType.None, new[] { key }));
-        };
-    }
 
     private void WindowOnRender(double obj)
     {

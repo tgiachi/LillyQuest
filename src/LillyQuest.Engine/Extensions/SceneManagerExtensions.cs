@@ -1,7 +1,6 @@
 using DryIoc;
 using LillyQuest.Core.Extensions.Container;
 using LillyQuest.Core.Internal.Data.Registrations;
-using LillyQuest.Engine.Interfaces.Scenes;
 
 namespace LillyQuest.Engine.Extensions;
 
@@ -14,7 +13,7 @@ public static class SceneManagerExtensions
     /// <param name="isInitial"></param>
     /// <typeparam name="TScene"></typeparam>
     /// <returns></returns>
-    public static IContainer RegisterScene<TScene>(this IContainer container, bool isInitial = false) where TScene : IScene
+    public static IContainer RegisterScene<TScene>(this IContainer container, bool isInitial = false)
     {
         container.Register<TScene>(Reuse.Singleton);
         container.AddToRegisterTypedList(new SceneRegistrationObject(typeof(TScene), isInitial));
