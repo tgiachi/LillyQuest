@@ -7,7 +7,11 @@
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <Authors>tom</Authors>
         <Version>0.1.0</Version>
+        <Description>LillyQuest Engine - 2D Game Engine with ECS Architecture</Description>
+        <PackageProjectUrl>https://github.com/tgiachi/LillyQuest/</PackageProjectUrl>
         <RepositoryUrl>https://github.com/tgiachi/LillyQuest/</RepositoryUrl>
+        <RepositoryType>git</RepositoryType>
+        <Copyright>Copyright © 2026 Tom</Copyright>
         <License>LICENSE</License>
     </PropertyGroup>
 
