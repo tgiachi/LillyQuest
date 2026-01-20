@@ -25,7 +25,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Interfaces\Managers\" />
       <Folder Include="Managers\" />
     </ItemGroup>
 
