@@ -48,7 +48,7 @@ public class SystemManagerTests
         var calls = new List<string>();
         var system = new RecordingSystem("Update", 0, SystemQueryType.Updateable | SystemQueryType.FixedUpdateable, calls);
 
-        systemManager.AddSystem(system);
+        systemManager.RegisterSystem(system);
         systemManager.RemoveSystem(system);
 
         RaiseEvent(bootstrap, "Update", new());
@@ -67,7 +67,7 @@ public class SystemManagerTests
         var calls = new List<string>();
         var system = new RecordingSystem("Render", 0, SystemQueryType.Renderable | SystemQueryType.DebugRenderable, calls);
 
-        systemManager.AddSystem(system);
+        systemManager.RegisterSystem(system);
 
         RaiseEvent(bootstrap, "Render", new());
 
@@ -85,8 +85,8 @@ public class SystemManagerTests
         var systemB = new RecordingSystem("B", 2, SystemQueryType.Updateable, calls);
         var systemA = new RecordingSystem("A", 1, SystemQueryType.Updateable, calls);
 
-        systemManager.AddSystem(systemB);
-        systemManager.AddSystem(systemA);
+        systemManager.RegisterSystem(systemB);
+        systemManager.RegisterSystem(systemA);
 
         RaiseEvent(bootstrap, "Update", new());
 

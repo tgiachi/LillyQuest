@@ -31,13 +31,30 @@ public class SystemManager : ISystemManager
         _lillyQuestBootstrap.Update += LillyQuestBootstrapOnUpdate;
     }
 
-    public void AddSystem<TSystem>(TSystem system) where TSystem : ISystem
+    public void RegisterSystem<TSystem>(TSystem system) where TSystem : ISystem
     {
         var queryTypes = system.QueryType.GetFlags();
 
         foreach (var queryType in queryTypes)
         {
             AddSystemInternal(system, queryType);
+        }
+    }
+
+    public void InitializeAllSystems()
+    {
+        var hashSet = new HashSet<ISystem>();
+
+        foreach (var systems in _systemsByQueryType.Values)
+        {
+            foreach (var system in systems.Values)
+            {
+                if (hashSet.Add(system))
+                {
+                    _logger.Information("Initializing system {Name} with order {Order}", system.Name, system.Order);
+                    system.Initialize();
+                }
+            }
         }
     }
 

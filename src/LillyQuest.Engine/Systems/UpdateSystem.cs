@@ -8,7 +8,7 @@ namespace LillyQuest.Engine.Systems;
 
 public class UpdateSystem : BaseSystem<IUpdateableEntity>
 {
-    public UpdateSystem(uint order, string name, SystemQueryType queryType) : base(
+    public UpdateSystem() : base(
         0,
         "Update system",
         SystemQueryType.Updateable

@@ -11,7 +11,13 @@ public interface ISystemManager
     /// <summary>
     /// Registers a system so it can run for its declared query types.
     /// </summary>
-    void AddSystem<TSystem>(TSystem system) where TSystem : ISystem;
+    void RegisterSystem<TSystem>(TSystem system) where TSystem : ISystem;
+
+
+    /// <summary>
+    ///  Initializes all registered systems.
+    /// </summary>
+    void InitializeAllSystems();
 
     /// <summary>
     /// Gets the last recorded processing time for a query type.

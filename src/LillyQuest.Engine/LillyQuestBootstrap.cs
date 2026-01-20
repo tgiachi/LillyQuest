@@ -11,9 +11,11 @@ using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Services;
+using LillyQuest.Engine.Interfaces.Systems;
 using LillyQuest.Engine.Managers.Entities;
 using LillyQuest.Engine.Managers.Services;
 using LillyQuest.Engine.Services;
+using LillyQuest.Engine.Systems;
 using LillyQuest.Scripting.Lua.Data.Config;
 using LillyQuest.Scripting.Lua.Extensions.Scripts;
 using LillyQuest.Scripting.Lua.Interfaces;
@@ -29,6 +31,13 @@ namespace LillyQuest.Engine;
 
 public class LillyQuestBootstrap
 {
+    private readonly Type[] _renderSystems =
+    [
+        typeof(UpdateSystem),
+        typeof(ImGuiSystem),
+        typeof(FixedUpdateSystem)
+    ];
+
     public delegate void TickEventHandler(GameTime gameTime);
 
     private readonly ILogger _logger = Log.ForContext<LillyQuestBootstrap>();
@@ -184,6 +193,11 @@ public class LillyQuestBootstrap
         _container.Register<IActionService, ActionService>(Reuse.Singleton);
         _container.Register<IShortcutService, ShortcutService>(Reuse.Singleton);
 
+        foreach (var systemType in _renderSystems)
+        {
+            _container.Register(systemType, Reuse.Singleton);
+        }
+
         _container.RegisterInstance(
             new LuaEngineConfig(
                 _directoriesConfig[DirectoryType.Scripts],
@@ -199,6 +213,14 @@ public class LillyQuestBootstrap
         _logger.Information("Starting LillyQuest Engine...");
 
         var systemManager = _container.Resolve<ISystemManager>();
+
+        foreach (var systemType in _renderSystems)
+        {
+            var system = (ISystem)_container.Resolve(systemType);
+            systemManager.RegisterSystem(system);
+        }
+
+        systemManager.InitializeAllSystems();
 
         _container.RegisterLuaUserData<Vector2>();
 
