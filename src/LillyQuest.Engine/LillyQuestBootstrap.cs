@@ -11,7 +11,7 @@ using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Internal.Data.Registrations;
 using LillyQuest.Core.Types;
 using LillyQuest.Engine.Entities;
-using LillyQuest.Engine.Extensions;
+using LillyQuest.Engine.Entities.Debug;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Scenes;
 using LillyQuest.Engine.Managers.Scenes;
@@ -44,7 +44,9 @@ public class LillyQuestBootstrap
         typeof(ImGuiSystem),
         typeof(FixedUpdateSystem),
         typeof(Render2dSystem),
-        typeof(ScreenSystem)
+        typeof(ScreenSystem),
+        typeof(SceneSystem)
+
     ];
 
     public delegate void TickEventHandler(GameTime gameTime);
@@ -147,10 +149,7 @@ public class LillyQuestBootstrap
     /// </summary>
     private void EndFrame()
     {
-        var sceneManager = _container.Resolve<ISceneManager>();
 
-        // make sure to render the fade overlay last
-        sceneManager.RenderFadeOverlay(_window.Size);
 
     }
 
@@ -249,6 +248,9 @@ public class LillyQuestBootstrap
 
         var entityManager = _container.Resolve<IGameEntityManager>();
         entityManager.AddEntity(new TestGameEntity());
+
+        entityManager.AddEntity(new DebugSystemGameObject(this, systemManager));
+        entityManager.AddEntity(new DebugEntityGameObject(entityManager));
     }
 
     private void StartSceneManager()

@@ -90,7 +90,5 @@ public class DebugSystemGameObject : GameEntity, IIMGuiEntity, IUpdateableEntity
             ImGui.Separator();
             ImGui.Text($"Total System Time: {totalSystemTime:F2}ms");
         }
-
-        ImGui.End();
     }
 }

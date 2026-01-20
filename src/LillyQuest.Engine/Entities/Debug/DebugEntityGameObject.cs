@@ -46,8 +46,6 @@ public class DebugEntityGameObject : GameEntity, IIMGuiEntity
         {
             DrawEntityTree(entity);
         }
-
-        ImGui.End();
     }
 
     /// <summary>

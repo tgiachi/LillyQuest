@@ -81,7 +81,6 @@ public class SystemManager : ISystemManager
             _systemsByQueryType[queryType] = value;
         }
 
-
         value.Add(system.Order, system);
 
         _logger.Information(

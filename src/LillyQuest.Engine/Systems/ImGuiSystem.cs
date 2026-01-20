@@ -4,11 +4,16 @@ using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Systems.Base;
+using LillyQuest.Engine.Systems.ImGui;
 using LillyQuest.Engine.Types;
 using Silk.NET.OpenGL.Extensions.ImGui;
 
 namespace LillyQuest.Engine.Systems;
 
+/// <summary>
+/// System for rendering ImGui UI elements.
+/// Applies the Cyan theme by default on initialization.
+/// </summary>
 public class ImGuiSystem : BaseSystem<IIMGuiEntity>
 {
     private readonly EngineRenderContext _renderContext;
@@ -30,6 +35,10 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>
             _renderContext.Window,
             _renderContext.InputContext
         );
+
+        // Apply Cyan theme
+        ImGuiThemeProvider.ApplyCyanTheme();
+
         base.Initialize();
     }
 
@@ -43,8 +52,9 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>
 
         foreach (var entity in typedEntities)
         {
-            ImGui.Begin(entity.Name);
+            ImGuiNET.ImGui.Begin(entity.Name);
             entity.DrawIMGui();
+            ImGuiNET.ImGui.End();
         }
 
         _imguiController.Render();
