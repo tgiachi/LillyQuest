@@ -238,6 +238,19 @@ public class TilesetSurfaceScreen : BaseScreen
     }
 
     /// <summary>
+    /// Gets the render scale multiplier for a specific layer.
+    /// </summary>
+    public float GetLayerRenderScale(int layerIndex)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return 1f;
+        }
+
+        return _surface.Layers[layerIndex].RenderScale;
+    }
+
+    /// <summary>
     /// Gets the pixel offset for a specific layer.
     /// </summary>
     /// <param name="layerIndex">Layer index.</param>
@@ -436,6 +449,43 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         _surface.Layers[layerIndex].Opacity = Math.Clamp(opacity, 0.0f, 1.0f);
+    }
+
+    /// <summary>
+    /// Sets the render scale multiplier for a specific layer.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="scale">Render scale multiplier.</param>
+    public void SetLayerRenderScale(int layerIndex, float scale)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        var layer = _surface.Layers[layerIndex];
+        layer.RenderScale = scale;
+        layer.RenderScaleTarget = scale;
+        layer.SmoothRenderScaleEnabled = false;
+    }
+
+    /// <summary>
+    /// Sets the render scale target for smooth zoom on a layer.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="targetScale">Target render scale multiplier.</param>
+    /// <param name="speed">Zoom speed in units per second.</param>
+    public void SetLayerRenderScaleTarget(int layerIndex, float targetScale, float speed)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        var layer = _surface.Layers[layerIndex];
+        layer.RenderScaleTarget = targetScale;
+        layer.SmoothRenderScaleSpeed = speed;
+        layer.SmoothRenderScaleEnabled = true;
     }
 
     /// <summary>
@@ -663,6 +713,7 @@ public class TilesetSurfaceScreen : BaseScreen
         base.Update(gameTime);
 
         UpdateViewSmoothing(gameTime);
+        UpdateRenderScaleSmoothing(gameTime);
 
         // if (!_autoRandomizeEnabled || _autoRandomizeEveryFrames <= 0 || _autoRandomizeTileCount <= 0)
         // {
@@ -812,8 +863,9 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         // Calculate scaled tile dimensions
-        var scaledTileWidth = tileset.TileWidth * TileRenderScale;
-        var scaledTileHeight = tileset.TileHeight * TileRenderScale;
+        var layerScale = layer.RenderScale;
+        var scaledTileWidth = tileset.TileWidth * TileRenderScale * layerScale;
+        var scaledTileHeight = tileset.TileHeight * TileRenderScale * layerScale;
         var layerOffset = layer.PixelOffset;
         var viewOffsetPx = new Vector2(
                                layer.ViewTileOffset.X * scaledTileWidth,
@@ -933,8 +985,9 @@ public class TilesetSurfaceScreen : BaseScreen
                 continue;
             }
 
-            var scaledTileWidth = tileWidth * TileRenderScale;
-            var scaledTileHeight = tileHeight * TileRenderScale;
+            var renderScale = layer.RenderScale;
+            var scaledTileWidth = tileWidth * TileRenderScale * renderScale;
+            var scaledTileHeight = tileHeight * TileRenderScale * renderScale;
 
             var currentPx = new Vector2(
                                 layer.ViewTileOffset.X * scaledTileWidth,
@@ -963,6 +1016,29 @@ public class TilesetSurfaceScreen : BaseScreen
 
             layer.ViewTileOffset = nextTileOffset;
             layer.ViewPixelOffset = nextPixelOffset;
+        }
+    }
+
+    private void UpdateRenderScaleSmoothing(GameTime gameTime)
+    {
+        if (gameTime.Elapsed.TotalSeconds <= 0)
+        {
+            return;
+        }
+
+        var dt = (float)gameTime.Elapsed.TotalSeconds;
+
+        for (var i = 0; i < _surface.Layers.Count; i++)
+        {
+            var layer = _surface.Layers[i];
+
+            if (!layer.SmoothRenderScaleEnabled)
+            {
+                continue;
+            }
+
+            var t = 1f - MathF.Exp(-layer.SmoothRenderScaleSpeed * dt);
+            layer.RenderScale = layer.RenderScale + (layer.RenderScaleTarget - layer.RenderScale) * t;
         }
     }
 }

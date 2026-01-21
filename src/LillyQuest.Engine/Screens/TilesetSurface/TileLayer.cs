@@ -71,6 +71,26 @@ public class TileLayer
     /// </summary>
     public Vector2? InputTileSizeOverride { get; set; }
 
+    /// <summary>
+    /// Visual render scale multiplier for this layer.
+    /// </summary>
+    public float RenderScale { get; set; } = 1f;
+
+    /// <summary>
+    /// Target render scale for smooth zoom.
+    /// </summary>
+    public float RenderScaleTarget { get; set; } = 1f;
+
+    /// <summary>
+    /// Enables smooth render scale transitions.
+    /// </summary>
+    public bool SmoothRenderScaleEnabled { get; set; }
+
+    /// <summary>
+    /// Smooth render scale speed in units per second.
+    /// </summary>
+    public float SmoothRenderScaleSpeed { get; set; } = 10f;
+
     public TileLayer(int width, int height)
     {
         Tiles = new TileRenderData[width, height];

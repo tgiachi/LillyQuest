@@ -330,6 +330,49 @@ public class TilesetSurfaceTextExtensionsTests
     }
 
     [Test]
+    public void LayerRenderScale_DoesNotAffectMouseSelection()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager())
+        {
+            Position = System.Numerics.Vector2.Zero,
+            Size = new System.Numerics.Vector2(200, 200),
+            TileRenderScale = 1.0f
+        };
+        screen.InitializeLayers(1);
+        screen.SelectedLayerIndex = 0;
+        screen.SetLayerInputTileSizeOverride(0, new System.Numerics.Vector2(10, 10));
+        screen.SetLayerRenderScale(0, 2f);
+
+        var moveResult = (-1, -1);
+        screen.TileMouseMove += (_, x, y, _, _) => moveResult = (x, y);
+
+        screen.OnMouseMove(25, 35);
+
+        Assert.That(moveResult, Is.EqualTo((2, 3)));
+    }
+
+    [Test]
+    public void LayerRenderScaleSmooth_MovesTowardsTarget()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager())
+        {
+            TileRenderScale = 1.0f
+        };
+        screen.InitializeLayers(1);
+
+        screen.SetLayerRenderScale(0, 1f);
+        screen.SetLayerRenderScaleTarget(0, 2f, speed: 10f);
+
+        var gameTime = new LillyQuest.Core.Primitives.GameTime();
+        gameTime.Update(0.1);
+        screen.Update(gameTime);
+
+        var current = screen.GetLayerRenderScale(0);
+        Assert.That(current, Is.GreaterThan(1f));
+        Assert.That(current, Is.LessThan(2f));
+    }
+
+    [Test]
     public void ClearLayer_EmptiesAllTiles()
     {
         var screen = new TilesetSurfaceScreen(new StubTilesetManager());

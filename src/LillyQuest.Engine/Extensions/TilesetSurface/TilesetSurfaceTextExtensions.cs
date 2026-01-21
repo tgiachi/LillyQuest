@@ -213,6 +213,131 @@ public static class TilesetSurfaceTextExtensions
         }
 
         /// <summary>
+        /// Writes text using screen pixel coordinates (same space as mouse input).
+        /// </summary>
+        /// <param name="text">Text to draw.</param>
+        /// <param name="xPx">Screen pixel X.</param>
+        /// <param name="yPx">Screen pixel Y.</param>
+        /// <param name="foregroundColor">Foreground color for glyphs.</param>
+        /// <param name="backgroundColor">Optional background color.</param>
+        /// <param name="flip">Optional flip for the foreground tile.</param>
+        public void DrawTextPixelScreen(
+            string text,
+            int xPx,
+            int yPx,
+            LyColor foregroundColor,
+            LyColor? backgroundColor = null,
+            TileFlipType flip = TileFlipType.None
+        )
+            => screen.DrawTextPixel(text, xPx, yPx, foregroundColor, backgroundColor, flip);
+
+        /// <summary>
+        /// Writes text to a specific layer using screen pixel coordinates (same space as mouse input).
+        /// </summary>
+        /// <param name="layerIndex">Target layer index.</param>
+        /// <param name="text">Text to draw.</param>
+        /// <param name="xPx">Screen pixel X.</param>
+        /// <param name="yPx">Screen pixel Y.</param>
+        /// <param name="foregroundColor">Foreground color for glyphs.</param>
+        /// <param name="backgroundColor">Optional background color.</param>
+        /// <param name="flip">Optional flip for the foreground tile.</param>
+        public void DrawTextPixelScreen(
+            int layerIndex,
+            string text,
+            int xPx,
+            int yPx,
+            LyColor foregroundColor,
+            LyColor? backgroundColor = null,
+            TileFlipType flip = TileFlipType.None
+        )
+            => screen.DrawTextPixel(layerIndex, text, xPx, yPx, foregroundColor, backgroundColor, flip);
+
+        /// <summary>
+        /// Writes text using local pixel coordinates relative to the screen origin.
+        /// </summary>
+        /// <param name="text">Text to draw.</param>
+        /// <param name="xPx">Local pixel X.</param>
+        /// <param name="yPx">Local pixel Y.</param>
+        /// <param name="foregroundColor">Foreground color for glyphs.</param>
+        /// <param name="backgroundColor">Optional background color.</param>
+        /// <param name="flip">Optional flip for the foreground tile.</param>
+        public void DrawTextPixelLocal(
+            string text,
+            int xPx,
+            int yPx,
+            LyColor foregroundColor,
+            LyColor? backgroundColor = null,
+            TileFlipType flip = TileFlipType.None
+        )
+        {
+            if (!screen.TryGetLayerTileInfo(screen.SelectedLayerIndex, out var tileWidth, out var tileHeight, out var pixelOffset))
+            {
+                return;
+            }
+
+            screen.TryGetLayerViewOffsets(screen.SelectedLayerIndex, out var viewTileOffset, out var viewPixelOffset);
+
+            var (tileX, tileY) = ComputeTileCoordinatesFromPixel(
+                xPx,
+                yPx,
+                tileWidth,
+                tileHeight,
+                screen.TileRenderScale,
+                pixelOffset,
+                viewTileOffset,
+                viewPixelOffset
+            );
+
+            screen.DrawText(text, tileX, tileY, foregroundColor, backgroundColor, flip);
+        }
+
+        /// <summary>
+        /// Writes text to a specific layer using local pixel coordinates relative to the screen origin.
+        /// </summary>
+        /// <param name="layerIndex">Target layer index.</param>
+        /// <param name="text">Text to draw.</param>
+        /// <param name="xPx">Local pixel X.</param>
+        /// <param name="yPx">Local pixel Y.</param>
+        /// <param name="foregroundColor">Foreground color for glyphs.</param>
+        /// <param name="backgroundColor">Optional background color.</param>
+        /// <param name="flip">Optional flip for the foreground tile.</param>
+        public void DrawTextPixelLocal(
+            int layerIndex,
+            string text,
+            int xPx,
+            int yPx,
+            LyColor foregroundColor,
+            LyColor? backgroundColor = null,
+            TileFlipType flip = TileFlipType.None
+        )
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            if (!screen.TryGetLayerInputTileInfo(layerIndex, out var tileWidth, out var tileHeight, out var pixelOffset))
+            {
+                return;
+            }
+
+            screen.TryGetLayerViewOffsets(layerIndex, out var viewTileOffset, out var viewPixelOffset);
+
+            var (tileX, tileY) = ComputeTileCoordinatesFromPixel(
+                xPx,
+                yPx,
+                tileWidth,
+                tileHeight,
+                screen.TileRenderScale,
+                pixelOffset,
+                viewTileOffset,
+                viewPixelOffset
+            );
+
+            screen.DrawText(layerIndex, text, tileX, tileY, foregroundColor, backgroundColor, flip);
+        }
+
+        /// <summary>
         /// Fills a rectangular area with the given tile.
         /// </summary>
         /// <param name="startX">Start tile X.</param>
