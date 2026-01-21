@@ -271,7 +271,9 @@ public class TilesetSurfaceScreen : BaseScreen
             return;
         }
 
-        _surface.Layers[layerIndex].ViewTileOffset = tileOffset;
+        var layer = _surface.Layers[layerIndex];
+        layer.ViewTileOffset = tileOffset;
+        layer.ViewTileOffsetTarget = tileOffset;
     }
 
     /// <summary>
@@ -286,7 +288,57 @@ public class TilesetSurfaceScreen : BaseScreen
             return;
         }
 
-        _surface.Layers[layerIndex].ViewPixelOffset = pixelOffset;
+        var layer = _surface.Layers[layerIndex];
+        layer.ViewPixelOffset = pixelOffset;
+        layer.ViewPixelOffsetTarget = pixelOffset;
+    }
+
+    /// <summary>
+    /// Sets the target view offset for a specific layer in tile coordinates.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="tileOffset">Target view offset in tile coordinates.</param>
+    public void SetLayerViewTileTarget(int layerIndex, Vector2 tileOffset)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        _surface.Layers[layerIndex].ViewTileOffsetTarget = tileOffset;
+    }
+
+    /// <summary>
+    /// Sets the target view offset for a specific layer in pixels.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="pixelOffset">Target view offset in pixels.</param>
+    public void SetLayerViewPixelTarget(int layerIndex, Vector2 pixelOffset)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        _surface.Layers[layerIndex].ViewPixelOffsetTarget = pixelOffset;
+    }
+
+    /// <summary>
+    /// Enables or disables smooth view scrolling for the specified layer.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="enabled">True to enable smoothing.</param>
+    /// <param name="speed">Smoothing speed per second.</param>
+    public void SetLayerViewSmoothing(int layerIndex, bool enabled, float speed = 10f)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        var layer = _surface.Layers[layerIndex];
+        layer.SmoothViewEnabled = enabled;
+        layer.SmoothViewSpeed = speed;
     }
 
     /// <summary>
@@ -448,8 +500,17 @@ public class TilesetSurfaceScreen : BaseScreen
             tileY - viewTilesY / 2f
         );
 
-        SetLayerViewTileOffset(layerIndex, viewOffset);
-        SetLayerViewPixelOffset(layerIndex, Vector2.Zero);
+        var layer = _surface.Layers[layerIndex];
+        if (layer.SmoothViewEnabled)
+        {
+            layer.ViewTileOffsetTarget = viewOffset;
+            layer.ViewPixelOffsetTarget = Vector2.Zero;
+        }
+        else
+        {
+            SetLayerViewTileOffset(layerIndex, viewOffset);
+            SetLayerViewPixelOffset(layerIndex, Vector2.Zero);
+        }
     }
 
     public override bool OnMouseMove(int x, int y)
@@ -603,6 +664,8 @@ public class TilesetSurfaceScreen : BaseScreen
     {
         base.Update(gameTime);
 
+        UpdateViewSmoothing(gameTime);
+
         // if (!_autoRandomizeEnabled || _autoRandomizeEveryFrames <= 0 || _autoRandomizeTileCount <= 0)
         // {
         //     return;
@@ -617,6 +680,58 @@ public class TilesetSurfaceScreen : BaseScreen
         //
         // _autoRandomizeFrameCounter = 0;
         // RandomizeSelectedLayer();
+    }
+
+    private void UpdateViewSmoothing(GameTime gameTime)
+    {
+        if (gameTime.Elapsed.TotalSeconds <= 0)
+        {
+            return;
+        }
+
+        var dt = (float)gameTime.Elapsed.TotalSeconds;
+
+        for (var i = 0; i < _surface.Layers.Count; i++)
+        {
+            var layer = _surface.Layers[i];
+            if (!layer.SmoothViewEnabled)
+            {
+                continue;
+            }
+
+            if (!TryGetLayerInputTileInfo(i, out var tileWidth, out var tileHeight, out _))
+            {
+                continue;
+            }
+
+            var scaledTileWidth = tileWidth * TileRenderScale;
+            var scaledTileHeight = tileHeight * TileRenderScale;
+
+            var currentPx = new Vector2(
+                layer.ViewTileOffset.X * scaledTileWidth,
+                layer.ViewTileOffset.Y * scaledTileHeight
+            ) + layer.ViewPixelOffset;
+
+            var targetPx = new Vector2(
+                layer.ViewTileOffsetTarget.X * scaledTileWidth,
+                layer.ViewTileOffsetTarget.Y * scaledTileHeight
+            ) + layer.ViewPixelOffsetTarget;
+
+            var t = 1f - MathF.Exp(-layer.SmoothViewSpeed * dt);
+            var nextPx = Vector2.Lerp(currentPx, targetPx, t);
+
+            var nextTileOffset = new Vector2(
+                MathF.Floor(nextPx.X / scaledTileWidth),
+                MathF.Floor(nextPx.Y / scaledTileHeight)
+            );
+            var nextPixelOffset = nextPx - new Vector2(
+                nextTileOffset.X * scaledTileWidth,
+                nextTileOffset.Y * scaledTileHeight
+            );
+
+            layer.ViewTileOffset = nextTileOffset;
+            layer.ViewPixelOffset = nextPixelOffset;
+        }
     }
 
     /// <summary>

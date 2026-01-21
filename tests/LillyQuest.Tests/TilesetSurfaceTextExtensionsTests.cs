@@ -248,4 +248,29 @@ public class TilesetSurfaceTextExtensionsTests
         Assert.That(viewOffset.X, Is.EqualTo(2));
         Assert.That(viewOffset.Y, Is.EqualTo(0));
     }
+
+    [Test]
+    public void SmoothView_MovesTowardsTarget()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager())
+        {
+            TileRenderScale = 1.0f
+        };
+        screen.InitializeLayers(1);
+        screen.SetLayerInputTileSizeOverride(0, new System.Numerics.Vector2(10, 10));
+        screen.SetLayerViewSmoothing(0, true, speed: 10f);
+
+        screen.SetLayerViewTileOffset(0, System.Numerics.Vector2.Zero);
+        screen.SetLayerViewTileTarget(0, new System.Numerics.Vector2(4, 0));
+
+        var gameTime = new LillyQuest.Core.Primitives.GameTime();
+        gameTime.Update(0.1);
+        screen.Update(gameTime);
+
+        var tileOffset = screen.GetLayerViewTileOffset(0);
+        var pixelOffset = screen.GetLayerViewPixelOffset(0);
+
+        Assert.That(tileOffset.X, Is.EqualTo(2));
+        Assert.That(pixelOffset.X, Is.GreaterThan(0f));
+    }
 }

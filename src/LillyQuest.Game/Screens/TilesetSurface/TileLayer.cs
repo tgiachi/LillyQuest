@@ -41,9 +41,29 @@ public class TileLayer
     public Vector2 ViewTileOffset { get; set; } = Vector2.Zero;
 
     /// <summary>
+    /// Target view offset in tile coordinates for smooth scrolling.
+    /// </summary>
+    public Vector2 ViewTileOffsetTarget { get; set; } = Vector2.Zero;
+
+    /// <summary>
     /// View offset in pixels for this layer (for smooth scrolling).
     /// </summary>
     public Vector2 ViewPixelOffset { get; set; } = Vector2.Zero;
+
+    /// <summary>
+    /// Target view offset in pixels for smooth scrolling.
+    /// </summary>
+    public Vector2 ViewPixelOffsetTarget { get; set; } = Vector2.Zero;
+
+    /// <summary>
+    /// Enables smooth scrolling for this layer view.
+    /// </summary>
+    public bool SmoothViewEnabled { get; set; }
+
+    /// <summary>
+    /// Smooth view speed in units per second.
+    /// </summary>
+    public float SmoothViewSpeed { get; set; } = 10f;
 
     /// <summary>
     /// Optional override for input tile size (in pixels).

@@ -6,6 +6,7 @@ using LillyQuest.Core.Types;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Managers.Scenes.Base;
 using LillyQuest.Game.Screens.TilesetSurface;
+using Silk.NET.Input;
 
 namespace LillyQuest.Game.Scenes;
 
@@ -49,21 +50,22 @@ public class TilesetSurfaceEditorScene : BaseScene
                                     );
                                 };
         screen.TileMouseDown += (layerIndex, tileX, tileY, buttons) =>
-        {
-            if (buttons.Contains(Silk.NET.Input.MouseButton.Right))
-            {
-                screen.CenterViewOnTile(layerIndex, tileX, tileY);
-            }
-        };
+                                {
+                                    if (buttons.Contains(MouseButton.Right))
+                                    {
+                                        screen.CenterViewOnTile(0, tileX, tileY);
+                                    }
+                                };
 
         // Initialize the surface layers before population
         screen.InitializeLayers(screen.LayerCount);
         screen.SetLayerTileset(0, "roguelike");
         screen.SetLayerTileset(1, "alloy");
 
+        screen.SetLayerViewSmoothing(0, true);
+
         // Populate with random tiles and colors
         PopulateWithRandomTiles(screen);
-
 
         screen.SelectedLayerIndex = 1;
         screen.DrawText("hello from LillyQuest *", 2, 2, LyColor.Yellow, LyColor.Black);
