@@ -1,3 +1,4 @@
+using System.Numerics;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Primitives;
 
@@ -28,6 +29,17 @@ public class TileLayer
     /// If null or empty, the default tileset is used.
     /// </summary>
     public string? TilesetName { get; set; }
+
+    /// <summary>
+    /// Pixel offset applied when rendering this layer.
+    /// </summary>
+    public Vector2 PixelOffset { get; set; } = Vector2.Zero;
+
+    /// <summary>
+    /// Optional override for input tile size (in pixels).
+    /// If set, mouse-to-tile conversion uses this instead of the tileset size.
+    /// </summary>
+    public Vector2? InputTileSizeOverride { get; set; }
 
     public TileLayer(int width, int height)
     {

@@ -5,6 +5,9 @@ using LillyQuest.Core.Types;
 
 namespace LillyQuest.Game.Screens.TilesetSurface;
 
+/// <summary>
+/// Extensions for drawing text and shapes onto a tileset surface screen.
+/// </summary>
 public static class TilesetSurfaceTextExtensions
 {
     /// <summary>
@@ -71,6 +74,41 @@ public static class TilesetSurfaceTextExtensions
                 screen.AddTileToSurface(x, y, tileData);
                 x++;
             }
+        }
+
+        /// <summary>
+        /// Writes text using pixel coordinates (relative to the screen origin).
+        /// </summary>
+        /// <param name="text">Text to draw.</param>
+        /// <param name="xPx">Pixel X.</param>
+        /// <param name="yPx">Pixel Y.</param>
+        /// <param name="foregroundColor">Foreground color for glyphs.</param>
+        /// <param name="backgroundColor">Optional background color.</param>
+        /// <param name="flip">Optional flip for the foreground tile.</param>
+        public void DrawTextPixel(
+            string text,
+            int xPx,
+            int yPx,
+            LyColor foregroundColor,
+            LyColor? backgroundColor = null,
+            TileFlipType flip = TileFlipType.None
+        )
+        {
+            if (!screen.TryGetLayerTileInfo(screen.SelectedLayerIndex, out var tileWidth, out var tileHeight, out var pixelOffset))
+            {
+                return;
+            }
+
+            var (tileX, tileY) = ComputeTileCoordinatesFromPixel(
+                xPx,
+                yPx,
+                tileWidth,
+                tileHeight,
+                screen.TileRenderScale,
+                pixelOffset
+            );
+
+            screen.DrawText(text, tileX, tileY, foregroundColor, backgroundColor, flip);
         }
 
         /// <summary>
@@ -412,5 +450,28 @@ public static class TilesetSurfaceTextExtensions
     {
         Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
         return Encoding.GetEncoding(437);
+    }
+
+    /// <summary>
+    /// Computes tile coordinates from pixel coordinates.
+    /// </summary>
+    public static (int x, int y) ComputeTileCoordinatesFromPixel(
+        int xPx,
+        int yPx,
+        int tileWidth,
+        int tileHeight,
+        float tileRenderScale,
+        System.Numerics.Vector2 pixelOffset
+    )
+    {
+        var scaledTileWidth = tileWidth * tileRenderScale;
+        var scaledTileHeight = tileHeight * tileRenderScale;
+        var localX = xPx - pixelOffset.X;
+        var localY = yPx - pixelOffset.Y;
+
+        return (
+            (int)MathF.Floor(localX / scaledTileWidth),
+            (int)MathF.Floor(localY / scaledTileHeight)
+        );
     }
 }

@@ -30,27 +30,41 @@ public class TilesetSurfaceEditorScene : BaseScene
         // Create the tileset surface screen
         var screen = new TilesetSurfaceScreen(_tilesetManager)
         {
-            DefaultTilesetName = "alloy",
-            LayerCount = 3,
-            Position = new Vector2(30, 100),
-            TileRenderScale = 2f,
-            TileViewSize = new Vector2(80, 30),
+            DefaultTilesetName = "roguelike",
+            LayerCount = 2,
+            Position = new Vector2(100, 30),
+            TileRenderScale = 1f,
+            TileViewSize = new Vector2(20, 20)
         };
 
+        screen.TileMouseMove += (index, x, y) =>
+                                {
+                                    screen.ClearLayer(1);
+                                    screen.DrawText(
+                                        $"Tile X: {x}, Tile Y: {y}       ",
+                                        x,
+                                        y,
+                                        LyColor.White,
+                                        LyColor.Black
+                                    );
+                                };
 
         // Initialize the surface layers before population
         screen.InitializeLayers(screen.LayerCount);
+        screen.SetLayerTileset(0, "roguelike");
+        screen.SetLayerTileset(1, "alloy");
 
         // Populate with random tiles and colors
         PopulateWithRandomTiles(screen);
+
         // screen.ConfigureAutoRandomize(
         //     tileCount: _tilesetManager.GetTileset(screen.DefaultTilesetName).TileCount,
         //     everyFrames: 2000
         // );
 
-        screen.DrawText("Hello from LillyQuest", 2, 2, LyColor.Yellow, LyColor.Black);
+        screen.SelectedLayerIndex = 1;
+        screen.DrawText("hello from LillyQuest *", 2, 2, LyColor.Yellow, LyColor.Black);
 
-        screen.FillRectangle(1, 1, 10, 5, tileIndex: 42, LyColor.White);
         // Add the screen to the screen manager
         _screenManager.PushScreen(screen);
 
@@ -113,7 +127,6 @@ public class TilesetSurfaceEditorScene : BaseScene
 
         // Set opacity variations for layers
         screen.SetLayerOpacity(0, 1.0f);
-        screen.SetLayerOpacity(1, 0.8f);
-        screen.SetLayerOpacity(2, 0.6f);
+        screen.SetLayerOpacity(1, 1.0f);
     }
 }

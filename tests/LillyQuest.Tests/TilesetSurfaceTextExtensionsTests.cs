@@ -158,4 +158,61 @@ public class TilesetSurfaceTextExtensionsTests
         Assert.That(tileA.TileIndex, Is.EqualTo(65));
         Assert.That(tileB.TileIndex, Is.EqualTo(66));
     }
+
+    [Test]
+    public void ComputeTileCoordinatesFromPixel_AccountsForOffsetAndScale()
+    {
+        var result = TilesetSurfaceTextExtensions.ComputeTileCoordinatesFromPixel(
+            29,
+            55,
+            12,
+            12,
+            2.0f,
+            new System.Numerics.Vector2(5, 7)
+        );
+
+        Assert.That(result.x, Is.EqualTo(1));
+        Assert.That(result.y, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void MouseCallbacks_ReportTileCoordinates()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager())
+        {
+            Position = System.Numerics.Vector2.Zero,
+            Size = new System.Numerics.Vector2(200, 200),
+            TileRenderScale = 1.0f
+        };
+        screen.InitializeLayers(1);
+        screen.SelectedLayerIndex = 0;
+        screen.SetLayerInputTileSizeOverride(0, new System.Numerics.Vector2(10, 10));
+        screen.SetLayerPixelOffset(0, new System.Numerics.Vector2(5, 5));
+
+        var moveResult = (-1, -1);
+        screen.TileMouseMove += (_, x, y) => moveResult = (x, y);
+
+        var downResult = (-1, -1);
+        screen.TileMouseDown += (_, x, y, _) => downResult = (x, y);
+
+        screen.OnMouseMove(25, 35);
+        screen.OnMouseDown(25, 35, new[] { Silk.NET.Input.MouseButton.Left });
+
+        Assert.That(moveResult, Is.EqualTo((2, 3)));
+        Assert.That(downResult, Is.EqualTo((2, 3)));
+    }
+
+    [Test]
+    public void ClearLayer_EmptiesAllTiles()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager());
+        screen.InitializeLayers(1);
+        screen.SelectedLayerIndex = 0;
+
+        screen.FillRectangle(0, 0, 2, 2, 9, LyColor.White);
+        screen.ClearLayer(0);
+
+        Assert.That(screen.GetTile(0, 0, 0).TileIndex, Is.EqualTo(-1));
+        Assert.That(screen.GetTile(0, 1, 1).TileIndex, Is.EqualTo(-1));
+    }
 }

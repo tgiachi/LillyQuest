@@ -188,6 +188,13 @@ public class LillyQuestBootstrap
             "Assets/Textures/lillyquest_logo.png",
             typeof(SpriteBatch).Assembly
         );
+
+        var graphicTileSet = Path.Combine(_directoriesConfig[DirectoryType.AssetsTextures], "32x32.png");
+
+        if (File.Exists(graphicTileSet))
+        {
+            assetManager.TilesetManager.LoadTileset("roguelike", graphicTileSet, 32, 32, 0, 0);
+        }
     }
 
     private void RegisterInternalServices()
