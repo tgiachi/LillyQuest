@@ -1,7 +1,5 @@
-using System.Numerics;
 using ImGuiNET;
 using LillyQuest.Core.Interfaces.Assets;
-using LillyQuest.Engine.Interfaces.Entities;
 using LillyQuest.Engine.Interfaces.Features;
 
 namespace LillyQuest.Engine.Entities.Debug;
@@ -32,11 +30,13 @@ public class DebugTextureExplorerGameObject : GameEntity, IIMGuiEntity
         if (textures.Count == 0)
         {
             ImGui.TextDisabled("No textures loaded");
+
             return;
         }
 
         // Calculate total memory usage
         long totalMemoryBytes = 0;
+
         foreach (var texture in textures.Values)
         {
             // RGBA = 4 bytes per pixel
@@ -47,21 +47,21 @@ public class DebugTextureExplorerGameObject : GameEntity, IIMGuiEntity
         ImGui.Spacing();
 
         // Display all textures with preview
-        if (ImGui.BeginChild("TexturesChild", new Vector2(0, 400)))
+        if (ImGui.BeginChild("TexturesChild", new(0, 400)))
         {
             foreach (var (name, texture) in textures)
             {
-                long textureMemory = (long)texture.Width * texture.Height * 4;
+                var textureMemory = (long)texture.Width * texture.Height * 4;
 
                 // Texture item
                 ImGui.Text($"{name}");
                 ImGui.Text($"Size: {texture.Width}x{texture.Height}px | Memory: {FormatBytes(textureMemory)}");
 
                 // Preview thumbnail
-                float thumbSize = 64.0f;
-                float aspectRatio = (float)texture.Width / texture.Height;
-                float thumbWidth = thumbSize * aspectRatio;
-                float thumbHeight = thumbSize;
+                var thumbSize = 64.0f;
+                var aspectRatio = (float)texture.Width / texture.Height;
+                var thumbWidth = thumbSize * aspectRatio;
+                var thumbHeight = thumbSize;
 
                 // Clamp to max size
                 if (thumbWidth > 200)
@@ -76,11 +76,11 @@ public class DebugTextureExplorerGameObject : GameEntity, IIMGuiEntity
                 // ImGui expects texture coordinates with Y flipped for OpenGL
                 ImGui.Image(
                     texturePtr,
-                    new Vector2(thumbWidth, thumbHeight),
-                    new Vector2(0, 1),   // UV0 - bottom left (OpenGL coords)
-                    new Vector2(1, 0),   // UV1 - top right (OpenGL coords)
-                    new Vector4(1, 1, 1, 1),  // Tint white
-                    new Vector4(0.7f, 0.7f, 0.7f, 1.0f)  // Border gray
+                    new(thumbWidth, thumbHeight),
+                    new(0, 1),                  // UV0 - bottom left (OpenGL coords)
+                    new(1, 0),                  // UV1 - top right (OpenGL coords)
+                    new(1, 1, 1, 1),            // Tint white
+                    new(0.7f, 0.7f, 0.7f, 1.0f) // Border gray
                 );
 
                 ImGui.Separator();
@@ -97,7 +97,7 @@ public class DebugTextureExplorerGameObject : GameEntity, IIMGuiEntity
     {
         string[] sizes = { "B", "KB", "MB", "GB" };
         double len = bytes;
-        int order = 0;
+        var order = 0;
 
         while (len >= 1024 && order < sizes.Length - 1)
         {

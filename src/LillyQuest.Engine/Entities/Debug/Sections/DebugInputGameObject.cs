@@ -2,7 +2,6 @@ using ImGuiNET;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Interfaces.Systems;
 using LillyQuest.Engine.Systems;
-using Silk.NET.Input;
 
 namespace LillyQuest.Engine.Entities.Debug;
 
@@ -38,6 +37,7 @@ public class DebugInputGameObject : GameEntity, IIMGuiEntity
         if (mouseButtons.Count > 0)
         {
             ImGui.Indent();
+
             foreach (var button in mouseButtons)
             {
                 ImGui.BulletText(button.ToString());
@@ -47,10 +47,12 @@ public class DebugInputGameObject : GameEntity, IIMGuiEntity
 
         // Mouse wheel section
         var scrollWheels = _inputSystem.ScrollWheels;
+
         if (scrollWheels.Count > 0)
         {
             ImGui.Text($"Scroll Wheels: {scrollWheels.Count}");
             ImGui.Indent();
+
             for (var i = 0; i < scrollWheels.Count; i++)
             {
                 var wheel = scrollWheels[i];
@@ -69,6 +71,7 @@ public class DebugInputGameObject : GameEntity, IIMGuiEntity
         if (pressedKeys.Count > 0)
         {
             ImGui.Indent();
+
             foreach (var key in pressedKeys.OrderBy(k => k.ToString()))
             {
                 ImGui.BulletText(key.ToString());

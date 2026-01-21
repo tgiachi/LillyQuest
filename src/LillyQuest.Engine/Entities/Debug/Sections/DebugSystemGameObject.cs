@@ -35,29 +35,6 @@ public class DebugSystemGameObject : GameEntity, IIMGuiEntity, IUpdateableEntity
     }
 
     /// <summary>
-    /// Updates FPS calculation based on frame time.
-    /// </summary>
-    public void Update(GameTime gameTime)
-    {
-        var frameTime = gameTime.Elapsed.TotalMilliseconds;
-
-        // Add new frame time sample
-        _frameTimeSamples.Enqueue(frameTime);
-
-        // Keep only recent samples
-        if (_frameTimeSamples.Count > MaxFrameSamples)
-        {
-            _frameTimeSamples.Dequeue();
-        }
-
-        // Calculate average frame time
-        _averageFrameTime = _frameTimeSamples.Count > 0 ? _frameTimeSamples.Average() : frameTime;
-
-        // Calculate FPS from average frame time
-        _currentFps = _averageFrameTime > 0 ? 1000.0 / _averageFrameTime : 0;
-    }
-
-    /// <summary>
     /// Draws the ImGui debug panel with timing information and FPS.
     /// </summary>
     public void DrawIMGui()
@@ -85,7 +62,7 @@ public class DebugSystemGameObject : GameEntity, IIMGuiEntity, IUpdateableEntity
         {
             var totalSystemTime = 0.0;
 
-            foreach (SystemQueryType queryType in _allQueryTypes)
+            foreach (var queryType in _allQueryTypes)
             {
                 var processingTime = _systemManager.GetSystemProcessingTime(queryType);
                 ImGui.Text($"{queryType}: {processingTime.TotalMilliseconds:F2}ms");
@@ -95,5 +72,28 @@ public class DebugSystemGameObject : GameEntity, IIMGuiEntity, IUpdateableEntity
             ImGui.Separator();
             ImGui.Text($"Total System Time: {totalSystemTime:F2}ms");
         }
+    }
+
+    /// <summary>
+    /// Updates FPS calculation based on frame time.
+    /// </summary>
+    public void Update(GameTime gameTime)
+    {
+        var frameTime = gameTime.Elapsed.TotalMilliseconds;
+
+        // Add new frame time sample
+        _frameTimeSamples.Enqueue(frameTime);
+
+        // Keep only recent samples
+        if (_frameTimeSamples.Count > MaxFrameSamples)
+        {
+            _frameTimeSamples.Dequeue();
+        }
+
+        // Calculate average frame time
+        _averageFrameTime = _frameTimeSamples.Count > 0 ? _frameTimeSamples.Average() : frameTime;
+
+        // Calculate FPS from average frame time
+        _currentFps = _averageFrameTime > 0 ? 1000.0 / _averageFrameTime : 0;
     }
 }

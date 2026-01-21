@@ -1,3 +1,4 @@
+using System.Numerics;
 using ImGuiNET;
 using LillyQuest.Engine.Interfaces.Entities;
 using LillyQuest.Engine.Interfaces.Features;
@@ -72,7 +73,7 @@ public class DebugEntityGameObject : GameEntity, IIMGuiEntity
         // Color code based on active state
         if (!entity.IsActive)
         {
-            ImGui.PushStyleColor(ImGuiCol.Text, new System.Numerics.Vector4(0.6f, 0.6f, 0.6f, 1.0f));
+            ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(0.6f, 0.6f, 0.6f, 1.0f));
         }
 
         var isOpen = ImGui.TreeNodeEx(nodeLabel, nodeFlags);
