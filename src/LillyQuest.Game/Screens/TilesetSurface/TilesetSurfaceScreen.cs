@@ -40,14 +40,16 @@ public class TilesetSurfaceScreen : BaseScreen
     public string DefaultTilesetName { get; set; } = "alloy";
 
     /// <summary>
-    /// Render scale for tiles (e.g., 2.67 scales 12x12 tiles to ~32x32).
+    /// Render scale for tiles (e.g., 2.0 scales 12x12 tiles to 24x24).
     /// </summary>
-    public float TileRenderScale { get; set; } = 2.67f;
+    public float TileRenderScale { get; set; } = 2.0f;
 
     public TilesetSurfaceScreen(ITilesetManager tilesetManager)
     {
         _tilesetManager = tilesetManager;
-        Size = new(400, 300);
+        // Display 90x30 tiles (like sadconsole's 90x30 character grid)
+        // With 24px tiles: 90*24=2160w, 30*24=720h
+        Size = new(2160, 720);
         IsModal = false;
 
         // Initialize surface early so it can be populated before OnLoad

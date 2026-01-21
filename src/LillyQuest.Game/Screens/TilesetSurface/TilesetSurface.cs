@@ -16,12 +16,12 @@ public class TilesetSurface
     /// <summary>
     /// Width of the surface in tiles.
     /// </summary>
-    public int Width { get; set; } = 50;
+    public int Width { get; set; } = 100;
 
     /// <summary>
     /// Height of the surface in tiles.
     /// </summary>
-    public int Height { get; set; } = 50;
+    public int Height { get; set; } = 100;
 
     /// <summary>
     /// Gets a tile at the given coordinates on the specified layer.
