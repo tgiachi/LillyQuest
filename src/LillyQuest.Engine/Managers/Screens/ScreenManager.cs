@@ -319,6 +319,31 @@ public sealed class ScreenManager : IScreenManager
     }
 
     /// <summary>
+    /// Removes a specific screen from the top of the stack if it matches.
+    /// Calls OnUnload on the screen if it was at the top.
+    /// </summary>
+    public void PopScreen(IScreen screen)
+    {
+        if (_screenStack.Count == 0)
+        {
+            _logger.Warning("Attempted to pop screen from empty stack");
+            return;
+        }
+
+        var focusedScreen = _screenStack.Peek();
+        if (focusedScreen == screen)
+        {
+            _screenStack.Pop();
+            screen.OnUnload();
+            _logger.Debug("Popped screen {ScreenId}, stack size: {StackSize}", screen.ConsumerId, _screenStack.Count);
+        }
+        else
+        {
+            _logger.Warning("Cannot pop screen {ScreenId}: not at top of stack", screen.ConsumerId);
+        }
+    }
+
+    /// <summary>
     /// Removes a specific screen from the stack.
     /// Calls OnUnload on the screen if found.
     /// </summary>

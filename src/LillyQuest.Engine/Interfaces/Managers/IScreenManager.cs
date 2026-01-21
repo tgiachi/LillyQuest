@@ -51,6 +51,13 @@ public interface IScreenManager
     void PopScreen();
 
     /// <summary>
+    /// Removes a specific screen from the top of the stack if it matches.
+    /// Calls OnUnload on the screen if it was at the top.
+    /// Does nothing if the screen is not at the top of the stack.
+    /// </summary>
+    void PopScreen(IScreen screen);
+
+    /// <summary>
     /// Removes a specific screen from the stack.
     /// Calls OnUnload on the screen if found.
     /// Useful when changing scenes to clean up associated screens.
