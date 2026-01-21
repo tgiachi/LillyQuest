@@ -9,10 +9,10 @@ namespace LillyQuest.Engine.Screens.TilesetSurface;
 /// </summary>
 public class TileLayer
 {
-    /// <summary>
-    /// 2D array of tile render data. Tiles with index -1 are considered empty.
-    /// </summary>
-    public TileRenderData[,] Tiles { get; set; }
+    private readonly TileRenderData[] _tiles;
+
+    public int Width { get; }
+    public int Height { get; }
 
     /// <summary>
     /// Opacity of this layer (0.0 = invisible, 1.0 = fully opaque).
@@ -93,15 +93,17 @@ public class TileLayer
 
     public TileLayer(int width, int height)
     {
-        Tiles = new TileRenderData[width, height];
+        Width = width;
+        Height = height;
+        _tiles = new TileRenderData[width * height];
 
-        // Initialize with empty tiles (index -1)
-        for (var x = 0; x < width; x++)
+        for (var i = 0; i < _tiles.Length; i++)
         {
-            for (var y = 0; y < height; y++)
-            {
-                Tiles[x, y] = new(-1, LyColor.White);
-            }
+            _tiles[i] = new(-1, LyColor.White);
         }
     }
+
+    public TileRenderData GetTile(int x, int y) => _tiles[x + y * Width];
+
+    public void SetTile(int x, int y, TileRenderData tileData) => _tiles[x + y * Width] = tileData;
 }
