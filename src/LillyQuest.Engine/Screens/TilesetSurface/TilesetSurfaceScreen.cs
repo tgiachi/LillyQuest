@@ -934,62 +934,78 @@ public class TilesetSurfaceScreen : BaseScreen
         var maxTileX = Math.Min(_surface.Width, (int)MathF.Floor((visibleX + visibleWidth) / scaledTileWidth) + 1);
         var maxTileY = Math.Min(_surface.Height, (int)MathF.Floor((visibleY + visibleHeight) / scaledTileHeight) + 1);
 
-        for (var x = minTileX; x < maxTileX; x++)
+        if (minTileX >= maxTileX || minTileY >= maxTileY)
         {
-            for (var y = minTileY; y < maxTileY; y++)
-            {
-                var tileData = layer.GetTile(x, y);
-
-                if (tileData.BackgroundColor.A == 0)
-                {
-                    continue;
-                }
-
-                // Draw background color if present
-                var position = new Vector2(x * scaledTileWidth, y * scaledTileHeight) - viewOffsetPx + layerOffset;
-                spriteBatch.DrawRectangle(position, new(scaledTileWidth, scaledTileHeight), tileData.BackgroundColor);
-            }
+            return;
         }
 
-        for (var x = minTileX; x < maxTileX; x++)
+        var maxTileXInclusive = maxTileX - 1;
+        var maxTileYInclusive = maxTileY - 1;
+
+        foreach (var (chunkX, chunkY, chunk) in layer.EnumerateChunksInRange(
+                     minTileX,
+                     minTileY,
+                     maxTileXInclusive,
+                     maxTileYInclusive))
         {
-            for (var y = minTileY; y < maxTileY; y++)
+            var chunkBaseX = chunkX * TileChunk.Size;
+            var chunkBaseY = chunkY * TileChunk.Size;
+            var startX = Math.Max(minTileX, chunkBaseX);
+            var startY = Math.Max(minTileY, chunkBaseY);
+            var endX = Math.Min(maxTileX, chunkBaseX + TileChunk.Size);
+            var endY = Math.Min(maxTileY, chunkBaseY + TileChunk.Size);
+
+            for (var x = startX; x < endX; x++)
             {
-                var tileData = layer.GetTile(x, y);
-
-                // Skip empty tiles (tile index -1)
-                if (tileData.TileIndex < 0 || tileData.TileIndex >= tileset.TileCount)
+                for (var y = startY; y < endY; y++)
                 {
-                    continue;
+                    var tileData = chunk.GetTile(x - chunkBaseX, y - chunkBaseY);
+
+                    if (tileData.BackgroundColor.A == 0)
+                    {
+                        continue;
+                    }
+
+                    var position = new Vector2(x * scaledTileWidth, y * scaledTileHeight) - viewOffsetPx + layerOffset;
+                    spriteBatch.DrawRectangle(position, new(scaledTileWidth, scaledTileHeight), tileData.BackgroundColor);
                 }
+            }
 
-                // Get the tile from the tileset
-                var tile = tileset.GetTile(tileData.TileIndex);
+            for (var x = startX; x < endX; x++)
+            {
+                for (var y = startY; y < endY; y++)
+                {
+                    var tileData = chunk.GetTile(x - chunkBaseX, y - chunkBaseY);
 
-                // Convert pixel coordinates to normalized UV coordinates (0-1 range)
-                var uvX = (float)tile.SourceRect.Origin.X / tileset.Texture.Width;
-                var uvY = (float)tile.SourceRect.Origin.Y / tileset.Texture.Height;
-                var uvWidth = (float)tile.SourceRect.Size.X / tileset.Texture.Width;
-                var uvHeight = (float)tile.SourceRect.Size.Y / tileset.Texture.Height;
+                    if (tileData.TileIndex < 0 || tileData.TileIndex >= tileset.TileCount)
+                    {
+                        continue;
+                    }
 
-                var sourceRect = new Rectangle<float>(uvX, uvY, uvWidth, uvHeight);
-                sourceRect = TileRenderData.ApplyFlip(sourceRect, tileData.Flip);
+                    var tile = tileset.GetTile(tileData.TileIndex);
 
-                // Apply layer opacity to the foreground color
-                var color = tileData.ForegroundColor.WithAlpha((byte)(tileData.ForegroundColor.A * layer.Opacity));
+                    var uvX = (float)tile.SourceRect.Origin.X / tileset.Texture.Width;
+                    var uvY = (float)tile.SourceRect.Origin.Y / tileset.Texture.Height;
+                    var uvWidth = (float)tile.SourceRect.Size.X / tileset.Texture.Width;
+                    var uvHeight = (float)tile.SourceRect.Size.Y / tileset.Texture.Height;
 
-                // Draw the tile at the correct position using scaled tile dimensions
-                var tilePosition = new Vector2(x * scaledTileWidth, y * scaledTileHeight) - viewOffsetPx + layerOffset;
-                spriteBatch.Draw(
-                    tileset.Texture,
-                    tilePosition,
-                    new(scaledTileWidth, scaledTileHeight),
-                    color,
-                    0f,
-                    Vector2.Zero,
-                    sourceRect,
-                    0f
-                );
+                    var sourceRect = new Rectangle<float>(uvX, uvY, uvWidth, uvHeight);
+                    sourceRect = TileRenderData.ApplyFlip(sourceRect, tileData.Flip);
+
+                    var color = tileData.ForegroundColor.WithAlpha((byte)(tileData.ForegroundColor.A * layer.Opacity));
+
+                    var tilePosition = new Vector2(x * scaledTileWidth, y * scaledTileHeight) - viewOffsetPx + layerOffset;
+                    spriteBatch.Draw(
+                        tileset.Texture,
+                        tilePosition,
+                        new(scaledTileWidth, scaledTileHeight),
+                        color,
+                        0f,
+                        Vector2.Zero,
+                        sourceRect,
+                        0f
+                    );
+                }
             }
         }
     }

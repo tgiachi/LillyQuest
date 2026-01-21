@@ -129,6 +129,31 @@ public class TileLayer
         chunk.SetTile(localX, localY, tileData);
     }
 
+    public IEnumerable<(int chunkX, int chunkY, TileChunk chunk)> EnumerateChunksInRange(
+        int minTileX,
+        int minTileY,
+        int maxTileX,
+        int maxTileY
+    )
+    {
+        var minChunkX = minTileX / TileChunk.Size;
+        var minChunkY = minTileY / TileChunk.Size;
+        var maxChunkX = maxTileX / TileChunk.Size;
+        var maxChunkY = maxTileY / TileChunk.Size;
+
+        foreach (var entry in _chunks)
+        {
+            var (chunkX, chunkY) = entry.Key;
+
+            if (chunkX < minChunkX || chunkX > maxChunkX || chunkY < minChunkY || chunkY > maxChunkY)
+            {
+                continue;
+            }
+
+            yield return (chunkX, chunkY, entry.Value);
+        }
+    }
+
     private static (int chunkX, int chunkY, int localX, int localY) ToChunkCoordinates(int x, int y)
     {
         var chunkX = x / TileChunk.Size;
