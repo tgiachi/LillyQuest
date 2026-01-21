@@ -58,12 +58,12 @@ public class TilesetSurfaceEditorScene : BaseScene
 
         var random = Random.Shared;
 
-        // Fill entire surface on first layer only (2500 tiles is the limit before blocking)
+        // Fill a portion of the surface on first layer (20x20 = 400 tiles for smooth rendering)
         screen.SelectedLayerIndex = 0;
 
-        for (var x = 0; x < 50; x++)
+        for (var x = 0; x < 20; x++)
         {
-            for (var y = 0; y < 50; y++)
+            for (var y = 0; y < 20; y++)
             {
                 // Random tile index
                 var tileIndex = random.Next(0, tileset.TileCount);

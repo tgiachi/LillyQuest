@@ -17,7 +17,7 @@ namespace LillyQuest.Core.Graphics.Rendering2D;
 
 public class SpriteBatch : IFontStashRenderer2, IDisposable
 {
-    private const int INITIAL_SPRITE_COUNT = 2048;
+    private const int INITIAL_SPRITE_COUNT = 2048 + 1024;
     private const int GROWTH_FACTOR = 2;
 
     private readonly GL _gl;
