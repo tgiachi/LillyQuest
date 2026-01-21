@@ -222,7 +222,7 @@ public class TilesetSurfaceScreen : BaseScreen
         {
             for (var y = 0; y < _surface.Height; y++)
             {
-                layer.Tiles[x, y] = emptyTile;
+                layer.SetTile(x, y, emptyTile);
             }
         }
     }
@@ -938,7 +938,7 @@ public class TilesetSurfaceScreen : BaseScreen
         {
             for (var y = minTileY; y < maxTileY; y++)
             {
-                var tileData = layer.Tiles[x, y];
+                var tileData = layer.GetTile(x, y);
 
                 if (tileData.BackgroundColor.A == 0)
                 {
@@ -955,7 +955,7 @@ public class TilesetSurfaceScreen : BaseScreen
         {
             for (var y = minTileY; y < maxTileY; y++)
             {
-                var tileData = layer.Tiles[x, y];
+                var tileData = layer.GetTile(x, y);
 
                 // Skip empty tiles (tile index -1)
                 if (tileData.TileIndex < 0 || tileData.TileIndex >= tileset.TileCount)
