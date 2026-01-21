@@ -7,6 +7,7 @@ using LillyQuest.Engine.Extensions.TilesetSurface;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Managers.Scenes.Base;
 using LillyQuest.Engine.Screens.TilesetSurface;
+using Serilog;
 using Silk.NET.Input;
 
 namespace LillyQuest.Game.Scenes;
@@ -48,7 +49,7 @@ public class TilesetSurfaceEditorScene : BaseScene
                                              screen.ClearLayer(1);
                                              screen.DrawTextPixel(
                                                  1,
-                                                 $"Tile X: {x}, Tile Y: {y}       ",
+                                                 $"Tile X: {x}, Tile Y: {y}",
                                                  mouseX,
                                                  mouseY,
                                                  LyColor.White,
@@ -63,10 +64,18 @@ public class TilesetSurfaceEditorScene : BaseScene
                                     }
                                 };
 
+        screen.TileMouseWheel += (layerIndex, x, y, delta) =>
+                                 {
+                                     var scale = screen.GetLayerRenderScale(0);
+                                     screen.SetLayerRenderScaleTarget(0, scale + delta, 1f);
+                                 };
+
         // Initialize the surface layers before population
         screen.InitializeLayers(screen.LayerCount);
         screen.SetLayerTileset(0, "roguelike");
         screen.SetLayerTileset(1, "alloy");
+
+        screen.SetLayerRenderScaleSmoothing(0, true, 0.1f);
 
         screen.SetLayerViewSmoothing(0, true);
 

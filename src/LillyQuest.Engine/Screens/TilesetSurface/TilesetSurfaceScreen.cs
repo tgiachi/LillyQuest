@@ -56,6 +56,16 @@ public class TilesetSurfaceScreen : BaseScreen
     /// </summary>
     public event TileMouseDownHandler? TileMouseDown;
 
+    /// <summary>
+    /// Fired when the mouse wheel scrolls over a valid tile.
+    /// </summary>
+    public delegate void TileMouseWheelHandler(int layerIndex, int tileX, int tileY, float delta);
+
+    /// <summary>
+    /// Fired when the mouse wheel scrolls over a valid tile.
+    /// </summary>
+    public event TileMouseWheelHandler? TileMouseWheel;
+
     private readonly ITilesetManager _tilesetManager;
     private readonly TilesetSurface _surface;
 
@@ -383,6 +393,24 @@ public class TilesetSurfaceScreen : BaseScreen
                 var (layerTileX, layerTileY) = GetInputTileCoordinates(layerIndex, x, y);
                 TileMouseMoveAllLayers.Invoke(layerIndex, layerTileX, layerTileY, x, y);
             }
+        }
+
+        return true;
+    }
+
+    public override bool OnMouseWheel(int x, int y, float delta)
+    {
+        if (!HitTest(x, y))
+        {
+            return false;
+        }
+
+        var (tileX, tileY) = GetInputTileCoordinates(SelectedLayerIndex, x, y);
+        var handledDelta = _surface.HandleMouseWheel(SelectedLayerIndex, tileX, tileY, delta);
+
+        if (handledDelta != 0f)
+        {
+            TileMouseWheel?.Invoke(SelectedLayerIndex, tileX, tileY, handledDelta);
         }
 
         return true;

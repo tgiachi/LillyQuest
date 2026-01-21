@@ -345,7 +345,7 @@ public sealed class InputSystem : IInputSystem
             {
                 var currentWheel = scrollWheels[i];
                 var previousWheel = _previousScrollWheels[i];
-                var delta = currentWheel.Y - previousWheel.Y;
+                var delta = ComputeWheelDelta(previousWheel.Y, currentWheel.Y);
 
                 if (delta != 0.0f)
                 {
@@ -405,5 +405,15 @@ public sealed class InputSystem : IInputSystem
         {
             _previousMouseButtons.Add(button);
         }
+    }
+
+    private static float ComputeWheelDelta(float previousY, float currentY)
+    {
+        if (currentY == 0f && previousY != 0f)
+        {
+            return 0f;
+        }
+
+        return currentY - previousY;
     }
 }

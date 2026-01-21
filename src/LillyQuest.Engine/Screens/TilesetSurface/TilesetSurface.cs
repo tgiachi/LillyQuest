@@ -11,7 +11,7 @@ public class TilesetSurface
     /// <summary>
     /// All layers in the surface, ordered from bottom (index 0) to top (index N-1).
     /// </summary>
-    public List<TileLayer> Layers { get; } = new();
+    public List<TileLayer> Layers { get; } = [];
 
     /// <summary>
     /// Width of the surface in tiles.
@@ -76,5 +76,23 @@ public class TilesetSurface
         }
 
         Layers[layerIndex].Tiles[x, y] = tileData;
+    }
+
+    /// <summary>
+    /// Handles a mouse wheel delta over a specific tile and returns the delta if valid.
+    /// </summary>
+    public float HandleMouseWheel(int layerIndex, int x, int y, float delta)
+    {
+        if (layerIndex < 0 || layerIndex >= Layers.Count)
+        {
+            return 0f;
+        }
+
+        if (x < 0 || x >= Width || y < 0 || y >= Height)
+        {
+            return 0f;
+        }
+
+        return delta;
     }
 }
