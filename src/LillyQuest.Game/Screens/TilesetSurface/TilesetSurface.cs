@@ -1,3 +1,6 @@
+using LillyQuest.Core.Data.Assets.Tiles;
+using LillyQuest.Core.Primitives;
+
 namespace LillyQuest.Game.Screens.TilesetSurface;
 
 /// <summary>
@@ -23,19 +26,19 @@ public class TilesetSurface
     /// <summary>
     /// Gets a tile at the given coordinates on the specified layer.
     /// </summary>
-    public int GetTile(int layerIndex, int x, int y)
+    public TileRenderData GetTile(int layerIndex, int x, int y)
     {
         if (layerIndex < 0 || layerIndex >= Layers.Count)
         {
-            return -1;
+            return new TileRenderData(-1, LyColor.White);
         }
 
         if (x < 0 || x >= Width || y < 0 || y >= Height)
         {
-            return -1;
+            return new TileRenderData(-1, LyColor.White);
         }
 
-        return Layers[layerIndex].TileIndices[x, y];
+        return Layers[layerIndex].Tiles[x, y];
     }
 
     /// <summary>
@@ -54,7 +57,7 @@ public class TilesetSurface
     /// <summary>
     /// Sets a tile at the given coordinates on the specified layer.
     /// </summary>
-    public void SetTile(int layerIndex, int x, int y, int tileIndex)
+    public void SetTile(int layerIndex, int x, int y, TileRenderData tileData)
     {
         if (layerIndex < 0 || layerIndex >= Layers.Count)
         {
@@ -66,6 +69,6 @@ public class TilesetSurface
             return;
         }
 
-        Layers[layerIndex].TileIndices[x, y] = tileIndex;
+        Layers[layerIndex].Tiles[x, y] = tileData;
     }
 }

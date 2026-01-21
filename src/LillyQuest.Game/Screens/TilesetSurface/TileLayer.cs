@@ -1,3 +1,5 @@
+using LillyQuest.Core.Data.Assets.Tiles;
+
 namespace LillyQuest.Game.Screens.TilesetSurface;
 
 /// <summary>
@@ -6,9 +8,9 @@ namespace LillyQuest.Game.Screens.TilesetSurface;
 public class TileLayer
 {
     /// <summary>
-    /// 2D array of tile indices. -1 or 0 means empty.
+    /// 2D array of tile render data. Tiles with index -1 are considered empty.
     /// </summary>
-    public int[,] TileIndices { get; set; }
+    public TileRenderData[,] Tiles { get; set; }
 
     /// <summary>
     /// Opacity of this layer (0.0 = invisible, 1.0 = fully opaque).
@@ -28,13 +30,13 @@ public class TileLayer
 
     public TileLayer(int width, int height)
     {
-        TileIndices = new int[width, height];
-        // Initialize with -1 (empty)
-        for (int x = 0; x < width; x++)
+        Tiles = new TileRenderData[width, height];
+        // Initialize with empty tiles (index -1)
+        for (var x = 0; x < width; x++)
         {
-            for (int y = 0; y < height; y++)
+            for (var y = 0; y < height; y++)
             {
-                TileIndices[x, y] = -1;
+                Tiles[x, y] = new TileRenderData(-1, LillyQuest.Core.Primitives.LyColor.White);
             }
         }
     }

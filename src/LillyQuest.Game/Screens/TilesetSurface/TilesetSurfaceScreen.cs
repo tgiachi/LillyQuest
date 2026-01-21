@@ -1,12 +1,12 @@
 using System.Numerics;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Data.Contexts;
+using LillyQuest.Core.Graphics.Extensions;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Managers.Screens.Base;
 using Silk.NET.Input;
-using Silk.NET.Maths;
 
 namespace LillyQuest.Game.Screens.TilesetSurface;
 
@@ -105,8 +105,11 @@ public class TilesetSurfaceScreen : BaseScreen
 
         var (tileX, tileY) = GetTileCoordinates(x, y);
 
+        // Create tile render data with the selected tile index and white color
+        var tileData = new TileRenderData(SelectedTileIndex, LyColor.White);
+
         // Draw on the selected layer
-        _surface.SetTile(SelectedLayerIndex, tileX, tileY, SelectedTileIndex);
+        _surface.SetTile(SelectedLayerIndex, tileX, tileY, tileData);
 
         return true;
     }
@@ -241,40 +244,21 @@ public class TilesetSurfaceScreen : BaseScreen
         {
             for (var y = 0; y < _surface.Height; y++)
             {
-                var tileIndex = layer.TileIndices[x, y];
+                var tileData = layer.Tiles[x, y];
 
-                // Skip empty tiles
-                if (tileIndex < 0 || tileIndex >= tileset.TileCount)
+                // Skip empty tiles (tile index -1)
+                if (tileData.TileIndex < 0 || tileData.TileIndex >= tileset.TileCount)
                 {
                     continue;
                 }
 
-                // Get the tile from the tileset
-                var tile = tileset.GetTile(tileIndex);
-
-                // Convert pixel coordinates to normalized UV coordinates (0-1 range)
-                var uvX = (float)tile.SourceRect.Origin.X / tileset.Texture.Width;
-                var uvY = (float)tile.SourceRect.Origin.Y / tileset.Texture.Height;
-                var uvWidth = (float)tile.SourceRect.Size.X / tileset.Texture.Width;
-                var uvHeight = (float)tile.SourceRect.Size.Y / tileset.Texture.Height;
-
-                var sourceRect = new Rectangle<float>(uvX, uvY, uvWidth, uvHeight);
-
-                // Apply layer opacity to the color
-                var color = LyColor.White.WithAlpha((byte)(255 * layer.Opacity));
+                // Apply layer opacity to the foreground color
+                var color = tileData.ForegroundColor.WithAlpha((byte)(tileData.ForegroundColor.A * layer.Opacity));
+                var tileRenderData = new TileRenderData(tileData.TileIndex, color, tileData.BackgroundColor);
 
                 // Draw the tile at the correct position using the tileset's tile dimensions
                 var position = new Vector2(x * tileset.TileWidth, y * tileset.TileHeight);
-                spriteBatch.Draw(
-                    tileset.Texture,
-                    position,
-                    new(tileset.TileWidth, tileset.TileHeight),
-                    color,
-                    0f,
-                    Vector2.Zero,
-                    sourceRect,
-                    0f
-                );
+                spriteBatch.DrawTileWithBackground(tileset, tileRenderData, position);
             }
         }
     }
