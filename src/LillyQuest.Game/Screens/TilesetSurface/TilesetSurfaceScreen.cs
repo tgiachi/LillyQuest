@@ -151,6 +151,14 @@ public class TilesetSurfaceScreen : BaseScreen
     }
 
     /// <summary>
+    /// Adds a tile to the surface at the specified coordinates on the selected layer.
+    /// </summary>
+    public void AddTileToSurface(int x, int y, TileRenderData tileData)
+    {
+        _surface.SetTile(SelectedLayerIndex, x, y, tileData);
+    }
+
+    /// <summary>
     /// Sets the tileset for a specific layer.
     /// If null or empty, the layer will use the default tileset.
     /// </summary>

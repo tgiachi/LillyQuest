@@ -38,6 +38,7 @@ await ConsoleApp.RunAsync(
             {
                 container.RegisterScene<TestSceneA>(true);
                 container.RegisterScene<TestSceneB>();
+                container.RegisterScene<TilesetSurfaceEditorScene>();
 
                 return container;
             }

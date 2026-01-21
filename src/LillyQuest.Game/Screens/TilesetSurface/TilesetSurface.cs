@@ -30,12 +30,12 @@ public class TilesetSurface
     {
         if (layerIndex < 0 || layerIndex >= Layers.Count)
         {
-            return new TileRenderData(-1, LyColor.White);
+            return new(-1, LyColor.White);
         }
 
         if (x < 0 || x >= Width || y < 0 || y >= Height)
         {
-            return new TileRenderData(-1, LyColor.White);
+            return new(-1, LyColor.White);
         }
 
         return Layers[layerIndex].Tiles[x, y];

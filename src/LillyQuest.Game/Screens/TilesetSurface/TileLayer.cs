@@ -1,4 +1,5 @@
 using LillyQuest.Core.Data.Assets.Tiles;
+using LillyQuest.Core.Primitives;
 
 namespace LillyQuest.Game.Screens.TilesetSurface;
 
@@ -31,12 +32,13 @@ public class TileLayer
     public TileLayer(int width, int height)
     {
         Tiles = new TileRenderData[width, height];
+
         // Initialize with empty tiles (index -1)
         for (var x = 0; x < width; x++)
         {
             for (var y = 0; y < height; y++)
             {
-                Tiles[x, y] = new TileRenderData(-1, LillyQuest.Core.Primitives.LyColor.White);
+                Tiles[x, y] = new(-1, LyColor.White);
             }
         }
     }
