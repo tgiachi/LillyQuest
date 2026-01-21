@@ -185,6 +185,36 @@ public class TilesetSurfaceTextExtensionsTests
     }
 
     [Test]
+    public void DrawTextPixelScreen_UsesScreenCoordinates()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager())
+        {
+            Position = new System.Numerics.Vector2(50, 0)
+        };
+        screen.InitializeLayers(1);
+        screen.SetLayerInputTileSizeOverride(0, new System.Numerics.Vector2(10, 10));
+
+        screen.DrawTextPixelScreen(0, "E", 60, 5, LyColor.White);
+
+        Assert.That(screen.GetTile(0, 1, 0).TileIndex, Is.EqualTo(69));
+    }
+
+    [Test]
+    public void DrawTextPixelLocal_UsesLocalCoordinates()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager())
+        {
+            Position = new System.Numerics.Vector2(50, 0)
+        };
+        screen.InitializeLayers(1);
+        screen.SetLayerInputTileSizeOverride(0, new System.Numerics.Vector2(10, 10));
+
+        screen.DrawTextPixelLocal(0, "F", 10, 5, LyColor.White);
+
+        Assert.That(screen.GetTile(0, 1, 0).TileIndex, Is.EqualTo(70));
+    }
+
+    [Test]
     public void DrawText_NewLineAdvancesRow()
     {
         var screen = new TilesetSurfaceScreen(new StubTilesetManager());
