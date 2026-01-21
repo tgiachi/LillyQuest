@@ -330,7 +330,7 @@ public class TilesetSurfaceTextExtensionsTests
     }
 
     [Test]
-    public void LayerRenderScale_DoesNotAffectMouseSelection()
+    public void LayerRenderScale_AffectsMouseSelection()
     {
         var screen = new TilesetSurfaceScreen(new StubTilesetManager())
         {
@@ -348,7 +348,7 @@ public class TilesetSurfaceTextExtensionsTests
 
         screen.OnMouseMove(25, 35);
 
-        Assert.That(moveResult, Is.EqualTo((2, 3)));
+        Assert.That(moveResult, Is.EqualTo((1, 1)));
     }
 
     [Test]
