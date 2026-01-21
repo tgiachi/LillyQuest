@@ -1,3 +1,4 @@
+using System.Numerics;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
@@ -22,6 +23,7 @@ public class TilesetSurfaceEditorScene : BaseScene
     {
         _screenManager = screenManager;
         _tilesetManager = tilesetManager;
+
     }
 
     public override void OnInitialize(ISceneManager sceneManager)
@@ -30,7 +32,8 @@ public class TilesetSurfaceEditorScene : BaseScene
         var screen = new TilesetSurfaceScreen(_tilesetManager)
         {
             DefaultTilesetName = "alloy",
-            LayerCount = 3
+            LayerCount = 3,
+            Position = new Vector2(100, 100)
         };
 
         // Initialize the surface layers before population
@@ -57,13 +60,11 @@ public class TilesetSurfaceEditorScene : BaseScene
         }
 
         var random = Random.Shared;
-
-        // Fill a portion of the surface on first layer (20x20 = 400 tiles for smooth rendering)
         screen.SelectedLayerIndex = 0;
 
-        for (var x = 0; x < 20; x++)
+        for (var x = 0; x < 50; x++)
         {
-            for (var y = 0; y < 20; y++)
+            for (var y = 0; y < 50; y++)
             {
                 // Random tile index
                 var tileIndex = random.Next(0, tileset.TileCount);

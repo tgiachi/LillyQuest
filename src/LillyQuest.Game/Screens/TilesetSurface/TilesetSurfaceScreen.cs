@@ -39,10 +39,15 @@ public class TilesetSurfaceScreen : BaseScreen
     /// </summary>
     public string DefaultTilesetName { get; set; } = "alloy";
 
+    /// <summary>
+    /// Render scale for tiles (e.g., 2.67 scales 12x12 tiles to ~32x32).
+    /// </summary>
+    public float TileRenderScale { get; set; } = 2.67f;
+
     public TilesetSurfaceScreen(ITilesetManager tilesetManager)
     {
         _tilesetManager = tilesetManager;
-        Size = new(800, 600);
+        Size = new(400, 300);
         IsModal = false;
 
         // Initialize surface early so it can be populated before OnLoad
@@ -125,6 +130,17 @@ public class TilesetSurfaceScreen : BaseScreen
         // Draw black background
         spriteBatch.DrawRectangle(Position, Size, LyColor.Black);
 
+        // Calculate scissor region with margins applied
+        var scissorX = (int)(Position.X + Margin.X);
+        var scissorY = (int)(Position.Y + Margin.Y);
+        var scissorWidth = (int)(Size.X - Margin.X - Margin.Z);
+        var scissorHeight = (int)(Size.Y - Margin.Y - Margin.W);
+
+        // Ensure scissor dimensions are not negative
+        scissorWidth = Math.Max(0, scissorWidth);
+        scissorHeight = Math.Max(0, scissorHeight);
+
+        spriteBatch.SetScissor(scissorX, scissorY, scissorWidth, scissorHeight);
         spriteBatch.PushTranslation(Position);
 
         // Render layers from bottom (0) to top (N-1)
@@ -141,6 +157,7 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         spriteBatch.PopTranslation();
+        spriteBatch.DisableScissor();
     }
 
     /// <summary>
@@ -238,19 +255,24 @@ public class TilesetSurfaceScreen : BaseScreen
             return (0, 0);
         }
 
+        // Calculate scaled tile dimensions
+        var scaledTileWidth = tileset.TileWidth * TileRenderScale;
+        var scaledTileHeight = tileset.TileHeight * TileRenderScale;
+
         // Adjust mouse position relative to screen position
         var relativeX = mouseX - (int)Position.X;
         var relativeY = mouseY - (int)Position.Y;
 
-        // Calculate tile coordinates using the tileset's tile dimensions
-        var tileX = relativeX / tileset.TileWidth;
-        var tileY = relativeY / tileset.TileHeight;
+        // Calculate tile coordinates using scaled tile dimensions
+        var tileX = (int)(relativeX / scaledTileWidth);
+        var tileY = (int)(relativeY / scaledTileHeight);
 
         return (tileX, tileY);
     }
 
     /// <summary>
-    /// Renders a single layer to the sprite batch.
+    /// Renders a single layer to the sprite batch with frustum culling.
+    /// Only renders tiles that are visible within the screen bounds.
     /// </summary>
     private void RenderLayer(SpriteBatch spriteBatch, TileLayer layer, int layerIndex)
     {
@@ -262,9 +284,26 @@ public class TilesetSurfaceScreen : BaseScreen
             return;
         }
 
-        for (var x = 0; x < _surface.Width; x++)
+        // Calculate scaled tile dimensions
+        var scaledTileWidth = tileset.TileWidth * TileRenderScale;
+        var scaledTileHeight = tileset.TileHeight * TileRenderScale;
+
+        // Calculate visible region accounting for margins (scissor area)
+        // Note: Tiles are already in coordinates relative to Position (due to PushTranslation)
+        var visibleX = Margin.X;
+        var visibleY = Margin.Y;
+        var visibleWidth = Size.X - Margin.X - Margin.Z;
+        var visibleHeight = Size.Y - Margin.Y - Margin.W;
+
+        // Calculate which tiles are visible based on scissor bounds (using scaled dimensions)
+        var minTileX = Math.Max(0, (int)(visibleX / scaledTileWidth));
+        var minTileY = Math.Max(0, (int)(visibleY / scaledTileHeight));
+        var maxTileX = Math.Min(_surface.Width, (int)((visibleX + visibleWidth) / scaledTileWidth) + 1);
+        var maxTileY = Math.Min(_surface.Height, (int)((visibleY + visibleHeight) / scaledTileHeight) + 1);
+
+        for (var x = minTileX; x < maxTileX; x++)
         {
-            for (var y = 0; y < _surface.Height; y++)
+            for (var y = minTileY; y < maxTileY; y++)
             {
                 var tileData = layer.Tiles[x, y];
 
@@ -280,8 +319,8 @@ public class TilesetSurfaceScreen : BaseScreen
                 // Draw background color if present
                 if (tileData.BackgroundColor.A > 0)
                 {
-                    var position = new Vector2(x * tileset.TileWidth, y * tileset.TileHeight);
-                    spriteBatch.DrawRectangle(position, new Vector2(tileset.TileWidth, tileset.TileHeight), tileData.BackgroundColor);
+                    var position = new Vector2(x * scaledTileWidth, y * scaledTileHeight);
+                    spriteBatch.DrawRectangle(position, new Vector2(scaledTileWidth, scaledTileHeight), tileData.BackgroundColor);
                 }
 
                 // Convert pixel coordinates to normalized UV coordinates (0-1 range)
@@ -295,12 +334,12 @@ public class TilesetSurfaceScreen : BaseScreen
                 // Apply layer opacity to the foreground color
                 var color = tileData.ForegroundColor.WithAlpha((byte)(tileData.ForegroundColor.A * layer.Opacity));
 
-                // Draw the tile at the correct position using the tileset's tile dimensions
-                var tilePosition = new Vector2(x * tileset.TileWidth, y * tileset.TileHeight);
+                // Draw the tile at the correct position using scaled tile dimensions
+                var tilePosition = new Vector2(x * scaledTileWidth, y * scaledTileHeight);
                 spriteBatch.Draw(
                     tileset.Texture,
                     tilePosition,
-                    new Vector2(tileset.TileWidth, tileset.TileHeight),
+                    new Vector2(scaledTileWidth, scaledTileHeight),
                     color,
                     0f,
                     Vector2.Zero,
