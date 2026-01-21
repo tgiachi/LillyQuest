@@ -145,6 +145,46 @@ public class TilesetSurfaceTextExtensionsTests
     }
 
     [Test]
+    public void DrawText_WithLayerIndex_WritesToSpecifiedLayer()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager());
+        screen.InitializeLayers(2);
+
+        screen.DrawText(1, "B", 0, 0, LyColor.White);
+
+        Assert.That(screen.GetTile(1, 0, 0).TileIndex, Is.EqualTo(66));
+        Assert.That(screen.GetTile(0, 0, 0).TileIndex, Is.EqualTo(-1));
+    }
+
+    [Test]
+    public void DrawTextPixel_WithLayerIndex_WritesToSpecifiedLayer()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager());
+        screen.InitializeLayers(2);
+        screen.SetLayerInputTileSizeOverride(1, new System.Numerics.Vector2(10, 10));
+
+        screen.DrawTextPixel(1, "C", 15, 5, LyColor.White);
+
+        Assert.That(screen.GetTile(1, 1, 0).TileIndex, Is.EqualTo(67));
+        Assert.That(screen.GetTile(0, 1, 0).TileIndex, Is.EqualTo(-1));
+    }
+
+    [Test]
+    public void DrawTextPixel_AccountsForScreenPosition()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager())
+        {
+            Position = new System.Numerics.Vector2(100, 0)
+        };
+        screen.InitializeLayers(1);
+        screen.SetLayerInputTileSizeOverride(0, new System.Numerics.Vector2(10, 10));
+
+        screen.DrawTextPixel(0, "D", 110, 5, LyColor.White);
+
+        Assert.That(screen.GetTile(0, 1, 0).TileIndex, Is.EqualTo(68));
+    }
+
+    [Test]
     public void DrawText_NewLineAdvancesRow()
     {
         var screen = new TilesetSurfaceScreen(new StubTilesetManager());
@@ -195,7 +235,12 @@ public class TilesetSurfaceTextExtensionsTests
         screen.SetLayerViewPixelOffset(0, System.Numerics.Vector2.Zero);
 
         var moveResult = (-1, -1);
-        screen.TileMouseMove += (_, x, y) => moveResult = (x, y);
+        var movePixels = (-1, -1);
+        screen.TileMouseMove += (_, x, y, mouseX, mouseY) =>
+        {
+            moveResult = (x, y);
+            movePixels = (mouseX, mouseY);
+        };
 
         var downResult = (-1, -1);
         screen.TileMouseDown += (_, x, y, _) => downResult = (x, y);
@@ -204,7 +249,54 @@ public class TilesetSurfaceTextExtensionsTests
         screen.OnMouseDown(25, 35, new[] { Silk.NET.Input.MouseButton.Left });
 
         Assert.That(moveResult, Is.EqualTo((2, 3)));
+        Assert.That(movePixels, Is.EqualTo((25, 35)));
         Assert.That(downResult, Is.EqualTo((2, 3)));
+    }
+
+    [Test]
+    public void MouseCallbacks_BroadcastTileCoordinatesForAllLayers()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager())
+        {
+            Position = System.Numerics.Vector2.Zero,
+            Size = new System.Numerics.Vector2(200, 200),
+            TileRenderScale = 1.0f
+        };
+        screen.InitializeLayers(2);
+        screen.SelectedLayerIndex = 0;
+        screen.SetLayerInputTileSizeOverride(0, new System.Numerics.Vector2(10, 10));
+        screen.SetLayerInputTileSizeOverride(1, new System.Numerics.Vector2(20, 20));
+        screen.SetLayerPixelOffset(0, System.Numerics.Vector2.Zero);
+        screen.SetLayerPixelOffset(1, System.Numerics.Vector2.Zero);
+        screen.SetLayerViewTileOffset(0, System.Numerics.Vector2.Zero);
+        screen.SetLayerViewTileOffset(1, System.Numerics.Vector2.Zero);
+        screen.SetLayerViewPixelOffset(0, System.Numerics.Vector2.Zero);
+        screen.SetLayerViewPixelOffset(1, System.Numerics.Vector2.Zero);
+
+        var layer0Result = (-1, -1);
+        var layer1Result = (-1, -1);
+        var layer0Pixels = (-1, -1);
+        var layer1Pixels = (-1, -1);
+        screen.TileMouseMoveAllLayers += (layerIndex, x, y, mouseX, mouseY) =>
+        {
+            if (layerIndex == 0)
+            {
+                layer0Result = (x, y);
+                layer0Pixels = (mouseX, mouseY);
+            }
+            else if (layerIndex == 1)
+            {
+                layer1Result = (x, y);
+                layer1Pixels = (mouseX, mouseY);
+            }
+        };
+
+        screen.OnMouseMove(25, 35);
+
+        Assert.That(layer0Result, Is.EqualTo((2, 3)));
+        Assert.That(layer1Result, Is.EqualTo((1, 1)));
+        Assert.That(layer0Pixels, Is.EqualTo((25, 35)));
+        Assert.That(layer1Pixels, Is.EqualTo((25, 35)));
     }
 
     [Test]

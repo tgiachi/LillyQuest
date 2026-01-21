@@ -39,17 +39,22 @@ public class TilesetSurfaceEditorScene : BaseScene
             TileViewSize = new Vector2(20, 20),
         };
 
-        screen.TileMouseMove += (index, x, y) =>
-                                {
-                                    screen.ClearLayer(1);
-                                    screen.DrawText(
-                                        $"Tile X: {x}, Tile Y: {y}       ",
-                                        x,
-                                        y,
-                                        LyColor.White,
-                                        LyColor.Black
-                                    );
-                                };
+        screen.TileMouseMoveAllLayers += (index, x, y, mouseX, mouseY) =>
+                                         {
+                                             if (index != 0)
+                                             {
+                                                 return;
+                                             }
+                                             screen.ClearLayer(1);
+                                             screen.DrawTextPixel(
+                                                 1,
+                                                 $"Tile X: {x}, Tile Y: {y}       ",
+                                                 mouseX,
+                                                 mouseY,
+                                                 LyColor.White,
+                                                 LyColor.Black
+                                             );
+                                         };
         screen.TileMouseDown += (layerIndex, tileX, tileY, buttons) =>
                                 {
                                     if (buttons.Contains(MouseButton.Right))
@@ -68,8 +73,8 @@ public class TilesetSurfaceEditorScene : BaseScene
         // Populate with random tiles and colors
         PopulateWithRandomTiles(screen);
 
-        screen.SelectedLayerIndex = 1;
-        screen.DrawText("hello from LillyQuest *", 2, 2, LyColor.Yellow, LyColor.Black);
+        screen.SelectedLayerIndex = 0;
+        screen.DrawText(1, "hello from LillyQuest *", 2, 2, LyColor.Yellow, LyColor.Black);
 
         // Add the screen to the screen manager
         _screenManager.PushScreen(screen);

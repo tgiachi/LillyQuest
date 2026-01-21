@@ -78,7 +78,57 @@ public static class TilesetSurfaceTextExtensions
         }
 
         /// <summary>
-        /// Writes text using pixel coordinates (relative to the screen origin).
+        /// Writes text to a specific layer using CP437 character codes.
+        /// Supports '\n' for new lines and '\r' is ignored.
+        /// </summary>
+        /// <param name="layerIndex">Target layer index.</param>
+        /// <param name="text">Text to draw.</param>
+        /// <param name="startX">Start tile X.</param>
+        /// <param name="startY">Start tile Y.</param>
+        /// <param name="foregroundColor">Foreground color for glyphs.</param>
+        /// <param name="backgroundColor">Optional background color.</param>
+        /// <param name="flip">Optional flip for the foreground tile.</param>
+        public void DrawText(
+            int layerIndex,
+            string text,
+            int startX,
+            int startY,
+            LyColor foregroundColor,
+            LyColor? backgroundColor = null,
+            TileFlipType flip = TileFlipType.None
+        )
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            var x = startX;
+            var y = startY;
+
+            foreach (var ch in text)
+            {
+                if (ch == '\n')
+                {
+                    y++;
+                    x = startX;
+                    continue;
+                }
+
+                if (ch == '\r')
+                {
+                    continue;
+                }
+
+                var tileIndex = ToCp437TileIndex(ch);
+                var tileData = new TileRenderData(tileIndex, foregroundColor, backgroundColor, flip);
+                screen.AddTileToSurface(layerIndex, x, y, tileData);
+                x++;
+            }
+        }
+
+        /// <summary>
+        /// Writes text using screen pixel coordinates (same space as mouse input).
         /// </summary>
         /// <param name="text">Text to draw.</param>
         /// <param name="xPx">Pixel X.</param>
@@ -103,8 +153,8 @@ public static class TilesetSurfaceTextExtensions
             screen.TryGetLayerViewOffsets(screen.SelectedLayerIndex, out var viewTileOffset, out var viewPixelOffset);
 
             var (tileX, tileY) = ComputeTileCoordinatesFromPixel(
-                xPx,
-                yPx,
+                (int)(xPx - screen.Position.X),
+                (int)(yPx - screen.Position.Y),
                 tileWidth,
                 tileHeight,
                 screen.TileRenderScale,
@@ -114,6 +164,52 @@ public static class TilesetSurfaceTextExtensions
             );
 
             screen.DrawText(text, tileX, tileY, foregroundColor, backgroundColor, flip);
+        }
+
+        /// <summary>
+        /// Writes text to a specific layer using screen pixel coordinates (same space as mouse input).
+        /// </summary>
+        /// <param name="layerIndex">Target layer index.</param>
+        /// <param name="text">Text to draw.</param>
+        /// <param name="xPx">Pixel X.</param>
+        /// <param name="yPx">Pixel Y.</param>
+        /// <param name="foregroundColor">Foreground color for glyphs.</param>
+        /// <param name="backgroundColor">Optional background color.</param>
+        /// <param name="flip">Optional flip for the foreground tile.</param>
+        public void DrawTextPixel(
+            int layerIndex,
+            string text,
+            int xPx,
+            int yPx,
+            LyColor foregroundColor,
+            LyColor? backgroundColor = null,
+            TileFlipType flip = TileFlipType.None
+        )
+        {
+            if (string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            if (!screen.TryGetLayerInputTileInfo(layerIndex, out var tileWidth, out var tileHeight, out var pixelOffset))
+            {
+                return;
+            }
+
+            screen.TryGetLayerViewOffsets(layerIndex, out var viewTileOffset, out var viewPixelOffset);
+
+            var (tileX, tileY) = ComputeTileCoordinatesFromPixel(
+                (int)(xPx - screen.Position.X),
+                (int)(yPx - screen.Position.Y),
+                tileWidth,
+                tileHeight,
+                screen.TileRenderScale,
+                pixelOffset,
+                viewTileOffset,
+                viewPixelOffset
+            );
+
+            screen.DrawText(layerIndex, text, tileX, tileY, foregroundColor, backgroundColor, flip);
         }
 
         /// <summary>

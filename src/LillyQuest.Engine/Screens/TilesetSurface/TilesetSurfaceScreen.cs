@@ -19,12 +19,32 @@ public class TilesetSurfaceScreen : BaseScreen
     /// <summary>
     /// Fired when the mouse moves over a valid tile.
     /// </summary>
-    public delegate void TileMouseMoveHandler(int layerIndex, int tileX, int tileY);
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="tileX">Tile X.</param>
+    /// <param name="tileY">Tile Y.</param>
+    /// <param name="mouseX">Mouse X in screen pixels.</param>
+    /// <param name="mouseY">Mouse Y in screen pixels.</param>
+    public delegate void TileMouseMoveHandler(int layerIndex, int tileX, int tileY, int mouseX, int mouseY);
 
     /// <summary>
     /// Fired when the mouse moves over a valid tile.
     /// </summary>
     public event TileMouseMoveHandler? TileMouseMove;
+
+    /// <summary>
+    /// Fired when the mouse moves over a valid tile on any layer.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="tileX">Tile X.</param>
+    /// <param name="tileY">Tile Y.</param>
+    /// <param name="mouseX">Mouse X in screen pixels.</param>
+    /// <param name="mouseY">Mouse Y in screen pixels.</param>
+    public delegate void TileMouseMoveAllLayersHandler(int layerIndex, int tileX, int tileY, int mouseX, int mouseY);
+
+    /// <summary>
+    /// Fired when the mouse moves over a valid tile on any layer.
+    /// </summary>
+    public event TileMouseMoveAllLayersHandler? TileMouseMoveAllLayers;
 
     /// <summary>
     /// Fired when the mouse is pressed over a valid tile.
@@ -335,8 +355,22 @@ public class TilesetSurfaceScreen : BaseScreen
             return false;
         }
 
-        var (tileX, tileY) = GetInputTileCoordinates(x, y);
-        TileMouseMove?.Invoke(SelectedLayerIndex, tileX, tileY);
+        var (tileX, tileY) = GetInputTileCoordinates(SelectedLayerIndex, x, y);
+        TileMouseMove?.Invoke(SelectedLayerIndex, tileX, tileY, x, y);
+
+        if (TileMouseMoveAllLayers is not null)
+        {
+            for (var layerIndex = 0; layerIndex < _surface.Layers.Count; layerIndex++)
+            {
+                if (!TryGetLayerInputTileInfo(layerIndex, out _, out _, out _))
+                {
+                    continue;
+                }
+
+                var (layerTileX, layerTileY) = GetInputTileCoordinates(layerIndex, x, y);
+                TileMouseMoveAllLayers.Invoke(layerIndex, layerTileX, layerTileY, x, y);
+            }
+        }
 
         return true;
     }
@@ -650,8 +684,14 @@ public class TilesetSurfaceScreen : BaseScreen
     /// Converts mouse coordinates to tile coordinates based on the selected layer's tileset.
     /// </summary>
     private (int x, int y) GetInputTileCoordinates(int mouseX, int mouseY)
+        => GetInputTileCoordinates(SelectedLayerIndex, mouseX, mouseY);
+
+    /// <summary>
+    /// Converts mouse coordinates to tile coordinates based on the specified layer's tileset.
+    /// </summary>
+    private (int x, int y) GetInputTileCoordinates(int layerIndex, int mouseX, int mouseY)
     {
-        if (!TryGetLayerInputTileInfo(SelectedLayerIndex, out var tileWidth, out var tileHeight, out var layerOffset))
+        if (!TryGetLayerInputTileInfo(layerIndex, out var tileWidth, out var tileHeight, out var layerOffset))
         {
             return (0, 0);
         }
@@ -660,7 +700,7 @@ public class TilesetSurfaceScreen : BaseScreen
         var scaledTileHeight = tileHeight * TileRenderScale;
 
         // Adjust mouse position relative to screen position
-        TryGetLayerViewOffsets(SelectedLayerIndex, out var viewTileOffset, out var viewPixelOffset);
+        TryGetLayerViewOffsets(layerIndex, out var viewTileOffset, out var viewPixelOffset);
         var viewOffsetPx = new Vector2(
                                viewTileOffset.X * scaledTileWidth,
                                viewTileOffset.Y * scaledTileHeight
