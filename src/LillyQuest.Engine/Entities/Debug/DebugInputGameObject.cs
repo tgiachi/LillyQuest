@@ -1,6 +1,7 @@
 using ImGuiNET;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Interfaces.Systems;
+using LillyQuest.Engine.Systems;
 using Silk.NET.Input;
 
 namespace LillyQuest.Engine.Entities.Debug;
@@ -13,7 +14,7 @@ public class DebugInputGameObject : GameEntity, IIMGuiEntity
 {
     private readonly IInputSystem _inputSystem;
 
-    public DebugInputGameObject(IInputSystem inputSystem)
+    public DebugInputGameObject(InputSystem inputSystem)
     {
         _inputSystem = inputSystem;
         IsActive = true;

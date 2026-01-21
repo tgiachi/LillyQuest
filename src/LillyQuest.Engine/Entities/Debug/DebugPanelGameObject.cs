@@ -1,44 +1,32 @@
 using ImGuiNET;
-using LillyQuest.Core.Data.Contexts;
-using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Interfaces.Managers;
-using LillyQuest.Engine.Interfaces.Services;
-using LillyQuest.Engine.Systems;
 
 namespace LillyQuest.Engine.Entities.Debug;
 
 /// <summary>
 /// Main debug panel that creates and manages all debug objects.
 /// Provides a menu bar to toggle visibility of debug panels.
+/// All debug objects are created via Dependency Injection.
 /// </summary>
 public class DebugPanelGameObject : GameEntity, IIMGuiEntity
 {
     private readonly Dictionary<string, GameEntity> _debugObjects = new();
 
-    public DebugPanelGameObject(
-        LillyQuestBootstrap bootstrap,
-        ISystemManager systemManager,
-        IGameEntityManager entityManager,
-        ISceneManager sceneManager,
-        IScreenManager screenManager,
-        ITextureManager textureManager,
-        ITilesetManager tilesetManager,
-        InputSystem inputSystem,
-        EngineRenderContext renderContext)
+    public DebugPanelGameObject(IGameEntityManager entityManager)
     {
         IsActive = true;
         Name = "Debug Panel";
 
-        // Create all debug objects
-        var debugSystem = new DebugSystemGameObject(bootstrap, systemManager);
-        var debugEntity = new DebugEntityGameObject(entityManager);
-        var debugInput = new DebugInputGameObject(inputSystem);
-        var debugLabel = new DebugLabelGameObject(renderContext);
-        var debugScene = new DebugSceneExplorerGameObject(sceneManager);
-        var debugScreen = new DebugScreenExplorerGameObject(screenManager);
-        var debugTexture = new DebugTextureExplorerGameObject(textureManager);
-        var debugTile = new DebugTileExplorerGameObject(tilesetManager);
+        // Create all debug objects via Dependency Injection
+        var debugSystem = entityManager.CreateEntity<DebugSystemGameObject>();
+        var debugEntity = entityManager.CreateEntity<DebugEntityGameObject>();
+        var debugInput = entityManager.CreateEntity<DebugInputGameObject>();
+        var debugLabel = entityManager.CreateEntity<DebugLabelGameObject>();
+        var debugScene = entityManager.CreateEntity<DebugSceneExplorerGameObject>();
+        var debugScreen = entityManager.CreateEntity<DebugScreenExplorerGameObject>();
+        var debugTexture = entityManager.CreateEntity<DebugTextureExplorerGameObject>();
+        var debugTile = entityManager.CreateEntity<DebugTileExplorerGameObject>();
 
         // Set all debug objects inactive by default
         debugSystem.IsActive = false;

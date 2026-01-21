@@ -1,3 +1,4 @@
+using DryIoc;
 using LillyQuest.Core.Extensions.Strings;
 using LillyQuest.Engine.Collections;
 using LillyQuest.Engine.Interfaces.Entities;
@@ -12,6 +13,13 @@ public sealed class GameEntityManager : IGameEntityManager
     private readonly GameEntityCollection _collection = new();
     private readonly Dictionary<uint, IGameEntity> _entitiesById = new();
     private uint _nextId = 1;
+
+    private readonly IContainer _container;
+
+    public GameEntityManager(IContainer container)
+    {
+        _container = container;
+    }
 
     public IReadOnlyList<IGameEntity> OrderedEntities => _collection.OrderedEntities;
 
@@ -40,6 +48,17 @@ public sealed class GameEntityManager : IGameEntityManager
         _collection.Remove(entity);
     }
 
+    public TEntity CreateEntity<TEntity>() where TEntity : IGameEntity
+    {
+        if (!_container.IsRegistered(typeof(TEntity)))
+        {
+            _logger.Debug("Registering entity type {EntityType} in DI container", typeof(TEntity).Name);
+            _container.Register<TEntity>();
+        }
+
+        return _container.Resolve<TEntity>();
+    }
+
     private void AddEntityInternal(IGameEntity entity, IGameEntity? parent)
     {
         ArgumentNullException.ThrowIfNull(entity);
@@ -58,8 +77,6 @@ public sealed class GameEntityManager : IGameEntityManager
         {
             throw new InvalidOperationException($"Entity id {entity.Id} is already assigned.");
         }
-
-
 
         if (string.IsNullOrEmpty(entity.Name))
         {
@@ -81,7 +98,6 @@ public sealed class GameEntityManager : IGameEntityManager
             entity.Name,
             entity.Parent?.Name ?? "null"
         );
-
 
         _entitiesById[entity.Id] = entity;
 
