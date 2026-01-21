@@ -168,7 +168,9 @@ public class TilesetSurfaceTextExtensionsTests
             12,
             12,
             2.0f,
-            new System.Numerics.Vector2(5, 7)
+            new System.Numerics.Vector2(5, 7),
+            System.Numerics.Vector2.Zero,
+            System.Numerics.Vector2.Zero
         );
 
         Assert.That(result.x, Is.EqualTo(1));
@@ -188,6 +190,8 @@ public class TilesetSurfaceTextExtensionsTests
         screen.SelectedLayerIndex = 0;
         screen.SetLayerInputTileSizeOverride(0, new System.Numerics.Vector2(10, 10));
         screen.SetLayerPixelOffset(0, new System.Numerics.Vector2(5, 5));
+        screen.SetLayerViewTileOffset(0, System.Numerics.Vector2.Zero);
+        screen.SetLayerViewPixelOffset(0, System.Numerics.Vector2.Zero);
 
         var moveResult = (-1, -1);
         screen.TileMouseMove += (_, x, y) => moveResult = (x, y);

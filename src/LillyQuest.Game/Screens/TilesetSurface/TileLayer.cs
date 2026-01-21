@@ -36,6 +36,16 @@ public class TileLayer
     public Vector2 PixelOffset { get; set; } = Vector2.Zero;
 
     /// <summary>
+    /// View offset in tile coordinates for this layer.
+    /// </summary>
+    public Vector2 ViewTileOffset { get; set; } = Vector2.Zero;
+
+    /// <summary>
+    /// View offset in pixels for this layer (for smooth scrolling).
+    /// </summary>
+    public Vector2 ViewPixelOffset { get; set; } = Vector2.Zero;
+
+    /// <summary>
     /// Optional override for input tile size (in pixels).
     /// If set, mouse-to-tile conversion uses this instead of the tileset size.
     /// </summary>

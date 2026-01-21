@@ -99,13 +99,17 @@ public static class TilesetSurfaceTextExtensions
                 return;
             }
 
+            screen.TryGetLayerViewOffsets(screen.SelectedLayerIndex, out var viewTileOffset, out var viewPixelOffset);
+
             var (tileX, tileY) = ComputeTileCoordinatesFromPixel(
                 xPx,
                 yPx,
                 tileWidth,
                 tileHeight,
                 screen.TileRenderScale,
-                pixelOffset
+                pixelOffset,
+                viewTileOffset,
+                viewPixelOffset
             );
 
             screen.DrawText(text, tileX, tileY, foregroundColor, backgroundColor, flip);
@@ -461,13 +465,20 @@ public static class TilesetSurfaceTextExtensions
         int tileWidth,
         int tileHeight,
         float tileRenderScale,
-        System.Numerics.Vector2 pixelOffset
+        System.Numerics.Vector2 pixelOffset,
+        System.Numerics.Vector2 viewTileOffset,
+        System.Numerics.Vector2 viewPixelOffset
     )
     {
         var scaledTileWidth = tileWidth * tileRenderScale;
         var scaledTileHeight = tileHeight * tileRenderScale;
-        var localX = xPx - pixelOffset.X;
-        var localY = yPx - pixelOffset.Y;
+        var viewOffsetPx = new System.Numerics.Vector2(
+            viewTileOffset.X * scaledTileWidth,
+            viewTileOffset.Y * scaledTileHeight
+        ) + viewPixelOffset;
+
+        var localX = xPx - pixelOffset.X + viewOffsetPx.X;
+        var localY = yPx - pixelOffset.Y + viewOffsetPx.Y;
 
         return (
             (int)MathF.Floor(localX / scaledTileWidth),
