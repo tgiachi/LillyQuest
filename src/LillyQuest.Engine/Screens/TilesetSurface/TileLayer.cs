@@ -117,6 +117,11 @@ public class TileLayer
 
         if (!_chunks.TryGetValue((chunkX, chunkY), out var chunk))
         {
+            if (tileData.TileIndex < 0)
+            {
+                return;
+            }
+
             chunk = new TileChunk();
             _chunks[(chunkX, chunkY)] = chunk;
         }
