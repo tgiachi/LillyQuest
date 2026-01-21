@@ -15,4 +15,19 @@ public class TileViewSizeTests
         Assert.That(result.X, Is.EqualTo(2160));
         Assert.That(result.Y, Is.EqualTo(720));
     }
+
+    [Test]
+    public void ApplyTileViewSize_UpdatesSize()
+    {
+        var result = TilesetSurfaceScreen.ApplyTileViewSize(
+            new Vector2(90, 30),
+            new Vector2(10, 10),
+            12,
+            12,
+            2.0f
+        );
+
+        Assert.That(result.X, Is.EqualTo(2160));
+        Assert.That(result.Y, Is.EqualTo(720));
+    }
 }

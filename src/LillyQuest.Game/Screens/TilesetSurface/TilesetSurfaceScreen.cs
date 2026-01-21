@@ -17,12 +17,14 @@ public class TilesetSurfaceScreen : BaseScreen
 {
     private readonly ITilesetManager _tilesetManager;
     private readonly TilesetSurface _surface;
+
     private Tileset _tileset;
-    private int _autoRandomizeEveryFrames;
-    private int _autoRandomizeTileCount;
-    private int _autoRandomizeFrameCounter;
-    private Random _autoRandomizeRandom = Random.Shared;
-    private bool _autoRandomizeEnabled;
+
+    // private int _autoRandomizeEveryFrames;
+    // private int _autoRandomizeTileCount;
+    // private int _autoRandomizeFrameCounter;
+    // private Random _autoRandomizeRandom = Random.Shared;
+    // private bool _autoRandomizeEnabled;
 
     /// <summary>
     /// Number of layers to create on initialization.
@@ -44,16 +46,35 @@ public class TilesetSurfaceScreen : BaseScreen
     /// </summary>
     public string DefaultTilesetName { get; set; } = "alloy";
 
+    private float _tileRenderScale = 1.0f;
+    private Vector2 _tileViewSize = new(90, 30);
+
     /// <summary>
     /// Render scale for tiles (e.g., 2.0 scales 12x12 tiles to 24x24).
     /// </summary>
-    public float TileRenderScale { get; set; } = 1.0f;
+    public float TileRenderScale
+    {
+        get => _tileRenderScale;
+        set
+        {
+            _tileRenderScale = value;
+            UpdateScreenSizeFromTileView();
+        }
+    }
 
     /// <summary>
     /// Number of tiles visible in the screen (columns, rows).
     /// Used to compute Size from the default tileset.
     /// </summary>
-    public Vector2 TileViewSize { get; set; } = new(90, 30);
+    public Vector2 TileViewSize
+    {
+        get => _tileViewSize;
+        set
+        {
+            _tileViewSize = value;
+            UpdateScreenSizeFromTileView();
+        }
+    }
 
     public TilesetSurfaceScreen(ITilesetManager tilesetManager)
     {
@@ -76,14 +97,14 @@ public class TilesetSurfaceScreen : BaseScreen
         _surface.SetTile(SelectedLayerIndex, x, y, tileData);
     }
 
-    public void ConfigureAutoRandomize(int tileCount, int everyFrames, Random? random = null)
-    {
-        _autoRandomizeTileCount = tileCount;
-        _autoRandomizeEveryFrames = everyFrames;
-        _autoRandomizeFrameCounter = 0;
-        _autoRandomizeRandom = random ?? Random.Shared;
-        _autoRandomizeEnabled = tileCount > 0 && everyFrames > 0;
-    }
+    // public void ConfigureAutoRandomize(int tileCount, int everyFrames, Random? random = null)
+    // {
+    //     _autoRandomizeTileCount = tileCount;
+    //     _autoRandomizeEveryFrames = everyFrames;
+    //     _autoRandomizeFrameCounter = 0;
+    //     _autoRandomizeRandom = random ?? Random.Shared;
+    //     _autoRandomizeEnabled = tileCount > 0 && everyFrames > 0;
+    // }
 
     /// <summary>
     /// Gets the opacity of a specific layer.
@@ -134,7 +155,7 @@ public class TilesetSurfaceScreen : BaseScreen
             throw new InvalidOperationException($"Default tileset '{DefaultTilesetName}' not found");
         }
 
-        Size = ComputeScreenSizeFromTileView(TileViewSize, _tileset.TileWidth, _tileset.TileHeight, TileRenderScale);
+        UpdateScreenSizeFromTileView();
 
         // Initialize layers if they haven't been initialized yet
         if (_surface.Layers.Count == 0)
@@ -217,6 +238,27 @@ public class TilesetSurfaceScreen : BaseScreen
         );
     }
 
+    public static Vector2 ApplyTileViewSize(
+        Vector2 tileViewSize,
+        Vector2 currentSize,
+        int tileWidth,
+        int tileHeight,
+        float tileRenderScale
+    )
+    {
+        return ComputeScreenSizeFromTileView(tileViewSize, tileWidth, tileHeight, tileRenderScale);
+    }
+
+    private void UpdateScreenSizeFromTileView()
+    {
+        if (_tileset == null)
+        {
+            return;
+        }
+
+        Size = ComputeScreenSizeFromTileView(_tileViewSize, _tileset.TileWidth, _tileset.TileHeight, _tileRenderScale);
+    }
+
     /// <summary>
     /// Sets the opacity of a specific layer.
     /// </summary>
@@ -261,20 +303,20 @@ public class TilesetSurfaceScreen : BaseScreen
     {
         base.Update(gameTime);
 
-        if (!_autoRandomizeEnabled || _autoRandomizeEveryFrames <= 0 || _autoRandomizeTileCount <= 0)
-        {
-            return;
-        }
-
-        _autoRandomizeFrameCounter++;
-
-        if (_autoRandomizeFrameCounter < _autoRandomizeEveryFrames)
-        {
-            return;
-        }
-
-        _autoRandomizeFrameCounter = 0;
-        RandomizeSelectedLayer();
+        // if (!_autoRandomizeEnabled || _autoRandomizeEveryFrames <= 0 || _autoRandomizeTileCount <= 0)
+        // {
+        //     return;
+        // }
+        //
+        // _autoRandomizeFrameCounter++;
+        //
+        // if (_autoRandomizeFrameCounter < _autoRandomizeEveryFrames)
+        // {
+        //     return;
+        // }
+        //
+        // _autoRandomizeFrameCounter = 0;
+        // RandomizeSelectedLayer();
     }
 
     /// <summary>
@@ -332,39 +374,39 @@ public class TilesetSurfaceScreen : BaseScreen
         return (tileX, tileY);
     }
 
-    private void RandomizeSelectedLayer()
-    {
-        var random = _autoRandomizeRandom;
-
-        for (var x = 0; x < _surface.Width; x++)
-        {
-            for (var y = 0; y < _surface.Height; y++)
-            {
-                var tileIndex = random.Next(0, _autoRandomizeTileCount);
-                var foregroundColor = new LyColor(
-                    (byte)random.Next(0, 256),
-                    (byte)random.Next(0, 256),
-                    (byte)random.Next(0, 256),
-                    (byte)random.Next(0, 256)
-                );
-
-                LyColor? backgroundColor = null;
-
-                if (random.Next(100) < 30)
-                {
-                    backgroundColor = new LyColor(
-                        (byte)random.Next(0, 256),
-                        (byte)random.Next(0, 256),
-                        (byte)random.Next(0, 256),
-                        10
-                    );
-                }
-
-                var tileData = new TileRenderData(tileIndex, foregroundColor, backgroundColor);
-                _surface.SetTile(SelectedLayerIndex, x, y, tileData);
-            }
-        }
-    }
+    // private void RandomizeSelectedLayer()
+    // {
+    //     var random = _autoRandomizeRandom;
+    //
+    //     for (var x = 0; x < _surface.Width; x++)
+    //     {
+    //         for (var y = 0; y < _surface.Height; y++)
+    //         {
+    //             var tileIndex = random.Next(0, _autoRandomizeTileCount);
+    //             var foregroundColor = new LyColor(
+    //                 (byte)random.Next(0, 256),
+    //                 (byte)random.Next(0, 256),
+    //                 (byte)random.Next(0, 256),
+    //                 (byte)random.Next(0, 256)
+    //             );
+    //
+    //             LyColor? backgroundColor = null;
+    //
+    //             if (random.Next(100) < 30)
+    //             {
+    //                 backgroundColor = new LyColor(
+    //                     (byte)random.Next(0, 256),
+    //                     (byte)random.Next(0, 256),
+    //                     (byte)random.Next(0, 256),
+    //                     10
+    //                 );
+    //             }
+    //
+    //             var tileData = new TileRenderData(tileIndex, foregroundColor, backgroundColor);
+    //             _surface.SetTile(SelectedLayerIndex, x, y, tileData);
+    //         }
+    //     }
+    // }
 
     /// <summary>
     /// Renders a single layer to the sprite batch with frustum culling.

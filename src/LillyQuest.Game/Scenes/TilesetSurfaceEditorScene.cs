@@ -33,20 +33,24 @@ public class TilesetSurfaceEditorScene : BaseScene
             DefaultTilesetName = "alloy",
             LayerCount = 3,
             Position = new Vector2(30, 100),
-            TileRenderScale = 1.2f,
+            TileRenderScale = 2f,
             TileViewSize = new Vector2(80, 30),
         };
+
 
         // Initialize the surface layers before population
         screen.InitializeLayers(screen.LayerCount);
 
         // Populate with random tiles and colors
         PopulateWithRandomTiles(screen);
-        screen.ConfigureAutoRandomize(
-            tileCount: _tilesetManager.GetTileset(screen.DefaultTilesetName).TileCount,
-            everyFrames: 70
-        );
+        // screen.ConfigureAutoRandomize(
+        //     tileCount: _tilesetManager.GetTileset(screen.DefaultTilesetName).TileCount,
+        //     everyFrames: 2000
+        // );
 
+        screen.DrawText("Hello from LillyQuest", 2, 2, LyColor.Yellow, LyColor.Black);
+
+        screen.FillRectangle(1, 1, 10, 5, tileIndex: 42, LyColor.White);
         // Add the screen to the screen manager
         _screenManager.PushScreen(screen);
 
