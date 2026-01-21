@@ -36,9 +36,9 @@ await ConsoleApp.RunAsync(
         lillyQuestBootstrap.RegisterServices(
             container =>
             {
-                container.RegisterScene<TestSceneA>(true);
+                container.RegisterScene<TestSceneA>();
                 container.RegisterScene<TestSceneB>();
-                container.RegisterScene<TilesetSurfaceEditorScene>();
+                container.RegisterScene<TilesetSurfaceEditorScene>(true);
 
                 return container;
             }

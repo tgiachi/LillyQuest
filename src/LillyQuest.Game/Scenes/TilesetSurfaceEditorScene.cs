@@ -92,7 +92,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             }
 
             // Create and place the tile
-            var tileData = new TileRenderData(tileIndex, foregroundColor, backgroundColor);
+            var tileData = new TileRenderData(tileIndex, foregroundColor,null);
 
             // Set the current layer and add the tile
             screen.SelectedLayerIndex = layerIndex;
