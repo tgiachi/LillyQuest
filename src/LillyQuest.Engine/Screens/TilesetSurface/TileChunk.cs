@@ -6,7 +6,7 @@ namespace LillyQuest.Engine.Screens.TilesetSurface;
 public sealed class TileChunk
 {
     public const int Size = 32;
-    public readonly TileRenderData[] Tiles;
+    public TileRenderData[] Tiles { get; }
 
     public bool IsEmpty { get; private set; } = true;
 
