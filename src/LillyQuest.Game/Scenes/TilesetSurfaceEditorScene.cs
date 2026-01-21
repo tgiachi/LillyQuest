@@ -48,6 +48,13 @@ public class TilesetSurfaceEditorScene : BaseScene
                                         LyColor.Black
                                     );
                                 };
+        screen.TileMouseDown += (layerIndex, tileX, tileY, buttons) =>
+        {
+            if (buttons.Contains(Silk.NET.Input.MouseButton.Right))
+            {
+                screen.CenterViewOnTile(layerIndex, tileX, tileY);
+            }
+        };
 
         // Initialize the surface layers before population
         screen.InitializeLayers(screen.LayerCount);
@@ -57,10 +64,6 @@ public class TilesetSurfaceEditorScene : BaseScene
         // Populate with random tiles and colors
         PopulateWithRandomTiles(screen);
 
-        // screen.ConfigureAutoRandomize(
-        //     tileCount: _tilesetManager.GetTileset(screen.DefaultTilesetName).TileCount,
-        //     everyFrames: 2000
-        // );
 
         screen.SelectedLayerIndex = 1;
         screen.DrawText("hello from LillyQuest *", 2, 2, LyColor.Yellow, LyColor.Black);

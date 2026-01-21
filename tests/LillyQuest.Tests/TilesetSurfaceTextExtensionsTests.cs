@@ -234,6 +234,14 @@ public class TilesetSurfaceTextExtensionsTests
         screen.SetLayerInputTileSizeOverride(0, new System.Numerics.Vector2(10, 10));
         screen.SetLayerPixelOffset(0, System.Numerics.Vector2.Zero);
 
+        screen.TileMouseDown += (_, x, y, buttons) =>
+        {
+            if (buttons.Contains(Silk.NET.Input.MouseButton.Right))
+            {
+                screen.CenterViewOnTile(0, x, y);
+            }
+        };
+
         screen.OnMouseDown(125, 105, new[] { Silk.NET.Input.MouseButton.Right });
 
         var viewOffset = screen.GetLayerViewTileOffset(0);

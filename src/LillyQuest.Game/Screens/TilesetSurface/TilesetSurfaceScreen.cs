@@ -40,11 +40,7 @@ public class TilesetSurfaceScreen : BaseScreen
 
     private Tileset _tileset;
 
-    // private int _autoRandomizeEveryFrames;
-    // private int _autoRandomizeTileCount;
-    // private int _autoRandomizeFrameCounter;
-    // private Random _autoRandomizeRandom = Random.Shared;
-    // private bool _autoRandomizeEnabled;
+
 
     /// <summary>
     /// Number of layers to create on initialization.
@@ -129,14 +125,7 @@ public class TilesetSurfaceScreen : BaseScreen
         _surface.SetTile(layerIndex, x, y, tileData);
     }
 
-    // public void ConfigureAutoRandomize(int tileCount, int everyFrames, Random? random = null)
-    // {
-    //     _autoRandomizeTileCount = tileCount;
-    //     _autoRandomizeEveryFrames = everyFrames;
-    //     _autoRandomizeFrameCounter = 0;
-    //     _autoRandomizeRandom = random ?? Random.Shared;
-    //     _autoRandomizeEnabled = tileCount > 0 && everyFrames > 0;
-    // }
+
 
     /// <summary>
     /// Gets the opacity of a specific layer.
@@ -413,18 +402,12 @@ public class TilesetSurfaceScreen : BaseScreen
             return false;
         }
 
-        if (buttons.Contains(MouseButton.Right))
-        {
-            var (tileX, tileY) = GetInputTileCoordinates(x, y);
-            CenterViewOnTile(SelectedLayerIndex, tileX, tileY);
-            TileMouseDown?.Invoke(SelectedLayerIndex, tileX, tileY, buttons);
-            return true;
-        }
-
         // Only draw on left mouse button
         if (!buttons.Contains(MouseButton.Left))
         {
-            return false;
+            var (tileX, tileY) = GetInputTileCoordinates(x, y);
+            TileMouseDown?.Invoke(SelectedLayerIndex, tileX, tileY, buttons);
+            return true;
         }
 
         var (leftTileX, leftTileY) = GetInputTileCoordinates(x, y);
