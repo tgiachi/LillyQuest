@@ -39,16 +39,40 @@ public class TilesetSurfaceScreen : BaseScreen
     /// </summary>
     public string DefaultTilesetName { get; set; } = "alloy";
 
-    /// <summary>
-    /// Size of each tile in pixels for rendering.
-    /// </summary>
-    public int TilePixelSize { get; set; } = 12;
-
     public TilesetSurfaceScreen(ITilesetManager tilesetManager)
     {
         _tilesetManager = tilesetManager;
-        Size = new Vector2(800, 600);
+        Size = new(800, 600);
         IsModal = false;
+    }
+
+    /// <summary>
+    /// Gets the opacity of a specific layer.
+    /// </summary>
+    public float GetLayerOpacity(int layerIndex)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return 1.0f;
+        }
+
+        return _surface.Layers[layerIndex].Opacity;
+    }
+
+    /// <summary>
+    /// Gets the tileset name for a specific layer.
+    /// Returns the layer's tileset name if set, otherwise returns the default.
+    /// </summary>
+    public string GetLayerTilesetName(int layerIndex)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return DefaultTilesetName;
+        }
+
+        var layer = _surface.Layers[layerIndex];
+
+        return string.IsNullOrEmpty(layer.TilesetName) ? DefaultTilesetName : layer.TilesetName;
     }
 
     public override void OnLoad()
@@ -60,119 +84,24 @@ public class TilesetSurfaceScreen : BaseScreen
             throw new InvalidOperationException($"Default tileset '{DefaultTilesetName}' not found");
         }
 
-        _surface = new TilesetSurface();
+        _surface = new();
         _surface.Initialize(LayerCount);
 
         base.OnLoad();
     }
 
-    /// <summary>
-    /// Gets the opacity of a specific layer.
-    /// </summary>
-    public float GetLayerOpacity(int layerIndex)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-            return 1.0f;
-
-        return _surface.Layers[layerIndex].Opacity;
-    }
-
-    /// <summary>
-    /// Sets the opacity of a specific layer.
-    /// </summary>
-    public void SetLayerOpacity(int layerIndex, float opacity)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-            return;
-
-        _surface.Layers[layerIndex].Opacity = Math.Clamp(opacity, 0.0f, 1.0f);
-    }
-
-    /// <summary>
-    /// Toggles visibility of a layer.
-    /// </summary>
-    public void ToggleLayerVisibility(int layerIndex)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-            return;
-
-        _surface.Layers[layerIndex].IsVisible = !_surface.Layers[layerIndex].IsVisible;
-    }
-
-    /// <summary>
-    /// Sets the tileset for a specific layer.
-    /// If null or empty, the layer will use the default tileset.
-    /// </summary>
-    public void SetLayerTileset(int layerIndex, string? tilesetName)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-            return;
-
-        _surface.Layers[layerIndex].TilesetName = tilesetName;
-    }
-
-    /// <summary>
-    /// Gets the tileset name for a specific layer.
-    /// Returns the layer's tileset name if set, otherwise returns the default.
-    /// </summary>
-    public string GetLayerTilesetName(int layerIndex)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-            return DefaultTilesetName;
-
-        var layer = _surface.Layers[layerIndex];
-        return string.IsNullOrEmpty(layer.TilesetName) ? DefaultTilesetName : layer.TilesetName;
-    }
-
-    /// <summary>
-    /// Gets the tileset for a specific layer, with fallback to default.
-    /// </summary>
-    private Tileset? GetLayerTileset(int layerIndex)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-            return null;
-
-        var layer = _surface.Layers[layerIndex];
-        string tilesetNameToUse = string.IsNullOrEmpty(layer.TilesetName) ? DefaultTilesetName : layer.TilesetName;
-
-        if (_tilesetManager.TryGetTileset(tilesetNameToUse, out var tileset))
-        {
-            return tileset;
-        }
-
-        // Fallback to default if the specified tileset doesn't exist
-        if (_tilesetManager.TryGetTileset(DefaultTilesetName, out var defaultTileset))
-        {
-            return defaultTileset;
-        }
-
-        return null;
-    }
-
-    /// <summary>
-    /// Converts mouse coordinates to tile coordinates.
-    /// </summary>
-    private (int x, int y) GetTileCoordinates(int mouseX, int mouseY)
-    {
-        // Adjust mouse position relative to screen position
-        int relativeX = mouseX - (int)Position.X;
-        int relativeY = mouseY - (int)Position.Y;
-
-        // Clamp to tile coordinates
-        int tileX = relativeX / TilePixelSize;
-        int tileY = relativeY / TilePixelSize;
-
-        return (tileX, tileY);
-    }
-
     public override bool OnMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
         if (!HitTest(x, y))
+        {
             return false;
+        }
 
         // Only draw on left mouse button
         if (!buttons.Contains(MouseButton.Left))
+        {
             return false;
+        }
 
         var (tileX, tileY) = GetTileCoordinates(x, y);
 
@@ -190,17 +119,109 @@ public class TilesetSurfaceScreen : BaseScreen
         spriteBatch.PushTranslation(Position);
 
         // Render layers from bottom (0) to top (N-1)
-        for (int layerIndex = 0; layerIndex < _surface.Layers.Count; layerIndex++)
+        for (var layerIndex = 0; layerIndex < _surface.Layers.Count; layerIndex++)
         {
             var layer = _surface.Layers[layerIndex];
 
             if (!layer.IsVisible)
+            {
                 continue;
+            }
 
             RenderLayer(spriteBatch, layer, layerIndex);
         }
 
         spriteBatch.PopTranslation();
+    }
+
+    /// <summary>
+    /// Sets the opacity of a specific layer.
+    /// </summary>
+    public void SetLayerOpacity(int layerIndex, float opacity)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        _surface.Layers[layerIndex].Opacity = Math.Clamp(opacity, 0.0f, 1.0f);
+    }
+
+    /// <summary>
+    /// Sets the tileset for a specific layer.
+    /// If null or empty, the layer will use the default tileset.
+    /// </summary>
+    public void SetLayerTileset(int layerIndex, string? tilesetName)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        _surface.Layers[layerIndex].TilesetName = tilesetName;
+    }
+
+    /// <summary>
+    /// Toggles visibility of a layer.
+    /// </summary>
+    public void ToggleLayerVisibility(int layerIndex)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        _surface.Layers[layerIndex].IsVisible = !_surface.Layers[layerIndex].IsVisible;
+    }
+
+    /// <summary>
+    /// Gets the tileset for a specific layer, with fallback to default.
+    /// </summary>
+    private Tileset? GetLayerTileset(int layerIndex)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return null;
+        }
+
+        var layer = _surface.Layers[layerIndex];
+        var tilesetNameToUse = string.IsNullOrEmpty(layer.TilesetName) ? DefaultTilesetName : layer.TilesetName;
+
+        if (_tilesetManager.TryGetTileset(tilesetNameToUse, out var tileset))
+        {
+            return tileset;
+        }
+
+        // Fallback to default if the specified tileset doesn't exist
+        if (_tilesetManager.TryGetTileset(DefaultTilesetName, out var defaultTileset))
+        {
+            return defaultTileset;
+        }
+
+        return null;
+    }
+
+    /// <summary>
+    /// Converts mouse coordinates to tile coordinates based on the selected layer's tileset.
+    /// </summary>
+    private (int x, int y) GetTileCoordinates(int mouseX, int mouseY)
+    {
+        // Get the tileset of the selected layer
+        var tileset = GetLayerTileset(SelectedLayerIndex);
+        if (tileset == null)
+        {
+            return (0, 0);
+        }
+
+        // Adjust mouse position relative to screen position
+        var relativeX = mouseX - (int)Position.X;
+        var relativeY = mouseY - (int)Position.Y;
+
+        // Calculate tile coordinates using the tileset's tile dimensions
+        var tileX = relativeX / tileset.TileWidth;
+        var tileY = relativeY / tileset.TileHeight;
+
+        return (tileX, tileY);
     }
 
     /// <summary>
@@ -210,39 +231,44 @@ public class TilesetSurfaceScreen : BaseScreen
     {
         // Get the tileset for this layer (with fallback to default)
         var tileset = GetLayerTileset(layerIndex);
-        if (tileset == null)
-            return;
 
-        for (int x = 0; x < _surface.Width; x++)
+        if (tileset == null)
         {
-            for (int y = 0; y < _surface.Height; y++)
+            return;
+        }
+
+        for (var x = 0; x < _surface.Width; x++)
+        {
+            for (var y = 0; y < _surface.Height; y++)
             {
-                int tileIndex = layer.TileIndices[x, y];
+                var tileIndex = layer.TileIndices[x, y];
 
                 // Skip empty tiles
                 if (tileIndex < 0 || tileIndex >= tileset.TileCount)
+                {
                     continue;
+                }
 
                 // Get the tile from the tileset
                 var tile = tileset.GetTile(tileIndex);
 
                 // Convert pixel coordinates to normalized UV coordinates (0-1 range)
-                float uvX = (float)tile.SourceRect.Origin.X / tileset.Texture.Width;
-                float uvY = (float)tile.SourceRect.Origin.Y / tileset.Texture.Height;
-                float uvWidth = (float)tile.SourceRect.Size.X / tileset.Texture.Width;
-                float uvHeight = (float)tile.SourceRect.Size.Y / tileset.Texture.Height;
+                var uvX = (float)tile.SourceRect.Origin.X / tileset.Texture.Width;
+                var uvY = (float)tile.SourceRect.Origin.Y / tileset.Texture.Height;
+                var uvWidth = (float)tile.SourceRect.Size.X / tileset.Texture.Width;
+                var uvHeight = (float)tile.SourceRect.Size.Y / tileset.Texture.Height;
 
                 var sourceRect = new Rectangle<float>(uvX, uvY, uvWidth, uvHeight);
 
                 // Apply layer opacity to the color
                 var color = LyColor.White.WithAlpha((byte)(255 * layer.Opacity));
 
-                // Draw the tile at the correct position
-                var position = new Vector2(x * TilePixelSize, y * TilePixelSize);
+                // Draw the tile at the correct position using the tileset's tile dimensions
+                var position = new Vector2(x * tileset.TileWidth, y * tileset.TileHeight);
                 spriteBatch.Draw(
                     tileset.Texture,
                     position,
-                    new Vector2(TilePixelSize, TilePixelSize),
+                    new(tileset.TileWidth, tileset.TileHeight),
                     color,
                     0f,
                     Vector2.Zero,
