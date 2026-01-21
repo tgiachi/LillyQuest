@@ -38,6 +38,7 @@
     <ItemGroup>
         <ProjectReference Include="../../src/LillyQuest.Core/LillyQuest.Core.csproj"/>
         <ProjectReference Include="../../src/LillyQuest.Engine/LillyQuest.Engine.csproj"/>
+        <ProjectReference Include="../../src/LillyQuest.Game/LillyQuest.Game.csproj"/>
     </ItemGroup>
 
 </Project>

@@ -3,7 +3,6 @@ using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Interfaces.Managers;
-using LillyQuest.Engine.Managers.Screens.Base;
 using LillyQuest.Engine.Managers.Scenes.Base;
 using LillyQuest.Game.Screens.TilesetSurface;
 
@@ -33,7 +32,8 @@ public class TilesetSurfaceEditorScene : BaseScene
         {
             DefaultTilesetName = "alloy",
             LayerCount = 3,
-            Position = new Vector2(100, 100)
+            Position = new Vector2(100, 100),
+            Size = new Vector2(200, 200),
         };
 
         // Initialize the surface layers before population
@@ -41,6 +41,7 @@ public class TilesetSurfaceEditorScene : BaseScene
 
         // Populate with random tiles and colors
         PopulateWithRandomTiles(screen);
+        screen.ConfigureAutoRandomize(tileCount: _tilesetManager.GetTileset(screen.DefaultTilesetName).TileCount, everyFrames: 3);
 
         // Add the screen to the screen manager
         _screenManager.PushScreen(screen);

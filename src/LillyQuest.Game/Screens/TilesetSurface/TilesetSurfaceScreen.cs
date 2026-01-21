@@ -18,6 +18,11 @@ public class TilesetSurfaceScreen : BaseScreen
     private readonly ITilesetManager _tilesetManager;
     private TilesetSurface _surface;
     private Tileset _tileset;
+    private int _autoRandomizeEveryFrames;
+    private int _autoRandomizeTileCount;
+    private int _autoRandomizeFrameCounter;
+    private Random _autoRandomizeRandom = Random.Shared;
+    private bool _autoRandomizeEnabled;
 
     /// <summary>
     /// Number of layers to create on initialization.
@@ -42,7 +47,7 @@ public class TilesetSurfaceScreen : BaseScreen
     /// <summary>
     /// Render scale for tiles (e.g., 2.0 scales 12x12 tiles to 24x24).
     /// </summary>
-    public float TileRenderScale { get; set; } = 2.0f;
+    public float TileRenderScale { get; set; } = 1.0f;
 
     public TilesetSurfaceScreen(ITilesetManager tilesetManager)
     {
@@ -162,6 +167,26 @@ public class TilesetSurfaceScreen : BaseScreen
         spriteBatch.DisableScissor();
     }
 
+    public override void Update(GameTime gameTime)
+    {
+        base.Update(gameTime);
+
+        if (!_autoRandomizeEnabled || _autoRandomizeEveryFrames <= 0 || _autoRandomizeTileCount <= 0)
+        {
+            return;
+        }
+
+        _autoRandomizeFrameCounter++;
+
+        if (_autoRandomizeFrameCounter < _autoRandomizeEveryFrames)
+        {
+            return;
+        }
+
+        _autoRandomizeFrameCounter = 0;
+        RandomizeSelectedLayer();
+    }
+
     /// <summary>
     /// Sets the opacity of a specific layer.
     /// </summary>
@@ -204,6 +229,18 @@ public class TilesetSurfaceScreen : BaseScreen
 
         _surface.Layers[layerIndex].TilesetName = tilesetName;
     }
+
+    public void ConfigureAutoRandomize(int tileCount, int everyFrames, Random? random = null)
+    {
+        _autoRandomizeTileCount = tileCount;
+        _autoRandomizeEveryFrames = everyFrames;
+        _autoRandomizeFrameCounter = 0;
+        _autoRandomizeRandom = random ?? Random.Shared;
+        _autoRandomizeEnabled = tileCount > 0 && everyFrames > 0;
+    }
+
+    public TileRenderData GetTile(int layerIndex, int x, int y)
+        => _surface.GetTile(layerIndex, x, y);
 
     /// <summary>
     /// Toggles visibility of a layer.
@@ -272,6 +309,39 @@ public class TilesetSurfaceScreen : BaseScreen
         return (tileX, tileY);
     }
 
+    private void RandomizeSelectedLayer()
+    {
+        var random = _autoRandomizeRandom;
+
+        for (var x = 0; x < _surface.Width; x++)
+        {
+            for (var y = 0; y < _surface.Height; y++)
+            {
+                var tileIndex = random.Next(0, _autoRandomizeTileCount);
+                var foregroundColor = new LyColor(
+                    (byte)random.Next(0, 256),
+                    (byte)random.Next(0, 256),
+                    (byte)random.Next(0, 256),
+                    (byte)random.Next(0, 256)
+                );
+
+                LyColor? backgroundColor = null;
+                if (random.Next(100) < 30)
+                {
+                    backgroundColor = new LyColor(
+                        (byte)random.Next(0, 256),
+                        (byte)random.Next(0, 256),
+                        (byte)random.Next(0, 256),
+                        (byte)random.Next(0, 256)
+                    );
+                }
+
+                var tileData = new TileRenderData(tileIndex, foregroundColor, backgroundColor);
+                _surface.SetTile(SelectedLayerIndex, x, y, tileData);
+            }
+        }
+    }
+
     /// <summary>
     /// Renders a single layer to the sprite batch with frustum culling.
     /// Only renders tiles that are visible within the screen bounds.
@@ -309,6 +379,23 @@ public class TilesetSurfaceScreen : BaseScreen
             {
                 var tileData = layer.Tiles[x, y];
 
+                if (tileData.BackgroundColor.A == 0)
+                {
+                    continue;
+                }
+
+                // Draw background color if present
+                var position = new Vector2(x * scaledTileWidth, y * scaledTileHeight);
+                spriteBatch.DrawRectangle(position, new Vector2(scaledTileWidth, scaledTileHeight), tileData.BackgroundColor);
+            }
+        }
+
+        for (var x = minTileX; x < maxTileX; x++)
+        {
+            for (var y = minTileY; y < maxTileY; y++)
+            {
+                var tileData = layer.Tiles[x, y];
+
                 // Skip empty tiles (tile index -1)
                 if (tileData.TileIndex < 0 || tileData.TileIndex >= tileset.TileCount)
                 {
@@ -317,13 +404,6 @@ public class TilesetSurfaceScreen : BaseScreen
 
                 // Get the tile from the tileset
                 var tile = tileset.GetTile(tileData.TileIndex);
-
-                // Draw background color if present
-                if (tileData.BackgroundColor.A > 0)
-                {
-                    var position = new Vector2(x * scaledTileWidth, y * scaledTileHeight);
-                    spriteBatch.DrawRectangle(position, new Vector2(scaledTileWidth, scaledTileHeight), tileData.BackgroundColor);
-                }
 
                 // Convert pixel coordinates to normalized UV coordinates (0-1 range)
                 var uvX = (float)tile.SourceRect.Origin.X / tileset.Texture.Width;
