@@ -34,7 +34,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             LayerCount = 2,
             Position = new Vector2(100, 30),
             TileRenderScale = 1f,
-            TileViewSize = new Vector2(20, 20)
+            TileViewSize = new Vector2(20, 20),
         };
 
         screen.TileMouseMove += (index, x, y) =>

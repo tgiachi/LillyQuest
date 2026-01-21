@@ -219,4 +219,25 @@ public class TilesetSurfaceTextExtensionsTests
         Assert.That(screen.GetTile(0, 0, 0).TileIndex, Is.EqualTo(-1));
         Assert.That(screen.GetTile(0, 1, 1).TileIndex, Is.EqualTo(-1));
     }
+
+    [Test]
+    public void RightClick_CentersViewOnTile()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager())
+        {
+            Position = System.Numerics.Vector2.Zero,
+            Size = new System.Numerics.Vector2(200, 200),
+            TileRenderScale = 1.0f
+        };
+        screen.InitializeLayers(1);
+        screen.SelectedLayerIndex = 0;
+        screen.SetLayerInputTileSizeOverride(0, new System.Numerics.Vector2(10, 10));
+        screen.SetLayerPixelOffset(0, System.Numerics.Vector2.Zero);
+
+        screen.OnMouseDown(125, 105, new[] { Silk.NET.Input.MouseButton.Right });
+
+        var viewOffset = screen.GetLayerViewTileOffset(0);
+        Assert.That(viewOffset.X, Is.EqualTo(2));
+        Assert.That(viewOffset.Y, Is.EqualTo(0));
+    }
 }

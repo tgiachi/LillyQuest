@@ -106,7 +106,7 @@ public class TilesetSurfaceScreen : BaseScreen
         IsModal = false;
 
         // Initialize surface early so it can be populated before OnLoad
-        _surface = new();
+        _surface = new(300, 300);
     }
 
     /// <summary>
@@ -413,22 +413,60 @@ public class TilesetSurfaceScreen : BaseScreen
             return false;
         }
 
+        if (buttons.Contains(MouseButton.Right))
+        {
+            var (tileX, tileY) = GetInputTileCoordinates(x, y);
+            CenterViewOnTile(SelectedLayerIndex, tileX, tileY);
+            TileMouseDown?.Invoke(SelectedLayerIndex, tileX, tileY, buttons);
+            return true;
+        }
+
         // Only draw on left mouse button
         if (!buttons.Contains(MouseButton.Left))
         {
             return false;
         }
 
-        var (tileX, tileY) = GetInputTileCoordinates(x, y);
+        var (leftTileX, leftTileY) = GetInputTileCoordinates(x, y);
 
         // Create tile render data with the selected tile index and white color
         var tileData = new TileRenderData(SelectedTileIndex, LyColor.White);
 
         // Draw on the selected layer
-        _surface.SetTile(SelectedLayerIndex, tileX, tileY, tileData);
+        _surface.SetTile(SelectedLayerIndex, leftTileX, leftTileY, tileData);
 
-        TileMouseDown?.Invoke(SelectedLayerIndex, tileX, tileY, buttons);
+        TileMouseDown?.Invoke(SelectedLayerIndex, leftTileX, leftTileY, buttons);
         return true;
+    }
+
+    /// <summary>
+    /// Centers the layer view on the specified tile coordinates.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="tileX">Tile X to center.</param>
+    /// <param name="tileY">Tile Y to center.</param>
+    public void CenterViewOnTile(int layerIndex, int tileX, int tileY)
+    {
+        if (!TryGetLayerInputTileInfo(layerIndex, out var tileWidth, out var tileHeight, out _))
+        {
+            return;
+        }
+
+        var scaledTileWidth = tileWidth * TileRenderScale;
+        var scaledTileHeight = tileHeight * TileRenderScale;
+        var visibleWidth = Size.X - Margin.X - Margin.Z;
+        var visibleHeight = Size.Y - Margin.Y - Margin.W;
+
+        var viewTilesX = MathF.Floor(visibleWidth / scaledTileWidth);
+        var viewTilesY = MathF.Floor(visibleHeight / scaledTileHeight);
+
+        var viewOffset = new Vector2(
+            tileX - viewTilesX / 2f,
+            tileY - viewTilesY / 2f
+        );
+
+        SetLayerViewTileOffset(layerIndex, viewOffset);
+        SetLayerViewPixelOffset(layerIndex, Vector2.Zero);
     }
 
     public override bool OnMouseMove(int x, int y)
