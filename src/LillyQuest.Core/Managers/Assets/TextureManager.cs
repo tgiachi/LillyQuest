@@ -212,7 +212,10 @@ public class TextureManager : ITextureManager
                 g <= tolerance &&
                 b >= 255 - tolerance)
             {
-                // Set alpha to 0 (fully transparent)
+                // Set alpha to 0 (fully transparent) and clear RGB to avoid fringe bleeding
+                pixelData[i] = 0;
+                pixelData[i + 1] = 0;
+                pixelData[i + 2] = 0;
                 pixelData[i + 3] = 0;
             }
         }

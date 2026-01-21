@@ -47,6 +47,7 @@ public class TilesetManager : ITilesetManager
         var textureName = $"{name}_texture";
         _textureManager.LoadTextureWithChromaKey(textureName, filePath);
         var texture = _textureManager.GetTexture(textureName);
+        texture.ConfigureSampling(useMipmaps: false, useLinearFiltering: false, clampToEdge: true);
 
         var tileset = new Tileset(filePath, tileWidth, tileHeight, spacing, margin, texture);
         _tilesets[name] = tileset;
@@ -70,6 +71,7 @@ public class TilesetManager : ITilesetManager
         var textureName = $"{name}_texture";
         _textureManager.LoadTextureFromPngWithChromaKey(textureName, content);
         var texture = _textureManager.GetTexture(textureName);
+        texture.ConfigureSampling(useMipmaps: false, useLinearFiltering: false, clampToEdge: true);
 
         var tileset = new Tileset($"[embedded]_{name}", tileWidth, tileHeight, spacing, margin, texture);
         _tilesets[name] = tileset;

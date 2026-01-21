@@ -152,24 +152,40 @@ public class Texture2D : IDisposable
         }
     }
 
+    public void ConfigureSampling(bool useMipmaps, bool useLinearFiltering, bool clampToEdge)
+    {
+        Bind();
+        ApplyParameters(useMipmaps, useLinearFiltering, clampToEdge);
+    }
+
     private void SetParameters(bool useMipmaps = true)
     {
-        var wrapMode = useMipmaps ? GLEnum.Repeat : GLEnum.ClampToEdge;
+        ApplyParameters(useMipmaps, useLinearFiltering: true, clampToEdge: !useMipmaps);
+    }
+
+    private void ApplyParameters(bool useMipmaps, bool useLinearFiltering, bool clampToEdge)
+    {
+        var wrapMode = clampToEdge ? GLEnum.ClampToEdge : GLEnum.Repeat;
         _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)wrapMode);
         _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)wrapMode);
 
+        var minFilter = useMipmaps
+                            ? (useLinearFiltering ? GLEnum.LinearMipmapLinear : GLEnum.NearestMipmapNearest)
+                            : (useLinearFiltering ? GLEnum.Linear : GLEnum.Nearest);
+        var magFilter = useLinearFiltering ? GLEnum.Linear : GLEnum.Nearest;
+
         if (useMipmaps)
         {
-            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.LinearMipmapLinear);
-            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)minFilter);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)magFilter);
             _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, 0);
             _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, 8);
             _gl.GenerateMipmap(TextureTarget.Texture2D);
         }
         else
         {
-            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)GLEnum.Linear);
-            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)GLEnum.Linear);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMinFilter, (int)minFilter);
+            _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMagFilter, (int)magFilter);
             _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, 0);
             _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, 0);
         }

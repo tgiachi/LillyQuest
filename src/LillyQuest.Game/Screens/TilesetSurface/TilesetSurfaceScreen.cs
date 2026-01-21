@@ -332,7 +332,7 @@ public class TilesetSurfaceScreen : BaseScreen
                         (byte)random.Next(0, 256),
                         (byte)random.Next(0, 256),
                         (byte)random.Next(0, 256),
-                        (byte)random.Next(0, 256)
+                        10
                     );
                 }
 

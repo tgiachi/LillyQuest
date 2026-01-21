@@ -22,7 +22,6 @@ public class TilesetSurfaceEditorScene : BaseScene
     {
         _screenManager = screenManager;
         _tilesetManager = tilesetManager;
-
     }
 
     public override void OnInitialize(ISceneManager sceneManager)
@@ -33,7 +32,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             DefaultTilesetName = "alloy",
             LayerCount = 3,
             Position = new Vector2(100, 100),
-            Size = new Vector2(200, 200),
+            Size = new Vector2(700, 500),
         };
 
         // Initialize the surface layers before population
@@ -41,7 +40,10 @@ public class TilesetSurfaceEditorScene : BaseScene
 
         // Populate with random tiles and colors
         PopulateWithRandomTiles(screen);
-        screen.ConfigureAutoRandomize(tileCount: _tilesetManager.GetTileset(screen.DefaultTilesetName).TileCount, everyFrames: 3);
+        screen.ConfigureAutoRandomize(
+            tileCount: _tilesetManager.GetTileset(screen.DefaultTilesetName).TileCount,
+            everyFrames: 70
+        );
 
         // Add the screen to the screen manager
         _screenManager.PushScreen(screen);
@@ -55,6 +57,7 @@ public class TilesetSurfaceEditorScene : BaseScene
     private void PopulateWithRandomTiles(TilesetSurfaceScreen screen)
     {
         var tileset = _tilesetManager.GetTileset(screen.DefaultTilesetName);
+
         if (tileset == null)
         {
             return;
@@ -75,20 +78,23 @@ public class TilesetSurfaceEditorScene : BaseScene
                     (byte)random.Next(0, 256),
                     (byte)random.Next(0, 256),
                     (byte)random.Next(0, 256),
-                    255
+                    (byte)random.Next(0, 256)
                 );
 
-                // Random background color (30% chance)
+                // // Random background color (30% chance)
                 LyColor? backgroundColor = null;
+
                 if (random.Next(100) < 30)
                 {
                     backgroundColor = new LyColor(
                         (byte)random.Next(0, 256),
                         (byte)random.Next(0, 256),
                         (byte)random.Next(0, 256),
-                        200
+                        (byte)random.Next(0, 256)
                     );
                 }
+
+                // backgroundColor = LyColor.Blue;
 
                 // Create and place the tile
                 var tileData = new TileRenderData(tileIndex, foregroundColor, backgroundColor);
