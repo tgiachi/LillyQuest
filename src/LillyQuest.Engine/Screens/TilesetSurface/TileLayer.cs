@@ -9,7 +9,7 @@ namespace LillyQuest.Engine.Screens.TilesetSurface;
 /// </summary>
 public class TileLayer
 {
-    private readonly TileRenderData[] _tiles;
+    private readonly Dictionary<(int x, int y), TileChunk> _chunks = new();
 
     public int Width { get; }
     public int Height { get; }
@@ -95,15 +95,42 @@ public class TileLayer
     {
         Width = width;
         Height = height;
-        _tiles = new TileRenderData[width * height];
-
-        for (var i = 0; i < _tiles.Length; i++)
-        {
-            _tiles[i] = new(-1, LyColor.White);
-        }
     }
 
-    public TileRenderData GetTile(int x, int y) => _tiles[x + y * Width];
+    public int GetChunkCount() => _chunks.Count;
 
-    public void SetTile(int x, int y, TileRenderData tileData) => _tiles[x + y * Width] = tileData;
+    public TileRenderData GetTile(int x, int y)
+    {
+        var (chunkX, chunkY, localX, localY) = ToChunkCoordinates(x, y);
+
+        if (!_chunks.TryGetValue((chunkX, chunkY), out var chunk))
+        {
+            return new(-1, LyColor.White);
+        }
+
+        return chunk.GetTile(localX, localY);
+    }
+
+    public void SetTile(int x, int y, TileRenderData tileData)
+    {
+        var (chunkX, chunkY, localX, localY) = ToChunkCoordinates(x, y);
+
+        if (!_chunks.TryGetValue((chunkX, chunkY), out var chunk))
+        {
+            chunk = new TileChunk();
+            _chunks[(chunkX, chunkY)] = chunk;
+        }
+
+        chunk.SetTile(localX, localY, tileData);
+    }
+
+    private static (int chunkX, int chunkY, int localX, int localY) ToChunkCoordinates(int x, int y)
+    {
+        var chunkX = x / TileChunk.Size;
+        var chunkY = y / TileChunk.Size;
+        var localX = x % TileChunk.Size;
+        var localY = y % TileChunk.Size;
+
+        return (chunkX, chunkY, localX, localY);
+    }
 }
