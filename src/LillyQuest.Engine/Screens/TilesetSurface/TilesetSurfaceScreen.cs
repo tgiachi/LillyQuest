@@ -4,11 +4,12 @@ using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
+using LillyQuest.Engine.Extensions.TilesetSurface;
 using LillyQuest.Engine.Managers.Screens.Base;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 
-namespace LillyQuest.Game.Screens.TilesetSurface;
+namespace LillyQuest.Engine.Screens.TilesetSurface;
 
 /// <summary>
 /// Screen for drawing and editing tileset surfaces with multi-layer support.
@@ -39,8 +40,6 @@ public class TilesetSurfaceScreen : BaseScreen
     private readonly TilesetSurface _surface;
 
     private Tileset _tileset;
-
-
 
     /// <summary>
     /// Number of layers to create on initialization.
@@ -125,39 +124,54 @@ public class TilesetSurfaceScreen : BaseScreen
         _surface.SetTile(layerIndex, x, y, tileData);
     }
 
-
-
-    /// <summary>
-    /// Gets the opacity of a specific layer.
-    /// </summary>
-    public float GetLayerOpacity(int layerIndex)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return 1.0f;
-        }
-
-        return _surface.Layers[layerIndex].Opacity;
-    }
+    public static Vector2 ApplyTileViewSize(
+        Vector2 tileViewSize,
+        Vector2 currentSize,
+        int tileWidth,
+        int tileHeight,
+        float tileRenderScale
+    )
+        => tileViewSize.ApplyTileViewSize(currentSize, tileWidth, tileHeight, tileRenderScale);
 
     /// <summary>
-    /// Gets the tileset name for a specific layer.
-    /// Returns the layer's tileset name if set, otherwise returns the default.
+    /// Centers the layer view on the specified tile coordinates.
     /// </summary>
-    public string GetLayerTilesetName(int layerIndex)
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="tileX">Tile X to center.</param>
+    /// <param name="tileY">Tile Y to center.</param>
+    public void CenterViewOnTile(int layerIndex, int tileX, int tileY)
     {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        if (!TryGetLayerInputTileInfo(layerIndex, out var tileWidth, out var tileHeight, out _))
         {
-            return DefaultTilesetName;
+            return;
         }
+
+        var scaledTileWidth = tileWidth * TileRenderScale;
+        var scaledTileHeight = tileHeight * TileRenderScale;
+        var visibleWidth = Size.X - Margin.X - Margin.Z;
+        var visibleHeight = Size.Y - Margin.Y - Margin.W;
+
+        var viewTilesX = MathF.Floor(visibleWidth / scaledTileWidth);
+        var viewTilesY = MathF.Floor(visibleHeight / scaledTileHeight);
+
+        var viewOffset = new Vector2(
+            tileX - viewTilesX / 2f,
+            tileY - viewTilesY / 2f
+        );
 
         var layer = _surface.Layers[layerIndex];
 
-        return string.IsNullOrEmpty(layer.TilesetName) ? DefaultTilesetName : layer.TilesetName;
+        if (layer.SmoothViewEnabled)
+        {
+            layer.ViewTileOffsetTarget = viewOffset;
+            layer.ViewPixelOffsetTarget = Vector2.Zero;
+        }
+        else
+        {
+            SetLayerViewTileOffset(layerIndex, viewOffset);
+            SetLayerViewPixelOffset(layerIndex, Vector2.Zero);
+        }
     }
-
-    public TileRenderData GetTile(int layerIndex, int x, int y)
-        => _surface.GetTile(layerIndex, x, y);
 
     /// <summary>
     /// Clears all tiles on the specified layer.
@@ -182,6 +196,27 @@ public class TilesetSurfaceScreen : BaseScreen
         }
     }
 
+    public static Vector2 ComputeScreenSizeFromTileView(
+        Vector2 tileViewSize,
+        int tileWidth,
+        int tileHeight,
+        float tileRenderScale
+    )
+        => tileViewSize.ToScreenSize(tileWidth, tileHeight, tileRenderScale);
+
+    /// <summary>
+    /// Gets the opacity of a specific layer.
+    /// </summary>
+    public float GetLayerOpacity(int layerIndex)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return 1.0f;
+        }
+
+        return _surface.Layers[layerIndex].Opacity;
+    }
+
     /// <summary>
     /// Gets the pixel offset for a specific layer.
     /// </summary>
@@ -198,38 +233,19 @@ public class TilesetSurfaceScreen : BaseScreen
     }
 
     /// <summary>
-    /// Gets the view offsets for a specific layer.
+    /// Gets the tileset name for a specific layer.
+    /// Returns the layer's tileset name if set, otherwise returns the default.
     /// </summary>
-    /// <param name="layerIndex">Layer index.</param>
-    /// <param name="tileOffset">View offset in tile coordinates.</param>
-    /// <param name="pixelOffset">View offset in pixels.</param>
-    /// <returns>True if the layer index is valid.</returns>
-    public bool TryGetLayerViewOffsets(int layerIndex, out Vector2 tileOffset, out Vector2 pixelOffset)
+    public string GetLayerTilesetName(int layerIndex)
     {
-        tileOffset = Vector2.Zero;
-        pixelOffset = Vector2.Zero;
-
         if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
         {
-            return false;
+            return DefaultTilesetName;
         }
 
         var layer = _surface.Layers[layerIndex];
-        tileOffset = layer.ViewTileOffset;
-        pixelOffset = layer.ViewPixelOffset;
-        return true;
-    }
 
-    /// <summary>
-    /// Gets the view tile offset for a specific layer.
-    /// </summary>
-    /// <param name="layerIndex">Layer index.</param>
-    /// <returns>View offset in tile coordinates.</returns>
-    public Vector2 GetLayerViewTileOffset(int layerIndex)
-    {
-        return TryGetLayerViewOffsets(layerIndex, out var tileOffset, out _)
-                   ? tileOffset
-                   : Vector2.Zero;
+        return string.IsNullOrEmpty(layer.TilesetName) ? DefaultTilesetName : layer.TilesetName;
     }
 
     /// <summary>
@@ -238,186 +254,22 @@ public class TilesetSurfaceScreen : BaseScreen
     /// <param name="layerIndex">Layer index.</param>
     /// <returns>View offset in pixels.</returns>
     public Vector2 GetLayerViewPixelOffset(int layerIndex)
-    {
-        return TryGetLayerViewOffsets(layerIndex, out _, out var pixelOffset)
-                   ? pixelOffset
-                   : Vector2.Zero;
-    }
+        => TryGetLayerViewOffsets(layerIndex, out _, out var pixelOffset)
+               ? pixelOffset
+               : Vector2.Zero;
 
     /// <summary>
-    /// Sets the pixel offset for a specific layer.
+    /// Gets the view tile offset for a specific layer.
     /// </summary>
     /// <param name="layerIndex">Layer index.</param>
-    /// <param name="pixelOffset">Pixel offset to apply.</param>
-    public void SetLayerPixelOffset(int layerIndex, Vector2 pixelOffset)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return;
-        }
+    /// <returns>View offset in tile coordinates.</returns>
+    public Vector2 GetLayerViewTileOffset(int layerIndex)
+        => TryGetLayerViewOffsets(layerIndex, out var tileOffset, out _)
+               ? tileOffset
+               : Vector2.Zero;
 
-        _surface.Layers[layerIndex].PixelOffset = pixelOffset;
-    }
-
-    /// <summary>
-    /// Sets the view offset for a specific layer in tile coordinates.
-    /// </summary>
-    /// <param name="layerIndex">Layer index.</param>
-    /// <param name="tileOffset">View offset in tile coordinates.</param>
-    public void SetLayerViewTileOffset(int layerIndex, Vector2 tileOffset)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return;
-        }
-
-        var layer = _surface.Layers[layerIndex];
-        layer.ViewTileOffset = tileOffset;
-        layer.ViewTileOffsetTarget = tileOffset;
-    }
-
-    /// <summary>
-    /// Sets the view offset for a specific layer in pixels.
-    /// </summary>
-    /// <param name="layerIndex">Layer index.</param>
-    /// <param name="pixelOffset">View offset in pixels.</param>
-    public void SetLayerViewPixelOffset(int layerIndex, Vector2 pixelOffset)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return;
-        }
-
-        var layer = _surface.Layers[layerIndex];
-        layer.ViewPixelOffset = pixelOffset;
-        layer.ViewPixelOffsetTarget = pixelOffset;
-    }
-
-    /// <summary>
-    /// Sets the target view offset for a specific layer in tile coordinates.
-    /// </summary>
-    /// <param name="layerIndex">Layer index.</param>
-    /// <param name="tileOffset">Target view offset in tile coordinates.</param>
-    public void SetLayerViewTileTarget(int layerIndex, Vector2 tileOffset)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return;
-        }
-
-        _surface.Layers[layerIndex].ViewTileOffsetTarget = tileOffset;
-    }
-
-    /// <summary>
-    /// Sets the target view offset for a specific layer in pixels.
-    /// </summary>
-    /// <param name="layerIndex">Layer index.</param>
-    /// <param name="pixelOffset">Target view offset in pixels.</param>
-    public void SetLayerViewPixelTarget(int layerIndex, Vector2 pixelOffset)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return;
-        }
-
-        _surface.Layers[layerIndex].ViewPixelOffsetTarget = pixelOffset;
-    }
-
-    /// <summary>
-    /// Enables or disables smooth view scrolling for the specified layer.
-    /// </summary>
-    /// <param name="layerIndex">Layer index.</param>
-    /// <param name="enabled">True to enable smoothing.</param>
-    /// <param name="speed">Smoothing speed per second.</param>
-    public void SetLayerViewSmoothing(int layerIndex, bool enabled, float speed = 10f)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return;
-        }
-
-        var layer = _surface.Layers[layerIndex];
-        layer.SmoothViewEnabled = enabled;
-        layer.SmoothViewSpeed = speed;
-    }
-
-    /// <summary>
-    /// Sets an input tile size override for the specified layer.
-    /// </summary>
-    /// <param name="layerIndex">Layer index.</param>
-    /// <param name="tileSize">Tile size in pixels, or null to clear.</param>
-    public void SetLayerInputTileSizeOverride(int layerIndex, Vector2? tileSize)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return;
-        }
-
-        _surface.Layers[layerIndex].InputTileSizeOverride = tileSize;
-    }
-
-    /// <summary>
-    /// Gets tile size and pixel offset for the specified layer using input overrides.
-    /// </summary>
-    /// <param name="layerIndex">Layer index.</param>
-    /// <param name="tileWidth">Tile width in pixels.</param>
-    /// <param name="tileHeight">Tile height in pixels.</param>
-    /// <param name="pixelOffset">Layer pixel offset.</param>
-    /// <returns>True if the layer and tileset are valid.</returns>
-    public bool TryGetLayerInputTileInfo(int layerIndex, out int tileWidth, out int tileHeight, out Vector2 pixelOffset)
-    {
-        tileWidth = 0;
-        tileHeight = 0;
-        pixelOffset = Vector2.Zero;
-
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return false;
-        }
-
-        var layer = _surface.Layers[layerIndex];
-        if (layer.InputTileSizeOverride.HasValue)
-        {
-            var overrideSize = layer.InputTileSizeOverride.Value;
-            tileWidth = (int)overrideSize.X;
-            tileHeight = (int)overrideSize.Y;
-            pixelOffset = layer.PixelOffset;
-            return tileWidth > 0 && tileHeight > 0;
-        }
-
-        return TryGetLayerTileInfo(layerIndex, out tileWidth, out tileHeight, out pixelOffset);
-    }
-
-    /// <summary>
-    /// Gets tile size and pixel offset for the specified layer.
-    /// </summary>
-    /// <param name="layerIndex">Layer index.</param>
-    /// <param name="tileWidth">Tile width in pixels.</param>
-    /// <param name="tileHeight">Tile height in pixels.</param>
-    /// <param name="pixelOffset">Layer pixel offset.</param>
-    /// <returns>True if the layer and tileset are valid.</returns>
-    public bool TryGetLayerTileInfo(int layerIndex, out int tileWidth, out int tileHeight, out Vector2 pixelOffset)
-    {
-        tileWidth = 0;
-        tileHeight = 0;
-        pixelOffset = Vector2.Zero;
-
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return false;
-        }
-
-        var tileset = GetLayerTileset(layerIndex);
-        if (tileset == null)
-        {
-            return false;
-        }
-
-        tileWidth = tileset.TileWidth;
-        tileHeight = tileset.TileHeight;
-        pixelOffset = _surface.Layers[layerIndex].PixelOffset;
-        return true;
-    }
+    public TileRenderData GetTile(int layerIndex, int x, int y)
+        => _surface.GetTile(layerIndex, x, y);
 
     /// <summary>
     /// Initializes the surface layers. Can be called before OnLoad to pre-populate.
@@ -459,6 +311,7 @@ public class TilesetSurfaceScreen : BaseScreen
         {
             var (tileX, tileY) = GetInputTileCoordinates(x, y);
             TileMouseDown?.Invoke(SelectedLayerIndex, tileX, tileY, buttons);
+
             return true;
         }
 
@@ -471,46 +324,8 @@ public class TilesetSurfaceScreen : BaseScreen
         _surface.SetTile(SelectedLayerIndex, leftTileX, leftTileY, tileData);
 
         TileMouseDown?.Invoke(SelectedLayerIndex, leftTileX, leftTileY, buttons);
+
         return true;
-    }
-
-    /// <summary>
-    /// Centers the layer view on the specified tile coordinates.
-    /// </summary>
-    /// <param name="layerIndex">Layer index.</param>
-    /// <param name="tileX">Tile X to center.</param>
-    /// <param name="tileY">Tile Y to center.</param>
-    public void CenterViewOnTile(int layerIndex, int tileX, int tileY)
-    {
-        if (!TryGetLayerInputTileInfo(layerIndex, out var tileWidth, out var tileHeight, out _))
-        {
-            return;
-        }
-
-        var scaledTileWidth = tileWidth * TileRenderScale;
-        var scaledTileHeight = tileHeight * TileRenderScale;
-        var visibleWidth = Size.X - Margin.X - Margin.Z;
-        var visibleHeight = Size.Y - Margin.Y - Margin.W;
-
-        var viewTilesX = MathF.Floor(visibleWidth / scaledTileWidth);
-        var viewTilesY = MathF.Floor(visibleHeight / scaledTileHeight);
-
-        var viewOffset = new Vector2(
-            tileX - viewTilesX / 2f,
-            tileY - viewTilesY / 2f
-        );
-
-        var layer = _surface.Layers[layerIndex];
-        if (layer.SmoothViewEnabled)
-        {
-            layer.ViewTileOffsetTarget = viewOffset;
-            layer.ViewPixelOffsetTarget = Vector2.Zero;
-        }
-        else
-        {
-            SetLayerViewTileOffset(layerIndex, viewOffset);
-            SetLayerViewPixelOffset(layerIndex, Vector2.Zero);
-        }
     }
 
     public override bool OnMouseMove(int x, int y)
@@ -522,6 +337,7 @@ public class TilesetSurfaceScreen : BaseScreen
 
         var (tileX, tileY) = GetInputTileCoordinates(x, y);
         TileMouseMove?.Invoke(SelectedLayerIndex, tileX, tileY);
+
         return true;
     }
 
@@ -560,59 +376,19 @@ public class TilesetSurfaceScreen : BaseScreen
         spriteBatch.DisableScissor();
     }
 
-    public static Vector2 ComputeScreenSizeFromTileView(
-        Vector2 tileViewSize,
-        int tileWidth,
-        int tileHeight,
-        float tileRenderScale
-    )
+    /// <summary>
+    /// Sets an input tile size override for the specified layer.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="tileSize">Tile size in pixels, or null to clear.</param>
+    public void SetLayerInputTileSizeOverride(int layerIndex, Vector2? tileSize)
     {
-        return new Vector2(
-            tileViewSize.X * tileWidth * tileRenderScale,
-            tileViewSize.Y * tileHeight * tileRenderScale
-        );
-    }
-
-    public static Vector2 ApplyTileViewSize(
-        Vector2 tileViewSize,
-        Vector2 currentSize,
-        int tileWidth,
-        int tileHeight,
-        float tileRenderScale
-    )
-    {
-        return ComputeScreenSizeFromTileView(tileViewSize, tileWidth, tileHeight, tileRenderScale);
-    }
-
-    private void UpdateScreenSizeFromTileView()
-    {
-        if (_tileset == null)
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
         {
             return;
         }
 
-        var masterTileset = GetMasterTileset();
-        Size = ComputeScreenSizeFromTileView(
-            _tileViewSize,
-            masterTileset.TileWidth,
-            masterTileset.TileHeight,
-            _tileRenderScale
-        );
-    }
-
-    private Tileset GetMasterTileset()
-    {
-        if (_surface.Layers.Count > 0)
-        {
-            var layer0TilesetName = _surface.Layers[0].TilesetName;
-            if (!string.IsNullOrEmpty(layer0TilesetName) &&
-                _tilesetManager.TryGetTileset(layer0TilesetName, out var layerTileset))
-            {
-                return layerTileset;
-            }
-        }
-
-        return _tileset;
+        _surface.Layers[layerIndex].InputTileSizeOverride = tileSize;
     }
 
     /// <summary>
@@ -626,6 +402,21 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         _surface.Layers[layerIndex].Opacity = Math.Clamp(opacity, 0.0f, 1.0f);
+    }
+
+    /// <summary>
+    /// Sets the pixel offset for a specific layer.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="pixelOffset">Pixel offset to apply.</param>
+    public void SetLayerPixelOffset(int layerIndex, Vector2 pixelOffset)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        _surface.Layers[layerIndex].PixelOffset = pixelOffset;
     }
 
     /// <summary>
@@ -648,6 +439,88 @@ public class TilesetSurfaceScreen : BaseScreen
     }
 
     /// <summary>
+    /// Sets the view offset for a specific layer in pixels.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="pixelOffset">View offset in pixels.</param>
+    public void SetLayerViewPixelOffset(int layerIndex, Vector2 pixelOffset)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        var layer = _surface.Layers[layerIndex];
+        layer.ViewPixelOffset = pixelOffset;
+        layer.ViewPixelOffsetTarget = pixelOffset;
+    }
+
+    /// <summary>
+    /// Sets the target view offset for a specific layer in pixels.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="pixelOffset">Target view offset in pixels.</param>
+    public void SetLayerViewPixelTarget(int layerIndex, Vector2 pixelOffset)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        _surface.Layers[layerIndex].ViewPixelOffsetTarget = pixelOffset;
+    }
+
+    /// <summary>
+    /// Enables or disables smooth view scrolling for the specified layer.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="enabled">True to enable smoothing.</param>
+    /// <param name="speed">Smoothing speed per second.</param>
+    public void SetLayerViewSmoothing(int layerIndex, bool enabled, float speed = 10f)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        var layer = _surface.Layers[layerIndex];
+        layer.SmoothViewEnabled = enabled;
+        layer.SmoothViewSpeed = speed;
+    }
+
+    /// <summary>
+    /// Sets the view offset for a specific layer in tile coordinates.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="tileOffset">View offset in tile coordinates.</param>
+    public void SetLayerViewTileOffset(int layerIndex, Vector2 tileOffset)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        var layer = _surface.Layers[layerIndex];
+        layer.ViewTileOffset = tileOffset;
+        layer.ViewTileOffsetTarget = tileOffset;
+    }
+
+    /// <summary>
+    /// Sets the target view offset for a specific layer in tile coordinates.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="tileOffset">Target view offset in tile coordinates.</param>
+    public void SetLayerViewTileTarget(int layerIndex, Vector2 tileOffset)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        _surface.Layers[layerIndex].ViewTileOffsetTarget = tileOffset;
+    }
+
+    /// <summary>
     /// Toggles visibility of a layer.
     /// </summary>
     public void ToggleLayerVisibility(int layerIndex)
@@ -658,6 +531,97 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         _surface.Layers[layerIndex].IsVisible = !_surface.Layers[layerIndex].IsVisible;
+    }
+
+    /// <summary>
+    /// Gets tile size and pixel offset for the specified layer using input overrides.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="tileWidth">Tile width in pixels.</param>
+    /// <param name="tileHeight">Tile height in pixels.</param>
+    /// <param name="pixelOffset">Layer pixel offset.</param>
+    /// <returns>True if the layer and tileset are valid.</returns>
+    public bool TryGetLayerInputTileInfo(int layerIndex, out int tileWidth, out int tileHeight, out Vector2 pixelOffset)
+    {
+        tileWidth = 0;
+        tileHeight = 0;
+        pixelOffset = Vector2.Zero;
+
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return false;
+        }
+
+        var layer = _surface.Layers[layerIndex];
+
+        if (layer.InputTileSizeOverride.HasValue)
+        {
+            var overrideSize = layer.InputTileSizeOverride.Value;
+            tileWidth = (int)overrideSize.X;
+            tileHeight = (int)overrideSize.Y;
+            pixelOffset = layer.PixelOffset;
+
+            return tileWidth > 0 && tileHeight > 0;
+        }
+
+        return TryGetLayerTileInfo(layerIndex, out tileWidth, out tileHeight, out pixelOffset);
+    }
+
+    /// <summary>
+    /// Gets tile size and pixel offset for the specified layer.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="tileWidth">Tile width in pixels.</param>
+    /// <param name="tileHeight">Tile height in pixels.</param>
+    /// <param name="pixelOffset">Layer pixel offset.</param>
+    /// <returns>True if the layer and tileset are valid.</returns>
+    public bool TryGetLayerTileInfo(int layerIndex, out int tileWidth, out int tileHeight, out Vector2 pixelOffset)
+    {
+        tileWidth = 0;
+        tileHeight = 0;
+        pixelOffset = Vector2.Zero;
+
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return false;
+        }
+
+        var tileset = GetLayerTileset(layerIndex);
+
+        if (tileset == null)
+        {
+            return false;
+        }
+
+        tileWidth = tileset.TileWidth;
+        tileHeight = tileset.TileHeight;
+        pixelOffset = _surface.Layers[layerIndex].PixelOffset;
+
+        return true;
+    }
+
+    /// <summary>
+    /// Gets the view offsets for a specific layer.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="tileOffset">View offset in tile coordinates.</param>
+    /// <param name="pixelOffset">View offset in pixels.</param>
+    /// <returns>True if the layer index is valid.</returns>
+    public bool TryGetLayerViewOffsets(int layerIndex, out Vector2 tileOffset, out Vector2 pixelOffset)
+    {
+        tileOffset = Vector2.Zero;
+        pixelOffset = Vector2.Zero;
+
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return false;
+        }
+
+        var layer = _surface.Layers[layerIndex];
+        tileOffset = layer.ViewTileOffset;
+        pixelOffset = layer.ViewPixelOffset;
+
+        return true;
     }
 
     public override void Update(GameTime gameTime)
@@ -682,56 +646,35 @@ public class TilesetSurfaceScreen : BaseScreen
         // RandomizeSelectedLayer();
     }
 
-    private void UpdateViewSmoothing(GameTime gameTime)
+    /// <summary>
+    /// Converts mouse coordinates to tile coordinates based on the selected layer's tileset.
+    /// </summary>
+    private (int x, int y) GetInputTileCoordinates(int mouseX, int mouseY)
     {
-        if (gameTime.Elapsed.TotalSeconds <= 0)
+        if (!TryGetLayerInputTileInfo(SelectedLayerIndex, out var tileWidth, out var tileHeight, out var layerOffset))
         {
-            return;
+            return (0, 0);
         }
 
-        var dt = (float)gameTime.Elapsed.TotalSeconds;
+        var scaledTileWidth = tileWidth * TileRenderScale;
+        var scaledTileHeight = tileHeight * TileRenderScale;
 
-        for (var i = 0; i < _surface.Layers.Count; i++)
-        {
-            var layer = _surface.Layers[i];
-            if (!layer.SmoothViewEnabled)
-            {
-                continue;
-            }
+        // Adjust mouse position relative to screen position
+        TryGetLayerViewOffsets(SelectedLayerIndex, out var viewTileOffset, out var viewPixelOffset);
+        var viewOffsetPx = new Vector2(
+                               viewTileOffset.X * scaledTileWidth,
+                               viewTileOffset.Y * scaledTileHeight
+                           ) +
+                           viewPixelOffset;
 
-            if (!TryGetLayerInputTileInfo(i, out var tileWidth, out var tileHeight, out _))
-            {
-                continue;
-            }
+        var relativeX = mouseX - Position.X - layerOffset.X + viewOffsetPx.X;
+        var relativeY = mouseY - Position.Y - layerOffset.Y + viewOffsetPx.Y;
 
-            var scaledTileWidth = tileWidth * TileRenderScale;
-            var scaledTileHeight = tileHeight * TileRenderScale;
+        // Calculate tile coordinates using scaled tile dimensions
+        var tileX = (int)MathF.Floor(relativeX / scaledTileWidth);
+        var tileY = (int)MathF.Floor(relativeY / scaledTileHeight);
 
-            var currentPx = new Vector2(
-                layer.ViewTileOffset.X * scaledTileWidth,
-                layer.ViewTileOffset.Y * scaledTileHeight
-            ) + layer.ViewPixelOffset;
-
-            var targetPx = new Vector2(
-                layer.ViewTileOffsetTarget.X * scaledTileWidth,
-                layer.ViewTileOffsetTarget.Y * scaledTileHeight
-            ) + layer.ViewPixelOffsetTarget;
-
-            var t = 1f - MathF.Exp(-layer.SmoothViewSpeed * dt);
-            var nextPx = Vector2.Lerp(currentPx, targetPx, t);
-
-            var nextTileOffset = new Vector2(
-                MathF.Floor(nextPx.X / scaledTileWidth),
-                MathF.Floor(nextPx.Y / scaledTileHeight)
-            );
-            var nextPixelOffset = nextPx - new Vector2(
-                nextTileOffset.X * scaledTileWidth,
-                nextTileOffset.Y * scaledTileHeight
-            );
-
-            layer.ViewTileOffset = nextTileOffset;
-            layer.ViewPixelOffset = nextPixelOffset;
-        }
+        return (tileX, tileY);
     }
 
     /// <summary>
@@ -764,34 +707,20 @@ public class TilesetSurfaceScreen : BaseScreen
         return null;
     }
 
-    /// <summary>
-    /// Converts mouse coordinates to tile coordinates based on the selected layer's tileset.
-    /// </summary>
-    private (int x, int y) GetInputTileCoordinates(int mouseX, int mouseY)
+    private Tileset GetMasterTileset()
     {
-        if (!TryGetLayerInputTileInfo(SelectedLayerIndex, out var tileWidth, out var tileHeight, out var layerOffset))
+        if (_surface.Layers.Count > 0)
         {
-            return (0, 0);
+            var layer0TilesetName = _surface.Layers[0].TilesetName;
+
+            if (!string.IsNullOrEmpty(layer0TilesetName) &&
+                _tilesetManager.TryGetTileset(layer0TilesetName, out var layerTileset))
+            {
+                return layerTileset;
+            }
         }
 
-        var scaledTileWidth = tileWidth * TileRenderScale;
-        var scaledTileHeight = tileHeight * TileRenderScale;
-
-        // Adjust mouse position relative to screen position
-        TryGetLayerViewOffsets(SelectedLayerIndex, out var viewTileOffset, out var viewPixelOffset);
-        var viewOffsetPx = new Vector2(
-            viewTileOffset.X * scaledTileWidth,
-            viewTileOffset.Y * scaledTileHeight
-        ) + viewPixelOffset;
-
-        var relativeX = mouseX - Position.X - layerOffset.X + viewOffsetPx.X;
-        var relativeY = mouseY - Position.Y - layerOffset.Y + viewOffsetPx.Y;
-
-        // Calculate tile coordinates using scaled tile dimensions
-        var tileX = (int)MathF.Floor(relativeX / scaledTileWidth);
-        var tileY = (int)MathF.Floor(relativeY / scaledTileHeight);
-
-        return (tileX, tileY);
+        return _tileset;
     }
 
     // private void RandomizeSelectedLayer()
@@ -847,9 +776,10 @@ public class TilesetSurfaceScreen : BaseScreen
         var scaledTileHeight = tileset.TileHeight * TileRenderScale;
         var layerOffset = layer.PixelOffset;
         var viewOffsetPx = new Vector2(
-            layer.ViewTileOffset.X * scaledTileWidth,
-            layer.ViewTileOffset.Y * scaledTileHeight
-        ) + layer.ViewPixelOffset;
+                               layer.ViewTileOffset.X * scaledTileWidth,
+                               layer.ViewTileOffset.Y * scaledTileHeight
+                           ) +
+                           layer.ViewPixelOffset;
 
         // Calculate visible region accounting for margins (scissor area)
         // Note: Tiles are already in coordinates relative to Position (due to PushTranslation)
@@ -921,6 +851,78 @@ public class TilesetSurfaceScreen : BaseScreen
                     0f
                 );
             }
+        }
+    }
+
+    private void UpdateScreenSizeFromTileView()
+    {
+        if (_tileset == null)
+        {
+            return;
+        }
+
+        var masterTileset = GetMasterTileset();
+        Size = ComputeScreenSizeFromTileView(
+            _tileViewSize,
+            masterTileset.TileWidth,
+            masterTileset.TileHeight,
+            _tileRenderScale
+        );
+    }
+
+    private void UpdateViewSmoothing(GameTime gameTime)
+    {
+        if (gameTime.Elapsed.TotalSeconds <= 0)
+        {
+            return;
+        }
+
+        var dt = (float)gameTime.Elapsed.TotalSeconds;
+
+        for (var i = 0; i < _surface.Layers.Count; i++)
+        {
+            var layer = _surface.Layers[i];
+
+            if (!layer.SmoothViewEnabled)
+            {
+                continue;
+            }
+
+            if (!TryGetLayerInputTileInfo(i, out var tileWidth, out var tileHeight, out _))
+            {
+                continue;
+            }
+
+            var scaledTileWidth = tileWidth * TileRenderScale;
+            var scaledTileHeight = tileHeight * TileRenderScale;
+
+            var currentPx = new Vector2(
+                                layer.ViewTileOffset.X * scaledTileWidth,
+                                layer.ViewTileOffset.Y * scaledTileHeight
+                            ) +
+                            layer.ViewPixelOffset;
+
+            var targetPx = new Vector2(
+                               layer.ViewTileOffsetTarget.X * scaledTileWidth,
+                               layer.ViewTileOffsetTarget.Y * scaledTileHeight
+                           ) +
+                           layer.ViewPixelOffsetTarget;
+
+            var t = 1f - MathF.Exp(-layer.SmoothViewSpeed * dt);
+            var nextPx = Vector2.Lerp(currentPx, targetPx, t);
+
+            var nextTileOffset = new Vector2(
+                MathF.Floor(nextPx.X / scaledTileWidth),
+                MathF.Floor(nextPx.Y / scaledTileHeight)
+            );
+            var nextPixelOffset = nextPx -
+                                  new Vector2(
+                                      nextTileOffset.X * scaledTileWidth,
+                                      nextTileOffset.Y * scaledTileHeight
+                                  );
+
+            layer.ViewTileOffset = nextTileOffset;
+            layer.ViewPixelOffset = nextPixelOffset;
         }
     }
 }

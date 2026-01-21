@@ -2,7 +2,7 @@ using System.Numerics;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Primitives;
 
-namespace LillyQuest.Game.Screens.TilesetSurface;
+namespace LillyQuest.Engine.Screens.TilesetSurface;
 
 /// <summary>
 /// Represents a single layer in a tileset surface for drawing/editing.

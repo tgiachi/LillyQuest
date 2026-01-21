@@ -2,8 +2,9 @@ using System.Text;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
+using LillyQuest.Engine.Screens.TilesetSurface;
 
-namespace LillyQuest.Game.Screens.TilesetSurface;
+namespace LillyQuest.Engine.Extensions.TilesetSurface;
 
 /// <summary>
 /// Extensions for drawing text and shapes onto a tileset surface screen.

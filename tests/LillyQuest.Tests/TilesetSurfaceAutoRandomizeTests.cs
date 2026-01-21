@@ -1,7 +1,7 @@
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
-using LillyQuest.Game.Screens.TilesetSurface;
+using LillyQuest.Engine.Screens.TilesetSurface;
 
 namespace LillyQuest.Tests;
 

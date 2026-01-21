@@ -3,9 +3,10 @@ using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
+using LillyQuest.Engine.Extensions.TilesetSurface;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Managers.Scenes.Base;
-using LillyQuest.Game.Screens.TilesetSurface;
+using LillyQuest.Engine.Screens.TilesetSurface;
 using Silk.NET.Input;
 
 namespace LillyQuest.Game.Scenes;

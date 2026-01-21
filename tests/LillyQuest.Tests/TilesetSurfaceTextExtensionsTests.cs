@@ -1,5 +1,6 @@
 using LillyQuest.Core.Primitives;
-using LillyQuest.Game.Screens.TilesetSurface;
+using LillyQuest.Engine.Extensions.TilesetSurface;
+using LillyQuest.Engine.Screens.TilesetSurface;
 
 namespace LillyQuest.Tests;
 

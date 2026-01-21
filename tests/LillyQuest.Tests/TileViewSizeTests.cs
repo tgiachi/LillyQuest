@@ -1,5 +1,5 @@
 using System.Numerics;
-using LillyQuest.Game.Screens.TilesetSurface;
+using LillyQuest.Engine.Screens.TilesetSurface;
 using NUnit.Framework;
 
 namespace LillyQuest.Tests;

@@ -1,7 +1,7 @@
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Primitives;
 
-namespace LillyQuest.Game.Screens.TilesetSurface;
+namespace LillyQuest.Engine.Screens.TilesetSurface;
 
 /// <summary>
 /// Represents a 2D surface for drawing tiles across multiple layers.
@@ -23,13 +23,11 @@ public class TilesetSurface
     /// </summary>
     public int Height { get; set; }
 
-
     public TilesetSurface(int width = 100, int height = 100)
     {
         Width = width;
         Height = height;
     }
-
 
     /// <summary>
     /// Gets a tile at the given coordinates on the specified layer.
