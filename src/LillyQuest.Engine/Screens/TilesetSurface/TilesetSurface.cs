@@ -44,7 +44,7 @@ public class TilesetSurface
             return new(-1, LyColor.White);
         }
 
-        return Layers[layerIndex].Tiles[x, y];
+        return Layers[layerIndex].GetTile(x, y);
     }
 
     /// <summary>
@@ -75,7 +75,7 @@ public class TilesetSurface
             return;
         }
 
-        Layers[layerIndex].Tiles[x, y] = tileData;
+        Layers[layerIndex].SetTile(x, y, tileData);
     }
 
     /// <summary>
