@@ -373,6 +373,27 @@ public class TilesetSurfaceTextExtensionsTests
     }
 
     [Test]
+    public void LayerRenderScaleSmoothing_DisablesSmoothUpdates()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager())
+        {
+            TileRenderScale = 1.0f
+        };
+        screen.InitializeLayers(1);
+
+        screen.SetLayerRenderScale(0, 1f);
+        screen.SetLayerRenderScaleTarget(0, 2f, speed: 10f);
+        screen.SetLayerRenderScaleSmoothing(0, enabled: false, speed: 1f);
+
+        var gameTime = new LillyQuest.Core.Primitives.GameTime();
+        gameTime.Update(0.1);
+        screen.Update(gameTime);
+
+        var current = screen.GetLayerRenderScale(0);
+        Assert.That(current, Is.EqualTo(1f));
+    }
+
+    [Test]
     public void ClearLayer_EmptiesAllTiles()
     {
         var screen = new TilesetSurfaceScreen(new StubTilesetManager());

@@ -489,6 +489,24 @@ public class TilesetSurfaceScreen : BaseScreen
     }
 
     /// <summary>
+    /// Enables or disables smooth render scale transitions for a layer.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <param name="enabled">Whether smoothing is enabled.</param>
+    /// <param name="speed">Zoom speed in units per second.</param>
+    public void SetLayerRenderScaleSmoothing(int layerIndex, bool enabled, float speed)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        var layer = _surface.Layers[layerIndex];
+        layer.SmoothRenderScaleEnabled = enabled;
+        layer.SmoothRenderScaleSpeed = speed;
+    }
+
+    /// <summary>
     /// Sets the pixel offset for a specific layer.
     /// </summary>
     /// <param name="layerIndex">Layer index.</param>
