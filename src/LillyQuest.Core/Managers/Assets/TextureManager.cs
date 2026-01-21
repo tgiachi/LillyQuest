@@ -171,6 +171,9 @@ public class TextureManager : ITextureManager
     public bool TryGetTexture(string assetName, out Texture2D texture)
         => _textures.TryGetValue(assetName, out texture);
 
+    public IReadOnlyDictionary<string, Texture2D> GetAllTextures()
+        => _textures.AsReadOnly();
+
     public void UnloadTexture(string assetName)
     {
         if (_textures.Remove(assetName, out var texture))

@@ -34,5 +34,10 @@ public interface ITextureManager : IDisposable
 
     bool TryGetTexture(string assetName, out Texture2D texture);
 
+    /// <summary>
+    /// Gets all loaded textures.
+    /// </summary>
+    IReadOnlyDictionary<string, Texture2D> GetAllTextures();
+
     void UnloadTexture(string assetName);
 }

@@ -47,6 +47,13 @@ public sealed class SceneTransitionManager : ISceneManager
     public SceneTransitionState TransitionState { get; private set; } = SceneTransitionState.Idle;
 
     /// <summary>
+    /// Gets all available scenes (both registered and initialized).
+    /// Returns a read-only list of scenes that have been initialized.
+    /// </summary>
+    public IReadOnlyList<IScene> GetAvailableScenes()
+        => _initializedScenes.Values.ToList().AsReadOnly();
+
+    /// <summary>
     /// Creates a new SceneTransitionManager with the specified dependencies.
     /// </summary>
     public SceneTransitionManager(

@@ -54,6 +54,11 @@ public interface ITilesetManager : IDisposable
     bool TryGetTileset(string name, out Tileset tileset);
 
     /// <summary>
+    /// Gets all loaded tilesets.
+    /// </summary>
+    IReadOnlyDictionary<string, Tileset> GetAllTilesets();
+
+    /// <summary>
     /// Unloads a tileset from memory.
     /// </summary>
     /// <param name="name">Name of the tileset to unload</param>

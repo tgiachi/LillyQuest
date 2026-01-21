@@ -21,6 +21,11 @@ public interface ISceneManager
     SceneTransitionState TransitionState { get; }
 
     /// <summary>
+    /// Gets all available scenes that have been initialized.
+    /// </summary>
+    IReadOnlyList<IScene> GetAvailableScenes();
+
+    /// <summary>
     /// Initiates a scene transition with a fade animation.
     /// </summary>
     /// <param name="sceneName">The name of the scene to transition to.</param>

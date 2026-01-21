@@ -79,6 +79,9 @@ public class TilesetManager : ITilesetManager
     public bool TryGetTileset(string name, out Tileset tileset)
         => _tilesets.TryGetValue(name, out tileset);
 
+    public IReadOnlyDictionary<string, Tileset> GetAllTilesets()
+        => _tilesets.AsReadOnly();
+
     public void UnloadTileset(string name)
     {
         if (_tilesets.Remove(name, out var tileset))

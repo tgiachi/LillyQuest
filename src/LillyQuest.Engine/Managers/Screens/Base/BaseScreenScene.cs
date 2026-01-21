@@ -1,66 +1,41 @@
-using LillyQuest.Engine.Interfaces.Entities;
 using LillyQuest.Engine.Interfaces.Managers;
-using LillyQuest.Engine.Interfaces.Scenes;
 using LillyQuest.Engine.Interfaces.Screens;
+using LillyQuest.Engine.Managers.Scenes.Base;
 
 namespace LillyQuest.Engine.Managers.Screens.Base;
 
-public abstract class BaseScreenScene : IScene
+public abstract class BaseScreenScene : BaseScene
 {
-    public string Name { get; }
-
-    private readonly List<IGameEntity> _sceneEntities = [];
     private readonly List<IScreen> _sceneScreens = [];
-    private readonly List<IGameEntity> _globalEntities = [];
 
-    protected ISceneManager SceneManager { get; private set; }
     protected IScreenManager ScreenManager { get; }
 
     protected BaseScreenScene(string name, IScreenManager screenManager)
+        : base(name)
     {
-        Name = name;
         ScreenManager = screenManager;
     }
 
-    public IEnumerable<IGameEntity> GetSceneGameObjects()
-        => _sceneEntities;
-
-    public void OnInitialize(ISceneManager sceneManager)
+    public override void OnInitialize(ISceneManager sceneManager)
     {
-        SceneManager = sceneManager;
+        base.OnInitialize(sceneManager);
 
         SceneInitialized();
 
-        foreach (var entity in _sceneScreens)
+        foreach (var screen in _sceneScreens)
         {
-            ScreenManager.PushScreen(entity);
+            ScreenManager.PushScreen(screen);
         }
     }
 
-    public void OnLoad()
+    public override void OnUnload()
     {
-        throw new NotImplementedException();
-    }
-
-    public void OnUnload()
-    {
-        foreach (var stackScene in ScreenManager.ScreenStack)
+        foreach (var screen in ScreenManager.ScreenStack.ToList())
         {
-            ScreenManager.PopScreen(stackScene);
+            ScreenManager.PopScreen(screen);
         }
-    }
 
-    public void RegisterGlobals(IGameEntityManager gameObjectManager)
-    {
-        foreach (var global in _globalEntities)
-        {
-            gameObjectManager.AddEntity(global);
-        }
-    }
-
-    protected void AddEntity(IGameEntity entity)
-    {
-        _sceneEntities.Add(entity);
+        base.OnUnload();
     }
 
     protected void AddScreen(IScreen screen)
@@ -68,24 +43,9 @@ public abstract class BaseScreenScene : IScene
         _sceneScreens.Add(screen);
     }
 
-    protected void RemoveEntity(IGameEntity entity)
-    {
-        _sceneEntities.Remove(entity);
-    }
-
     protected void RemoveScreen(IScreen screen)
     {
         _sceneScreens.Remove(screen);
-    }
-
-    protected void AddGlobalEntity(IGameEntity entity)
-    {
-        _globalEntities.Add(entity);
-    }
-
-    protected void RemoveGlobalEntity(IGameEntity entity)
-    {
-        _globalEntities.Remove(entity);
     }
 
     protected virtual void SceneInitialized() { }

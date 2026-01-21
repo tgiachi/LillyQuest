@@ -1,6 +1,7 @@
 using ImGuiNET;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Primitives;
+using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Systems.Base;
@@ -36,6 +37,7 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>
             _renderContext.InputContext
         );
 
+
         // Apply Dark Fantasy theme (gold, purple, mystical blue)
         ImGuiThemeProvider.ApplyDarkFantasyTheme();
 
@@ -52,6 +54,12 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>
 
         foreach (var entity in typedEntities)
         {
+            var asGameEntity = entity as GameEntity;
+            if (asGameEntity is not { IsActive: true })
+            {
+                continue;
+            }
+
             ImGui.Begin(entity.Name);
             entity.DrawIMGui();
             ImGui.End();

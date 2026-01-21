@@ -146,7 +146,9 @@ public class LillyQuestBootstrap
     /// Finalizes the frame after rendering.
     /// Can be used for post-processing, debug rendering, or cleanup.
     /// </summary>
-    private void EndFrame() { }
+    private void EndFrame()
+    {
+    }
 
     private void LoadDefaultResources()
     {
@@ -259,11 +261,25 @@ public class LillyQuestBootstrap
         var entityManager = _container.Resolve<IGameEntityManager>();
         var inputSystem = _container.Resolve<InputSystem>();
         var systemManager = _container.Resolve<ISystemManager>();
+        var sceneManager = _container.Resolve<ISceneManager>();
+        var screenManager = _container.Resolve<IScreenManager>();
+        var textureManager = _container.Resolve<ITextureManager>();
+        var tilesetManager = _container.Resolve<ITilesetManager>();
 
-        entityManager.AddEntity(new DebugSystemGameObject(this, systemManager));
-        entityManager.AddEntity(new DebugEntityGameObject(entityManager));
-        entityManager.AddEntity(new DebugInputGameObject(inputSystem));
-        entityManager.AddEntity(new DebugLabelGameObject(_renderContext));
+        // Create debug panel - it handles creation of all debug objects as children
+        var debugPanel = new DebugPanelGameObject(
+            this,
+            systemManager,
+            entityManager,
+            sceneManager,
+            screenManager,
+            textureManager,
+            tilesetManager,
+            inputSystem,
+            _renderContext
+        );
+
+        entityManager.AddEntity(debugPanel);
     }
 
     private void StartSceneManager()
