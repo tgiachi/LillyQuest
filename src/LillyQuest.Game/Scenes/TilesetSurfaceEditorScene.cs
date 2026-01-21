@@ -72,17 +72,18 @@ public class TilesetSurfaceEditorScene : BaseScene
                                      {
                                          delta = (point * -1);
                                      }
-                                        else
-                                        {
-                                            delta = point;
-                                        }
+                                     else
+                                     {
+                                         delta = point;
+                                     }
 
                                      var scale = screen.GetLayerRenderScale(0);
 
                                      if (scale + delta > 0)
                                      {
                                          screen.SetLayerRenderScaleTarget(0, scale + delta, 1f);
-                                        // screen.CenterViewOnTile(0, x, y);
+
+                                         // screen.CenterViewOnTile(0, x, y);
                                          Log.Logger.Information("Scale adjusted to {Scale}", scale + delta);
                                      }
                                  };
