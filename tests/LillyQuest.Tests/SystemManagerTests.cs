@@ -1,4 +1,5 @@
 using System.Reflection;
+using DryIoc;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine;
 using LillyQuest.Engine.Interfaces.Managers;
@@ -13,6 +14,8 @@ public class SystemManagerTests
 {
     private static readonly string[] UpdateOrder = { "A", "B" };
     private static readonly string[] RenderTwice = { "Render", "Render" };
+
+    private static IContainer CreateContainer() => new Container();
 
     private sealed class RecordingSystem : ISystem
     {
@@ -42,7 +45,7 @@ public class SystemManagerTests
     public void RemoveSystem_RemovesFromAllQueryTypes()
     {
         var bootstrap = new LillyQuestBootstrap(new());
-        var entityManager = new GameEntityManager();
+        var entityManager = new GameEntityManager(CreateContainer());
         var systemManager = new SystemManager(bootstrap, entityManager);
 
         var calls = new List<string>();
@@ -61,7 +64,7 @@ public class SystemManagerTests
     public void RenderEvent_ProcessesRenderableAndDebugRenderableSystems()
     {
         var bootstrap = new LillyQuestBootstrap(new());
-        var entityManager = new GameEntityManager();
+        var entityManager = new GameEntityManager(CreateContainer());
         var systemManager = new SystemManager(bootstrap, entityManager);
 
         var calls = new List<string>();
@@ -78,7 +81,7 @@ public class SystemManagerTests
     public void UpdateEvent_ProcessesUpdateableSystemsInOrder()
     {
         var bootstrap = new LillyQuestBootstrap(new());
-        var entityManager = new GameEntityManager();
+        var entityManager = new GameEntityManager(CreateContainer());
         var systemManager = new SystemManager(bootstrap, entityManager);
 
         var calls = new List<string>();

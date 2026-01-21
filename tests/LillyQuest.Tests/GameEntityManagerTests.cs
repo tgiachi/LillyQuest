@@ -1,3 +1,4 @@
+using DryIoc;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Engine.Entities;
@@ -14,10 +15,12 @@ public class GameEntityManagerTests
         public void Render(SpriteBatch spriteBatch, EngineRenderContext context) { }
     }
 
+    private static IContainer CreateContainer() => new Container();
+
     [Test]
     public void AddEntity_AssignsId_WhenZero()
     {
-        var manager = new GameEntityManager();
+        var manager = new GameEntityManager(CreateContainer());
         var first = new GameEntity();
         var second = new GameEntity();
 
@@ -31,7 +34,7 @@ public class GameEntityManagerTests
     [Test]
     public void AddEntity_DuplicateIdDifferentEntity_Throws()
     {
-        var manager = new GameEntityManager();
+        var manager = new GameEntityManager(CreateContainer());
         var first = new GameEntity { Id = 10 };
         var second = new GameEntity { Id = 10 };
 
@@ -43,7 +46,7 @@ public class GameEntityManagerTests
     [Test]
     public void AddEntity_WithHierarchy_AssignsIdsToChildren()
     {
-        var manager = new GameEntityManager();
+        var manager = new GameEntityManager(CreateContainer());
         var root = new GameEntity();
         var child = new GameEntity();
         root.Children.Add(child);
@@ -57,7 +60,7 @@ public class GameEntityManagerTests
     [Test]
     public void AddEntity_WithParent_AttachesAndOrders()
     {
-        var manager = new GameEntityManager();
+        var manager = new GameEntityManager(CreateContainer());
         var root = new GameEntity { Order = 0 };
         var child = new GameEntity { Order = 0 };
 
@@ -72,7 +75,7 @@ public class GameEntityManagerTests
     [Test]
     public void GetQueryOf_UsesCollectionCache()
     {
-        var manager = new GameEntityManager();
+        var manager = new GameEntityManager(CreateContainer());
         var root = new GameEntity();
         var renderable = new RenderableTestEntity();
         root.Children.Add(renderable);
@@ -88,7 +91,7 @@ public class GameEntityManagerTests
     [Test]
     public void RemoveEntity_RemovesSubtree()
     {
-        var manager = new GameEntityManager();
+        var manager = new GameEntityManager(CreateContainer());
         var root = new GameEntity();
         var child = new GameEntity();
         root.Children.Add(child);
