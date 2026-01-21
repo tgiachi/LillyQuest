@@ -176,8 +176,9 @@ public class TilesetSurfaceScreen : BaseScreen
             return;
         }
 
-        var scaledTileWidth = tileWidth * TileRenderScale;
-        var scaledTileHeight = tileHeight * TileRenderScale;
+        var layerScale = _surface.Layers[layerIndex].RenderScale;
+        var scaledTileWidth = tileWidth * TileRenderScale * layerScale;
+        var scaledTileHeight = tileHeight * TileRenderScale * layerScale;
         var visibleWidth = Size.X - Margin.X - Margin.Z;
         var visibleHeight = Size.Y - Margin.Y - Margin.W;
 
@@ -793,8 +794,9 @@ public class TilesetSurfaceScreen : BaseScreen
             return (0, 0);
         }
 
-        var scaledTileWidth = tileWidth * TileRenderScale;
-        var scaledTileHeight = tileHeight * TileRenderScale;
+        var layerScale = _surface.Layers[layerIndex].RenderScale;
+        var scaledTileWidth = tileWidth * TileRenderScale * layerScale;
+        var scaledTileHeight = tileHeight * TileRenderScale * layerScale;
 
         // Adjust mouse position relative to screen position
         TryGetLayerViewOffsets(layerIndex, out var viewTileOffset, out var viewPixelOffset);

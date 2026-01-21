@@ -66,8 +66,25 @@ public class TilesetSurfaceEditorScene : BaseScene
 
         screen.TileMouseWheel += (layerIndex, x, y, delta) =>
                                  {
+                                     var point = 0.1f;
+
+                                     if (delta < 0)
+                                     {
+                                         delta = (point * -1);
+                                     }
+                                        else
+                                        {
+                                            delta = point;
+                                        }
+
                                      var scale = screen.GetLayerRenderScale(0);
-                                     screen.SetLayerRenderScaleTarget(0, scale + delta, 1f);
+
+                                     if (scale + delta > 0)
+                                     {
+                                         screen.SetLayerRenderScaleTarget(0, scale + delta, 1f);
+                                        // screen.CenterViewOnTile(0, x, y);
+                                         Log.Logger.Information("Scale adjusted to {Scale}", scale + delta);
+                                     }
                                  };
 
         // Initialize the surface layers before population
@@ -97,11 +114,6 @@ public class TilesetSurfaceEditorScene : BaseScene
     private void PopulateWithRandomTiles(TilesetSurfaceScreen screen)
     {
         var tileset = _tilesetManager.GetTileset(screen.DefaultTilesetName);
-
-        if (tileset == null)
-        {
-            return;
-        }
 
         var random = Random.Shared;
         screen.SelectedLayerIndex = 0;
