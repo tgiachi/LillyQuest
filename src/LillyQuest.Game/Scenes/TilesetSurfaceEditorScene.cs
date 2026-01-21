@@ -58,42 +58,39 @@ public class TilesetSurfaceEditorScene : BaseScene
 
         var random = Random.Shared;
 
-        // Fill entire surface for each layer
-        for (var layerIndex = 0; layerIndex < screen.LayerCount; layerIndex++)
+        // Fill entire surface on first layer only (2500 tiles is the limit before blocking)
+        screen.SelectedLayerIndex = 0;
+
+        for (var x = 0; x < 50; x++)
         {
-            screen.SelectedLayerIndex = layerIndex;
-
-            for (var x = 0; x < 50; x++)
+            for (var y = 0; y < 50; y++)
             {
-                for (var y = 0; y < 50; y++)
+                // Random tile index
+                var tileIndex = random.Next(0, tileset.TileCount);
+
+                // Random foreground color
+                var foregroundColor = new LyColor(
+                    (byte)random.Next(0, 256),
+                    (byte)random.Next(0, 256),
+                    (byte)random.Next(0, 256),
+                    255
+                );
+
+                // Random background color (30% chance)
+                LyColor? backgroundColor = null;
+                if (random.Next(100) < 30)
                 {
-                    // Random tile index
-                    var tileIndex = random.Next(0, tileset.TileCount);
-
-                    // Random foreground color
-                    var foregroundColor = new LyColor(
+                    backgroundColor = new LyColor(
                         (byte)random.Next(0, 256),
                         (byte)random.Next(0, 256),
                         (byte)random.Next(0, 256),
-                        255
+                        200
                     );
-
-                    // Random background color (30% chance)
-                    LyColor? backgroundColor = null;
-                    if (random.Next(100) < 30)
-                    {
-                        backgroundColor = new LyColor(
-                            (byte)random.Next(0, 256),
-                            (byte)random.Next(0, 256),
-                            (byte)random.Next(0, 256),
-                            200
-                        );
-                    }
-
-                    // Create and place the tile
-                    var tileData = new TileRenderData(tileIndex, foregroundColor, backgroundColor);
-                    screen.AddTileToSurface(x, y, tileData);
                 }
+
+                // Create and place the tile
+                var tileData = new TileRenderData(tileIndex, foregroundColor, backgroundColor);
+                screen.AddTileToSurface(x, y, tileData);
             }
         }
 
