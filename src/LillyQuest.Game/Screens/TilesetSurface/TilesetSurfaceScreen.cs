@@ -44,6 +44,9 @@ public class TilesetSurfaceScreen : BaseScreen
         _tilesetManager = tilesetManager;
         Size = new(800, 600);
         IsModal = false;
+
+        // Initialize surface early so it can be populated before OnLoad
+        _surface = new TilesetSurface();
     }
 
     /// <summary>
@@ -84,8 +87,11 @@ public class TilesetSurfaceScreen : BaseScreen
             throw new InvalidOperationException($"Default tileset '{DefaultTilesetName}' not found");
         }
 
-        _surface = new();
-        _surface.Initialize(LayerCount);
+        // Initialize layers if they haven't been initialized yet
+        if (_surface.Layers.Count == 0)
+        {
+            _surface.Initialize(LayerCount);
+        }
 
         base.OnLoad();
     }
@@ -148,6 +154,14 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         _surface.Layers[layerIndex].Opacity = Math.Clamp(opacity, 0.0f, 1.0f);
+    }
+
+    /// <summary>
+    /// Initializes the surface layers. Can be called before OnLoad to pre-populate.
+    /// </summary>
+    public void InitializeLayers(int layerCount)
+    {
+        _surface.Initialize(layerCount);
     }
 
     /// <summary>

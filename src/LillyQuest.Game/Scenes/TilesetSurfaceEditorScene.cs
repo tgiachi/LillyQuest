@@ -33,6 +33,9 @@ public class TilesetSurfaceEditorScene : BaseScene
             LayerCount = 3
         };
 
+        // Initialize the surface layers before population
+        screen.InitializeLayers(screen.LayerCount);
+
         // Populate with random tiles and colors
         PopulateWithRandomTiles(screen);
 

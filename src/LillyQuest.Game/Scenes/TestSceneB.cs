@@ -46,6 +46,11 @@ public class TestSceneB : IScene
                     {
                         _sceneManager?.SwitchScene("test_scene_a", 2f);
                     }
+
+                    if (ImGui.Button("Go to Tiles"))
+                    {
+                        _sceneManager?.SwitchScene("tileset_surface_editor", 0.5f);
+                    }
                 }
             )
         );
