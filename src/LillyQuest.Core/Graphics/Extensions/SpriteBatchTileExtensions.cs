@@ -161,11 +161,6 @@ public static class SpriteBatchTileExtensions
                 depth
             );
         }
-    }
-
-    /// <param name="spriteBatch">The sprite batch instance</param>
-    extension(SpriteBatch spriteBatch)
-    {
         /// <summary>
         /// Draws a tile with background color and foreground tint.
         /// </summary>
@@ -187,13 +182,19 @@ public static class SpriteBatchTileExtensions
                 DrawSolidRectangle(spriteBatch, position, bgSize, tileRenderData.BackgroundColor, depth);
             }
 
-            // Draw tile with foreground color
-            spriteBatch.DrawTile(
-                tileset,
-                tileRenderData.TileIndex,
+            var tileData = tileset.GetTile(tileRenderData.TileIndex);
+            var sourceRect = ConvertSourceRect(tileData.SourceRect);
+            sourceRect = TileRenderData.ApplyFlip(sourceRect, tileRenderData.Flip);
+
+            spriteBatch.Draw(
+                tileset.Texture,
                 position,
+                new Vector2(tileset.TileWidth, tileset.TileHeight),
                 tileRenderData.ForegroundColor,
-                depth: depth + 0.001f
+                0f,
+                Vector2.Zero,
+                sourceRect,
+                depth + 0.001f
             );
         }
 
@@ -219,14 +220,19 @@ public static class SpriteBatchTileExtensions
                 DrawSolidRectangle(spriteBatch, position, size, tileRenderData.BackgroundColor, depth);
             }
 
-            // Draw tile with foreground color
-            spriteBatch.DrawTile(
-                tileset,
-                tileRenderData.TileIndex,
+            var tileData = tileset.GetTile(tileRenderData.TileIndex);
+            var sourceRect = ConvertSourceRect(tileData.SourceRect);
+            sourceRect = TileRenderData.ApplyFlip(sourceRect, tileRenderData.Flip);
+
+            spriteBatch.Draw(
+                tileset.Texture,
                 position,
                 size,
                 tileRenderData.ForegroundColor,
-                depth: depth + 0.001f
+                0f,
+                Vector2.Zero,
+                sourceRect,
+                depth + 0.001f
             );
         }
     }

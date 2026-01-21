@@ -16,7 +16,7 @@ namespace LillyQuest.Game.Screens.TilesetSurface;
 public class TilesetSurfaceScreen : BaseScreen
 {
     private readonly ITilesetManager _tilesetManager;
-    private TilesetSurface _surface;
+    private readonly TilesetSurface _surface;
     private Tileset _tileset;
     private int _autoRandomizeEveryFrames;
     private int _autoRandomizeTileCount;
@@ -49,16 +49,40 @@ public class TilesetSurfaceScreen : BaseScreen
     /// </summary>
     public float TileRenderScale { get; set; } = 1.0f;
 
+    /// <summary>
+    /// Number of tiles visible in the screen (columns, rows).
+    /// Used to compute Size from the default tileset.
+    /// </summary>
+    public Vector2 TileViewSize { get; set; } = new(90, 30);
+
     public TilesetSurfaceScreen(ITilesetManager tilesetManager)
     {
         _tilesetManager = tilesetManager;
+
         // Display 90x30 tiles (like sadconsole's 90x30 character grid)
         // With 24px tiles: 90*24=2160w, 30*24=720h
         Size = new(2160, 720);
         IsModal = false;
 
         // Initialize surface early so it can be populated before OnLoad
-        _surface = new TilesetSurface();
+        _surface = new();
+    }
+
+    /// <summary>
+    /// Adds a tile to the surface at the specified coordinates on the selected layer.
+    /// </summary>
+    public void AddTileToSurface(int x, int y, TileRenderData tileData)
+    {
+        _surface.SetTile(SelectedLayerIndex, x, y, tileData);
+    }
+
+    public void ConfigureAutoRandomize(int tileCount, int everyFrames, Random? random = null)
+    {
+        _autoRandomizeTileCount = tileCount;
+        _autoRandomizeEveryFrames = everyFrames;
+        _autoRandomizeFrameCounter = 0;
+        _autoRandomizeRandom = random ?? Random.Shared;
+        _autoRandomizeEnabled = tileCount > 0 && everyFrames > 0;
     }
 
     /// <summary>
@@ -90,6 +114,17 @@ public class TilesetSurfaceScreen : BaseScreen
         return string.IsNullOrEmpty(layer.TilesetName) ? DefaultTilesetName : layer.TilesetName;
     }
 
+    public TileRenderData GetTile(int layerIndex, int x, int y)
+        => _surface.GetTile(layerIndex, x, y);
+
+    /// <summary>
+    /// Initializes the surface layers. Can be called before OnLoad to pre-populate.
+    /// </summary>
+    public void InitializeLayers(int layerCount)
+    {
+        _surface.Initialize(layerCount);
+    }
+
     public override void OnLoad()
     {
         _tileset = _tilesetManager.GetTileset(DefaultTilesetName);
@@ -98,6 +133,8 @@ public class TilesetSurfaceScreen : BaseScreen
         {
             throw new InvalidOperationException($"Default tileset '{DefaultTilesetName}' not found");
         }
+
+        Size = ComputeScreenSizeFromTileView(TileViewSize, _tileset.TileWidth, _tileset.TileHeight, TileRenderScale);
 
         // Initialize layers if they haven't been initialized yet
         if (_surface.Layers.Count == 0)
@@ -167,6 +204,59 @@ public class TilesetSurfaceScreen : BaseScreen
         spriteBatch.DisableScissor();
     }
 
+    public static Vector2 ComputeScreenSizeFromTileView(
+        Vector2 tileViewSize,
+        int tileWidth,
+        int tileHeight,
+        float tileRenderScale
+    )
+    {
+        return new Vector2(
+            tileViewSize.X * tileWidth * tileRenderScale,
+            tileViewSize.Y * tileHeight * tileRenderScale
+        );
+    }
+
+    /// <summary>
+    /// Sets the opacity of a specific layer.
+    /// </summary>
+    public void SetLayerOpacity(int layerIndex, float opacity)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        _surface.Layers[layerIndex].Opacity = Math.Clamp(opacity, 0.0f, 1.0f);
+    }
+
+    /// <summary>
+    /// Sets the tileset for a specific layer.
+    /// If null or empty, the layer will use the default tileset.
+    /// </summary>
+    public void SetLayerTileset(int layerIndex, string? tilesetName)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        _surface.Layers[layerIndex].TilesetName = tilesetName;
+    }
+
+    /// <summary>
+    /// Toggles visibility of a layer.
+    /// </summary>
+    public void ToggleLayerVisibility(int layerIndex)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return;
+        }
+
+        _surface.Layers[layerIndex].IsVisible = !_surface.Layers[layerIndex].IsVisible;
+    }
+
     public override void Update(GameTime gameTime)
     {
         base.Update(gameTime);
@@ -185,74 +275,6 @@ public class TilesetSurfaceScreen : BaseScreen
 
         _autoRandomizeFrameCounter = 0;
         RandomizeSelectedLayer();
-    }
-
-    /// <summary>
-    /// Sets the opacity of a specific layer.
-    /// </summary>
-    public void SetLayerOpacity(int layerIndex, float opacity)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return;
-        }
-
-        _surface.Layers[layerIndex].Opacity = Math.Clamp(opacity, 0.0f, 1.0f);
-    }
-
-    /// <summary>
-    /// Initializes the surface layers. Can be called before OnLoad to pre-populate.
-    /// </summary>
-    public void InitializeLayers(int layerCount)
-    {
-        _surface.Initialize(layerCount);
-    }
-
-    /// <summary>
-    /// Adds a tile to the surface at the specified coordinates on the selected layer.
-    /// </summary>
-    public void AddTileToSurface(int x, int y, TileRenderData tileData)
-    {
-        _surface.SetTile(SelectedLayerIndex, x, y, tileData);
-    }
-
-    /// <summary>
-    /// Sets the tileset for a specific layer.
-    /// If null or empty, the layer will use the default tileset.
-    /// </summary>
-    public void SetLayerTileset(int layerIndex, string? tilesetName)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return;
-        }
-
-        _surface.Layers[layerIndex].TilesetName = tilesetName;
-    }
-
-    public void ConfigureAutoRandomize(int tileCount, int everyFrames, Random? random = null)
-    {
-        _autoRandomizeTileCount = tileCount;
-        _autoRandomizeEveryFrames = everyFrames;
-        _autoRandomizeFrameCounter = 0;
-        _autoRandomizeRandom = random ?? Random.Shared;
-        _autoRandomizeEnabled = tileCount > 0 && everyFrames > 0;
-    }
-
-    public TileRenderData GetTile(int layerIndex, int x, int y)
-        => _surface.GetTile(layerIndex, x, y);
-
-    /// <summary>
-    /// Toggles visibility of a layer.
-    /// </summary>
-    public void ToggleLayerVisibility(int layerIndex)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return;
-        }
-
-        _surface.Layers[layerIndex].IsVisible = !_surface.Layers[layerIndex].IsVisible;
     }
 
     /// <summary>
@@ -289,6 +311,7 @@ public class TilesetSurfaceScreen : BaseScreen
     {
         // Get the tileset of the selected layer
         var tileset = GetLayerTileset(SelectedLayerIndex);
+
         if (tileset == null)
         {
             return (0, 0);
@@ -326,6 +349,7 @@ public class TilesetSurfaceScreen : BaseScreen
                 );
 
                 LyColor? backgroundColor = null;
+
                 if (random.Next(100) < 30)
                 {
                     backgroundColor = new LyColor(
@@ -386,7 +410,7 @@ public class TilesetSurfaceScreen : BaseScreen
 
                 // Draw background color if present
                 var position = new Vector2(x * scaledTileWidth, y * scaledTileHeight);
-                spriteBatch.DrawRectangle(position, new Vector2(scaledTileWidth, scaledTileHeight), tileData.BackgroundColor);
+                spriteBatch.DrawRectangle(position, new(scaledTileWidth, scaledTileHeight), tileData.BackgroundColor);
             }
         }
 
@@ -412,6 +436,7 @@ public class TilesetSurfaceScreen : BaseScreen
                 var uvHeight = (float)tile.SourceRect.Size.Y / tileset.Texture.Height;
 
                 var sourceRect = new Rectangle<float>(uvX, uvY, uvWidth, uvHeight);
+                sourceRect = TileRenderData.ApplyFlip(sourceRect, tileData.Flip);
 
                 // Apply layer opacity to the foreground color
                 var color = tileData.ForegroundColor.WithAlpha((byte)(tileData.ForegroundColor.A * layer.Opacity));
@@ -421,7 +446,7 @@ public class TilesetSurfaceScreen : BaseScreen
                 spriteBatch.Draw(
                     tileset.Texture,
                     tilePosition,
-                    new Vector2(scaledTileWidth, scaledTileHeight),
+                    new(scaledTileWidth, scaledTileHeight),
                     color,
                     0f,
                     Vector2.Zero,

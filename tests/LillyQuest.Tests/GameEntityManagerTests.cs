@@ -15,7 +15,7 @@ public class GameEntityManagerTests
         public void Render(SpriteBatch spriteBatch, EngineRenderContext context) { }
     }
 
-    private static IContainer CreateContainer() => new Container();
+    private static Container CreateContainer() => new();
 
     [Test]
     public void AddEntity_AssignsId_WhenZero()

@@ -12,7 +12,7 @@ public class TestScreen : BaseScreen
 
     private SpriteGameEntity _spriteGameEntity;
 
-    private float accumulator = 0f;
+    private float accumulator;
     private const float interval = 0.1f; // 1 second interval
 
     public override void OnLoad()

@@ -1,4 +1,6 @@
 using LillyQuest.Core.Primitives;
+using LillyQuest.Core.Types;
+using Silk.NET.Maths;
 
 namespace LillyQuest.Core.Data.Assets.Tiles;
 
@@ -22,13 +24,46 @@ public struct TileRenderData
     /// </summary>
     public LyColor ForegroundColor { get; set; }
 
-    public TileRenderData(int tileIndex, LyColor foregroundColor, LyColor? backgroundColor = null)
+    /// <summary>
+    /// Flip flags applied to the foreground tile.
+    /// </summary>
+    public TileFlipType Flip { get; set; }
+
+    public TileRenderData(
+        int tileIndex,
+        LyColor foregroundColor,
+        LyColor? backgroundColor = null,
+        TileFlipType flip = TileFlipType.None
+    )
     {
         TileIndex = tileIndex;
         ForegroundColor = foregroundColor;
         BackgroundColor = backgroundColor ?? new LyColor(0, 0, 0, 0); // Transparent by default
+        Flip = flip;
     }
 
     public override string ToString()
-        => $"Tile {TileIndex}: BG={BackgroundColor} FG={ForegroundColor}";
+        => $"Tile {TileIndex}: BG={BackgroundColor} FG={ForegroundColor} Flip={Flip}";
+
+    public static Rectangle<float> ApplyFlip(Rectangle<float> uvRect, TileFlipType flip)
+    {
+        var originX = uvRect.Origin.X;
+        var originY = uvRect.Origin.Y;
+        var sizeX = uvRect.Size.X;
+        var sizeY = uvRect.Size.Y;
+
+        if (flip.HasFlag(TileFlipType.FlipHorizontal))
+        {
+            originX += sizeX;
+            sizeX = -sizeX;
+        }
+
+        if (flip.HasFlag(TileFlipType.FlipVertical))
+        {
+            originY += sizeY;
+            sizeY = -sizeY;
+        }
+
+        return new Rectangle<float>(originX, originY, sizeX, sizeY);
+    }
 }

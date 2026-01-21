@@ -15,7 +15,7 @@ public class SystemManagerTests
     private static readonly string[] UpdateOrder = { "A", "B" };
     private static readonly string[] RenderTwice = { "Render", "Render" };
 
-    private static IContainer CreateContainer() => new Container();
+    private static Container CreateContainer() => new();
 
     private sealed class RecordingSystem : ISystem
     {

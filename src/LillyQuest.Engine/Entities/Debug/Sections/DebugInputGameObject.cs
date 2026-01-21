@@ -1,6 +1,5 @@
 using ImGuiNET;
 using LillyQuest.Engine.Interfaces.Features;
-using LillyQuest.Engine.Interfaces.Systems;
 using LillyQuest.Engine.Systems;
 
 namespace LillyQuest.Engine.Entities.Debug;
@@ -11,7 +10,7 @@ namespace LillyQuest.Engine.Entities.Debug;
 /// </summary>
 public class DebugInputGameObject : GameEntity, IIMGuiEntity
 {
-    private readonly IInputSystem _inputSystem;
+    private readonly InputSystem _inputSystem;
 
     public DebugInputGameObject(InputSystem inputSystem)
     {

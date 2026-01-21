@@ -2,6 +2,7 @@ using System.Numerics;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
+using LillyQuest.Core.Types;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Managers.Scenes.Base;
 using LillyQuest.Game.Screens.TilesetSurface;
@@ -31,8 +32,9 @@ public class TilesetSurfaceEditorScene : BaseScene
         {
             DefaultTilesetName = "alloy",
             LayerCount = 3,
-            Position = new Vector2(100, 100),
-            Size = new Vector2(700, 500),
+            Position = new Vector2(30, 100),
+            TileRenderScale = 1.2f,
+            TileViewSize = new Vector2(80, 30),
         };
 
         // Initialize the surface layers before population
@@ -96,8 +98,11 @@ public class TilesetSurfaceEditorScene : BaseScene
 
                 // backgroundColor = LyColor.Blue;
 
+                var rotation = Enum.GetValues<TileFlipType>();
+                var flip = rotation[random.Next(0, rotation.Length)];
+
                 // Create and place the tile
-                var tileData = new TileRenderData(tileIndex, foregroundColor, backgroundColor);
+                var tileData = new TileRenderData(tileIndex, foregroundColor, backgroundColor, flip);
                 screen.AddTileToSurface(x, y, tileData);
             }
         }
