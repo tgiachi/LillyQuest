@@ -1,6 +1,7 @@
 using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
+using LillyQuest.Core.Primitives;
 using Silk.NET.Maths;
 
 namespace LillyQuest.Engine.Screens.UI;
@@ -77,4 +78,9 @@ public class UIScreenControl
     /// Renders the control.
     /// </summary>
     public virtual void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext) { }
+
+    /// <summary>
+    /// Updates the control.
+    /// </summary>
+    public virtual void Update(GameTime gameTime) { }
 }
