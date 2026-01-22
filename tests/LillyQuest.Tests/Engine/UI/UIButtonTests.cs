@@ -61,6 +61,22 @@ public class UIButtonTests
         Assert.That(button.CurrentTint.R, Is.LessThan(255));
     }
 
+    [Test]
+    public void Update_Advances_Transition()
+    {
+        var button = CreateButton();
+        button.TransitionTime = 1f;
+        button.IdleTint = new LyColor(0, 0, 0, 255);
+        button.HoveredTint = new LyColor(255, 255, 255, 255);
+
+        button.Update(new GameTime(TimeSpan.Zero, TimeSpan.Zero));
+        button.HandleMouseMove(new Vector2(10, 10));
+        var gameTime = new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        button.Update(gameTime);
+
+        Assert.That(button.CurrentTint.R, Is.EqualTo(255));
+    }
+
     private static UIButton CreateButton()
     {
         var textureManager = new FakeTextureManager();

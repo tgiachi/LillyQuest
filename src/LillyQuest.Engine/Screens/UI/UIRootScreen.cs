@@ -90,6 +90,16 @@ public sealed class UIRootScreen : BaseScreen
         return handled;
     }
 
+    public override void Update(GameTime gameTime)
+    {
+        base.Update(gameTime);
+
+        foreach (var control in Root.Children)
+        {
+            control.Update(gameTime);
+        }
+    }
+
     private UIWindow? GetTopmostModal()
     {
         return Root.Children

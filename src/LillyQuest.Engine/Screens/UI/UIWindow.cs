@@ -209,6 +209,14 @@ public class UIWindow : UIScreenControl
         }
     }
 
+    public override void Update(GameTime gameTime)
+    {
+        foreach (var child in _children)
+        {
+            child.Update(gameTime);
+        }
+    }
+
     protected virtual void RenderBackground(SpriteBatch spriteBatch, EngineRenderContext renderContext)
     {
         var world = GetWorldPosition();
