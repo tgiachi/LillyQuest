@@ -4,38 +4,26 @@ using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Extensions.TilesetSurface;
 using LillyQuest.Engine.Screens.TilesetSurface;
 
-namespace LillyQuest.Tests;
+namespace LillyQuest.Tests.Engine;
 
 public class TilesetSurface1dIntegrationTests
 {
     private sealed class StubTilesetManager : ITilesetManager
     {
         public void Dispose() { }
-
-        public IReadOnlyDictionary<string, Tileset> GetAllTilesets()
-            => new Dictionary<string, Tileset>();
-
-        public Tileset GetTileset(string name)
-            => throw new NotSupportedException();
-
-        public bool HasTileset(string name)
-            => false;
-
+        public Tileset GetTileset(string name) => throw new NotSupportedException();
+        public bool HasTileset(string name) => false;
         public void LoadTileset(string name, string filePath, int tileWidth, int tileHeight, int spacing, int margin)
             => throw new NotSupportedException();
-
         public void LoadTileset(string name, Span<byte> content, int tileWidth, int tileHeight, int spacing, int margin)
             => throw new NotSupportedException();
-
         public bool TryGetTileset(string name, out Tileset tileset)
         {
             tileset = null!;
-
             return false;
         }
-
-        public void UnloadTileset(string name)
-            => throw new NotSupportedException();
+        public IReadOnlyDictionary<string, Tileset> GetAllTilesets() => new Dictionary<string, Tileset>();
+        public void UnloadTileset(string name) => throw new NotSupportedException();
     }
 
     [Test]

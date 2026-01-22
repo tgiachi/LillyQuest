@@ -1,5 +1,6 @@
 using System.Numerics;
 using LillyQuest.Core.Data.Assets.Tiles;
+using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Types;
 
 namespace LillyQuest.Engine.Screens.TilesetSurface;
@@ -16,6 +17,7 @@ public sealed class TileMovement
     public float DurationSeconds { get; }
     public float ElapsedSeconds { get; set; }
     public TileRenderData TileData { get; }
+    public TileRenderData DestinationTileData { get; set; }
     public TileMovementState State { get; set; }
 
     public TileMovement(
@@ -33,6 +35,7 @@ public sealed class TileMovement
         Bounce = bounce;
         DurationSeconds = durationSeconds;
         TileData = tileData;
+        DestinationTileData = new TileRenderData(-1, LyColor.White);
         State = TileMovementState.Pending;
     }
 }

@@ -8,12 +8,14 @@ using LillyQuest.Engine.Managers.Entities;
 using LillyQuest.Engine.Managers.Services;
 using LillyQuest.Engine.Types;
 
-namespace LillyQuest.Tests;
+namespace LillyQuest.Tests.Engine;
 
 public class SystemManagerTests
 {
     private static readonly string[] UpdateOrder = { "A", "B" };
     private static readonly string[] RenderTwice = { "Render", "Render" };
+
+    private static Container CreateContainer() => new();
 
     private sealed class RecordingSystem : ISystem
     {
@@ -93,9 +95,6 @@ public class SystemManagerTests
 
         Assert.That(calls, Is.EqualTo(UpdateOrder));
     }
-
-    private static Container CreateContainer()
-        => new();
 
     private static void RaiseEvent(LillyQuestBootstrap bootstrap, string eventName, GameTime gameTime)
     {

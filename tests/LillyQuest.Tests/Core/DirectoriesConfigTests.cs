@@ -1,6 +1,6 @@
 using LillyQuest.Core.Data.Directories;
 
-namespace LillyQuest.Tests;
+namespace LillyQuest.Tests.Core;
 
 /// <summary>
 /// Tests for DirectoriesConfig directory management and path resolution

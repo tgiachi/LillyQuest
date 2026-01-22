@@ -65,14 +65,14 @@ public class TilesetSurfaceEditorScene : BaseScene
 
                                     if (buttons.Contains(MouseButton.Middle))
                                     {
-                                        foreach (var i in Enumerable.Range(0, 10))
+                                        foreach (var i in Enumerable.Range(0, 1000))
                                         {
                                             var randX = Random.Shared.Next(0, 100);
                                             var randY = Random.Shared.Next(0, 100);
 
                                             var randomDenstinationVector = new Vector2(randX + Random.Shared.Next(-1, 2), randY + Random.Shared.Next(-1, 2));
 
-                                            screen.EnqueueMove(0, new Vector2((float)randX,(float)randY), randomDenstinationVector, 1);
+                                            screen.EnqueueMove(0, new Vector2((float)randX,(float)randY), randomDenstinationVector, 0.2f, true);
 
                                         }
 

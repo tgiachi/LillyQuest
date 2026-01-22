@@ -6,7 +6,7 @@ using LillyQuest.Engine.Interfaces.Entities;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Managers.Entities;
 
-namespace LillyQuest.Tests;
+namespace LillyQuest.Tests.Engine;
 
 public class GameEntityManagerTests
 {
@@ -14,6 +14,8 @@ public class GameEntityManagerTests
     {
         public void Render(SpriteBatch spriteBatch, EngineRenderContext context) { }
     }
+
+    private static Container CreateContainer() => new();
 
     [Test]
     public void AddEntity_AssignsId_WhenZero()
@@ -101,7 +103,4 @@ public class GameEntityManagerTests
         Assert.That(manager.GetEntityById(child.Id), Is.Null);
         Assert.That(manager.OrderedEntities, Is.Empty);
     }
-
-    private static Container CreateContainer()
-        => new();
 }

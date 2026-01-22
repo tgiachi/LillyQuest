@@ -1,6 +1,6 @@
 using LillyQuest.Core.Primitives;
 
-namespace LillyQuest.Tests;
+namespace LillyQuest.Tests.Core;
 
 /// <summary>
 /// Tests for the GameTime primitive class

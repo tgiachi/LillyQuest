@@ -275,13 +275,6 @@ public class TilesetSurfaceScreen : BaseScreen
             return false;
         }
 
-        var destinationTile = _surface.GetTile(layerIndex, destinationX, destinationY);
-
-        if (destinationTile.TileIndex >= 0)
-        {
-            return false;
-        }
-
         var movement = new TileMovement(
             layerIndex,
             new(sourceX, sourceY),
@@ -547,16 +540,16 @@ public class TilesetSurfaceScreen : BaseScreen
                 var destinationY = (int)movement.DestinationTile.Y;
 
                 var sourceTile = _surface.GetTile(layerIndex, sourceX, sourceY);
-                var destinationTile = _surface.GetTile(layerIndex, destinationX, destinationY);
-
-                if (sourceTile.TileIndex < 0 || destinationTile.TileIndex >= 0)
+                if (sourceTile.TileIndex < 0)
                 {
                     continue;
                 }
 
+                movement.DestinationTileData = _surface.GetTile(layerIndex, destinationX, destinationY);
+                _surface.SetTile(layerIndex, destinationX, destinationY, new(-1, LyColor.White));
+                _surface.SetTile(layerIndex, sourceX, sourceY, new(-1, LyColor.White));
                 movement.State = TileMovementState.Active;
                 active.Add(movement);
-                _surface.SetTile(layerIndex, sourceX, sourceY, new(-1, LyColor.White));
             }
 
             for (var i = active.Count - 1; i >= 0; i--)
@@ -584,6 +577,12 @@ public class TilesetSurfaceScreen : BaseScreen
                     var sourceX = (int)movement.SourceTile.X;
                     var sourceY = (int)movement.SourceTile.Y;
                     _surface.SetTile(layerIndex, sourceX, sourceY, movement.TileData);
+                    _surface.SetTile(
+                        layerIndex,
+                        (int)movement.DestinationTile.X,
+                        (int)movement.DestinationTile.Y,
+                        movement.DestinationTileData
+                    );
                     movement.State = TileMovementState.Completed;
                     active.RemoveAt(i);
 

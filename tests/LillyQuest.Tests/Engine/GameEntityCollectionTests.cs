@@ -4,7 +4,7 @@ using LillyQuest.Engine.Collections;
 using LillyQuest.Engine.Interfaces.Entities;
 using LillyQuest.Engine.Interfaces.Features;
 
-namespace LillyQuest.Tests;
+namespace LillyQuest.Tests.Engine;
 
 public class GameEntityCollectionTests
 {

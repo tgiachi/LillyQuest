@@ -2,7 +2,7 @@ using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Screens.TilesetSurface;
 
-namespace LillyQuest.Tests;
+namespace LillyQuest.Tests.Engine;
 
 public class TilesetSurfaceChunkRenderTests
 {

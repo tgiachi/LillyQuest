@@ -1,7 +1,7 @@
 using System.Reflection;
 using LillyQuest.Core.Managers.Assets;
 
-namespace LillyQuest.Tests;
+namespace LillyQuest.Tests.Core;
 
 public class ChromaKeyReplaceTests
 {
