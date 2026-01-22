@@ -10,6 +10,10 @@ namespace LillyQuest.Engine.Screens.UI;
 /// </summary>
 public sealed class UIWindow : UIScreenControl
 {
+    private readonly List<UIScreenControl> _children = [];
+
+    public IReadOnlyList<UIScreenControl> Children => _children;
+
     public string Title { get; set; } = string.Empty;
     public bool IsTitleBarEnabled { get; set; } = true;
     public bool IsWindowMovable { get; set; } = true;
@@ -22,11 +26,51 @@ public sealed class UIWindow : UIScreenControl
     private bool _isDragging;
     private Vector2 _dragOffset;
 
+    public void Add(UIScreenControl control)
+    {
+        if (control == null)
+        {
+            return;
+        }
+
+        control.Parent = this;
+        _children.Add(control);
+    }
+
+    public void Remove(UIScreenControl control)
+    {
+        if (control == null)
+        {
+            return;
+        }
+
+        _children.Remove(control);
+        if (control.Parent == this)
+        {
+            control.Parent = null;
+        }
+    }
+
     public override bool HandleMouseDown(Vector2 point)
     {
         if (!IsEnabled || !IsVisible)
         {
             return false;
+        }
+
+        foreach (var child in _children
+                             .OrderByDescending(control => control.ZIndex)
+                             .ThenByDescending(control => _children.IndexOf(control)))
+        {
+            var childBounds = child.GetBounds();
+            if (point.X >= childBounds.Origin.X && point.X <= childBounds.Origin.X + childBounds.Size.X &&
+                point.Y >= childBounds.Origin.Y && point.Y <= childBounds.Origin.Y + childBounds.Size.Y)
+            {
+                if (child.HandleMouseDown(point))
+                {
+                    return true;
+                }
+            }
         }
 
         var bounds = GetBounds();
@@ -54,6 +98,7 @@ public sealed class UIWindow : UIScreenControl
         }
 
         Position = point - _dragOffset;
+        ClampToParent();
         return true;
     }
 
@@ -74,5 +119,19 @@ public sealed class UIWindow : UIScreenControl
         {
             return;
         }
+    }
+
+    private void ClampToParent()
+    {
+        if (Parent == null)
+        {
+            return;
+        }
+
+        var maxX = Parent.Size.X - Size.X;
+        var maxY = Parent.Size.Y - Size.Y;
+        var clampedX = Math.Clamp(Position.X, 0f, maxX);
+        var clampedY = Math.Clamp(Position.Y, 0f, maxY);
+        Position = new Vector2(clampedX, clampedY);
     }
 }
