@@ -21,6 +21,8 @@ public class UIScreenControl
     public UIScreenControl? Parent { get; set; }
 
     public Func<Vector2, bool>? OnMouseDown { get; set; }
+    public Func<Vector2, bool>? OnMouseMove { get; set; }
+    public Func<Vector2, bool>? OnMouseUp { get; set; }
 
     /// <summary>
     /// Gets the world position based on parent and anchor.
@@ -62,13 +64,13 @@ public class UIScreenControl
     /// Handles mouse move for this control.
     /// </summary>
     public virtual bool HandleMouseMove(Vector2 point)
-        => false;
+        => OnMouseMove?.Invoke(point) ?? false;
 
     /// <summary>
     /// Handles mouse up for this control.
     /// </summary>
     public virtual bool HandleMouseUp(Vector2 point)
-        => false;
+        => OnMouseUp?.Invoke(point) ?? false;
 
     /// <summary>
     /// Renders the control.
