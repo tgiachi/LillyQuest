@@ -59,6 +59,18 @@ public class UIScreenControl
         => OnMouseDown?.Invoke(point) ?? false;
 
     /// <summary>
+    /// Handles mouse move for this control.
+    /// </summary>
+    public virtual bool HandleMouseMove(Vector2 point)
+        => false;
+
+    /// <summary>
+    /// Handles mouse up for this control.
+    /// </summary>
+    public virtual bool HandleMouseUp(Vector2 point)
+        => false;
+
+    /// <summary>
     /// Renders the control.
     /// </summary>
     public virtual void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext)
