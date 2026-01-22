@@ -1,4 +1,5 @@
 using System.Numerics;
+using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Screens.UI;
 using NUnit.Framework;
 
@@ -71,5 +72,19 @@ public class UIWindowTests
 
         Assert.That(handled, Is.True);
         Assert.That(hit, Is.EqualTo("b"));
+    }
+
+    [Test]
+    public void BackgroundColor_UsesAlphaMultiplier()
+    {
+        var window = new UIWindow
+        {
+            BackgroundColor = new LyColor(255, 10, 20, 30),
+            BackgroundAlpha = 0.5f
+        };
+
+        var color = window.GetBackgroundColorWithAlpha();
+
+        Assert.That(color.A, Is.EqualTo(128));
     }
 }

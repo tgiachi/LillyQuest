@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
@@ -49,6 +50,12 @@ public sealed class UIWindow : UIScreenControl
         {
             control.Parent = null;
         }
+    }
+
+    public LyColor GetBackgroundColorWithAlpha()
+    {
+        var alpha = (byte)Math.Clamp(MathF.Round(BackgroundColor.A * BackgroundAlpha), 0f, 255f);
+        return BackgroundColor.WithAlpha(alpha);
     }
 
     public override bool HandleMouseDown(Vector2 point)
@@ -118,6 +125,32 @@ public sealed class UIWindow : UIScreenControl
         if (spriteBatch == null || renderContext == null)
         {
             return;
+        }
+
+        var world = GetWorldPosition();
+        var background = GetBackgroundColorWithAlpha();
+        spriteBatch.DrawRectangle(world, Size, background);
+        spriteBatch.DrawRectangleOutline(world, Size, BorderColor, BorderThickness);
+
+        if (IsTitleBarEnabled)
+        {
+            var titlebarSize = new Vector2(Size.X, TitleBarHeight);
+            spriteBatch.DrawRectangle(world, titlebarSize, background);
+
+            if (!string.IsNullOrWhiteSpace(Title))
+            {
+                spriteBatch.DrawFont("default_font", 14, Title, world + new Vector2(4, 2), LyColor.White);
+            }
+        }
+
+        foreach (var child in _children.OrderBy(control => control.ZIndex))
+        {
+            if (!child.IsVisible)
+            {
+                continue;
+            }
+
+            child.Render(spriteBatch, renderContext);
         }
     }
 
