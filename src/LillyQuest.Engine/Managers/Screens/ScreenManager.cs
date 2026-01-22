@@ -30,6 +30,19 @@ public sealed class ScreenManager : IScreenManager
     private UIScreenOverlay? GetUiOverlay()
         => _screenStack.OfType<UIScreenOverlay>().LastOrDefault();
 
+    private IScreen? GetTopNonOverlayScreen()
+    {
+        foreach (var screen in _screenStack)
+        {
+            if (screen is not UIScreenOverlay)
+            {
+                return screen;
+            }
+        }
+
+        return null;
+    }
+
     /// <summary>
     /// Dispatches key press events to the focused screen and its entities.
     /// Only the focused (top) screen receives input.
@@ -42,20 +55,21 @@ public sealed class ScreenManager : IScreenManager
             return true;
         }
 
-        if (FocusedScreen is not { IsActive: true })
+        var targetScreen = GetTopNonOverlayScreen();
+        if (targetScreen is not { IsActive: true })
         {
             return false;
         }
 
         // Try screen itself
-        if (FocusedScreen.OnKeyPress(modifier, keys))
+        if (targetScreen.OnKeyPress(modifier, keys))
         {
             return true;
         }
 
         // Try screen entities (UI components)
         return DispatchToScreenEntities(
-            FocusedScreen,
+            targetScreen,
             entity =>
             {
                 if (entity is IInputConsumer inputConsumer)
@@ -79,18 +93,19 @@ public sealed class ScreenManager : IScreenManager
             return true;
         }
 
-        if (FocusedScreen is not { IsActive: true })
+        var targetScreen = GetTopNonOverlayScreen();
+        if (targetScreen is not { IsActive: true })
         {
             return false;
         }
 
-        if (FocusedScreen.OnKeyRelease(modifier, keys))
+        if (targetScreen.OnKeyRelease(modifier, keys))
         {
             return true;
         }
 
         return DispatchToScreenEntities(
-            RootScreen,
+            targetScreen,
             entity =>
             {
                 if (entity is IInputConsumer inputConsumer)
@@ -114,18 +129,19 @@ public sealed class ScreenManager : IScreenManager
             return true;
         }
 
-        if (FocusedScreen == null || !FocusedScreen.IsActive)
+        var targetScreen = GetTopNonOverlayScreen();
+        if (targetScreen == null || !targetScreen.IsActive)
         {
             return false;
         }
 
-        if (FocusedScreen.OnKeyRepeat(modifier, keys))
+        if (targetScreen.OnKeyRepeat(modifier, keys))
         {
             return true;
         }
 
         return DispatchToScreenEntities(
-            RootScreen,
+            targetScreen,
             entity =>
             {
                 if (entity is IInputConsumer inputConsumer)
@@ -149,19 +165,20 @@ public sealed class ScreenManager : IScreenManager
             return true;
         }
 
-        if (FocusedScreen == null || !FocusedScreen.IsActive)
+        var targetScreen = GetTopNonOverlayScreen();
+        if (targetScreen == null || !targetScreen.IsActive)
         {
             return false;
         }
 
         // Hit-test screen first
-        if (FocusedScreen.HitTest(x, y) && FocusedScreen.OnMouseDown(x, y, buttons))
+        if (targetScreen.HitTest(x, y) && targetScreen.OnMouseDown(x, y, buttons))
         {
             return true;
         }
 
         // Hit-test entities (top to bottom)
-        var entities = FocusedScreen.GetScreenGameObjects().ToList();
+        var entities = targetScreen.GetScreenGameObjects().ToList();
 
         for (var i = entities.Count - 1; i >= 0; i--)
         {
@@ -190,18 +207,19 @@ public sealed class ScreenManager : IScreenManager
             return true;
         }
 
-        if (FocusedScreen is not { IsActive: true })
+        var targetScreen = GetTopNonOverlayScreen();
+        if (targetScreen is not { IsActive: true })
         {
             return false;
         }
 
-        if (FocusedScreen.OnMouseMove(x, y))
+        if (targetScreen.OnMouseMove(x, y))
         {
             return true;
         }
 
         return DispatchToScreenEntities(
-            RootScreen,
+            targetScreen,
             entity =>
             {
                 if (entity is IInputConsumer inputConsumer)
@@ -225,18 +243,19 @@ public sealed class ScreenManager : IScreenManager
             return true;
         }
 
-        if (FocusedScreen == null || !FocusedScreen.IsActive)
+        var targetScreen = GetTopNonOverlayScreen();
+        if (targetScreen == null || !targetScreen.IsActive)
         {
             return false;
         }
 
-        if (FocusedScreen.OnMouseUp(x, y, buttons))
+        if (targetScreen.OnMouseUp(x, y, buttons))
         {
             return true;
         }
 
         return DispatchToScreenEntities(
-            RootScreen,
+            targetScreen,
             entity =>
             {
                 if (entity is IInputConsumer inputConsumer)
@@ -260,19 +279,20 @@ public sealed class ScreenManager : IScreenManager
             return true;
         }
 
-        if (FocusedScreen == null || !FocusedScreen.IsActive)
+        var targetScreen = GetTopNonOverlayScreen();
+        if (targetScreen == null || !targetScreen.IsActive)
         {
             return false;
         }
 
         // Hit-test screen first
-        if (FocusedScreen.HitTest(x, y) && FocusedScreen.OnMouseWheel(x, y, delta))
+        if (targetScreen.HitTest(x, y) && targetScreen.OnMouseWheel(x, y, delta))
         {
             return true;
         }
 
         // Try entities (top to bottom)
-        var entities = FocusedScreen.GetScreenGameObjects().ToList();
+        var entities = targetScreen.GetScreenGameObjects().ToList();
 
         for (var i = entities.Count - 1; i >= 0; i--)
         {

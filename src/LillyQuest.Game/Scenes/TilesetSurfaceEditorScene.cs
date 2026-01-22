@@ -132,7 +132,7 @@ public class TilesetSurfaceEditorScene : BaseScene
         var label = new UILabel
         {
             Text = "UI Label",
-            Position = new Vector2(20, 20),
+            Position = new Vector2(20, 200),
             Color = LyColor.Yellow,
             ZIndex = 0
         };
@@ -140,7 +140,7 @@ public class TilesetSurfaceEditorScene : BaseScene
 
         var window = new UIWindow
         {
-            Position = new Vector2(20, 50),
+            Position = new Vector2(100, 90),
             Size = new Vector2(240, 120),
             Title = "UI Window",
             IsTitleBarEnabled = true,
@@ -159,6 +159,28 @@ public class TilesetSurfaceEditorScene : BaseScene
         };
         window.Add(windowLabel);
         uiOverlay.Root.Add(window);
+
+        var staticWindow = new UIWindow
+        {
+            Position = new Vector2(280, 50),
+            Size = new Vector2(220, 90),
+            Title = "Static Window",
+            IsTitleBarEnabled = false,
+            IsWindowMovable = false,
+            BackgroundColor = LyColor.Black,
+            BackgroundAlpha = 0.4f,
+            BorderColor = LyColor.White,
+            ZIndex = 2
+        };
+
+        var staticLabel = new UILabel
+        {
+            Text = "Non-movable",
+            Position = new Vector2(8, 10),
+            Color = LyColor.White
+        };
+        staticWindow.Add(staticLabel);
+        uiOverlay.Root.Add(staticWindow);
 
         // var uiTile = new UITileSurfaceControl(_tilesetManager, 20, 5)
         // {

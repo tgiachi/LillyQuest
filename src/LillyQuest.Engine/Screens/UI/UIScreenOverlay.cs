@@ -11,6 +11,7 @@ namespace LillyQuest.Engine.Screens.UI;
 public sealed class UIScreenOverlay : BaseScreen
 {
     public UIScreenRoot Root { get; } = new();
+    private UIScreenControl? _activeControl;
 
     public override bool HitTest(int x, int y)
         => true;
@@ -19,7 +20,33 @@ public sealed class UIScreenOverlay : BaseScreen
     {
         var hit = Root.HitTest(new(x, y));
 
-        return hit != null && hit.HandleMouseDown(new(x, y));
+        if (hit == null)
+        {
+            return false;
+        }
+
+        if (hit.HandleMouseDown(new(x, y)))
+        {
+            _activeControl = hit;
+            return true;
+        }
+
+        return false;
+    }
+
+    public override bool OnMouseMove(int x, int y)
+        => _activeControl?.HandleMouseMove(new(x, y)) ?? false;
+
+    public override bool OnMouseUp(int x, int y, IReadOnlyList<MouseButton> buttons)
+    {
+        if (_activeControl == null)
+        {
+            return false;
+        }
+
+        var handled = _activeControl.HandleMouseUp(new(x, y));
+        _activeControl = null;
+        return handled;
     }
 
     public override void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)

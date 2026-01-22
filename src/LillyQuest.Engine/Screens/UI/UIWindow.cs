@@ -16,6 +16,8 @@ public sealed class UIWindow : UIScreenControl
     public IReadOnlyList<UIScreenControl> Children => _children;
 
     public string Title { get; set; } = string.Empty;
+    public string TitleFontName { get; set; } = "default_font";
+    public int TitleFontSize { get; set; } = 14;
     public bool IsTitleBarEnabled { get; set; } = true;
     public bool IsWindowMovable { get; set; } = true;
     public LyColor BackgroundColor { get; set; } = LyColor.Black;
@@ -139,7 +141,7 @@ public sealed class UIWindow : UIScreenControl
 
             if (!string.IsNullOrWhiteSpace(Title))
             {
-                spriteBatch.DrawFont("default_font", 14, Title, world + new Vector2(4, 2), LyColor.White);
+                spriteBatch.DrawFont(TitleFontName, TitleFontSize, Title, world + new Vector2(4, 2), LyColor.White);
             }
         }
 

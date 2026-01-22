@@ -24,4 +24,26 @@ public class UIScreenOverlayTests
 
         Assert.That(handled, Is.True);
     }
+
+    [Test]
+    public void Overlay_ForwardsMouseMove_ToActiveControl()
+    {
+        var overlay = new UIScreenOverlay();
+        var window = new UIWindow
+        {
+            Position = Vector2.Zero,
+            Size = new Vector2(100, 50),
+            IsTitleBarEnabled = true,
+            IsWindowMovable = true,
+            TitleBarHeight = 10f
+        };
+        overlay.Root.Add(window);
+
+        var downHandled = overlay.OnMouseDown(5, 5, Array.Empty<MouseButton>());
+        var moveHandled = overlay.OnMouseMove(20, 20);
+
+        Assert.That(downHandled, Is.True);
+        Assert.That(moveHandled, Is.True);
+        Assert.That(window.Position, Is.EqualTo(new Vector2(15, 15)));
+    }
 }

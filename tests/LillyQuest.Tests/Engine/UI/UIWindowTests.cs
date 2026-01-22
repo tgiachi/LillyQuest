@@ -87,4 +87,17 @@ public class UIWindowTests
 
         Assert.That(color.A, Is.EqualTo(128));
     }
+
+    [Test]
+    public void TitleFontSettings_AreConfigurable()
+    {
+        var window = new UIWindow
+        {
+            TitleFontName = "alloy",
+            TitleFontSize = 18
+        };
+
+        Assert.That(window.TitleFontName, Is.EqualTo("alloy"));
+        Assert.That(window.TitleFontSize, Is.EqualTo(18));
+    }
 }
