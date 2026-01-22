@@ -246,6 +246,8 @@ public class TilesetSurfaceEditorScene : BaseScene
             Text = "Click Me",
             FontName = "default_font",
             FontSize = 14,
+            TextColor = LyColor.Black,
+
             NineSliceKey = "simple_ui",
             IdleTint = new LyColor(200, 200, 200, 255),
             HoveredTint = new LyColor(255, 255, 255, 255),
