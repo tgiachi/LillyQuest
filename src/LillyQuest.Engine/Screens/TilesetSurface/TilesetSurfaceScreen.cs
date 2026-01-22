@@ -6,6 +6,7 @@ using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Extensions.TilesetSurface;
 using LillyQuest.Engine.Managers.Screens.Base;
+using LillyQuest.Engine.Types;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 
@@ -236,6 +237,92 @@ public class TilesetSurfaceScreen : BaseScreen
         => tileViewSize.ToScreenSize(tileWidth, tileHeight, tileRenderScale);
 
     /// <summary>
+    /// Enqueues a tile movement for the specified layer.
+    /// </summary>
+    public bool EnqueueMove(
+        int layerIndex,
+        Vector2 source,
+        Vector2 destination,
+        float durationSeconds,
+        bool bounce = false
+    )
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return false;
+        }
+
+        var sourceX = (int)source.X;
+        var sourceY = (int)source.Y;
+
+        if (sourceX < 0 || sourceX >= _surface.Width || sourceY < 0 || sourceY >= _surface.Height)
+        {
+            return false;
+        }
+
+        var destinationX = (int)destination.X;
+        var destinationY = (int)destination.Y;
+
+        if (destinationX < 0 || destinationX >= _surface.Width || destinationY < 0 || destinationY >= _surface.Height)
+        {
+            return false;
+        }
+
+        var tile = _surface.GetTile(layerIndex, sourceX, sourceY);
+
+        if (tile.TileIndex < 0)
+        {
+            return false;
+        }
+
+        var destinationTile = _surface.GetTile(layerIndex, destinationX, destinationY);
+
+        if (destinationTile.TileIndex >= 0)
+        {
+            return false;
+        }
+
+        var movement = new TileMovement(
+            layerIndex,
+            new(sourceX, sourceY),
+            new(destinationX, destinationY),
+            bounce,
+            durationSeconds,
+            tile
+        );
+
+        _surface.Layers[layerIndex].Movements.Pending.Enqueue(movement);
+
+        return true;
+    }
+
+    /// <summary>
+    /// Gets the active movements for a specific layer.
+    /// </summary>
+    public IReadOnlyList<TileMovement> GetActiveMovements(int layerIndex)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return Array.Empty<TileMovement>();
+        }
+
+        return _surface.Layers[layerIndex].Movements.Active;
+    }
+
+    /// <summary>
+    /// Gets the movement queue for a specific layer.
+    /// </summary>
+    public TileMovementQueue? GetLayerMovementQueue(int layerIndex)
+    {
+        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
+        {
+            return null;
+        }
+
+        return _surface.Layers[layerIndex].Movements;
+    }
+
+    /// <summary>
     /// Gets the opacity of a specific layer.
     /// </summary>
     public float GetLayerOpacity(int layerIndex)
@@ -311,6 +398,22 @@ public class TilesetSurfaceScreen : BaseScreen
         => TryGetLayerViewOffsets(layerIndex, out var tileOffset, out _)
                ? tileOffset
                : Vector2.Zero;
+
+    /// <summary>
+    /// Gets the interpolated tile position for a movement based on its elapsed time.
+    /// </summary>
+    public Vector2 GetMovementTilePosition(TileMovement movement)
+    {
+        var duration = movement.DurationSeconds <= 0f ? 0.0001f : movement.DurationSeconds;
+        var progress = Math.Clamp(movement.ElapsedSeconds / duration, 0f, 1f);
+
+        if (movement.Bounce && movement.State == TileMovementState.Returning)
+        {
+            return Vector2.Lerp(movement.DestinationTile, movement.SourceTile, progress);
+        }
+
+        return Vector2.Lerp(movement.SourceTile, movement.DestinationTile, progress);
+    }
 
     public TileRenderData GetTile(int layerIndex, int x, int y)
         => _surface.GetTile(layerIndex, x, y);
@@ -415,6 +518,85 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         return true;
+    }
+
+    /// <summary>
+    /// Advances active tile movements and places tiles when complete.
+    /// </summary>
+    public void ProcessMovements(GameTime gameTime)
+    {
+        if (gameTime.Elapsed.TotalSeconds <= 0)
+        {
+            return;
+        }
+
+        var dt = (float)gameTime.Elapsed.TotalSeconds;
+
+        for (var layerIndex = 0; layerIndex < _surface.Layers.Count; layerIndex++)
+        {
+            var layer = _surface.Layers[layerIndex];
+            var active = layer.Movements.Active;
+            var pending = layer.Movements.Pending;
+
+            while (pending.Count > 0)
+            {
+                var movement = pending.Dequeue();
+                var sourceX = (int)movement.SourceTile.X;
+                var sourceY = (int)movement.SourceTile.Y;
+                var destinationX = (int)movement.DestinationTile.X;
+                var destinationY = (int)movement.DestinationTile.Y;
+
+                var sourceTile = _surface.GetTile(layerIndex, sourceX, sourceY);
+                var destinationTile = _surface.GetTile(layerIndex, destinationX, destinationY);
+
+                if (sourceTile.TileIndex < 0 || destinationTile.TileIndex >= 0)
+                {
+                    continue;
+                }
+
+                movement.State = TileMovementState.Active;
+                active.Add(movement);
+                _surface.SetTile(layerIndex, sourceX, sourceY, new(-1, LyColor.White));
+            }
+
+            for (var i = active.Count - 1; i >= 0; i--)
+            {
+                var movement = active[i];
+                movement.ElapsedSeconds += dt;
+
+                var duration = movement.DurationSeconds <= 0f ? 0.0001f : movement.DurationSeconds;
+
+                if (movement.ElapsedSeconds < duration)
+                {
+                    continue;
+                }
+
+                if (movement.Bounce)
+                {
+                    if (movement.State == TileMovementState.Active)
+                    {
+                        movement.State = TileMovementState.Returning;
+                        movement.ElapsedSeconds = 0f;
+
+                        continue;
+                    }
+
+                    var sourceX = (int)movement.SourceTile.X;
+                    var sourceY = (int)movement.SourceTile.Y;
+                    _surface.SetTile(layerIndex, sourceX, sourceY, movement.TileData);
+                    movement.State = TileMovementState.Completed;
+                    active.RemoveAt(i);
+
+                    continue;
+                }
+
+                var destinationX = (int)movement.DestinationTile.X;
+                var destinationY = (int)movement.DestinationTile.Y;
+                _surface.SetTile(layerIndex, destinationX, destinationY, movement.TileData);
+                movement.State = TileMovementState.Completed;
+                active.RemoveAt(i);
+            }
+        }
     }
 
     public override void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
@@ -761,6 +943,7 @@ public class TilesetSurfaceScreen : BaseScreen
 
         UpdateViewSmoothing(gameTime);
         UpdateRenderScaleSmoothing(gameTime);
+        ProcessMovements(gameTime);
 
         // if (!_autoRandomizeEnabled || _autoRandomizeEveryFrames <= 0 || _autoRandomizeTileCount <= 0)
         // {
@@ -946,7 +1129,8 @@ public class TilesetSurfaceScreen : BaseScreen
                      minTileX,
                      minTileY,
                      maxTileXInclusive,
-                     maxTileYInclusive))
+                     maxTileYInclusive
+                 ))
         {
             var chunkBaseX = chunkX * TileChunk.Size;
             var chunkBaseY = chunkY * TileChunk.Size;
@@ -1007,6 +1191,50 @@ public class TilesetSurfaceScreen : BaseScreen
                     );
                 }
             }
+        }
+
+        var activeMovements = layer.Movements.Active;
+
+        for (var i = 0; i < activeMovements.Count; i++)
+        {
+            var movement = activeMovements[i];
+            var tileData = movement.TileData;
+
+            if (tileData.TileIndex < 0 || tileData.TileIndex >= tileset.TileCount)
+            {
+                continue;
+            }
+
+            var tile = tileset.GetTile(tileData.TileIndex);
+
+            var uvX = (float)tile.SourceRect.Origin.X / tileset.Texture.Width;
+            var uvY = (float)tile.SourceRect.Origin.Y / tileset.Texture.Height;
+            var uvWidth = (float)tile.SourceRect.Size.X / tileset.Texture.Width;
+            var uvHeight = (float)tile.SourceRect.Size.Y / tileset.Texture.Height;
+
+            var sourceRect = new Rectangle<float>(uvX, uvY, uvWidth, uvHeight);
+            sourceRect = TileRenderData.ApplyFlip(sourceRect, tileData.Flip);
+
+            var color = tileData.ForegroundColor.WithAlpha((byte)(tileData.ForegroundColor.A * layer.Opacity));
+
+            var tilePosition = GetMovementTilePosition(movement);
+            var pixelPosition = new Vector2(
+                                    tilePosition.X * scaledTileWidth,
+                                    tilePosition.Y * scaledTileHeight
+                                ) -
+                                viewOffsetPx +
+                                layerOffset;
+
+            spriteBatch.Draw(
+                tileset.Texture,
+                pixelPosition,
+                new(scaledTileWidth, scaledTileHeight),
+                color,
+                0f,
+                Vector2.Zero,
+                sourceRect,
+                0f
+            );
         }
     }
 

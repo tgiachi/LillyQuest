@@ -62,6 +62,21 @@ public class TilesetSurfaceEditorScene : BaseScene
                                     {
                                         screen.CenterViewOnTile(0, tileX, tileY);
                                     }
+
+                                    if (buttons.Contains(MouseButton.Middle))
+                                    {
+                                        foreach (var i in Enumerable.Range(0, 10))
+                                        {
+                                            var randX = Random.Shared.Next(0, 100);
+                                            var randY = Random.Shared.Next(0, 100);
+
+                                            var randomDenstinationVector = new Vector2(randX + Random.Shared.Next(-1, 2), randY + Random.Shared.Next(-1, 2));
+
+                                            screen.EnqueueMove(0, new Vector2((float)randX,(float)randY), randomDenstinationVector, 1);
+
+                                        }
+
+                                    }
                                 };
 
         screen.TileMouseWheel += (layerIndex, x, y, delta) =>
@@ -102,6 +117,7 @@ public class TilesetSurfaceEditorScene : BaseScene
 
         screen.SelectedLayerIndex = 0;
         screen.DrawText(1, "hello from LillyQuest *", 2, 2, LyColor.Yellow, LyColor.Black);
+
 
         // Add the screen to the screen manager
         _screenManager.PushScreen(screen);

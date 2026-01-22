@@ -20,11 +20,13 @@ public sealed class TileChunk
         }
     }
 
-    public TileRenderData GetTile(int x, int y) => Tiles[x + y * Size];
+    public TileRenderData GetTile(int x, int y)
+        => Tiles[x + y * Size];
 
     public void SetTile(int x, int y, TileRenderData tileData)
     {
         Tiles[x + y * Size] = tileData;
+
         if (tileData.TileIndex >= 0)
         {
             IsEmpty = false;

@@ -15,8 +15,6 @@ public class SystemManagerTests
     private static readonly string[] UpdateOrder = { "A", "B" };
     private static readonly string[] RenderTwice = { "Render", "Render" };
 
-    private static Container CreateContainer() => new();
-
     private sealed class RecordingSystem : ISystem
     {
         private readonly List<string> _calls;
@@ -95,6 +93,9 @@ public class SystemManagerTests
 
         Assert.That(calls, Is.EqualTo(UpdateOrder));
     }
+
+    private static Container CreateContainer()
+        => new();
 
     private static void RaiseEvent(LillyQuestBootstrap bootstrap, string eventName, GameTime gameTime)
     {

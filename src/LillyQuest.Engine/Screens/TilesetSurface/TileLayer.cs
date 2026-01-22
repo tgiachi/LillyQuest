@@ -77,6 +77,11 @@ public class TileLayer
     public float RenderScale { get; set; } = 1f;
 
     /// <summary>
+    /// Movement queue for animated tiles on this layer.
+    /// </summary>
+    public TileMovementQueue Movements { get; } = new();
+
+    /// <summary>
     /// Target render scale for smooth zoom.
     /// </summary>
     public float RenderScaleTarget { get; set; } = 1f;
@@ -95,38 +100,6 @@ public class TileLayer
     {
         Width = width;
         Height = height;
-    }
-
-    public int GetChunkCount() => _chunks.Count;
-
-    public TileRenderData GetTile(int x, int y)
-    {
-        var (chunkX, chunkY, localX, localY) = ToChunkCoordinates(x, y);
-
-        if (!_chunks.TryGetValue((chunkX, chunkY), out var chunk))
-        {
-            return new(-1, LyColor.White);
-        }
-
-        return chunk.GetTile(localX, localY);
-    }
-
-    public void SetTile(int x, int y, TileRenderData tileData)
-    {
-        var (chunkX, chunkY, localX, localY) = ToChunkCoordinates(x, y);
-
-        if (!_chunks.TryGetValue((chunkX, chunkY), out var chunk))
-        {
-            if (tileData.TileIndex < 0)
-            {
-                return;
-            }
-
-            chunk = new TileChunk();
-            _chunks[(chunkX, chunkY)] = chunk;
-        }
-
-        chunk.SetTile(localX, localY, tileData);
     }
 
     public IEnumerable<(int chunkX, int chunkY, TileChunk chunk)> EnumerateChunksInRange(
@@ -152,6 +125,39 @@ public class TileLayer
 
             yield return (chunkX, chunkY, entry.Value);
         }
+    }
+
+    public int GetChunkCount()
+        => _chunks.Count;
+
+    public TileRenderData GetTile(int x, int y)
+    {
+        var (chunkX, chunkY, localX, localY) = ToChunkCoordinates(x, y);
+
+        if (!_chunks.TryGetValue((chunkX, chunkY), out var chunk))
+        {
+            return new(-1, LyColor.White);
+        }
+
+        return chunk.GetTile(localX, localY);
+    }
+
+    public void SetTile(int x, int y, TileRenderData tileData)
+    {
+        var (chunkX, chunkY, localX, localY) = ToChunkCoordinates(x, y);
+
+        if (!_chunks.TryGetValue((chunkX, chunkY), out var chunk))
+        {
+            if (tileData.TileIndex < 0)
+            {
+                return;
+            }
+
+            chunk = new();
+            _chunks[(chunkX, chunkY)] = chunk;
+        }
+
+        chunk.SetTile(localX, localY, tileData);
     }
 
     private static (int chunkX, int chunkY, int localX, int localY) ToChunkCoordinates(int x, int y)

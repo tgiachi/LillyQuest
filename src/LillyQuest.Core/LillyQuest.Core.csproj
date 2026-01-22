@@ -18,7 +18,7 @@
     <ItemGroup>
         <PackageReference Include="DryIoc.dll" Version="5.4.3"/>
         <PackageReference Include="FontStashSharp.Base" Version="1.2.2"/>
-        <PackageReference Include="FontStashSharp.PlatformAgnostic" Version="1.5.2"/>
+        <PackageReference Include="FontStashSharp.PlatformAgnostic" Version="1.5.3" />
         <PackageReference Include="FontStashSharp.Rasterizers.StbTrueTypeSharp" Version="1.2.2"/>
         <PackageReference Include="MP3Sharp" Version="1.0.5"/>
         <PackageReference Include="NVorbis" Version="0.10.5"/>

@@ -48,6 +48,24 @@ public class TilesetSurface
     }
 
     /// <summary>
+    /// Handles a mouse wheel delta over a specific tile and returns the delta if valid.
+    /// </summary>
+    public float HandleMouseWheel(int layerIndex, int x, int y, float delta)
+    {
+        if (layerIndex < 0 || layerIndex >= Layers.Count)
+        {
+            return 0f;
+        }
+
+        if (x < 0 || x >= Width || y < 0 || y >= Height)
+        {
+            return 0f;
+        }
+
+        return delta;
+    }
+
+    /// <summary>
     /// Initialize the surface with a specific number of layers.
     /// </summary>
     public void Initialize(int layerCount)
@@ -76,23 +94,5 @@ public class TilesetSurface
         }
 
         Layers[layerIndex].SetTile(x, y, tileData);
-    }
-
-    /// <summary>
-    /// Handles a mouse wheel delta over a specific tile and returns the delta if valid.
-    /// </summary>
-    public float HandleMouseWheel(int layerIndex, int x, int y, float delta)
-    {
-        if (layerIndex < 0 || layerIndex >= Layers.Count)
-        {
-            return 0f;
-        }
-
-        if (x < 0 || x >= Width || y < 0 || y >= Height)
-        {
-            return 0f;
-        }
-
-        return delta;
     }
 }
