@@ -1,5 +1,11 @@
 # LillyQuest
 
+![LillyQuest Cover](images/lillyquest_cover.jpg)
+
+![.NET](https://img.shields.io/badge/.NET-512BD4?style=for-the-badge&logo=dotnet&logoColor=white)
+![Neovim](https://img.shields.io/badge/NeoVim-%2357A143.svg?style=for-the-badge&logo=neovim&logoColor=white)
+![Rider](https://img.shields.io/badge/Rider-000000?style=for-the-badge&logo=Rider&logoColor=white)
+
 LillyQuest is a C# engine for building roguelike/roguelite open-world games. It is built on Silk.NET and currently ships with an OpenGL renderer, with room to evolve the rendering backend in the future.
 
 This is a hobby project. A core goal is to keep momentum by publishing a weekly devlog article on <https://orivega.io>.
