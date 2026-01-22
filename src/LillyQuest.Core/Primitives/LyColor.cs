@@ -190,6 +190,38 @@ public readonly struct LyColor : IEquatable<LyColor>
     public static LyColor FromRgb(int r, int g, int b)
         => new(255, ToByte(r, nameof(r)), ToByte(g, nameof(g)), ToByte(b, nameof(b)));
 
+    public static LyColor FromHex(string hex)
+    {
+        if (string.IsNullOrWhiteSpace(hex))
+        {
+            throw new ArgumentException("Hex color cannot be empty.", nameof(hex));
+        }
+
+        var trimmed = hex.Trim();
+        if (trimmed.StartsWith('#'))
+        {
+            trimmed = trimmed[1..];
+        }
+
+        if (trimmed.Length != 6 && trimmed.Length != 8)
+        {
+            throw new ArgumentException("Hex color must be 6 or 8 characters long.", nameof(hex));
+        }
+
+        if (!uint.TryParse(trimmed, System.Globalization.NumberStyles.HexNumber, null, out var value))
+        {
+            throw new ArgumentException("Hex color contains invalid characters.", nameof(hex));
+        }
+
+        var hasAlpha = trimmed.Length == 8;
+        var r = (byte)((value >> (hasAlpha ? 24 : 16)) & 0xFF);
+        var g = (byte)((value >> (hasAlpha ? 16 : 8)) & 0xFF);
+        var b = (byte)((value >> (hasAlpha ? 8 : 0)) & 0xFF);
+        var a = hasAlpha ? (byte)(value & 0xFF) : (byte)255;
+
+        return new(a, r, g, b);
+    }
+
     public override int GetHashCode()
         => HashCode.Combine(A, R, G, B);
 
