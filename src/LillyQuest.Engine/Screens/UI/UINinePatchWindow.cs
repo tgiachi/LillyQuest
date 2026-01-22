@@ -1,6 +1,12 @@
+using System;
 using System.Numerics;
+using LillyQuest.Core.Data.Assets;
+using LillyQuest.Core.Data.Contexts;
+using LillyQuest.Core.Graphics.OpenGL.Resources;
+using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Engine.Screens.UI;
+using LillyQuest.Core.Primitives;
 using Silk.NET.Maths;
 
 namespace LillyQuest.Engine.Screens.UI;
@@ -35,6 +41,7 @@ public sealed class UINinePatchWindow : UIScreenControl
         }
 
         control.Parent = this;
+        control.Position += new Vector2(ContentMargin.X, ContentMargin.Y);
         _children.Add(control);
     }
 
@@ -62,5 +69,152 @@ public sealed class UINinePatchWindow : UIScreenControl
     {
         var world = GetWorldPosition();
         return new Vector2(world.X + ContentMargin.X, world.Y + ContentMargin.Y);
+    }
+
+    public override void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext)
+    {
+        if (spriteBatch == null || renderContext == null)
+        {
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(NineSliceKey))
+        {
+            return;
+        }
+
+        if (!_nineSliceManager.TryGetNineSlice(NineSliceKey, out var slice))
+        {
+            return;
+        }
+
+        if (!_textureManager.TryGetTexture(slice.TextureName, out var texture))
+        {
+            return;
+        }
+
+        DrawNineSlice(spriteBatch, texture, slice);
+
+        if (!string.IsNullOrWhiteSpace(Title))
+        {
+            spriteBatch.DrawFont(TitleFontName, TitleFontSize, Title, GetTitlePosition(), LyColor.White);
+        }
+
+        foreach (var child in _children.OrderBy(control => control.ZIndex))
+        {
+            if (!child.IsVisible)
+            {
+                continue;
+            }
+
+            child.Render(spriteBatch, renderContext);
+        }
+    }
+
+    private void DrawNineSlice(SpriteBatch spriteBatch, Texture2D texture, NineSliceDefinition slice)
+    {
+        var world = GetWorldPosition();
+
+        var leftWidth = slice.Left.Size.X * NineSliceScale;
+        var rightWidth = slice.Right.Size.X * NineSliceScale;
+        var topHeight = slice.Top.Size.Y * NineSliceScale;
+        var bottomHeight = slice.Bottom.Size.Y * NineSliceScale;
+
+        var centerWidth = MathF.Max(0f, Size.X - leftWidth - rightWidth);
+        var centerHeight = MathF.Max(0f, Size.Y - topHeight - bottomHeight);
+
+        DrawSlice(spriteBatch, texture, world, new Vector2(leftWidth, topHeight), slice.TopLeft);
+        DrawSlice(spriteBatch, texture, new Vector2(world.X + leftWidth + centerWidth, world.Y), new Vector2(rightWidth, topHeight), slice.TopRight);
+        DrawSlice(spriteBatch, texture, new Vector2(world.X, world.Y + topHeight + centerHeight), new Vector2(leftWidth, bottomHeight), slice.BottomLeft);
+        DrawSlice(
+            spriteBatch,
+            texture,
+            new Vector2(world.X + leftWidth + centerWidth, world.Y + topHeight + centerHeight),
+            new Vector2(rightWidth, bottomHeight),
+            slice.BottomRight
+        );
+
+        DrawTiled(spriteBatch, texture, new Vector2(world.X + leftWidth, world.Y), new Vector2(centerWidth, topHeight), slice.Top);
+        DrawTiled(
+            spriteBatch,
+            texture,
+            new Vector2(world.X + leftWidth, world.Y + topHeight + centerHeight),
+            new Vector2(centerWidth, bottomHeight),
+            slice.Bottom
+        );
+        DrawTiled(spriteBatch, texture, new Vector2(world.X, world.Y + topHeight), new Vector2(leftWidth, centerHeight), slice.Left);
+        DrawTiled(
+            spriteBatch,
+            texture,
+            new Vector2(world.X + leftWidth + centerWidth, world.Y + topHeight),
+            new Vector2(rightWidth, centerHeight),
+            slice.Right
+        );
+
+        DrawTiled(
+            spriteBatch,
+            texture,
+            new Vector2(world.X + leftWidth, world.Y + topHeight),
+            new Vector2(centerWidth, centerHeight),
+            slice.Center
+        );
+    }
+
+    private void DrawSlice(SpriteBatch spriteBatch, Texture2D texture, Vector2 position, Vector2 size, Rectangle<int> sourceRect)
+    {
+        if (size.X <= 0f || size.Y <= 0f)
+        {
+            return;
+        }
+
+        var uv = ToUvRect(texture, sourceRect, 1f, 1f);
+        spriteBatch.Draw(texture, position, size, LyColor.White, 0f, Vector2.Zero, uv, 0f);
+    }
+
+    private void DrawTiled(SpriteBatch spriteBatch, Texture2D texture, Vector2 position, Vector2 size, Rectangle<int> sourceRect)
+    {
+        if (size.X <= 0f || size.Y <= 0f)
+        {
+            return;
+        }
+
+        var tileWidth = sourceRect.Size.X * NineSliceScale;
+        var tileHeight = sourceRect.Size.Y * NineSliceScale;
+        if (tileWidth <= 0f || tileHeight <= 0f)
+        {
+            return;
+        }
+
+        for (var y = 0f; y < size.Y; y += tileHeight)
+        {
+            var drawHeight = MathF.Min(tileHeight, size.Y - y);
+            var vScale = drawHeight / tileHeight;
+
+            for (var x = 0f; x < size.X; x += tileWidth)
+            {
+                var drawWidth = MathF.Min(tileWidth, size.X - x);
+                var uScale = drawWidth / tileWidth;
+                var uv = ToUvRect(texture, sourceRect, uScale, vScale);
+                spriteBatch.Draw(
+                    texture,
+                    new Vector2(position.X + x, position.Y + y),
+                    new Vector2(drawWidth, drawHeight),
+                    LyColor.White,
+                    0f,
+                    Vector2.Zero,
+                    uv,
+                    0f
+                );
+            }
+        }
+    }
+
+    private static Rectangle<float> ToUvRect(Texture2D texture, Rectangle<int> sourceRect, float uScale, float vScale)
+    {
+        var u = (float)sourceRect.Origin.X / texture.Width;
+        var v = (float)sourceRect.Origin.Y / texture.Height;
+        var width = (sourceRect.Size.X * uScale) / texture.Width;
+        var height = (sourceRect.Size.Y * vScale) / texture.Height;
+        return new Rectangle<float>(u, v, width, height);
     }
 }

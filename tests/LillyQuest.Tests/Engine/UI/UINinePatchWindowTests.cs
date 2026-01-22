@@ -22,4 +22,11 @@ public class UINinePatchWindowTests
         Assert.That(window.GetTitlePosition(), Is.EqualTo(new Vector2(6, 4)));
         Assert.That(window.GetContentOrigin(), Is.EqualTo(new Vector2(8, 10)));
     }
+
+    [Test]
+    public void Render_DoesNotThrow_WhenMissingSpriteBatch()
+    {
+        var window = new UINinePatchWindow(null!, null!);
+        window.Render(null, null);
+    }
 }
