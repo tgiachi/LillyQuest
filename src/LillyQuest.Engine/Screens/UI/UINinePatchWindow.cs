@@ -1,35 +1,22 @@
-using System;
 using System.Numerics;
 using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.OpenGL.Resources;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
-using LillyQuest.Engine.Screens.UI;
 using LillyQuest.Core.Primitives;
 using Silk.NET.Maths;
 
 namespace LillyQuest.Engine.Screens.UI;
 
-public sealed class UINinePatchWindow : UIScreenControl
+public sealed class UINinePatchWindow : UIWindow
 {
-    private readonly List<UIScreenControl> _children = [];
     private readonly INineSliceAssetManager _nineSliceManager;
     private readonly ITextureManager _textureManager;
-    private bool _isDragging;
-    private Vector2 _dragOffset;
-
-    public IReadOnlyList<UIScreenControl> Children => _children;
 
     public string NineSliceKey { get; set; } = string.Empty;
-    public string Title { get; set; } = string.Empty;
-    public string TitleFontName { get; set; } = "default_font";
-    public int TitleFontSize { get; set; } = 14;
     public LyColor BorderTint { get; set; } = LyColor.White;
     public LyColor CenterTint { get; set; } = LyColor.White;
-    public bool IsTitleBarEnabled { get; set; } = true;
-    public bool IsWindowMovable { get; set; } = true;
-    public float TitleBarHeight { get; set; } = 18f;
     public Vector4D<float> TitleMargin { get; set; } = Vector4D<float>.Zero;
     public Vector4D<float> ContentMargin { get; set; } = Vector4D<float>.Zero;
     public float NineSliceScale { get; set; } = 1f;
@@ -40,119 +27,23 @@ public sealed class UINinePatchWindow : UIScreenControl
         _textureManager = textureManager;
     }
 
-    public void Add(UIScreenControl control)
-    {
-        if (control == null)
-        {
-            return;
-        }
-
-        control.Parent = this;
-        control.Position += new Vector2(ContentMargin.X, ContentMargin.Y);
-        _children.Add(control);
-    }
-
-    public void Remove(UIScreenControl control)
-    {
-        if (control == null)
-        {
-            return;
-        }
-
-        _children.Remove(control);
-        if (control.Parent == this)
-        {
-            control.Parent = null;
-        }
-    }
-
-    public Vector2 GetTitlePosition()
+    public override Vector2 GetTitlePosition()
     {
         var world = GetWorldPosition();
         return new Vector2(world.X + TitleMargin.X, world.Y + TitleMargin.Y);
     }
 
-    public Vector2 GetContentOrigin()
+    public override Vector2 GetContentOrigin()
     {
         var world = GetWorldPosition();
         return new Vector2(world.X + ContentMargin.X, world.Y + ContentMargin.Y);
     }
 
-    public override bool HandleMouseDown(Vector2 point)
+    protected override Vector2 GetContentOffset()
+        => new(ContentMargin.X, ContentMargin.Y);
+
+    protected override void RenderBackground(SpriteBatch spriteBatch, EngineRenderContext renderContext)
     {
-        if (!IsEnabled || !IsVisible)
-        {
-            return false;
-        }
-
-        foreach (var child in _children
-                              .OrderByDescending(control => control.ZIndex)
-                              .ThenByDescending(control => _children.IndexOf(control)))
-        {
-            var childBounds = child.GetBounds();
-
-            if (point.X >= childBounds.Origin.X &&
-                point.X <= childBounds.Origin.X + childBounds.Size.X &&
-                point.Y >= childBounds.Origin.Y &&
-                point.Y <= childBounds.Origin.Y + childBounds.Size.Y)
-            {
-                if (child.HandleMouseDown(point))
-                {
-                    return true;
-                }
-            }
-        }
-
-        var bounds = GetBounds();
-        if (point.X < bounds.Origin.X ||
-            point.X > bounds.Origin.X + bounds.Size.X ||
-            point.Y < bounds.Origin.Y ||
-            point.Y > bounds.Origin.Y + bounds.Size.Y)
-        {
-            return false;
-        }
-
-        if (IsTitleBarEnabled && IsWindowMovable && point.Y <= bounds.Origin.Y + TitleBarHeight)
-        {
-            _isDragging = true;
-            _dragOffset = point - GetWorldPosition();
-            return true;
-        }
-
-        return true;
-    }
-
-    public override bool HandleMouseMove(Vector2 point)
-    {
-        if (!_isDragging)
-        {
-            return false;
-        }
-
-        Position = point - _dragOffset;
-        ClampToParent();
-
-        return true;
-    }
-
-    public override bool HandleMouseUp(Vector2 point)
-    {
-        if (!_isDragging)
-        {
-            return false;
-        }
-
-        _isDragging = false;
-        return true;
-    }
-
-    public override void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext)
-    {
-        if (spriteBatch == null || renderContext == null)
-        {
-            return;
-        }
-
         if (string.IsNullOrWhiteSpace(NineSliceKey))
         {
             return;
@@ -169,21 +60,6 @@ public sealed class UINinePatchWindow : UIScreenControl
         }
 
         DrawNineSlice(spriteBatch, texture, slice);
-
-        if (!string.IsNullOrWhiteSpace(Title))
-        {
-            spriteBatch.DrawFont(TitleFontName, TitleFontSize, Title, GetTitlePosition(), LyColor.White);
-        }
-
-        foreach (var child in _children.OrderBy(control => control.ZIndex))
-        {
-            if (!child.IsVisible)
-            {
-                continue;
-            }
-
-            child.Render(spriteBatch, renderContext);
-        }
     }
 
     private void DrawNineSlice(SpriteBatch spriteBatch, Texture2D texture, NineSliceDefinition slice)
@@ -323,19 +199,5 @@ public sealed class UINinePatchWindow : UIScreenControl
         var width = (sourceRect.Size.X * uScale) / texture.Width;
         var height = (sourceRect.Size.Y * vScale) / texture.Height;
         return new Rectangle<float>(u, v, width, height);
-    }
-
-    private void ClampToParent()
-    {
-        if (Parent == null)
-        {
-            return;
-        }
-
-        var maxX = Parent.Size.X - Size.X;
-        var maxY = Parent.Size.Y - Size.Y;
-        var clampedX = Math.Clamp(Position.X, 0f, maxX);
-        var clampedY = Math.Clamp(Position.Y, 0f, maxY);
-        Position = new(clampedX, clampedY);
     }
 }

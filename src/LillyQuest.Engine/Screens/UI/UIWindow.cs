@@ -8,7 +8,7 @@ namespace LillyQuest.Engine.Screens.UI;
 /// <summary>
 /// Draggable UI window with optional title bar and child controls.
 /// </summary>
-public sealed class UIWindow : UIScreenControl
+public class UIWindow : UIScreenControl
 {
     private readonly List<UIScreenControl> _children = [];
 
@@ -49,6 +49,7 @@ public sealed class UIWindow : UIScreenControl
         }
 
         control.Parent = this;
+        control.Position += GetContentOffset();
         _children.Add(control);
     }
 
@@ -58,6 +59,15 @@ public sealed class UIWindow : UIScreenControl
 
         return BackgroundColor.WithAlpha(alpha);
     }
+
+    public virtual Vector2 GetContentOrigin()
+        => GetWorldPosition() + GetContentOffset();
+
+    protected virtual Vector2 GetContentOffset()
+        => Vector2.Zero;
+
+    public virtual Vector2 GetTitlePosition()
+        => GetWorldPosition() + new Vector2(4f, 2f);
 
     public override bool HandleMouseDown(Vector2 point)
     {
@@ -185,21 +195,8 @@ public sealed class UIWindow : UIScreenControl
             return;
         }
 
-        var world = GetWorldPosition();
-        var background = GetBackgroundColorWithAlpha();
-        spriteBatch.DrawRectangle(world, Size, background);
-        spriteBatch.DrawRectangleOutline(world, Size, BorderColor, BorderThickness);
-
-        if (IsTitleBarEnabled)
-        {
-            var titlebarSize = new Vector2(Size.X, TitleBarHeight);
-            spriteBatch.DrawRectangle(world, titlebarSize, background);
-
-            if (!string.IsNullOrWhiteSpace(Title))
-            {
-                spriteBatch.DrawFont(TitleFontName, TitleFontSize, Title, world + new Vector2(4, 2), LyColor.White);
-            }
-        }
+        RenderBackground(spriteBatch, renderContext);
+        RenderTitle(spriteBatch);
 
         foreach (var child in _children.OrderBy(control => control.ZIndex))
         {
@@ -209,6 +206,28 @@ public sealed class UIWindow : UIScreenControl
             }
 
             child.Render(spriteBatch, renderContext);
+        }
+    }
+
+    protected virtual void RenderBackground(SpriteBatch spriteBatch, EngineRenderContext renderContext)
+    {
+        var world = GetWorldPosition();
+        var background = GetBackgroundColorWithAlpha();
+        spriteBatch.DrawRectangle(world, Size, background);
+        spriteBatch.DrawRectangleOutline(world, Size, BorderColor, BorderThickness);
+
+        if (IsTitleBarEnabled)
+        {
+            var titlebarSize = new Vector2(Size.X, TitleBarHeight);
+            spriteBatch.DrawRectangle(world, titlebarSize, background);
+        }
+    }
+
+    protected virtual void RenderTitle(SpriteBatch spriteBatch)
+    {
+        if (!string.IsNullOrWhiteSpace(Title))
+        {
+            spriteBatch.DrawFont(TitleFontName, TitleFontSize, Title, GetTitlePosition(), LyColor.White);
         }
     }
 
