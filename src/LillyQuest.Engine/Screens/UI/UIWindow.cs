@@ -24,9 +24,16 @@ public sealed class UIWindow : UIScreenControl
     public LyColor BorderColor { get; set; } = LyColor.White;
     public float BorderThickness { get; set; } = 1f;
     public float TitleBarHeight { get; set; } = 18f;
+    public bool IsResizable { get; set; } = true;
+    public Vector2 MinSize { get; set; } = Vector2.Zero;
+    public Vector2 MaxSize { get; set; } = new(float.PositiveInfinity, float.PositiveInfinity);
+    public Vector2 ResizeHandleSize { get; set; } = new(10f, 10f);
 
     private bool _isDragging;
     private Vector2 _dragOffset;
+    private bool _isResizing;
+    private Vector2 _resizeStartAnchor;
+    private Vector2 _resizeStartSize;
 
     public UIWindow()
     {
@@ -86,6 +93,20 @@ public sealed class UIWindow : UIScreenControl
             return false;
         }
 
+        if (IsPointInResizeHandle(point))
+        {
+            if (!IsResizable)
+            {
+                return false;
+            }
+
+            _isResizing = true;
+            _resizeStartAnchor = GetWorldPosition() + Size;
+            _resizeStartSize = Size;
+
+            return true;
+        }
+
         if (IsTitleBarEnabled && IsWindowMovable && point.Y <= bounds.Origin.Y + TitleBarHeight)
         {
             _isDragging = true;
@@ -99,6 +120,13 @@ public sealed class UIWindow : UIScreenControl
 
     public override bool HandleMouseMove(Vector2 point)
     {
+        if (_isResizing)
+        {
+            ApplyResize(point);
+
+            return true;
+        }
+
         if (!_isDragging)
         {
             return false;
@@ -112,6 +140,13 @@ public sealed class UIWindow : UIScreenControl
 
     public override bool HandleMouseUp(Vector2 point)
     {
+        if (_isResizing)
+        {
+            _isResizing = false;
+
+            return true;
+        }
+
         if (!_isDragging)
         {
             return false;
@@ -183,5 +218,32 @@ public sealed class UIWindow : UIScreenControl
         var clampedX = Math.Clamp(Position.X, 0f, maxX);
         var clampedY = Math.Clamp(Position.Y, 0f, maxY);
         Position = new(clampedX, clampedY);
+    }
+
+    private bool IsPointInResizeHandle(Vector2 point)
+    {
+        var world = GetWorldPosition();
+        var handleOrigin = new Vector2(
+            world.X + Size.X - ResizeHandleSize.X,
+            world.Y + Size.Y - ResizeHandleSize.Y
+        );
+
+        return point.X >= handleOrigin.X &&
+               point.X <= handleOrigin.X + ResizeHandleSize.X &&
+               point.Y >= handleOrigin.Y &&
+               point.Y <= handleOrigin.Y + ResizeHandleSize.Y;
+    }
+
+    private void ApplyResize(Vector2 point)
+    {
+        var delta = point - _resizeStartAnchor;
+        var target = _resizeStartSize + delta;
+        var clamped = new Vector2(
+            Math.Clamp(target.X, MinSize.X, MaxSize.X),
+            Math.Clamp(target.Y, MinSize.Y, MaxSize.Y)
+        );
+
+        Size = clamped;
+        ClampToParent();
     }
 }
