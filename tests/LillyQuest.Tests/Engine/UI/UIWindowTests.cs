@@ -183,4 +183,60 @@ public class UIWindowTests
         Assert.That(pressed, Is.False);
         Assert.That(window.Size, Is.EqualTo(new Vector2(100, 50)));
     }
+
+    [Test]
+    public void MouseMove_Forwards_To_Active_Child()
+    {
+        var window = new UIWindow
+        {
+            Position = Vector2.Zero,
+            Size = new(100, 50)
+        };
+        var child = new UIScreenControl
+        {
+            Position = Vector2.Zero,
+            Size = new(100, 50)
+        };
+        var moves = 0;
+        child.OnMouseDown = _ => true;
+        child.OnMouseMove = _ =>
+                            {
+                                moves++;
+                                return true;
+                            };
+        window.Add(child);
+
+        window.HandleMouseDown(new Vector2(10, 10));
+        window.HandleMouseMove(new Vector2(12, 12));
+
+        Assert.That(moves, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void MouseUp_Forwards_To_Active_Child()
+    {
+        var window = new UIWindow
+        {
+            Position = Vector2.Zero,
+            Size = new(100, 50)
+        };
+        var child = new UIScreenControl
+        {
+            Position = Vector2.Zero,
+            Size = new(100, 50)
+        };
+        var ups = 0;
+        child.OnMouseDown = _ => true;
+        child.OnMouseUp = _ =>
+                          {
+                              ups++;
+                              return true;
+                          };
+        window.Add(child);
+
+        window.HandleMouseDown(new Vector2(10, 10));
+        window.HandleMouseUp(new Vector2(12, 12));
+
+        Assert.That(ups, Is.EqualTo(1));
+    }
 }

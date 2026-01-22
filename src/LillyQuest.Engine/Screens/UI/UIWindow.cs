@@ -35,6 +35,7 @@ public class UIWindow : UIScreenControl
     private bool _isResizing;
     private Vector2 _resizeStartAnchor;
     private Vector2 _resizeStartSize;
+    private UIScreenControl? _activeChild;
 
     public UIWindow()
     {
@@ -94,6 +95,7 @@ public class UIWindow : UIScreenControl
             {
                 if (child.HandleMouseDown(point))
                 {
+                    _activeChild = child;
                     return true;
                 }
             }
@@ -136,6 +138,11 @@ public class UIWindow : UIScreenControl
 
     public override bool HandleMouseMove(Vector2 point)
     {
+        if (_activeChild != null)
+        {
+            return _activeChild.HandleMouseMove(point);
+        }
+
         if (_isResizing)
         {
             ApplyResize(point);
@@ -156,6 +163,13 @@ public class UIWindow : UIScreenControl
 
     public override bool HandleMouseUp(Vector2 point)
     {
+        if (_activeChild != null)
+        {
+            var handled = _activeChild.HandleMouseUp(point);
+            _activeChild = null;
+            return handled;
+        }
+
         if (_isResizing)
         {
             _isResizing = false;
