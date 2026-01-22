@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -19,7 +19,7 @@
 
 
     <ItemGroup>
-        <PackageReference Include="MoonSharp" Version="2.0.0"/>
+        <PackageReference Include="MoonSharp" Version="2.0.0" />
         <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.102">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -28,12 +28,12 @@
 
 
     <ItemGroup>
-        <ProjectReference Include="..\LillyQuest.Core\LillyQuest.Core.csproj"/>
+        <ProjectReference Include="..\LillyQuest.Core\LillyQuest.Core.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\..\images\lillyquest_logo_nuget.jpg" Pack="true" PackagePath="\"/>
-        <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+        <None Include="..\..\images\lillyquest_logo_nuget.jpg" Pack="true" PackagePath="\" />
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
 </Project>

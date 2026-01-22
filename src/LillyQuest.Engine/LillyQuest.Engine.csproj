@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
@@ -23,25 +23,25 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Silk.NET.GLFW" Version="2.22.0"/>
-        <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.22.0"/>
-        <PackageReference Include="Silk.NET.Windowing" Version="2.22.0"/>
-        <PackageReference Include="Silk.NET.Windowing.Common" Version="2.22.0"/>
-        <PackageReference Include="Silk.NET.Windowing.Glfw" Version="2.22.0"/>
+        <PackageReference Include="Silk.NET.GLFW" Version="2.22.0" />
+        <PackageReference Include="Silk.NET.OpenGL.Extensions.ImGui" Version="2.22.0" />
+        <PackageReference Include="Silk.NET.Windowing" Version="2.22.0" />
+        <PackageReference Include="Silk.NET.Windowing.Common" Version="2.22.0" />
+        <PackageReference Include="Silk.NET.Windowing.Glfw" Version="2.22.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\LillyQuest.Core\LillyQuest.Core.csproj"/>
-        <ProjectReference Include="..\LillyQuest.Scripting.Lua\LillyQuest.Scripting.Lua.csproj"/>
+        <ProjectReference Include="..\LillyQuest.Core\LillyQuest.Core.csproj" />
+        <ProjectReference Include="..\LillyQuest.Scripting.Lua\LillyQuest.Scripting.Lua.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="Screens\"/>
+        <Folder Include="Screens\" />
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\..\images\lillyquest_logo_nuget.jpg" Pack="true" PackagePath="\"/>
-        <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
+        <None Include="..\..\images\lillyquest_logo_nuget.jpg" Pack="true" PackagePath="\" />
+        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
     </ItemGroup>
 
 </Project>

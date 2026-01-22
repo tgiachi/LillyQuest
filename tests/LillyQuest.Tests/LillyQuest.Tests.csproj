@@ -17,14 +17,14 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="coverlet.collector" Version="6.0.4"/>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1"/>
-        <PackageReference Include="NUnit" Version="4.4.0"/>
+        <PackageReference Include="coverlet.collector" Version="6.0.4" />
+        <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.1" />
+        <PackageReference Include="NUnit" Version="4.4.0" />
         <PackageReference Include="NUnit.Analyzers" Version="4.11.2">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="NUnit3TestAdapter" Version="6.1.0"/>
+        <PackageReference Include="NUnit3TestAdapter" Version="6.1.0" />
         <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.102">
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
@@ -32,13 +32,13 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Using Include="NUnit.Framework"/>
+        <Using Include="NUnit.Framework" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="../../src/LillyQuest.Core/LillyQuest.Core.csproj"/>
-        <ProjectReference Include="../../src/LillyQuest.Engine/LillyQuest.Engine.csproj"/>
-        <ProjectReference Include="../../src/LillyQuest.Game/LillyQuest.Game.csproj"/>
+        <ProjectReference Include="../../src/LillyQuest.Core/LillyQuest.Core.csproj" />
+        <ProjectReference Include="../../src/LillyQuest.Engine/LillyQuest.Engine.csproj" />
+        <ProjectReference Include="../../src/LillyQuest.Game/LillyQuest.Game.csproj" />
     </ItemGroup>
 
 </Project>
