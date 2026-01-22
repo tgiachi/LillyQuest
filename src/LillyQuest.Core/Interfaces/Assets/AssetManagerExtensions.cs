@@ -1,5 +1,6 @@
 using System.Reflection;
 using LillyQuest.Core.Utils;
+using Silk.NET.Maths;
 
 namespace LillyQuest.Core.Interfaces.Assets;
 
@@ -178,5 +179,31 @@ public static class AssetManagerExtensions
         assembly ??= Assembly.GetCallingAssembly();
         var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
         manager.LoadTileset(tilesetName, data, tileWidth, tileHeight, spacing, margin);
+    }
+
+    /// <summary>
+    /// Loads a nine-slice texture from an embedded resource and registers it.
+    /// </summary>
+    /// <param name="manager">The asset manager instance.</param>
+    /// <param name="key">Unique key for the nine-slice definition.</param>
+    /// <param name="textureName">Unique name for the texture asset.</param>
+    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/9patch/window.png").</param>
+    /// <param name="sourceRect">Source rectangle within the texture.</param>
+    /// <param name="margins">Pixel margins for the nine-slice (left, top, right, bottom).</param>
+    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly.</param>
+    public static void LoadNineSliceFromEmbeddedResource(
+        this IAssetManager manager,
+        string key,
+        string textureName,
+        string resourcePath,
+        Rectangle<int> sourceRect,
+        Vector4D<float> margins,
+        Assembly? assembly = null
+    )
+    {
+        assembly ??= Assembly.GetCallingAssembly();
+        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
+        manager.TextureManager.LoadTextureFromPng(textureName, data);
+        manager.NineSliceManager.RegisterNineSlice(key, textureName, sourceRect, margins);
     }
 }
