@@ -114,7 +114,7 @@ This project uses AI tools (Claude, Codex, etc.) with intentionality and restrai
 - Bug discovery and code review
 - Documentation drafting
 
-However, core implementation is hand-crafted. Programming is an art form—the discipline of thinking through problems, making deliberate design choices, and writing clean, maintainable code cannot be delegated. AI is a tool for augmenting human judgment, not replacing it.
+However, core implementation is hand-crafted. Programming is an art form. The discipline of thinking through problems, making deliberate design choices, and writing clean, maintainable code cannot be delegated. AI is a tool for augmenting human judgment, not replacing it.
 
 The code you read here reflects human reasoning and intentional design, not automated generation.
 
