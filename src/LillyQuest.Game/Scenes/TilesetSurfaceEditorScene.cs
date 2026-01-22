@@ -138,6 +138,28 @@ public class TilesetSurfaceEditorScene : BaseScene
         };
         uiOverlay.Root.Add(label);
 
+        var window = new UIWindow
+        {
+            Position = new Vector2(20, 50),
+            Size = new Vector2(240, 120),
+            Title = "UI Window",
+            IsTitleBarEnabled = true,
+            IsWindowMovable = true,
+            BackgroundColor = LyColor.Black,
+            BackgroundAlpha = 0.6f,
+            BorderColor = LyColor.White,
+            ZIndex = 1
+        };
+
+        var windowLabel = new UILabel
+        {
+            Text = "Hello from UIWindow",
+            Position = new Vector2(8, 26),
+            Color = LyColor.White
+        };
+        window.Add(windowLabel);
+        uiOverlay.Root.Add(window);
+
         // var uiTile = new UITileSurfaceControl(_tilesetManager, 20, 5)
         // {
         //     Position = new Vector2(20, 50),
