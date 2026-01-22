@@ -25,6 +25,11 @@ public sealed class UIRootScreen : BaseScreen
         if (hit.HandleMouseDown(new(x, y)))
         {
             _activeControl = hit;
+            if (hit.IsFocusable)
+            {
+                Root.FocusManager.RequestFocus(hit);
+            }
+            Root.BringToFront(hit);
 
             return true;
         }

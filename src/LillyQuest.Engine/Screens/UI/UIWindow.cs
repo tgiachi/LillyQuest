@@ -28,6 +28,11 @@ public sealed class UIWindow : UIScreenControl
     private bool _isDragging;
     private Vector2 _dragOffset;
 
+    public UIWindow()
+    {
+        IsFocusable = true;
+    }
+
     public void Add(UIScreenControl control)
     {
         if (control == null)
