@@ -47,13 +47,6 @@ public sealed class SceneTransitionManager : ISceneManager
     public SceneTransitionState TransitionState { get; private set; } = SceneTransitionState.Idle;
 
     /// <summary>
-    /// Gets all available scenes (both registered and initialized).
-    /// Returns a read-only list of scenes that have been initialized.
-    /// </summary>
-    public IReadOnlyList<IScene> GetAvailableScenes()
-        => _initializedScenes.Values.ToList().AsReadOnly();
-
-    /// <summary>
     /// Creates a new SceneTransitionManager with the specified dependencies.
     /// </summary>
     public SceneTransitionManager(
@@ -69,7 +62,7 @@ public sealed class SceneTransitionManager : ISceneManager
         _entityManager = entityManager;
         _sceneRegistrations = sceneRegistrations;
         _container = container;
-        _spriteBatch = new SpriteBatch(
+        _spriteBatch = new(
             renderContext,
             shaderManager,
             fontManager,
@@ -80,6 +73,13 @@ public sealed class SceneTransitionManager : ISceneManager
 
         _logger.Information("SceneTransitionManager initialized");
     }
+
+    /// <summary>
+    /// Gets all available scenes (both registered and initialized).
+    /// Returns a read-only list of scenes that have been initialized.
+    /// </summary>
+    public IReadOnlyList<IScene> GetAvailableScenes()
+        => _initializedScenes.Values.ToList().AsReadOnly();
 
     /// <summary>
     /// Renders the fade overlay on top of all scene rendering.

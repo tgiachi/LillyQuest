@@ -1,7 +1,5 @@
-using System;
 using System.Numerics;
 using LillyQuest.Engine.Screens.UI;
-using NUnit.Framework;
 using Silk.NET.Input;
 
 namespace LillyQuest.Tests.Engine.UI;
@@ -15,14 +13,24 @@ public class UIRootScreenTests
         var control = new UIScreenControl
         {
             Position = Vector2.Zero,
-            Size = new Vector2(20, 20)
+            Size = new(20, 20)
         };
         var moves = 0;
         var ups = 0;
 
         control.OnMouseDown = _ => true;
-        control.OnMouseMove = _ => { moves++; return true; };
-        control.OnMouseUp = _ => { ups++; return true; };
+        control.OnMouseMove = _ =>
+                              {
+                                  moves++;
+
+                                  return true;
+                              };
+        control.OnMouseUp = _ =>
+                            {
+                                ups++;
+
+                                return true;
+                            };
         root.Root.Add(control);
 
         Assert.That(root.OnMouseDown(5, 5, Array.Empty<MouseButton>()), Is.True);

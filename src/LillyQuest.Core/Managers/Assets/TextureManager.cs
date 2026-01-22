@@ -35,6 +35,9 @@ public class TextureManager : ITextureManager
         GC.SuppressFinalize(this);
     }
 
+    public IReadOnlyDictionary<string, Texture2D> GetAllTextures()
+        => _textures.AsReadOnly();
+
     public Texture2D GetTexture(string assetName)
         => _textures.TryGetValue(assetName, out var texture)
                ? texture
@@ -170,9 +173,6 @@ public class TextureManager : ITextureManager
 
     public bool TryGetTexture(string assetName, out Texture2D texture)
         => _textures.TryGetValue(assetName, out texture);
-
-    public IReadOnlyDictionary<string, Texture2D> GetAllTextures()
-        => _textures.AsReadOnly();
 
     public void UnloadTexture(string assetName)
     {

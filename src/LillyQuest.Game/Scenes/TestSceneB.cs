@@ -22,9 +22,7 @@ public class TestSceneB : IScene
     private ISceneManager? _sceneManager;
 
     public TestSceneB(IScreenManager screenManager)
-    {
-        _screenManager = screenManager;
-    }
+        => _screenManager = screenManager;
 
     public string Name => "test_scene_b";
 
@@ -60,7 +58,7 @@ public class TestSceneB : IScene
     {
         _logger.Information("TestSceneB loaded");
 
-        var testScreen1 = new TestScreen()
+        var testScreen1 = new TestScreen
         {
             Size = new(200, 200),
             Position = new(100, 100)

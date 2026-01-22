@@ -25,18 +25,15 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>
         "Immediate UI system",
         SystemQueryType.DebugRenderable
     )
-    {
-        _renderContext = renderContext;
-    }
+        => _renderContext = renderContext;
 
     public override void Initialize()
     {
-        _imguiController = new ImGuiController(
+        _imguiController = new(
             _renderContext.Gl,
             _renderContext.Window,
             _renderContext.InputContext
         );
-
 
         // Apply Dark Fantasy theme (gold, purple, mystical blue)
         ImGuiThemeProvider.ApplyDarkFantasyTheme();
@@ -55,6 +52,7 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>
         foreach (var entity in typedEntities)
         {
             var asGameEntity = entity as GameEntity;
+
             if (asGameEntity is not { IsActive: true })
             {
                 continue;

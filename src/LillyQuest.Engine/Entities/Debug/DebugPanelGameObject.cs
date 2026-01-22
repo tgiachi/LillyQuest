@@ -71,7 +71,8 @@ public class DebugPanelGameObject : GameEntity, IIMGuiEntity
                 // Draw menu items for each debug object
                 foreach (var (name, debugObj) in _debugObjects)
                 {
-                    bool isActive = debugObj.IsActive;
+                    var isActive = debugObj.IsActive;
+
                     if (ImGui.MenuItem(name, "", isActive))
                     {
                         debugObj.IsActive = !debugObj.IsActive;

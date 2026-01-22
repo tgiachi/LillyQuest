@@ -1,4 +1,3 @@
-using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
@@ -15,10 +14,10 @@ public sealed class UITileSurfaceControl : UIScreenControl
 
     public UITileSurfaceControl(ITilesetManager tilesetManager, int width, int height)
     {
-        Surface = new TilesetSurfaceScreen(tilesetManager)
+        Surface = new(tilesetManager)
         {
             LayerCount = 1,
-            TileViewSize = new Vector2(width, height)
+            TileViewSize = new(width, height)
         };
         Surface.InitializeLayers(1);
     }

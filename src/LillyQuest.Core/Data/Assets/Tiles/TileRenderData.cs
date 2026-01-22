@@ -42,9 +42,6 @@ public struct TileRenderData
         Flip = flip;
     }
 
-    public override string ToString()
-        => $"Tile {TileIndex}: BG={BackgroundColor} FG={ForegroundColor} Flip={Flip}";
-
     public static Rectangle<float> ApplyFlip(Rectangle<float> uvRect, TileFlipType flip)
     {
         var originX = uvRect.Origin.X;
@@ -64,6 +61,9 @@ public struct TileRenderData
             sizeY = -sizeY;
         }
 
-        return new Rectangle<float>(originX, originY, sizeX, sizeY);
+        return new(originX, originY, sizeX, sizeY);
     }
+
+    public override string ToString()
+        => $"Tile {TileIndex}: BG={BackgroundColor} FG={ForegroundColor} Flip={Flip}";
 }

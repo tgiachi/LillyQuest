@@ -9,6 +9,11 @@ namespace LillyQuest.Core.Interfaces.Assets;
 public interface ITilesetManager : IDisposable
 {
     /// <summary>
+    /// Gets all loaded tilesets.
+    /// </summary>
+    IReadOnlyDictionary<string, Tileset> GetAllTilesets();
+
+    /// <summary>
     /// Gets a loaded tileset by name.
     /// </summary>
     /// <param name="name">Unique name of the tileset</param>
@@ -52,11 +57,6 @@ public interface ITilesetManager : IDisposable
     /// <param name="tileset">Tileset found, null if not found</param>
     /// <returns>true if the tileset was found, false otherwise</returns>
     bool TryGetTileset(string name, out Tileset tileset);
-
-    /// <summary>
-    /// Gets all loaded tilesets.
-    /// </summary>
-    IReadOnlyDictionary<string, Tileset> GetAllTilesets();
 
     /// <summary>
     /// Unloads a tileset from memory.

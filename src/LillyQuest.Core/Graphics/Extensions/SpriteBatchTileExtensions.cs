@@ -161,6 +161,7 @@ public static class SpriteBatchTileExtensions
                 depth
             );
         }
+
         /// <summary>
         /// Draws a tile with background color and foreground tint.
         /// </summary>
@@ -189,7 +190,7 @@ public static class SpriteBatchTileExtensions
             spriteBatch.Draw(
                 tileset.Texture,
                 position,
-                new Vector2(tileset.TileWidth, tileset.TileHeight),
+                new(tileset.TileWidth, tileset.TileHeight),
                 tileRenderData.ForegroundColor,
                 0f,
                 Vector2.Zero,

@@ -17,9 +17,7 @@ public sealed class GameEntityManager : IGameEntityManager
     private readonly IContainer _container;
 
     public GameEntityManager(IContainer container)
-    {
-        _container = container;
-    }
+        => _container = container;
 
     public IReadOnlyList<IGameEntity> OrderedEntities => _collection.OrderedEntities;
 
@@ -34,6 +32,17 @@ public sealed class GameEntityManager : IGameEntityManager
         AddEntityInternal(entity, parent);
     }
 
+    public TEntity CreateEntity<TEntity>() where TEntity : IGameEntity
+    {
+        if (!_container.IsRegistered(typeof(TEntity)))
+        {
+            _logger.Debug("Registering entity type {EntityType} in DI container", typeof(TEntity).Name);
+            _container.Register<TEntity>();
+        }
+
+        return _container.Resolve<TEntity>();
+    }
+
     public IGameEntity? GetEntityById(uint id)
         => _entitiesById.GetValueOrDefault(id);
 
@@ -46,17 +55,6 @@ public sealed class GameEntityManager : IGameEntityManager
 
         RemoveSubtreeFromMap(entity);
         _collection.Remove(entity);
-    }
-
-    public TEntity CreateEntity<TEntity>() where TEntity : IGameEntity
-    {
-        if (!_container.IsRegistered(typeof(TEntity)))
-        {
-            _logger.Debug("Registering entity type {EntityType} in DI container", typeof(TEntity).Name);
-            _container.Register<TEntity>();
-        }
-
-        return _container.Resolve<TEntity>();
     }
 
     private void AddEntityInternal(IGameEntity entity, IGameEntity? parent)

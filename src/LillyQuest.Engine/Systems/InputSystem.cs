@@ -1,7 +1,6 @@
 using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Primitives;
-using LillyQuest.Core.Types;
 using LillyQuest.Engine.Data.Input;
 using LillyQuest.Engine.Interfaces.Entities.Features.Input;
 using LillyQuest.Engine.Interfaces.Managers;
@@ -96,7 +95,15 @@ public sealed class InputSystem : IInputSystem
         _logger.Debug("Mouse released");
     }
 
+    private static float ComputeWheelDelta(float previousY, float currentY)
+    {
+        if (currentY == 0f && previousY != 0f)
+        {
+            return 0f;
+        }
 
+        return currentY - previousY;
+    }
 
     private void DispatchKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
@@ -405,15 +412,5 @@ public sealed class InputSystem : IInputSystem
         {
             _previousMouseButtons.Add(button);
         }
-    }
-
-    private static float ComputeWheelDelta(float previousY, float currentY)
-    {
-        if (currentY == 0f && previousY != 0f)
-        {
-            return 0f;
-        }
-
-        return currentY - previousY;
     }
 }

@@ -21,6 +21,36 @@ public class TweenSequence
     public bool IsComplete => _hasStarted && _currentGroup == null && _queue.Count == 0;
 
     /// <summary>
+    /// Appends a single tween to be played after all previous tweens complete.
+    /// </summary>
+    public TweenSequence Append(Tween tween)
+    {
+        _queue.Enqueue((new() { tween }, false));
+
+        return this;
+    }
+
+    /// <summary>
+    /// Sets the callback to invoke when the entire sequence completes.
+    /// </summary>
+    public TweenSequence OnComplete(Action callback)
+    {
+        _onComplete = callback;
+
+        return this;
+    }
+
+    /// <summary>
+    /// Appends multiple tweens to be played in parallel after all previous tweens complete.
+    /// </summary>
+    public TweenSequence Parallel(params Tween[] tweens)
+    {
+        _queue.Enqueue((tweens.ToList(), true));
+
+        return this;
+    }
+
+    /// <summary>
     /// Updates all active tweens in the current group by the given delta time.
     /// </summary>
     public void Update(float deltaTime)
@@ -46,38 +76,12 @@ public class TweenSequence
             if (_currentGroup.All(t => t.IsComplete))
             {
                 _currentGroup = null;
+
                 if (_queue.Count == 0)
                 {
                     _onComplete?.Invoke();
                 }
             }
         }
-    }
-
-    /// <summary>
-    /// Appends a single tween to be played after all previous tweens complete.
-    /// </summary>
-    public TweenSequence Append(Tween tween)
-    {
-        _queue.Enqueue((new List<Tween> { tween }, false));
-        return this;
-    }
-
-    /// <summary>
-    /// Appends multiple tweens to be played in parallel after all previous tweens complete.
-    /// </summary>
-    public TweenSequence Parallel(params Tween[] tweens)
-    {
-        _queue.Enqueue((tweens.ToList(), true));
-        return this;
-    }
-
-    /// <summary>
-    /// Sets the callback to invoke when the entire sequence completes.
-    /// </summary>
-    public TweenSequence OnComplete(Action callback)
-    {
-        _onComplete = callback;
-        return this;
     }
 }

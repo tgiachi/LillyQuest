@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
@@ -40,23 +39,10 @@ public sealed class UIWindow : UIScreenControl
         _children.Add(control);
     }
 
-    public void Remove(UIScreenControl control)
-    {
-        if (control == null)
-        {
-            return;
-        }
-
-        _children.Remove(control);
-        if (control.Parent == this)
-        {
-            control.Parent = null;
-        }
-    }
-
     public LyColor GetBackgroundColorWithAlpha()
     {
         var alpha = (byte)Math.Clamp(MathF.Round(BackgroundColor.A * BackgroundAlpha), 0f, 255f);
+
         return BackgroundColor.WithAlpha(alpha);
     }
 
@@ -68,12 +54,15 @@ public sealed class UIWindow : UIScreenControl
         }
 
         foreach (var child in _children
-                             .OrderByDescending(control => control.ZIndex)
-                             .ThenByDescending(control => _children.IndexOf(control)))
+                              .OrderByDescending(control => control.ZIndex)
+                              .ThenByDescending(control => _children.IndexOf(control)))
         {
             var childBounds = child.GetBounds();
-            if (point.X >= childBounds.Origin.X && point.X <= childBounds.Origin.X + childBounds.Size.X &&
-                point.Y >= childBounds.Origin.Y && point.Y <= childBounds.Origin.Y + childBounds.Size.Y)
+
+            if (point.X >= childBounds.Origin.X &&
+                point.X <= childBounds.Origin.X + childBounds.Size.X &&
+                point.Y >= childBounds.Origin.Y &&
+                point.Y <= childBounds.Origin.Y + childBounds.Size.Y)
             {
                 if (child.HandleMouseDown(point))
                 {
@@ -83,8 +72,11 @@ public sealed class UIWindow : UIScreenControl
         }
 
         var bounds = GetBounds();
-        if (point.X < bounds.Origin.X || point.X > bounds.Origin.X + bounds.Size.X ||
-            point.Y < bounds.Origin.Y || point.Y > bounds.Origin.Y + bounds.Size.Y)
+
+        if (point.X < bounds.Origin.X ||
+            point.X > bounds.Origin.X + bounds.Size.X ||
+            point.Y < bounds.Origin.Y ||
+            point.Y > bounds.Origin.Y + bounds.Size.Y)
         {
             return false;
         }
@@ -93,6 +85,7 @@ public sealed class UIWindow : UIScreenControl
         {
             _isDragging = true;
             _dragOffset = point - GetWorldPosition();
+
             return true;
         }
 
@@ -108,6 +101,7 @@ public sealed class UIWindow : UIScreenControl
 
         Position = point - _dragOffset;
         ClampToParent();
+
         return true;
     }
 
@@ -119,7 +113,23 @@ public sealed class UIWindow : UIScreenControl
         }
 
         _isDragging = false;
+
         return true;
+    }
+
+    public void Remove(UIScreenControl control)
+    {
+        if (control == null)
+        {
+            return;
+        }
+
+        _children.Remove(control);
+
+        if (control.Parent == this)
+        {
+            control.Parent = null;
+        }
     }
 
     public override void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext)
@@ -167,6 +177,6 @@ public sealed class UIWindow : UIScreenControl
         var maxY = Parent.Size.Y - Size.Y;
         var clampedX = Math.Clamp(Position.X, 0f, maxX);
         var clampedY = Math.Clamp(Position.Y, 0f, maxY);
-        Position = new Vector2(clampedX, clampedY);
+        Position = new(clampedX, clampedY);
     }
 }

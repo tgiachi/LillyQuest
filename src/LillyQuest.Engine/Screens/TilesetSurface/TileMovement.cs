@@ -35,7 +35,7 @@ public sealed class TileMovement
         Bounce = bounce;
         DurationSeconds = durationSeconds;
         TileData = tileData;
-        DestinationTileData = new TileRenderData(-1, LyColor.White);
+        DestinationTileData = new(-1, LyColor.White);
         State = TileMovementState.Pending;
     }
 }

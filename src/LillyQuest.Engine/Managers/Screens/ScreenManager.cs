@@ -32,26 +32,28 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
-        return DispatchToScreens(screen =>
-        {
-            if (screen.OnKeyPress(modifier, keys))
+        return DispatchToScreens(
+            screen =>
             {
-                return true;
-            }
-
-            return DispatchToScreenEntities(
-                screen,
-                entity =>
+                if (screen.OnKeyPress(modifier, keys))
                 {
-                    if (entity is IInputConsumer inputConsumer)
-                    {
-                        return inputConsumer.OnKeyPress(modifier, keys);
-                    }
-
-                    return false;
+                    return true;
                 }
-            );
-        });
+
+                return DispatchToScreenEntities(
+                    screen,
+                    entity =>
+                    {
+                        if (entity is IInputConsumer inputConsumer)
+                        {
+                            return inputConsumer.OnKeyPress(modifier, keys);
+                        }
+
+                        return false;
+                    }
+                );
+            }
+        );
     }
 
     /// <summary>
@@ -59,26 +61,28 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
-        return DispatchToScreens(screen =>
-        {
-            if (screen.OnKeyRelease(modifier, keys))
+        return DispatchToScreens(
+            screen =>
             {
-                return true;
-            }
-
-            return DispatchToScreenEntities(
-                screen,
-                entity =>
+                if (screen.OnKeyRelease(modifier, keys))
                 {
-                    if (entity is IInputConsumer inputConsumer)
-                    {
-                        return inputConsumer.OnKeyRelease(modifier, keys);
-                    }
-
-                    return false;
+                    return true;
                 }
-            );
-        });
+
+                return DispatchToScreenEntities(
+                    screen,
+                    entity =>
+                    {
+                        if (entity is IInputConsumer inputConsumer)
+                        {
+                            return inputConsumer.OnKeyRelease(modifier, keys);
+                        }
+
+                        return false;
+                    }
+                );
+            }
+        );
     }
 
     /// <summary>
@@ -86,26 +90,28 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
-        return DispatchToScreens(screen =>
-        {
-            if (screen.OnKeyRepeat(modifier, keys))
+        return DispatchToScreens(
+            screen =>
             {
-                return true;
-            }
-
-            return DispatchToScreenEntities(
-                screen,
-                entity =>
+                if (screen.OnKeyRepeat(modifier, keys))
                 {
-                    if (entity is IInputConsumer inputConsumer)
-                    {
-                        return inputConsumer.OnKeyRepeat(modifier, keys);
-                    }
-
-                    return false;
+                    return true;
                 }
-            );
-        });
+
+                return DispatchToScreenEntities(
+                    screen,
+                    entity =>
+                    {
+                        if (entity is IInputConsumer inputConsumer)
+                        {
+                            return inputConsumer.OnKeyRepeat(modifier, keys);
+                        }
+
+                        return false;
+                    }
+                );
+            }
+        );
     }
 
     /// <summary>
@@ -113,30 +119,32 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
-        return DispatchToScreens(screen =>
-        {
-            if (screen.HitTest(x, y) && screen.OnMouseDown(x, y, buttons))
+        return DispatchToScreens(
+            screen =>
             {
-                return true;
-            }
-
-            var entities = screen.GetScreenGameObjects().ToList();
-
-            for (var i = entities.Count - 1; i >= 0; i--)
-            {
-                var entity = entities[i];
-
-                if (entity is IInputConsumer inputConsumer)
+                if (screen.HitTest(x, y) && screen.OnMouseDown(x, y, buttons))
                 {
-                    if (inputConsumer.HitTest(x, y) && inputConsumer.OnMouseDown(x, y, buttons))
+                    return true;
+                }
+
+                var entities = screen.GetScreenGameObjects().ToList();
+
+                for (var i = entities.Count - 1; i >= 0; i--)
+                {
+                    var entity = entities[i];
+
+                    if (entity is IInputConsumer inputConsumer)
                     {
-                        return true;
+                        if (inputConsumer.HitTest(x, y) && inputConsumer.OnMouseDown(x, y, buttons))
+                        {
+                            return true;
+                        }
                     }
                 }
-            }
 
-            return false;
-        });
+                return false;
+            }
+        );
     }
 
     /// <summary>
@@ -144,26 +152,28 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseMove(int x, int y)
     {
-        return DispatchToScreens(screen =>
-        {
-            if (screen.OnMouseMove(x, y))
+        return DispatchToScreens(
+            screen =>
             {
-                return true;
-            }
-
-            return DispatchToScreenEntities(
-                screen,
-                entity =>
+                if (screen.OnMouseMove(x, y))
                 {
-                    if (entity is IInputConsumer inputConsumer)
-                    {
-                        return inputConsumer.OnMouseMove(x, y);
-                    }
-
-                    return false;
+                    return true;
                 }
-            );
-        });
+
+                return DispatchToScreenEntities(
+                    screen,
+                    entity =>
+                    {
+                        if (entity is IInputConsumer inputConsumer)
+                        {
+                            return inputConsumer.OnMouseMove(x, y);
+                        }
+
+                        return false;
+                    }
+                );
+            }
+        );
     }
 
     /// <summary>
@@ -171,26 +181,28 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseUp(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
-        return DispatchToScreens(screen =>
-        {
-            if (screen.OnMouseUp(x, y, buttons))
+        return DispatchToScreens(
+            screen =>
             {
-                return true;
-            }
-
-            return DispatchToScreenEntities(
-                screen,
-                entity =>
+                if (screen.OnMouseUp(x, y, buttons))
                 {
-                    if (entity is IInputConsumer inputConsumer)
-                    {
-                        return inputConsumer.OnMouseUp(x, y, buttons);
-                    }
-
-                    return false;
+                    return true;
                 }
-            );
-        });
+
+                return DispatchToScreenEntities(
+                    screen,
+                    entity =>
+                    {
+                        if (entity is IInputConsumer inputConsumer)
+                        {
+                            return inputConsumer.OnMouseUp(x, y, buttons);
+                        }
+
+                        return false;
+                    }
+                );
+            }
+        );
     }
 
     /// <summary>
@@ -198,30 +210,128 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseWheel(int x, int y, float delta)
     {
-        return DispatchToScreens(screen =>
-        {
-            if (screen.HitTest(x, y) && screen.OnMouseWheel(x, y, delta))
+        return DispatchToScreens(
+            screen =>
             {
-                return true;
-            }
-
-            var entities = screen.GetScreenGameObjects().ToList();
-
-            for (var i = entities.Count - 1; i >= 0; i--)
-            {
-                var entity = entities[i];
-
-                if (entity is IInputConsumer inputConsumer)
+                if (screen.HitTest(x, y) && screen.OnMouseWheel(x, y, delta))
                 {
-                    if (inputConsumer.HitTest(x, y) && inputConsumer.OnMouseWheel(x, y, delta))
+                    return true;
+                }
+
+                var entities = screen.GetScreenGameObjects().ToList();
+
+                for (var i = entities.Count - 1; i >= 0; i--)
+                {
+                    var entity = entities[i];
+
+                    if (entity is IInputConsumer inputConsumer)
                     {
-                        return true;
+                        if (inputConsumer.HitTest(x, y) && inputConsumer.OnMouseWheel(x, y, delta))
+                        {
+                            return true;
+                        }
                     }
                 }
-            }
 
-            return false;
-        });
+                return false;
+            }
+        );
+    }
+
+    /// <summary>
+    /// Removes the focused screen (top of stack).
+    /// Calls OnUnload on the screen. Focus moves to screen below.
+    /// </summary>
+    public void PopScreen()
+    {
+        if (_screenStack.Count == 0)
+        {
+            _logger.Warning("Attempted to pop screen from empty stack");
+
+            return;
+        }
+
+        var screen = _screenStack.Pop();
+        screen.OnUnload();
+        _logger.Debug("Popped screen {ScreenId}, stack size: {StackSize}", screen.ConsumerId, _screenStack.Count);
+    }
+
+    /// <summary>
+    /// Removes a specific screen from the top of the stack if it matches.
+    /// Calls OnUnload on the screen if it was at the top.
+    /// </summary>
+    public void PopScreen(IScreen screen)
+    {
+        if (_screenStack.Count == 0)
+        {
+            _logger.Warning("Attempted to pop screen from empty stack");
+
+            return;
+        }
+
+        var focusedScreen = _screenStack.Peek();
+
+        if (focusedScreen == screen)
+        {
+            _screenStack.Pop();
+            screen.OnUnload();
+            _logger.Debug("Popped screen {ScreenId}, stack size: {StackSize}", screen.ConsumerId, _screenStack.Count);
+        }
+        else
+        {
+            _logger.Warning("Cannot pop screen {ScreenId}: not at top of stack", screen.ConsumerId);
+        }
+    }
+
+    /// <summary>
+    /// Adds a screen to the top of the stack (becomes focused).
+    /// Calls OnLoad on the screen.
+    /// </summary>
+    public void PushScreen(IScreen screen)
+    {
+        _screenStack.Push(screen);
+        screen.OnLoad();
+        _logger.Debug("Pushed screen {ScreenId}, stack size: {StackSize}", screen.ConsumerId, _screenStack.Count);
+    }
+
+    /// <summary>
+    /// Removes a specific screen from the stack.
+    /// Calls OnUnload on the screen if found.
+    /// </summary>
+    public void RemoveScreen(IScreen screen)
+    {
+        var list = _screenStack.ToList();
+
+        if (!list.Contains(screen))
+        {
+            _logger.Warning("Screen {ScreenId} not found in stack", screen.ConsumerId);
+
+            return;
+        }
+
+        _screenStack.Clear();
+
+        foreach (var s in list)
+        {
+            if (s != screen)
+            {
+                _screenStack.Push(s);
+            }
+            else
+            {
+                s.OnUnload();
+                _logger.Debug("Removed screen {ScreenId} from stack", screen.ConsumerId);
+            }
+        }
+
+        // Re-push remaining screens in correct order
+        var tempStack = _screenStack.ToList();
+        _screenStack.Clear();
+
+        for (var i = tempStack.Count - 1; i >= 0; i--)
+        {
+            _screenStack.Push(tempStack[i]);
+        }
     }
 
     /// <summary>
@@ -236,6 +346,7 @@ public sealed class ScreenManager : IScreenManager
 
         // Render screens from bottom to top (reverse order)
         var screensToRender = _screenStack.Reverse().ToList();
+
         foreach (var screen in screensToRender)
         {
             if (screen.IsActive)
@@ -271,95 +382,6 @@ public sealed class ScreenManager : IScreenManager
     }
 
     /// <summary>
-    /// Adds a screen to the top of the stack (becomes focused).
-    /// Calls OnLoad on the screen.
-    /// </summary>
-    public void PushScreen(IScreen screen)
-    {
-        _screenStack.Push(screen);
-        screen.OnLoad();
-        _logger.Debug("Pushed screen {ScreenId}, stack size: {StackSize}", screen.ConsumerId, _screenStack.Count);
-    }
-
-    /// <summary>
-    /// Removes the focused screen (top of stack).
-    /// Calls OnUnload on the screen. Focus moves to screen below.
-    /// </summary>
-    public void PopScreen()
-    {
-        if (_screenStack.Count == 0)
-        {
-            _logger.Warning("Attempted to pop screen from empty stack");
-            return;
-        }
-
-        var screen = _screenStack.Pop();
-        screen.OnUnload();
-        _logger.Debug("Popped screen {ScreenId}, stack size: {StackSize}", screen.ConsumerId, _screenStack.Count);
-    }
-
-    /// <summary>
-    /// Removes a specific screen from the top of the stack if it matches.
-    /// Calls OnUnload on the screen if it was at the top.
-    /// </summary>
-    public void PopScreen(IScreen screen)
-    {
-        if (_screenStack.Count == 0)
-        {
-            _logger.Warning("Attempted to pop screen from empty stack");
-            return;
-        }
-
-        var focusedScreen = _screenStack.Peek();
-        if (focusedScreen == screen)
-        {
-            _screenStack.Pop();
-            screen.OnUnload();
-            _logger.Debug("Popped screen {ScreenId}, stack size: {StackSize}", screen.ConsumerId, _screenStack.Count);
-        }
-        else
-        {
-            _logger.Warning("Cannot pop screen {ScreenId}: not at top of stack", screen.ConsumerId);
-        }
-    }
-
-    /// <summary>
-    /// Removes a specific screen from the stack.
-    /// Calls OnUnload on the screen if found.
-    /// </summary>
-    public void RemoveScreen(IScreen screen)
-    {
-        var list = _screenStack.ToList();
-        if (!list.Contains(screen))
-        {
-            _logger.Warning("Screen {ScreenId} not found in stack", screen.ConsumerId);
-            return;
-        }
-
-        _screenStack.Clear();
-        foreach (var s in list)
-        {
-            if (s != screen)
-            {
-                _screenStack.Push(s);
-            }
-            else
-            {
-                s.OnUnload();
-                _logger.Debug("Removed screen {ScreenId} from stack", screen.ConsumerId);
-            }
-        }
-
-        // Re-push remaining screens in correct order
-        var tempStack = _screenStack.ToList();
-        _screenStack.Clear();
-        for (int i = tempStack.Count - 1; i >= 0; i--)
-        {
-            _screenStack.Push(tempStack[i]);
-        }
-    }
-
-    /// <summary>
     /// Updates all screens in the stack.
     /// </summary>
     public void Update(GameTime gameTime)
@@ -379,24 +401,6 @@ public sealed class ScreenManager : IScreenManager
         }
     }
 
-    private bool DispatchToScreens(Func<IScreen, bool> dispatchAction)
-    {
-        foreach (var screen in _screenStack)
-        {
-            if (!screen.IsActive)
-            {
-                continue;
-            }
-
-            if (dispatchAction(screen))
-            {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
     /// <summary>
     /// Dispatches an input action to all screen entities.
     /// </summary>
@@ -413,6 +417,24 @@ public sealed class ScreenManager : IScreenManager
             if (dispatchAction(entities[i]))
             {
                 return true; // Entity consumed input
+            }
+        }
+
+        return false;
+    }
+
+    private bool DispatchToScreens(Func<IScreen, bool> dispatchAction)
+    {
+        foreach (var screen in _screenStack)
+        {
+            if (!screen.IsActive)
+            {
+                continue;
+            }
+
+            if (dispatchAction(screen))
+            {
+                return true;
             }
         }
 

@@ -53,12 +53,12 @@ public interface IScreen : IInputConsumer
     void OnUnload();
 
     /// <summary>
-    /// Called to update the screen and its entities (once per frame).
-    /// </summary>
-    void Update(GameTime gameTime);
-
-    /// <summary>
     /// Called to render the screen and its entities.
     /// </summary>
     void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext);
+
+    /// <summary>
+    /// Called to update the screen and its entities (once per frame).
+    /// </summary>
+    void Update(GameTime gameTime);
 }

@@ -1,6 +1,4 @@
 using System.Numerics;
-using LillyQuest.Core.Data.Contexts;
-using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Managers.Screens.Base;
 using LillyQuest.Game.Entities;
@@ -9,7 +7,6 @@ namespace LillyQuest.Game.Screens;
 
 public class TestScreen : BaseScreen
 {
-
     private SpriteGameEntity _spriteGameEntity;
 
     private float accumulator;
@@ -17,10 +14,10 @@ public class TestScreen : BaseScreen
 
     public override void OnLoad()
     {
-        _spriteGameEntity = new SpriteGameEntity
+        _spriteGameEntity = new()
         {
-            Position = new Vector2(50, 50),
-            Size = new Vector2(30,30)
+            Position = new(50, 50),
+            Size = new(30, 30)
         };
 
         AddEntity(_spriteGameEntity);
@@ -35,14 +32,10 @@ public class TestScreen : BaseScreen
         if (accumulator >= interval)
         {
             // Move the sprite entity by 10 units to the right every second
-            Position += new Vector2(Random.Shared.Next(-10,10), Random.Shared.Next(-10,10));
+            Position += new Vector2(Random.Shared.Next(-10, 10), Random.Shared.Next(-10, 10));
             accumulator -= interval; // Reset the accumulator
         }
 
         base.Update(gameTime);
-
     }
-
-
-
 }

@@ -1,30 +1,22 @@
 using System.Numerics;
-using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Screens.UI;
-using NUnit.Framework;
 
 namespace LillyQuest.Tests.Engine.UI;
 
 public class UIWindowTests
 {
     [Test]
-    public void MouseDown_TitleBar_StartsDrag_WhenMovable()
+    public void BackgroundColor_UsesAlphaMultiplier()
     {
         var window = new UIWindow
         {
-            Position = Vector2.Zero,
-            Size = new Vector2(100, 50),
-            IsTitleBarEnabled = true,
-            IsWindowMovable = true
+            BackgroundColor = new(255, 10, 20, 30),
+            BackgroundAlpha = 0.5f
         };
-        window.TitleBarHeight = 10f;
 
-        var handled = window.HandleMouseDown(new Vector2(5, 5));
-        var moved = window.HandleMouseMove(new Vector2(20, 20));
+        var color = window.GetBackgroundColorWithAlpha();
 
-        Assert.That(handled, Is.True);
-        Assert.That(moved, Is.True);
-        Assert.That(window.Position, Is.EqualTo(new Vector2(15, 15)));
+        Assert.That(color.A, Is.EqualTo(128));
     }
 
     [Test]
@@ -33,20 +25,20 @@ public class UIWindowTests
         var parent = new UIScreenControl
         {
             Position = Vector2.Zero,
-            Size = new Vector2(100, 100)
+            Size = new(100, 100)
         };
         var window = new UIWindow
         {
             Position = Vector2.Zero,
-            Size = new Vector2(40, 40),
+            Size = new(40, 40),
             Parent = parent,
             IsTitleBarEnabled = true,
             IsWindowMovable = true
         };
         window.TitleBarHeight = 10f;
 
-        window.HandleMouseDown(new Vector2(5, 5));
-        window.HandleMouseMove(new Vector2(200, 200));
+        window.HandleMouseDown(new(5, 5));
+        window.HandleMouseMove(new(200, 200));
 
         Assert.That(window.Position, Is.EqualTo(new Vector2(60, 60)));
     }
@@ -57,35 +49,51 @@ public class UIWindowTests
         var window = new UIWindow
         {
             Position = Vector2.Zero,
-            Size = new Vector2(100, 50)
+            Size = new(100, 50)
         };
         window.TitleBarHeight = 10f;
-        var a = new UIScreenControl { Position = Vector2.Zero, Size = new Vector2(100, 50), ZIndex = 0 };
-        var b = new UIScreenControl { Position = Vector2.Zero, Size = new Vector2(100, 50), ZIndex = 1 };
+        var a = new UIScreenControl { Position = Vector2.Zero, Size = new(100, 50), ZIndex = 0 };
+        var b = new UIScreenControl { Position = Vector2.Zero, Size = new(100, 50), ZIndex = 1 };
         var hit = string.Empty;
-        a.OnMouseDown = _ => { hit = "a"; return true; };
-        b.OnMouseDown = _ => { hit = "b"; return true; };
+        a.OnMouseDown = _ =>
+                        {
+                            hit = "a";
+
+                            return true;
+                        };
+        b.OnMouseDown = _ =>
+                        {
+                            hit = "b";
+
+                            return true;
+                        };
         window.Add(a);
         window.Add(b);
 
-        var handled = window.HandleMouseDown(new Vector2(10, 20));
+        var handled = window.HandleMouseDown(new(10, 20));
 
         Assert.That(handled, Is.True);
         Assert.That(hit, Is.EqualTo("b"));
     }
 
     [Test]
-    public void BackgroundColor_UsesAlphaMultiplier()
+    public void MouseDown_TitleBar_StartsDrag_WhenMovable()
     {
         var window = new UIWindow
         {
-            BackgroundColor = new LyColor(255, 10, 20, 30),
-            BackgroundAlpha = 0.5f
+            Position = Vector2.Zero,
+            Size = new(100, 50),
+            IsTitleBarEnabled = true,
+            IsWindowMovable = true
         };
+        window.TitleBarHeight = 10f;
 
-        var color = window.GetBackgroundColorWithAlpha();
+        var handled = window.HandleMouseDown(new(5, 5));
+        var moved = window.HandleMouseMove(new(20, 20));
 
-        Assert.That(color.A, Is.EqualTo(128));
+        Assert.That(handled, Is.True);
+        Assert.That(moved, Is.True);
+        Assert.That(window.Position, Is.EqualTo(new Vector2(15, 15)));
     }
 
     [Test]

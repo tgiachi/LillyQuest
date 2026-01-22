@@ -1,4 +1,3 @@
-using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Engine.Managers.Screens.Base;
@@ -16,15 +15,17 @@ public sealed class UIRootScreen : BaseScreen
 
     public override bool OnMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
-        var hit = Root.HitTest(new Vector2(x, y));
+        var hit = Root.HitTest(new(x, y));
+
         if (hit == null)
         {
             return false;
         }
 
-        if (hit.HandleMouseDown(new Vector2(x, y)))
+        if (hit.HandleMouseDown(new(x, y)))
         {
             _activeControl = hit;
+
             return true;
         }
 
@@ -32,7 +33,7 @@ public sealed class UIRootScreen : BaseScreen
     }
 
     public override bool OnMouseMove(int x, int y)
-        => _activeControl?.HandleMouseMove(new Vector2(x, y)) ?? false;
+        => _activeControl?.HandleMouseMove(new(x, y)) ?? false;
 
     public override bool OnMouseUp(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
@@ -41,8 +42,9 @@ public sealed class UIRootScreen : BaseScreen
             return false;
         }
 
-        var handled = _activeControl.HandleMouseUp(new Vector2(x, y));
+        var handled = _activeControl.HandleMouseUp(new(x, y));
         _activeControl = null;
+
         return handled;
     }
 

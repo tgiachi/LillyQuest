@@ -22,6 +22,9 @@ public class TilesetManager : ITilesetManager
         GC.SuppressFinalize(this);
     }
 
+    public IReadOnlyDictionary<string, Tileset> GetAllTilesets()
+        => _tilesets.AsReadOnly();
+
     public Tileset GetTileset(string name)
         => _tilesets.TryGetValue(name, out var tileset)
                ? tileset
@@ -47,7 +50,7 @@ public class TilesetManager : ITilesetManager
         var textureName = $"{name}_texture";
         _textureManager.LoadTextureWithChromaKey(textureName, filePath);
         var texture = _textureManager.GetTexture(textureName);
-        texture.ConfigureSampling(useMipmaps: false, useLinearFiltering: false, clampToEdge: true);
+        texture.ConfigureSampling(false, false, true);
 
         var tileset = new Tileset(filePath, tileWidth, tileHeight, spacing, margin, texture);
         _tilesets[name] = tileset;
@@ -71,7 +74,7 @@ public class TilesetManager : ITilesetManager
         var textureName = $"{name}_texture";
         _textureManager.LoadTextureFromPngWithChromaKey(textureName, content);
         var texture = _textureManager.GetTexture(textureName);
-        texture.ConfigureSampling(useMipmaps: false, useLinearFiltering: false, clampToEdge: true);
+        texture.ConfigureSampling(false, false, true);
 
         var tileset = new Tileset($"[embedded]_{name}", tileWidth, tileHeight, spacing, margin, texture);
         _tilesets[name] = tileset;
@@ -80,9 +83,6 @@ public class TilesetManager : ITilesetManager
 
     public bool TryGetTileset(string name, out Tileset tileset)
         => _tilesets.TryGetValue(name, out tileset);
-
-    public IReadOnlyDictionary<string, Tileset> GetAllTilesets()
-        => _tilesets.AsReadOnly();
 
     public void UnloadTileset(string name)
     {

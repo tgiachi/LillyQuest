@@ -27,26 +27,27 @@ public class Tween
     }
 
     /// <summary>
+    /// Sets the callback to invoke when the tween completes.
+    /// </summary>
+    public Tween OnComplete(Action callback)
+    {
+        _onComplete = callback;
+
+        return this;
+    }
+
+    /// <summary>
     /// Updates the tween by the given delta time and invokes update callback.
     /// </summary>
     public void Update(float deltaTime)
     {
         _elapsedTime += deltaTime;
-        float progress = Math.Min(_elapsedTime / _duration, 1f);
+        var progress = Math.Min(_elapsedTime / _duration, 1f);
         _onUpdate(progress);
 
         if (IsComplete)
         {
             _onComplete?.Invoke();
         }
-    }
-
-    /// <summary>
-    /// Sets the callback to invoke when the tween completes.
-    /// </summary>
-    public Tween OnComplete(Action callback)
-    {
-        _onComplete = callback;
-        return this;
     }
 }

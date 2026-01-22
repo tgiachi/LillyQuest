@@ -39,7 +39,7 @@ public class ScreenSystem : ISystem
 
     public void Initialize()
     {
-        _spriteBatch = new SpriteBatch(_renderContext, _shaderManager, _fontManager, textureManager: _textureManager);
+        _spriteBatch = new(_renderContext, _shaderManager, _fontManager, textureManager: _textureManager);
     }
 
     public void ProcessEntities(GameTime gameTime, IGameEntityManager entityManager)

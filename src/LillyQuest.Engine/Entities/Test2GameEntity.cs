@@ -1,4 +1,3 @@
-using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Primitives;
@@ -8,15 +7,11 @@ namespace LillyQuest.Engine.Entities;
 
 public class Test2GameEntity : GameEntity, IRenderableEntity
 {
-
     public Test2GameEntity()
-    {
-        Name = "Test2";
-    }
+        => Name = "Test2";
 
     public void Render(SpriteBatch spriteBatch, EngineRenderContext context)
     {
-        spriteBatch.DrawFont("default_font", 14, "Test2 Entity Rendered", new Vector2(100,100), LyColor.Red);
-
+        spriteBatch.DrawFont("default_font", 14, "Test2 Entity Rendered", new(100, 100), LyColor.Red);
     }
 }
