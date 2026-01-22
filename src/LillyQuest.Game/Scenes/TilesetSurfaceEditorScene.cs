@@ -25,12 +25,14 @@ public class TilesetSurfaceEditorScene : BaseScene
     private readonly ITilesetManager _tilesetManager;
     private readonly ITextureManager _textureManager;
     private readonly INineSliceAssetManager _nineSliceManager;
+    private readonly IFontManager _fontManager;
 
     public TilesetSurfaceEditorScene(
         IScreenManager screenManager,
         ITilesetManager tilesetManager,
         ITextureManager textureManager,
-        INineSliceAssetManager nineSliceManager
+        INineSliceAssetManager nineSliceManager,
+        IFontManager fontManager
     )
         : base("tileset_surface_editor")
     {
@@ -38,6 +40,7 @@ public class TilesetSurfaceEditorScene : BaseScene
         _tilesetManager = tilesetManager;
         _textureManager = textureManager;
         _nineSliceManager = nineSliceManager;
+        _fontManager = fontManager;
     }
 
     public override void OnInitialize(ISceneManager sceneManager)
@@ -219,6 +222,40 @@ public class TilesetSurfaceEditorScene : BaseScene
         };
         nineSliceWindow.Add(nineSliceLabel);
         uiRoot.Root.Add(nineSliceWindow);
+
+        var buttonWindow = new UINinePatchWindow(_nineSliceManager, _textureManager)
+        {
+            Position = new(100, 260),
+            Size = new(260, 160),
+            Title = "UIButton Demo",
+            TitleFontName = "default_font",
+            TitleFontSize = 16,
+            TitleMargin = new Vector4D<float>(20f, 12f, 0f, 0f),
+            ContentMargin = new Vector4D<float>(20f, 40f, 0f, 0f),
+            NineSliceScale = 1f,
+            CenterTint = LyColor.FromHex("#e8d7b0"),
+            BorderTint = LyColor.FromHex("#a67c52"),
+            NineSliceKey = "simple_ui",
+            ZIndex = 4,
+        };
+
+        var sampleButton = new UIButton(_nineSliceManager, _textureManager, _fontManager)
+        {
+            Position = new(20, 10),
+            Size = new(180, 48),
+            Text = "Click Me",
+            FontName = "default_font",
+            FontSize = 14,
+            NineSliceKey = "simple_ui",
+            IdleTint = new LyColor(200, 200, 200, 255),
+            HoveredTint = new LyColor(255, 255, 255, 255),
+            PressedTint = new LyColor(160, 160, 160, 255),
+            TransitionTime = 0.2f
+        };
+        sampleButton.OnClick = () => Log.Logger.Information("UIButton clicked");
+
+        buttonWindow.Add(sampleButton);
+        uiRoot.Root.Add(buttonWindow);
 
         // var uiTile = new UITileSurfaceControl(_tilesetManager, 20, 5)
         // {
