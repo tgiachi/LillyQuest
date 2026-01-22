@@ -6,7 +6,6 @@ using LillyQuest.Engine.Interfaces.Entities;
 using LillyQuest.Engine.Interfaces.Input;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Screens;
-using LillyQuest.Engine.Screens.UI;
 using Serilog;
 using Silk.NET.Input;
 
@@ -15,7 +14,7 @@ namespace LillyQuest.Engine.Managers.Screens;
 /// <summary>
 /// Manages the screen stack for input dispatch and rendering.
 /// Supports multiple screens rendered together with focus-based input dispatch.
-/// Only the focused (top) screen receives input events.
+/// Only the focused (top) screen receives input events by default.
 /// Screens contain UI entities that are updated and rendered like game entities.
 /// </summary>
 public sealed class ScreenManager : IScreenManager
@@ -27,59 +26,32 @@ public sealed class ScreenManager : IScreenManager
     public IReadOnlyList<IScreen> ScreenStack => _screenStack.ToList().AsReadOnly();
     public IScreen? RootScreen => _screenStack.Count > 0 ? _screenStack.LastOrDefault() : null;
 
-    private UIScreenOverlay? GetUiOverlay()
-        => _screenStack.OfType<UIScreenOverlay>().LastOrDefault();
-
-    private IScreen? GetTopNonOverlayScreen()
-    {
-        foreach (var screen in _screenStack)
-        {
-            if (screen is not UIScreenOverlay)
-            {
-                return screen;
-            }
-        }
-
-        return null;
-    }
-
     /// <summary>
     /// Dispatches key press events to the focused screen and its entities.
     /// Only the focused (top) screen receives input.
     /// </summary>
     public bool DispatchKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
-        var overlay = GetUiOverlay();
-        if (overlay is { IsActive: true } && overlay.OnKeyPress(modifier, keys))
+        return DispatchToScreens(screen =>
         {
-            return true;
-        }
-
-        var targetScreen = GetTopNonOverlayScreen();
-        if (targetScreen is not { IsActive: true })
-        {
-            return false;
-        }
-
-        // Try screen itself
-        if (targetScreen.OnKeyPress(modifier, keys))
-        {
-            return true;
-        }
-
-        // Try screen entities (UI components)
-        return DispatchToScreenEntities(
-            targetScreen,
-            entity =>
+            if (screen.OnKeyPress(modifier, keys))
             {
-                if (entity is IInputConsumer inputConsumer)
-                {
-                    return inputConsumer.OnKeyPress(modifier, keys);
-                }
-
-                return false;
+                return true;
             }
-        );
+
+            return DispatchToScreenEntities(
+                screen,
+                entity =>
+                {
+                    if (entity is IInputConsumer inputConsumer)
+                    {
+                        return inputConsumer.OnKeyPress(modifier, keys);
+                    }
+
+                    return false;
+                }
+            );
+        });
     }
 
     /// <summary>
@@ -87,35 +59,26 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
-        var overlay = GetUiOverlay();
-        if (overlay is { IsActive: true } && overlay.OnKeyRelease(modifier, keys))
+        return DispatchToScreens(screen =>
         {
-            return true;
-        }
-
-        var targetScreen = GetTopNonOverlayScreen();
-        if (targetScreen is not { IsActive: true })
-        {
-            return false;
-        }
-
-        if (targetScreen.OnKeyRelease(modifier, keys))
-        {
-            return true;
-        }
-
-        return DispatchToScreenEntities(
-            targetScreen,
-            entity =>
+            if (screen.OnKeyRelease(modifier, keys))
             {
-                if (entity is IInputConsumer inputConsumer)
-                {
-                    return inputConsumer.OnKeyRelease(modifier, keys);
-                }
-
-                return false;
+                return true;
             }
-        );
+
+            return DispatchToScreenEntities(
+                screen,
+                entity =>
+                {
+                    if (entity is IInputConsumer inputConsumer)
+                    {
+                        return inputConsumer.OnKeyRelease(modifier, keys);
+                    }
+
+                    return false;
+                }
+            );
+        });
     }
 
     /// <summary>
@@ -123,35 +86,26 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
-        var overlay = GetUiOverlay();
-        if (overlay is { IsActive: true } && overlay.OnKeyRepeat(modifier, keys))
+        return DispatchToScreens(screen =>
         {
-            return true;
-        }
-
-        var targetScreen = GetTopNonOverlayScreen();
-        if (targetScreen == null || !targetScreen.IsActive)
-        {
-            return false;
-        }
-
-        if (targetScreen.OnKeyRepeat(modifier, keys))
-        {
-            return true;
-        }
-
-        return DispatchToScreenEntities(
-            targetScreen,
-            entity =>
+            if (screen.OnKeyRepeat(modifier, keys))
             {
-                if (entity is IInputConsumer inputConsumer)
-                {
-                    return inputConsumer.OnKeyRepeat(modifier, keys);
-                }
-
-                return false;
+                return true;
             }
-        );
+
+            return DispatchToScreenEntities(
+                screen,
+                entity =>
+                {
+                    if (entity is IInputConsumer inputConsumer)
+                    {
+                        return inputConsumer.OnKeyRepeat(modifier, keys);
+                    }
+
+                    return false;
+                }
+            );
+        });
     }
 
     /// <summary>
@@ -159,41 +113,30 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
-        var overlay = GetUiOverlay();
-        if (overlay is { IsActive: true } && overlay.HitTest(x, y) && overlay.OnMouseDown(x, y, buttons))
+        return DispatchToScreens(screen =>
         {
-            return true;
-        }
-
-        var targetScreen = GetTopNonOverlayScreen();
-        if (targetScreen == null || !targetScreen.IsActive)
-        {
-            return false;
-        }
-
-        // Hit-test screen first
-        if (targetScreen.HitTest(x, y) && targetScreen.OnMouseDown(x, y, buttons))
-        {
-            return true;
-        }
-
-        // Hit-test entities (top to bottom)
-        var entities = targetScreen.GetScreenGameObjects().ToList();
-
-        for (var i = entities.Count - 1; i >= 0; i--)
-        {
-            var entity = entities[i];
-
-            if (entity is IInputConsumer inputConsumer)
+            if (screen.HitTest(x, y) && screen.OnMouseDown(x, y, buttons))
             {
-                if (inputConsumer.HitTest(x, y) && inputConsumer.OnMouseDown(x, y, buttons))
+                return true;
+            }
+
+            var entities = screen.GetScreenGameObjects().ToList();
+
+            for (var i = entities.Count - 1; i >= 0; i--)
+            {
+                var entity = entities[i];
+
+                if (entity is IInputConsumer inputConsumer)
                 {
-                    return true;
+                    if (inputConsumer.HitTest(x, y) && inputConsumer.OnMouseDown(x, y, buttons))
+                    {
+                        return true;
+                    }
                 }
             }
-        }
 
-        return false;
+            return false;
+        });
     }
 
     /// <summary>
@@ -201,35 +144,26 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseMove(int x, int y)
     {
-        var overlay = GetUiOverlay();
-        if (overlay is { IsActive: true } && overlay.OnMouseMove(x, y))
+        return DispatchToScreens(screen =>
         {
-            return true;
-        }
-
-        var targetScreen = GetTopNonOverlayScreen();
-        if (targetScreen is not { IsActive: true })
-        {
-            return false;
-        }
-
-        if (targetScreen.OnMouseMove(x, y))
-        {
-            return true;
-        }
-
-        return DispatchToScreenEntities(
-            targetScreen,
-            entity =>
+            if (screen.OnMouseMove(x, y))
             {
-                if (entity is IInputConsumer inputConsumer)
-                {
-                    return inputConsumer.OnMouseMove(x, y);
-                }
-
-                return false;
+                return true;
             }
-        );
+
+            return DispatchToScreenEntities(
+                screen,
+                entity =>
+                {
+                    if (entity is IInputConsumer inputConsumer)
+                    {
+                        return inputConsumer.OnMouseMove(x, y);
+                    }
+
+                    return false;
+                }
+            );
+        });
     }
 
     /// <summary>
@@ -237,35 +171,26 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseUp(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
-        var overlay = GetUiOverlay();
-        if (overlay is { IsActive: true } && overlay.OnMouseUp(x, y, buttons))
+        return DispatchToScreens(screen =>
         {
-            return true;
-        }
-
-        var targetScreen = GetTopNonOverlayScreen();
-        if (targetScreen == null || !targetScreen.IsActive)
-        {
-            return false;
-        }
-
-        if (targetScreen.OnMouseUp(x, y, buttons))
-        {
-            return true;
-        }
-
-        return DispatchToScreenEntities(
-            targetScreen,
-            entity =>
+            if (screen.OnMouseUp(x, y, buttons))
             {
-                if (entity is IInputConsumer inputConsumer)
-                {
-                    return inputConsumer.OnMouseUp(x, y, buttons);
-                }
-
-                return false;
+                return true;
             }
-        );
+
+            return DispatchToScreenEntities(
+                screen,
+                entity =>
+                {
+                    if (entity is IInputConsumer inputConsumer)
+                    {
+                        return inputConsumer.OnMouseUp(x, y, buttons);
+                    }
+
+                    return false;
+                }
+            );
+        });
     }
 
     /// <summary>
@@ -273,41 +198,30 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseWheel(int x, int y, float delta)
     {
-        var overlay = GetUiOverlay();
-        if (overlay is { IsActive: true } && overlay.OnMouseWheel(x, y, delta))
+        return DispatchToScreens(screen =>
         {
-            return true;
-        }
-
-        var targetScreen = GetTopNonOverlayScreen();
-        if (targetScreen == null || !targetScreen.IsActive)
-        {
-            return false;
-        }
-
-        // Hit-test screen first
-        if (targetScreen.HitTest(x, y) && targetScreen.OnMouseWheel(x, y, delta))
-        {
-            return true;
-        }
-
-        // Try entities (top to bottom)
-        var entities = targetScreen.GetScreenGameObjects().ToList();
-
-        for (var i = entities.Count - 1; i >= 0; i--)
-        {
-            var entity = entities[i];
-
-            if (entity is IInputConsumer inputConsumer)
+            if (screen.HitTest(x, y) && screen.OnMouseWheel(x, y, delta))
             {
-                if (inputConsumer.HitTest(x, y) && inputConsumer.OnMouseWheel(x, y, delta))
+                return true;
+            }
+
+            var entities = screen.GetScreenGameObjects().ToList();
+
+            for (var i = entities.Count - 1; i >= 0; i--)
+            {
+                var entity = entities[i];
+
+                if (entity is IInputConsumer inputConsumer)
                 {
-                    return true;
+                    if (inputConsumer.HitTest(x, y) && inputConsumer.OnMouseWheel(x, y, delta))
+                    {
+                        return true;
+                    }
                 }
             }
-        }
 
-        return false;
+            return false;
+        });
     }
 
     /// <summary>
@@ -463,6 +377,24 @@ public sealed class ScreenManager : IScreenManager
                 screen.Update(gameTime);
             }
         }
+    }
+
+    private bool DispatchToScreens(Func<IScreen, bool> dispatchAction)
+    {
+        foreach (var screen in _screenStack)
+        {
+            if (!screen.IsActive)
+            {
+                continue;
+            }
+
+            if (dispatchAction(screen))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>
