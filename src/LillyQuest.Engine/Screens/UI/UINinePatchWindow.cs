@@ -16,6 +16,8 @@ public sealed class UINinePatchWindow : UIScreenControl
     private readonly List<UIScreenControl> _children = [];
     private readonly INineSliceAssetManager _nineSliceManager;
     private readonly ITextureManager _textureManager;
+    private bool _isDragging;
+    private Vector2 _dragOffset;
 
     public IReadOnlyList<UIScreenControl> Children => _children;
 
@@ -25,6 +27,9 @@ public sealed class UINinePatchWindow : UIScreenControl
     public int TitleFontSize { get; set; } = 14;
     public LyColor BorderTint { get; set; } = LyColor.White;
     public LyColor CenterTint { get; set; } = LyColor.White;
+    public bool IsTitleBarEnabled { get; set; } = true;
+    public bool IsWindowMovable { get; set; } = true;
+    public float TitleBarHeight { get; set; } = 18f;
     public Vector4D<float> TitleMargin { get; set; } = Vector4D<float>.Zero;
     public Vector4D<float> ContentMargin { get; set; } = Vector4D<float>.Zero;
     public float NineSliceScale { get; set; } = 1f;
@@ -71,6 +76,74 @@ public sealed class UINinePatchWindow : UIScreenControl
     {
         var world = GetWorldPosition();
         return new Vector2(world.X + ContentMargin.X, world.Y + ContentMargin.Y);
+    }
+
+    public override bool HandleMouseDown(Vector2 point)
+    {
+        if (!IsEnabled || !IsVisible)
+        {
+            return false;
+        }
+
+        foreach (var child in _children
+                              .OrderByDescending(control => control.ZIndex)
+                              .ThenByDescending(control => _children.IndexOf(control)))
+        {
+            var childBounds = child.GetBounds();
+
+            if (point.X >= childBounds.Origin.X &&
+                point.X <= childBounds.Origin.X + childBounds.Size.X &&
+                point.Y >= childBounds.Origin.Y &&
+                point.Y <= childBounds.Origin.Y + childBounds.Size.Y)
+            {
+                if (child.HandleMouseDown(point))
+                {
+                    return true;
+                }
+            }
+        }
+
+        var bounds = GetBounds();
+        if (point.X < bounds.Origin.X ||
+            point.X > bounds.Origin.X + bounds.Size.X ||
+            point.Y < bounds.Origin.Y ||
+            point.Y > bounds.Origin.Y + bounds.Size.Y)
+        {
+            return false;
+        }
+
+        if (IsTitleBarEnabled && IsWindowMovable && point.Y <= bounds.Origin.Y + TitleBarHeight)
+        {
+            _isDragging = true;
+            _dragOffset = point - GetWorldPosition();
+            return true;
+        }
+
+        return true;
+    }
+
+    public override bool HandleMouseMove(Vector2 point)
+    {
+        if (!_isDragging)
+        {
+            return false;
+        }
+
+        Position = point - _dragOffset;
+        ClampToParent();
+
+        return true;
+    }
+
+    public override bool HandleMouseUp(Vector2 point)
+    {
+        if (!_isDragging)
+        {
+            return false;
+        }
+
+        _isDragging = false;
+        return true;
     }
 
     public override void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext)
@@ -250,5 +323,19 @@ public sealed class UINinePatchWindow : UIScreenControl
         var width = (sourceRect.Size.X * uScale) / texture.Width;
         var height = (sourceRect.Size.Y * vScale) / texture.Height;
         return new Rectangle<float>(u, v, width, height);
+    }
+
+    private void ClampToParent()
+    {
+        if (Parent == null)
+        {
+            return;
+        }
+
+        var maxX = Parent.Size.X - Size.X;
+        var maxY = Parent.Size.Y - Size.Y;
+        var clampedX = Math.Clamp(Position.X, 0f, maxX);
+        var clampedY = Math.Clamp(Position.Y, 0f, maxY);
+        Position = new(clampedX, clampedY);
     }
 }
