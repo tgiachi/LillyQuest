@@ -6,7 +6,13 @@ namespace LillyQuest.Core.Managers.Assets;
 
 public sealed class NineSliceAssetManager : INineSliceAssetManager
 {
+    private readonly ITextureManager _textureManager;
     private readonly Dictionary<string, NineSliceDefinition> _definitions = new(StringComparer.OrdinalIgnoreCase);
+
+    public NineSliceAssetManager(ITextureManager textureManager)
+    {
+        _textureManager = textureManager;
+    }
 
     public void RegisterNineSlice(
         string key,
@@ -50,6 +56,44 @@ public sealed class NineSliceAssetManager : INineSliceAssetManager
             bottomRect,
             bottomRight
         );
+    }
+
+    public void LoadNineSlice(
+        string key,
+        string textureName,
+        string filePath,
+        Rectangle<int> sourceRect,
+        Vector4D<float> margins
+    )
+    {
+        _textureManager.LoadTexture(textureName, filePath);
+        RegisterNineSlice(key, textureName, sourceRect, margins);
+    }
+
+    public void LoadNineSlice(
+        string key,
+        string textureName,
+        Span<byte> data,
+        uint width,
+        uint height,
+        Rectangle<int> sourceRect,
+        Vector4D<float> margins
+    )
+    {
+        _textureManager.LoadTexture(textureName, data, width, height);
+        RegisterNineSlice(key, textureName, sourceRect, margins);
+    }
+
+    public void LoadNineSliceFromPng(
+        string key,
+        string textureName,
+        Span<byte> pngData,
+        Rectangle<int> sourceRect,
+        Vector4D<float> margins
+    )
+    {
+        _textureManager.LoadTextureFromPng(textureName, pngData);
+        RegisterNineSlice(key, textureName, sourceRect, margins);
     }
 
     public NineSliceDefinition GetNineSlice(string key)

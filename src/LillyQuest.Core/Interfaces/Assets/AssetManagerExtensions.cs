@@ -1,6 +1,8 @@
 using System.Reflection;
 using LillyQuest.Core.Utils;
 using Silk.NET.Maths;
+using SixLabors.ImageSharp;
+using SixLabors.ImageSharp.PixelFormats;
 
 namespace LillyQuest.Core.Interfaces.Assets;
 
@@ -199,8 +201,19 @@ public static class AssetManagerExtensions
     {
         assembly ??= Assembly.GetCallingAssembly();
         var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
-        manager.TextureManager.LoadTextureFromPng($"n9_ui_{key}", data);
-        var textureInfo = manager.TextureManager.GetTexture($"n9_ui_{key}");
-        manager.NineSliceManager.RegisterNineSlice(key, $"n9_ui_{key}" , new Rectangle<int>(0,0, textureInfo.Width,textureInfo.Height), margins);
+        using var image = Image.Load<Rgba32>(data);
+        var pixelData = new byte[image.Width * image.Height * 4];
+        image.CopyPixelDataTo(pixelData);
+
+        var textureName = $"n9_ui_{key}";
+        manager.NineSliceManager.LoadNineSlice(
+            key,
+            textureName,
+            pixelData,
+            (uint)image.Width,
+            (uint)image.Height,
+            new Rectangle<int>(0, 0, image.Width, image.Height),
+            margins
+        );
     }
 }

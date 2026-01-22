@@ -13,7 +13,7 @@ public class AssetManagerExtensionsTests
     public void LoadNineSliceFromEmbeddedResource_RegistersDefinitionAndLoadsTexture()
     {
         var textureManager = new FakeTextureManager();
-        var nineSliceManager = new NineSliceAssetManager();
+        var nineSliceManager = new NineSliceAssetManager(textureManager);
         var assetManager = new FakeAssetManager(textureManager, nineSliceManager);
 
         assetManager.LoadNineSliceFromEmbeddedResource(
@@ -23,11 +23,13 @@ public class AssetManagerExtensionsTests
             typeof(ResourceUtils).Assembly
         );
 
-        Assert.That(textureManager.LoadedTextureNames, Does.Contain("ui_panel_texture"));
+        Assert.That(textureManager.LoadedTextureNames, Does.Contain("n9_ui_ui_panel"));
         Assert.That(nineSliceManager.TryGetNineSlice("ui_panel", out var definition), Is.True);
-        Assert.That(definition.TextureName, Is.EqualTo("ui_panel_texture"));
-        Assert.That(definition.Center.Size.X, Is.EqualTo(24));
-        Assert.That(definition.Center.Size.Y, Is.EqualTo(24));
+        Assert.That(definition.TextureName, Is.EqualTo("n9_ui_ui_panel"));
+        Assert.That(textureManager.LastWidth, Is.GreaterThan(0u));
+        Assert.That(textureManager.LastHeight, Is.GreaterThan(0u));
+        Assert.That(definition.Center.Size.X, Is.EqualTo((int)textureManager.LastWidth - 8));
+        Assert.That(definition.Center.Size.Y, Is.EqualTo((int)textureManager.LastHeight - 8));
     }
 
     private sealed class FakeAssetManager : IAssetManager
@@ -54,6 +56,9 @@ public class AssetManagerExtensionsTests
     {
         private readonly HashSet<string> _loadedNames = new(StringComparer.OrdinalIgnoreCase);
 
+        public uint LastWidth { get; private set; }
+        public uint LastHeight { get; private set; }
+
         public IReadOnlyCollection<string> LoadedTextureNames => _loadedNames;
 
         public Texture2D DefaultWhiteTexture => throw new NotSupportedException();
@@ -72,7 +77,11 @@ public class AssetManagerExtensionsTests
             => throw new NotSupportedException();
 
         public void LoadTexture(string assetName, Span<byte> data, uint width, uint height)
-            => throw new NotSupportedException();
+        {
+            _loadedNames.Add(assetName);
+            LastWidth = width;
+            LastHeight = height;
+        }
 
         public void LoadTextureFromPng(string assetName, Span<byte> pngData)
         {

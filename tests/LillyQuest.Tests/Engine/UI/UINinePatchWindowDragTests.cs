@@ -11,8 +11,8 @@ public class UINinePatchWindowDragTests
     [Test]
     public void HandleMouseDrag_MovesWindow_WhenEnabled()
     {
-        var nineSliceManager = new NineSliceAssetManager();
         var textureManager = new FakeTextureManager();
+        var nineSliceManager = new NineSliceAssetManager(textureManager);
         var window = new UINinePatchWindow(nineSliceManager, textureManager)
         {
             Position = new(10, 10),

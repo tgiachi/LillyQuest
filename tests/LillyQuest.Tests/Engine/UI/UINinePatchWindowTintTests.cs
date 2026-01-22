@@ -11,8 +11,8 @@ public class UINinePatchWindowTintTests
     [Test]
     public void TintDefaults_AreWhite()
     {
-        var nineSliceManager = new NineSliceAssetManager();
         var textureManager = new FakeTextureManager();
+        var nineSliceManager = new NineSliceAssetManager(textureManager);
         var window = new UINinePatchWindow(nineSliceManager, textureManager);
 
         Assert.That(window.BorderTint, Is.EqualTo(LyColor.White));
