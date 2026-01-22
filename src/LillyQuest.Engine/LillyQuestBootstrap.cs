@@ -231,6 +231,7 @@ public class LillyQuestBootstrap
         _container.Register<IFontManager, FontManager>(Reuse.Singleton);
         _container.Register<IAudioManager, AudioManager>(Reuse.Singleton);
         _container.Register<ITilesetManager, TilesetManager>(Reuse.Singleton);
+        _container.Register<INineSliceAssetManager, NineSliceAssetManager>(Reuse.Singleton);
 
         _container.Register<IGameEntityManager, GameEntityManager>(Reuse.Singleton);
         _container.Register<ISystemManager, SystemManager>(Reuse.Singleton);

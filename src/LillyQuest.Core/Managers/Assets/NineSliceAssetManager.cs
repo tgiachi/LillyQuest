@@ -1,0 +1,67 @@
+using LillyQuest.Core.Data.Assets;
+using LillyQuest.Core.Interfaces.Assets;
+using Silk.NET.Maths;
+
+namespace LillyQuest.Core.Managers.Assets;
+
+public sealed class NineSliceAssetManager : INineSliceAssetManager
+{
+    private readonly Dictionary<string, NineSliceDefinition> _definitions = new(StringComparer.OrdinalIgnoreCase);
+
+    public void RegisterNineSlice(
+        string key,
+        string textureName,
+        Rectangle<int> sourceRect,
+        Vector4D<float> margins
+    )
+    {
+        var left = (int)margins.X;
+        var top = (int)margins.Y;
+        var right = (int)margins.Z;
+        var bottom = (int)margins.W;
+
+        var centerWidth = sourceRect.Size.X - left - right;
+        var centerHeight = sourceRect.Size.Y - top - bottom;
+
+        var x = sourceRect.Origin.X;
+        var y = sourceRect.Origin.Y;
+
+        var topLeft = new Rectangle<int>(x, y, left, top);
+        var topRect = new Rectangle<int>(x + left, y, centerWidth, top);
+        var topRight = new Rectangle<int>(x + left + centerWidth, y, right, top);
+
+        var leftRect = new Rectangle<int>(x, y + top, left, centerHeight);
+        var center = new Rectangle<int>(x + left, y + top, centerWidth, centerHeight);
+        var rightRect = new Rectangle<int>(x + left + centerWidth, y + top, right, centerHeight);
+
+        var bottomLeft = new Rectangle<int>(x, y + top + centerHeight, left, bottom);
+        var bottomRect = new Rectangle<int>(x + left, y + top + centerHeight, centerWidth, bottom);
+        var bottomRight = new Rectangle<int>(x + left + centerWidth, y + top + centerHeight, right, bottom);
+
+        _definitions[key] = new NineSliceDefinition(
+            textureName,
+            topLeft,
+            topRect,
+            topRight,
+            leftRect,
+            center,
+            rightRect,
+            bottomLeft,
+            bottomRect,
+            bottomRight
+        );
+    }
+
+    public NineSliceDefinition GetNineSlice(string key)
+    {
+        if (!_definitions.TryGetValue(key, out var definition))
+        {
+            throw new KeyNotFoundException($"Nine-slice not found: {key}");
+        }
+
+        return definition;
+    }
+
+    public bool TryGetNineSlice(string key, out NineSliceDefinition definition)
+        => _definitions.TryGetValue(key, out definition);
+}

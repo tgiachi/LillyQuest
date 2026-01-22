@@ -18,12 +18,15 @@ public class AssetManager : IAssetManager
 
     public ITilesetManager TilesetManager { get; }
 
+    public INineSliceAssetManager NineSliceManager { get; }
+
     public AssetManager(
         ITextureManager textureManager,
         IFontManager fontManager,
         IShaderManager shaderManager,
         IAudioManager audioManager,
-        ITilesetManager tilesetManager
+        ITilesetManager tilesetManager,
+        INineSliceAssetManager nineSliceManager
     )
     {
         TextureManager = textureManager;
@@ -31,6 +34,7 @@ public class AssetManager : IAssetManager
         ShaderManager = shaderManager;
         AudioManager = audioManager;
         TilesetManager = tilesetManager;
+        NineSliceManager = nineSliceManager;
     }
 
     public void Dispose()
