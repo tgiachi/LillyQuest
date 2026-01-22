@@ -24,6 +24,7 @@ public sealed class UIWindow : UIScreenControl
     public LyColor BorderColor { get; set; } = LyColor.White;
     public float BorderThickness { get; set; } = 1f;
     public float TitleBarHeight { get; set; } = 18f;
+    public bool IsModal { get; set; }
     public bool IsResizable { get; set; } = true;
     public Vector2 MinSize { get; set; } = Vector2.Zero;
     public Vector2 MaxSize { get; set; } = new(float.PositiveInfinity, float.PositiveInfinity);
@@ -63,6 +64,11 @@ public sealed class UIWindow : UIScreenControl
         if (!IsEnabled || !IsVisible)
         {
             return false;
+        }
+
+        if (OnMouseDown?.Invoke(point) == true)
+        {
+            return true;
         }
 
         foreach (var child in _children

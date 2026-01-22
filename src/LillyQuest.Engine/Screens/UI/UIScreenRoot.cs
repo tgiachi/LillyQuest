@@ -22,6 +22,16 @@ public sealed class UIScreenRoot
         _children.Add(control);
     }
 
+    public void Remove(UIScreenControl control)
+    {
+        if (control == null)
+        {
+            return;
+        }
+
+        _children.Remove(control);
+    }
+
     public void BringToFront(UIScreenControl control)
     {
         if (control == null || !_children.Contains(control))
