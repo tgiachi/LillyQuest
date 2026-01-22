@@ -7,6 +7,7 @@ using LillyQuest.Engine.Extensions.TilesetSurface;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Managers.Scenes.Base;
 using LillyQuest.Engine.Screens.TilesetSurface;
+using LillyQuest.Engine.Screens.UI;
 using Serilog;
 using Silk.NET.Input;
 
@@ -121,6 +122,34 @@ public class TilesetSurfaceEditorScene : BaseScene
 
         // Add the screen to the screen manager
         _screenManager.PushScreen(screen);
+
+        var uiOverlay = new UIScreenOverlay
+        {
+            Position = Vector2.Zero,
+            Size = new Vector2(1600, 900)
+        };
+
+        var label = new UILabel
+        {
+            Text = "UI Label",
+            Position = new Vector2(20, 20),
+            Color = LyColor.Yellow,
+            ZIndex = 0
+        };
+        uiOverlay.Root.Add(label);
+
+        // var uiTile = new UITileSurfaceControl(_tilesetManager, 20, 5)
+        // {
+        //     Position = new Vector2(20, 50),
+        //     Size = new Vector2(10, 3),
+        //     ZIndex = 1
+        // };
+        // uiTile.Surface.DefaultTilesetName = "alloy";
+        // uiTile.Surface.SetLayerTileset(0, "alloy");
+        // uiTile.Surface.DrawText(0, "UI Tiles", 1, 1, LyColor.White, LyColor.Black);
+        // uiOverlay.Root.Add(uiTile);
+
+        _screenManager.PushScreen(uiOverlay);
 
         base.OnInitialize(sceneManager);
     }

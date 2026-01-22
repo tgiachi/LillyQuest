@@ -6,6 +6,7 @@ using LillyQuest.Engine.Interfaces.Entities;
 using LillyQuest.Engine.Interfaces.Input;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Screens;
+using LillyQuest.Engine.Screens.UI;
 using Serilog;
 using Silk.NET.Input;
 
@@ -26,12 +27,21 @@ public sealed class ScreenManager : IScreenManager
     public IReadOnlyList<IScreen> ScreenStack => _screenStack.ToList().AsReadOnly();
     public IScreen? RootScreen => _screenStack.Count > 0 ? _screenStack.LastOrDefault() : null;
 
+    private UIScreenOverlay? GetUiOverlay()
+        => _screenStack.OfType<UIScreenOverlay>().LastOrDefault();
+
     /// <summary>
     /// Dispatches key press events to the focused screen and its entities.
     /// Only the focused (top) screen receives input.
     /// </summary>
     public bool DispatchKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
+        var overlay = GetUiOverlay();
+        if (overlay is { IsActive: true } && overlay.OnKeyPress(modifier, keys))
+        {
+            return true;
+        }
+
         if (FocusedScreen is not { IsActive: true })
         {
             return false;
@@ -63,6 +73,12 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
+        var overlay = GetUiOverlay();
+        if (overlay is { IsActive: true } && overlay.OnKeyRelease(modifier, keys))
+        {
+            return true;
+        }
+
         if (FocusedScreen is not { IsActive: true })
         {
             return false;
@@ -92,6 +108,12 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
+        var overlay = GetUiOverlay();
+        if (overlay is { IsActive: true } && overlay.OnKeyRepeat(modifier, keys))
+        {
+            return true;
+        }
+
         if (FocusedScreen == null || !FocusedScreen.IsActive)
         {
             return false;
@@ -121,6 +143,12 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
+        var overlay = GetUiOverlay();
+        if (overlay is { IsActive: true } && overlay.HitTest(x, y) && overlay.OnMouseDown(x, y, buttons))
+        {
+            return true;
+        }
+
         if (FocusedScreen == null || !FocusedScreen.IsActive)
         {
             return false;
@@ -156,6 +184,12 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseMove(int x, int y)
     {
+        var overlay = GetUiOverlay();
+        if (overlay is { IsActive: true } && overlay.OnMouseMove(x, y))
+        {
+            return true;
+        }
+
         if (FocusedScreen is not { IsActive: true })
         {
             return false;
@@ -185,6 +219,12 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseUp(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
+        var overlay = GetUiOverlay();
+        if (overlay is { IsActive: true } && overlay.OnMouseUp(x, y, buttons))
+        {
+            return true;
+        }
+
         if (FocusedScreen == null || !FocusedScreen.IsActive)
         {
             return false;
@@ -214,6 +254,12 @@ public sealed class ScreenManager : IScreenManager
     /// </summary>
     public bool DispatchMouseWheel(int x, int y, float delta)
     {
+        var overlay = GetUiOverlay();
+        if (overlay is { IsActive: true } && overlay.OnMouseWheel(x, y, delta))
+        {
+            return true;
+        }
+
         if (FocusedScreen == null || !FocusedScreen.IsActive)
         {
             return false;
