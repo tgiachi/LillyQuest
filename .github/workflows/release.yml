@@ -49,6 +49,12 @@ jobs:
         if: steps.release_check.outputs.should_release == 'true'
         run: dotnet tool install --global versionize
 
+      - name: Configure git user
+        if: steps.release_check.outputs.should_release == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Run versionize
         if: steps.release_check.outputs.should_release == 'true'
         run: versionize --skip-dirty
@@ -56,8 +62,6 @@ jobs:
       - name: Push version commit and tag
         if: steps.release_check.outputs.should_release == 'true'
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
           git push
           git push --tags
 
