@@ -23,6 +23,8 @@ public sealed class UINinePatchWindow : UIScreenControl
     public string Title { get; set; } = string.Empty;
     public string TitleFontName { get; set; } = "default_font";
     public int TitleFontSize { get; set; } = 14;
+    public LyColor BorderTint { get; set; } = LyColor.White;
+    public LyColor CenterTint { get; set; } = LyColor.White;
     public Vector4D<float> TitleMargin { get; set; } = Vector4D<float>.Zero;
     public Vector4D<float> ContentMargin { get; set; } = Vector4D<float>.Zero;
     public float NineSliceScale { get; set; } = 1f;
@@ -123,32 +125,49 @@ public sealed class UINinePatchWindow : UIScreenControl
         var centerWidth = MathF.Max(0f, Size.X - leftWidth - rightWidth);
         var centerHeight = MathF.Max(0f, Size.Y - topHeight - bottomHeight);
 
-        DrawSlice(spriteBatch, texture, world, new Vector2(leftWidth, topHeight), slice.TopLeft);
-        DrawSlice(spriteBatch, texture, new Vector2(world.X + leftWidth + centerWidth, world.Y), new Vector2(rightWidth, topHeight), slice.TopRight);
-        DrawSlice(spriteBatch, texture, new Vector2(world.X, world.Y + topHeight + centerHeight), new Vector2(leftWidth, bottomHeight), slice.BottomLeft);
+        DrawSlice(spriteBatch, texture, world, new Vector2(leftWidth, topHeight), slice.TopLeft, BorderTint);
+        DrawSlice(
+            spriteBatch,
+            texture,
+            new Vector2(world.X + leftWidth + centerWidth, world.Y),
+            new Vector2(rightWidth, topHeight),
+            slice.TopRight,
+            BorderTint
+        );
+        DrawSlice(
+            spriteBatch,
+            texture,
+            new Vector2(world.X, world.Y + topHeight + centerHeight),
+            new Vector2(leftWidth, bottomHeight),
+            slice.BottomLeft,
+            BorderTint
+        );
         DrawSlice(
             spriteBatch,
             texture,
             new Vector2(world.X + leftWidth + centerWidth, world.Y + topHeight + centerHeight),
             new Vector2(rightWidth, bottomHeight),
-            slice.BottomRight
+            slice.BottomRight,
+            BorderTint
         );
 
-        DrawTiled(spriteBatch, texture, new Vector2(world.X + leftWidth, world.Y), new Vector2(centerWidth, topHeight), slice.Top);
+        DrawTiled(spriteBatch, texture, new Vector2(world.X + leftWidth, world.Y), new Vector2(centerWidth, topHeight), slice.Top, BorderTint);
         DrawTiled(
             spriteBatch,
             texture,
             new Vector2(world.X + leftWidth, world.Y + topHeight + centerHeight),
             new Vector2(centerWidth, bottomHeight),
-            slice.Bottom
+            slice.Bottom,
+            BorderTint
         );
-        DrawTiled(spriteBatch, texture, new Vector2(world.X, world.Y + topHeight), new Vector2(leftWidth, centerHeight), slice.Left);
+        DrawTiled(spriteBatch, texture, new Vector2(world.X, world.Y + topHeight), new Vector2(leftWidth, centerHeight), slice.Left, BorderTint);
         DrawTiled(
             spriteBatch,
             texture,
             new Vector2(world.X + leftWidth + centerWidth, world.Y + topHeight),
             new Vector2(rightWidth, centerHeight),
-            slice.Right
+            slice.Right,
+            BorderTint
         );
 
         DrawTiled(
@@ -156,11 +175,19 @@ public sealed class UINinePatchWindow : UIScreenControl
             texture,
             new Vector2(world.X + leftWidth, world.Y + topHeight),
             new Vector2(centerWidth, centerHeight),
-            slice.Center
+            slice.Center,
+            CenterTint
         );
     }
 
-    private void DrawSlice(SpriteBatch spriteBatch, Texture2D texture, Vector2 position, Vector2 size, Rectangle<int> sourceRect)
+    private void DrawSlice(
+        SpriteBatch spriteBatch,
+        Texture2D texture,
+        Vector2 position,
+        Vector2 size,
+        Rectangle<int> sourceRect,
+        LyColor tint
+    )
     {
         if (size.X <= 0f || size.Y <= 0f)
         {
@@ -168,10 +195,17 @@ public sealed class UINinePatchWindow : UIScreenControl
         }
 
         var uv = ToUvRect(texture, sourceRect, 1f, 1f);
-        spriteBatch.Draw(texture, position, size, LyColor.White, 0f, Vector2.Zero, uv, 0f);
+        spriteBatch.Draw(texture, position, size, tint, 0f, Vector2.Zero, uv, 0f);
     }
 
-    private void DrawTiled(SpriteBatch spriteBatch, Texture2D texture, Vector2 position, Vector2 size, Rectangle<int> sourceRect)
+    private void DrawTiled(
+        SpriteBatch spriteBatch,
+        Texture2D texture,
+        Vector2 position,
+        Vector2 size,
+        Rectangle<int> sourceRect,
+        LyColor tint
+    )
     {
         if (size.X <= 0f || size.Y <= 0f)
         {
@@ -199,7 +233,7 @@ public sealed class UINinePatchWindow : UIScreenControl
                     texture,
                     new Vector2(position.X + x, position.Y + y),
                     new Vector2(drawWidth, drawHeight),
-                    LyColor.White,
+                    tint,
                     0f,
                     Vector2.Zero,
                     uv,
