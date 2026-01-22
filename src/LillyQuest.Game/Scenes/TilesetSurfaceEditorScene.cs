@@ -123,7 +123,7 @@ public class TilesetSurfaceEditorScene : BaseScene
         // Add the screen to the screen manager
         _screenManager.PushScreen(screen);
 
-        var uiOverlay = new UIScreenOverlay
+        var uiRoot = new UIRootScreen
         {
             Position = Vector2.Zero,
             Size = new Vector2(1600, 900)
@@ -136,7 +136,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             Color = LyColor.Yellow,
             ZIndex = 0
         };
-        uiOverlay.Root.Add(label);
+        uiRoot.Root.Add(label);
 
         var window = new UIWindow
         {
@@ -158,7 +158,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             Color = LyColor.White
         };
         window.Add(windowLabel);
-        uiOverlay.Root.Add(window);
+        uiRoot.Root.Add(window);
 
         var staticWindow = new UIWindow
         {
@@ -180,7 +180,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             Color = LyColor.White
         };
         staticWindow.Add(staticLabel);
-        uiOverlay.Root.Add(staticWindow);
+        uiRoot.Root.Add(staticWindow);
 
         // var uiTile = new UITileSurfaceControl(_tilesetManager, 20, 5)
         // {
@@ -191,9 +191,9 @@ public class TilesetSurfaceEditorScene : BaseScene
         // uiTile.Surface.DefaultTilesetName = "alloy";
         // uiTile.Surface.SetLayerTileset(0, "alloy");
         // uiTile.Surface.DrawText(0, "UI Tiles", 1, 1, LyColor.White, LyColor.Black);
-        // uiOverlay.Root.Add(uiTile);
+        // uiRoot.Root.Add(uiTile);
 
-        _screenManager.PushScreen(uiOverlay);
+        _screenManager.PushScreen(uiRoot);
 
         base.OnInitialize(sceneManager);
     }
