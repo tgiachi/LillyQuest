@@ -157,7 +157,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             IsTitleBarEnabled = true,
             IsWindowMovable = true,
             BackgroundColor = LyColor.Black,
-            BackgroundAlpha = 0.6f,
+            BackgroundAlpha = 0.9f,
             BorderColor = LyColor.White,
             ZIndex = 1
         };
@@ -193,52 +193,32 @@ public class TilesetSurfaceEditorScene : BaseScene
         staticWindow.Add(staticLabel);
         uiRoot.Root.Add(staticWindow);
 
-        var nineSliceTextureName = "lillyquest_cover";
-        var nineSliceKey = "lillyquest_cover_slice";
-        if (!_textureManager.HasTexture(nineSliceTextureName))
+        var nineSliceWindow = new UINinePatchWindow(_nineSliceManager, _textureManager)
         {
-            var texturePath = Path.Combine(Directory.GetCurrentDirectory(), "images", "lillyquest_cover.jpg");
-            if (File.Exists(texturePath))
-            {
-                _textureManager.LoadTexture(nineSliceTextureName, texturePath);
-            }
-        }
+            Position = new(520, 240),
+            Size = new(420, 240),
+            Title = "Nine-Slice Window",
+            TitleFontName = "default_font",
+            TitleFontSize = 16,
+            TitleMargin = new Vector4D<float>(20f, 12f, 0f, 0f),
+            ContentMargin = new Vector4D<float>(20f, 40f, 0f, 0f),
+            NineSliceScale = 1f,
+            CenterTint = LyColor.FromHex("#e8d7b0"),
+            BorderTint = LyColor.FromHex("#a67c52"),
+            NineSliceKey = "simple_ui",
+            ZIndex = 3,
+        };
 
-        if (_textureManager.TryGetTexture(nineSliceTextureName, out var nineSliceTexture))
+
+
+        var nineSliceLabel = new UILabel
         {
-            if (!_nineSliceManager.TryGetNineSlice(nineSliceKey, out _))
-            {
-                _nineSliceManager.RegisterNineSlice(
-                    nineSliceKey,
-                    nineSliceTextureName,
-                    new Rectangle<int>(0, 0, (int)nineSliceTexture.Width, (int)nineSliceTexture.Height),
-                    new Vector4D<float>(64f, 64f, 64f, 64f)
-                );
-            }
-
-            var nineSliceWindow = new UINinePatchWindow(_nineSliceManager, _textureManager)
-            {
-                Position = new(520, 240),
-                Size = new(420, 240),
-                Title = "Nine-Slice Window",
-                TitleFontName = "default_font",
-                TitleFontSize = 16,
-                TitleMargin = new Vector4D<float>(20f, 12f, 0f, 0f),
-                ContentMargin = new Vector4D<float>(20f, 40f, 0f, 0f),
-                NineSliceScale = 1f,
-                NineSliceKey = nineSliceKey,
-                ZIndex = 3
-            };
-
-            var nineSliceLabel = new UILabel
-            {
-                Text = "Nine-slice content",
-                Position = new(0, 0),
-                Color = LyColor.White
-            };
-            nineSliceWindow.Add(nineSliceLabel);
-            uiRoot.Root.Add(nineSliceWindow);
-        }
+            Text = "Nine-slice content",
+            Position = new(0, 0),
+            Color = LyColor.White
+        };
+        nineSliceWindow.Add(nineSliceLabel);
+        uiRoot.Root.Add(nineSliceWindow);
 
         // var uiTile = new UITileSurfaceControl(_tilesetManager, 20, 5)
         // {

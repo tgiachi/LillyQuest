@@ -18,9 +18,7 @@ public class AssetManagerExtensionsTests
 
         assetManager.LoadNineSliceFromEmbeddedResource(
             "ui_panel",
-            "ui_panel_texture",
             "Assets/_9patch/simple_ui.png",
-            new Rectangle<int>(0, 0, 32, 32),
             new Vector4D<float>(4f, 4f, 4f, 4f),
             typeof(ResourceUtils).Assembly
         );

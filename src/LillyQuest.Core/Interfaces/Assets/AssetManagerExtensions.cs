@@ -186,24 +186,21 @@ public static class AssetManagerExtensions
     /// </summary>
     /// <param name="manager">The asset manager instance.</param>
     /// <param name="key">Unique key for the nine-slice definition.</param>
-    /// <param name="textureName">Unique name for the texture asset.</param>
     /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/9patch/window.png").</param>
-    /// <param name="sourceRect">Source rectangle within the texture.</param>
     /// <param name="margins">Pixel margins for the nine-slice (left, top, right, bottom).</param>
     /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly.</param>
     public static void LoadNineSliceFromEmbeddedResource(
         this IAssetManager manager,
         string key,
-        string textureName,
         string resourcePath,
-        Rectangle<int> sourceRect,
         Vector4D<float> margins,
         Assembly? assembly = null
     )
     {
         assembly ??= Assembly.GetCallingAssembly();
         var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
-        manager.TextureManager.LoadTextureFromPng(textureName, data);
-        manager.NineSliceManager.RegisterNineSlice(key, textureName, sourceRect, margins);
+        manager.TextureManager.LoadTextureFromPng($"n9_ui_{key}", data);
+        var textureInfo = manager.TextureManager.GetTexture($"n9_ui_{key}");
+        manager.NineSliceManager.RegisterNineSlice(key, $"n9_ui_{key}" , new Rectangle<int>(0,0, textureInfo.Width,textureInfo.Height), margins);
     }
 }

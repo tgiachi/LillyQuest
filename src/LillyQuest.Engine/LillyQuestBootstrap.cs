@@ -151,27 +151,6 @@ public class LillyQuestBootstrap
     private void InitDebugMode()
     {
         var entityManager = _container.Resolve<IGameEntityManager>();
-
-        // var inputSystem = _container.Resolve<InputSystem>();
-        // var systemManager = _container.Resolve<ISystemManager>();
-        // var sceneManager = _container.Resolve<ISceneManager>();
-        // var screenManager = _container.Resolve<IScreenManager>();
-        // var textureManager = _container.Resolve<ITextureManager>();
-        // var tilesetManager = _container.Resolve<ITilesetManager>();
-        //
-        // // Create debug panel - it handles creation of all debug objects as children
-        // var debugPanel = new DebugPanelGameObject(
-        //     this,
-        //     systemManager,
-        //     entityManager,
-        //     sceneManager,
-        //     screenManager,
-        //     textureManager,
-        //     tilesetManager,
-        //     inputSystem,
-        //     _renderContext
-        // );
-
         entityManager.AddEntity(entityManager.CreateEntity<DebugPanelGameObject>());
     }
 
@@ -215,6 +194,21 @@ public class LillyQuestBootstrap
             "Assets/Textures/lillyquest_logo.png",
             typeof(SpriteBatch).Assembly
         );
+
+        assetManager.LoadNineSliceFromEmbeddedResource(
+            "simple_ui",
+            "Assets/_9patch/simple_ui.png",
+            new Vector4D<float>(16, 16, 16, 16),
+            typeof(SpriteBatch).Assembly
+        );
+
+        // assetManager.NineSliceManager.LoadNineSliceFromEmbeddedResource(
+        //     "default_panel",
+        //     "Assets/Textures/panel_nine_slice.png",
+        //     12,
+        //     12,
+        //     typeof(SpriteBatch).Assembly
+        // );
 
         var graphicTileSet = Path.Combine(_directoriesConfig[DirectoryType.AssetsTextures], "32x32.png");
 
