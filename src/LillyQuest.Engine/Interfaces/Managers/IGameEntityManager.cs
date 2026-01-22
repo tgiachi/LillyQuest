@@ -27,6 +27,15 @@ public interface IGameEntityManager
     void AddEntity(IGameEntity entity, IGameEntity parent);
 
     /// <summary>
+    /// Creates a new entity of the specified type and adds it to the manager.
+    /// The entity is resolved via Dependency Injection (DryIoc container).
+    /// All required constructor dependencies must be registered in the container.
+    /// </summary>
+    /// <typeparam name="TEntity">The type of entity to create</typeparam>
+    /// <returns>The newly created entity instance resolved from the DI container</returns>
+    TEntity CreateEntity<TEntity>() where TEntity : IGameEntity;
+
+    /// <summary>
     /// Retrieves an entity by its unique ID.
     /// </summary>
     /// <param name="id">The entity ID</param>
@@ -46,13 +55,4 @@ public interface IGameEntityManager
     /// </summary>
     /// <param name="entity">The entity to remove</param>
     void RemoveEntity(IGameEntity entity);
-
-    /// <summary>
-    /// Creates a new entity of the specified type and adds it to the manager.
-    /// The entity is resolved via Dependency Injection (DryIoc container).
-    /// All required constructor dependencies must be registered in the container.
-    /// </summary>
-    /// <typeparam name="TEntity">The type of entity to create</typeparam>
-    /// <returns>The newly created entity instance resolved from the DI container</returns>
-    TEntity CreateEntity<TEntity>() where TEntity : IGameEntity;
 }

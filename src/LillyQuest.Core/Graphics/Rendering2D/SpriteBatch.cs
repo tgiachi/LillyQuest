@@ -123,9 +123,10 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         if (_scissorEnabled && ScissorRect.Size.X > 0 && ScissorRect.Size.Y > 0)
         {
             _gl.Enable(EnableCap.ScissorTest);
+
             // Convert from top-left coordinates to OpenGL bottom-left
-            int viewportHeight = Viewport.Size.Y;
-            int scissorY = viewportHeight - ScissorRect.Origin.Y - ScissorRect.Size.Y;
+            var viewportHeight = Viewport.Size.Y;
+            var scissorY = viewportHeight - ScissorRect.Origin.Y - ScissorRect.Size.Y;
             _gl.Scissor(
                 ScissorRect.Origin.X,
                 scissorY,
@@ -161,70 +162,6 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     }
 
     /// <summary>
-    /// Pushes a translation offset onto the translation stack.
-    /// All subsequent draw calls will be offset by this amount.
-    /// Must be paired with PopTranslation().
-    /// </summary>
-    public void PushTranslation(Vector2 offset)
-    {
-        _translationStack.Push(_currentTranslation);
-        _currentTranslation += offset;
-    }
-
-    /// <summary>
-    /// Pops the most recent translation offset from the translation stack.
-    /// Restores the previous translation state.
-    /// </summary>
-    public void PopTranslation()
-    {
-        if (_translationStack.Count > 0)
-        {
-            _currentTranslation = _translationStack.Pop();
-        }
-        else
-        {
-            _currentTranslation = Vector2.Zero;
-        }
-    }
-
-    /// <summary>
-    /// Enable scissor test with the specified rectangle.
-    /// Flushes the current buffer before changing scissor state.
-    /// Coordinates: (x, y) from top-left corner.
-    /// </summary>
-    /// <param name="x">X position of the scissor rectangle.</param>
-    /// <param name="y">Y position of the scissor rectangle.</param>
-    /// <param name="width">Width of the scissor rectangle.</param>
-    /// <param name="height">Height of the scissor rectangle.</param>
-    public void SetScissor(int x, int y, int width, int height)
-    {
-        if (IsActive)
-        {
-            FlushBuffer();  // Flush current batch with previous scissor state
-
-            _gl.Enable(EnableCap.ScissorTest);
-
-            // Convert from top-left coordinates to OpenGL bottom-left
-            int viewportHeight = Viewport.Size.Y;
-            int scissorY = viewportHeight - y - height;
-
-            _gl.Scissor(x, scissorY, (uint)width, (uint)height);
-        }
-
-        ScissorRect = new(x, y, width, height);
-        _scissorEnabled = true;
-    }
-
-    /// <summary>
-    /// Enable scissor test with a rectangle.
-    /// Flushes the current buffer before changing scissor state.
-    /// </summary>
-    public void SetScissor(Rectangle<int> rect)
-    {
-        SetScissor(rect.Origin.X, rect.Origin.Y, rect.Size.X, rect.Size.Y);
-    }
-
-    /// <summary>
     /// Disable scissor test.
     /// Flushes the current buffer with scissor still active before disabling.
     /// </summary>
@@ -232,7 +169,7 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     {
         if (IsActive)
         {
-            FlushBuffer();  // Flush current batch with scissor still active
+            FlushBuffer(); // Flush current batch with scissor still active
             _gl.Disable(EnableCap.ScissorTest);
         }
 
@@ -1330,6 +1267,70 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         _lastTexture = null;
         _scissorEnabled = false;
         ScissorRect = new(0, 0, 0, 0);
+    }
+
+    /// <summary>
+    /// Pops the most recent translation offset from the translation stack.
+    /// Restores the previous translation state.
+    /// </summary>
+    public void PopTranslation()
+    {
+        if (_translationStack.Count > 0)
+        {
+            _currentTranslation = _translationStack.Pop();
+        }
+        else
+        {
+            _currentTranslation = Vector2.Zero;
+        }
+    }
+
+    /// <summary>
+    /// Pushes a translation offset onto the translation stack.
+    /// All subsequent draw calls will be offset by this amount.
+    /// Must be paired with PopTranslation().
+    /// </summary>
+    public void PushTranslation(Vector2 offset)
+    {
+        _translationStack.Push(_currentTranslation);
+        _currentTranslation += offset;
+    }
+
+    /// <summary>
+    /// Enable scissor test with the specified rectangle.
+    /// Flushes the current buffer before changing scissor state.
+    /// Coordinates: (x, y) from top-left corner.
+    /// </summary>
+    /// <param name="x">X position of the scissor rectangle.</param>
+    /// <param name="y">Y position of the scissor rectangle.</param>
+    /// <param name="width">Width of the scissor rectangle.</param>
+    /// <param name="height">Height of the scissor rectangle.</param>
+    public void SetScissor(int x, int y, int width, int height)
+    {
+        if (IsActive)
+        {
+            FlushBuffer(); // Flush current batch with previous scissor state
+
+            _gl.Enable(EnableCap.ScissorTest);
+
+            // Convert from top-left coordinates to OpenGL bottom-left
+            var viewportHeight = Viewport.Size.Y;
+            var scissorY = viewportHeight - y - height;
+
+            _gl.Scissor(x, scissorY, (uint)width, (uint)height);
+        }
+
+        ScissorRect = new(x, y, width, height);
+        _scissorEnabled = true;
+    }
+
+    /// <summary>
+    /// Enable scissor test with a rectangle.
+    /// Flushes the current buffer before changing scissor state.
+    /// </summary>
+    public void SetScissor(Rectangle<int> rect)
+    {
+        SetScissor(rect.Origin.X, rect.Origin.Y, rect.Size.X, rect.Size.Y);
     }
 
     protected virtual void Dispose(bool disposing)

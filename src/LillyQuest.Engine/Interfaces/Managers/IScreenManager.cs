@@ -33,16 +33,44 @@ public interface IScreenManager
     IScreen? RootScreen { get; }
 
     /// <summary>
-    /// Sets the root screen, replacing all existing screens.
-    /// Calls OnUnload on old screens and OnLoad on new screen.
+    /// Performs hierarchical input dispatch to the screen tree.
+    /// Hit-tests and dispatches to topmost active screen first.
+    /// If a screen consumes input, stops dispatch (doesn't propagate to children).
     /// </summary>
-    void SetRootScreen(IScreen? screen);
+    /// <param name="x">Mouse X coordinate.</param>
+    /// <param name="y">Mouse Y coordinate.</param>
+    /// <returns>True if input was consumed by any screen in the hierarchy.</returns>
+    bool DispatchKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys);
 
     /// <summary>
-    /// Adds a screen to the top of the stack (becomes focused/has input).
-    /// Calls OnLoad on the screen.
+    /// Dispatches key release event to active screens.
     /// </summary>
-    void PushScreen(IScreen screen);
+    bool DispatchKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys);
+
+    /// <summary>
+    /// Dispatches key repeat event to active screens.
+    /// </summary>
+    bool DispatchKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys);
+
+    /// <summary>
+    /// Dispatches mouse down event to active screens (with hit-testing).
+    /// </summary>
+    bool DispatchMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons);
+
+    /// <summary>
+    /// Dispatches mouse move event to active screens.
+    /// </summary>
+    bool DispatchMouseMove(int x, int y);
+
+    /// <summary>
+    /// Dispatches mouse up event to active screens.
+    /// </summary>
+    bool DispatchMouseUp(int x, int y, IReadOnlyList<MouseButton> buttons);
+
+    /// <summary>
+    /// Dispatches mouse wheel event to active screens.
+    /// </summary>
+    bool DispatchMouseWheel(int x, int y, float delta);
 
     /// <summary>
     /// Removes the focused screen (top of stack) from the stack.
@@ -58,6 +86,12 @@ public interface IScreenManager
     void PopScreen(IScreen screen);
 
     /// <summary>
+    /// Adds a screen to the top of the stack (becomes focused/has input).
+    /// Calls OnLoad on the screen.
+    /// </summary>
+    void PushScreen(IScreen screen);
+
+    /// <summary>
     /// Removes a specific screen from the stack.
     /// Calls OnUnload on the screen if found.
     /// Useful when changing scenes to clean up associated screens.
@@ -65,52 +99,18 @@ public interface IScreenManager
     void RemoveScreen(IScreen screen);
 
     /// <summary>
-    /// Updates the current screen and all its entities.
-    /// </summary>
-    void Update(GameTime gameTime);
-
-    /// <summary>
     /// Renders the current screen and all its entities.
     /// </summary>
     void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext);
 
     /// <summary>
-    /// Performs hierarchical input dispatch to the screen tree.
-    /// Hit-tests and dispatches to topmost active screen first.
-    /// If a screen consumes input, stops dispatch (doesn't propagate to children).
+    /// Sets the root screen, replacing all existing screens.
+    /// Calls OnUnload on old screens and OnLoad on new screen.
     /// </summary>
-    /// <param name="x">Mouse X coordinate.</param>
-    /// <param name="y">Mouse Y coordinate.</param>
-    /// <returns>True if input was consumed by any screen in the hierarchy.</returns>
-    bool DispatchKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys);
+    void SetRootScreen(IScreen? screen);
 
     /// <summary>
-    /// Dispatches key repeat event to active screens.
+    /// Updates the current screen and all its entities.
     /// </summary>
-    bool DispatchKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys);
-
-    /// <summary>
-    /// Dispatches key release event to active screens.
-    /// </summary>
-    bool DispatchKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys);
-
-    /// <summary>
-    /// Dispatches mouse move event to active screens.
-    /// </summary>
-    bool DispatchMouseMove(int x, int y);
-
-    /// <summary>
-    /// Dispatches mouse down event to active screens (with hit-testing).
-    /// </summary>
-    bool DispatchMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons);
-
-    /// <summary>
-    /// Dispatches mouse up event to active screens.
-    /// </summary>
-    bool DispatchMouseUp(int x, int y, IReadOnlyList<MouseButton> buttons);
-
-    /// <summary>
-    /// Dispatches mouse wheel event to active screens.
-    /// </summary>
-    bool DispatchMouseWheel(int x, int y, float delta);
+    void Update(GameTime gameTime);
 }

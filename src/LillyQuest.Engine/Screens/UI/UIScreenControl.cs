@@ -25,6 +25,16 @@ public class UIScreenControl
     public Func<Vector2, bool>? OnMouseUp { get; set; }
 
     /// <summary>
+    /// Gets the bounds of the control in world space.
+    /// </summary>
+    public Rectangle<float> GetBounds()
+    {
+        var world = GetWorldPosition();
+
+        return new(world.X, world.Y, Size.X, Size.Y);
+    }
+
+    /// <summary>
     /// Gets the world position based on parent and anchor.
     /// </summary>
     public Vector2 GetWorldPosition()
@@ -34,24 +44,15 @@ public class UIScreenControl
 
         var anchorOffset = Anchor switch
         {
-            UIAnchor.TopLeft => Vector2.Zero,
-            UIAnchor.TopRight => new Vector2(parentSize.X - Size.X, 0f),
-            UIAnchor.BottomLeft => new Vector2(0f, parentSize.Y - Size.Y),
-            UIAnchor.BottomRight => new Vector2(parentSize.X - Size.X, parentSize.Y - Size.Y),
-            UIAnchor.Center => new Vector2((parentSize.X - Size.X) * 0.5f, (parentSize.Y - Size.Y) * 0.5f),
-            _ => Vector2.Zero
+            UIAnchor.TopLeft     => Vector2.Zero,
+            UIAnchor.TopRight    => new(parentSize.X - Size.X, 0f),
+            UIAnchor.BottomLeft  => new(0f, parentSize.Y - Size.Y),
+            UIAnchor.BottomRight => new(parentSize.X - Size.X, parentSize.Y - Size.Y),
+            UIAnchor.Center      => new((parentSize.X - Size.X) * 0.5f, (parentSize.Y - Size.Y) * 0.5f),
+            _                    => Vector2.Zero
         };
 
         return parentPosition + anchorOffset + Position;
-    }
-
-    /// <summary>
-    /// Gets the bounds of the control in world space.
-    /// </summary>
-    public Rectangle<float> GetBounds()
-    {
-        var world = GetWorldPosition();
-        return new Rectangle<float>(world.X, world.Y, Size.X, Size.Y);
     }
 
     /// <summary>
@@ -75,7 +76,5 @@ public class UIScreenControl
     /// <summary>
     /// Renders the control.
     /// </summary>
-    public virtual void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext)
-    {
-    }
+    public virtual void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext) { }
 }

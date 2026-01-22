@@ -7,6 +7,11 @@ public interface ITextureManager : IDisposable
     Texture2D DefaultWhiteTexture { get; }
     Texture2D DefaultBlackTexture { get; }
 
+    /// <summary>
+    /// Gets all loaded textures.
+    /// </summary>
+    IReadOnlyDictionary<string, Texture2D> GetAllTextures();
+
     Texture2D GetTexture(string assetName);
     bool HasTexture(string assetName);
 
@@ -33,11 +38,6 @@ public interface ITextureManager : IDisposable
     void LoadTextureWithChromaKey(string assetName, string filePath, byte tolerance = 0);
 
     bool TryGetTexture(string assetName, out Texture2D texture);
-
-    /// <summary>
-    /// Gets all loaded textures.
-    /// </summary>
-    IReadOnlyDictionary<string, Texture2D> GetAllTextures();
 
     void UnloadTexture(string assetName);
 }

@@ -19,9 +19,8 @@ public abstract class BaseSystem<TEntityFeature> : ISystem where TEntityFeature 
         QueryType = queryType;
     }
 
-    public virtual void Initialize()
-    {
-    }
+    public virtual void Initialize() { }
+
     public void ProcessEntities(GameTime gameTime, IGameEntityManager entityManager)
     {
         var typedEntities = entityManager.GetQueryOf<TEntityFeature>();
@@ -29,8 +28,9 @@ public abstract class BaseSystem<TEntityFeature> : ISystem where TEntityFeature 
         ProcessTypedEntities(gameTime, entityManager, typedEntities);
     }
 
-    protected virtual void ProcessTypedEntities(GameTime gameTime, IGameEntityManager entityManager, IReadOnlyList<TEntityFeature> typedEntities)
-    {
-
-    }
+    protected virtual void ProcessTypedEntities(
+        GameTime gameTime,
+        IGameEntityManager entityManager,
+        IReadOnlyList<TEntityFeature> typedEntities
+    ) { }
 }

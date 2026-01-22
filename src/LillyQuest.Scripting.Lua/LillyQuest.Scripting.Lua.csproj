@@ -32,8 +32,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="..\..\images\lillyquest_logo_nuget.jpg" Pack="true" PackagePath="\" />
-        <None Include="..\..\README.md" Pack="true" PackagePath="\" />
+        <None Include="..\..\images\lillyquest_logo_nuget.jpg" Pack="true" PackagePath="\"/>
+        <None Include="..\..\README.md" Pack="true" PackagePath="\"/>
     </ItemGroup>
 
 </Project>

@@ -12,9 +12,7 @@ public abstract class BaseScreenScene : BaseScene
 
     protected BaseScreenScene(string name, IScreenManager screenManager)
         : base(name)
-    {
-        ScreenManager = screenManager;
-    }
+        => ScreenManager = screenManager;
 
     public override void OnInitialize(ISceneManager sceneManager)
     {

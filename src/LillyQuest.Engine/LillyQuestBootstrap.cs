@@ -148,6 +148,33 @@ public class LillyQuestBootstrap
     /// </summary>
     private void EndFrame() { }
 
+    private void InitDebugMode()
+    {
+        var entityManager = _container.Resolve<IGameEntityManager>();
+
+        // var inputSystem = _container.Resolve<InputSystem>();
+        // var systemManager = _container.Resolve<ISystemManager>();
+        // var sceneManager = _container.Resolve<ISceneManager>();
+        // var screenManager = _container.Resolve<IScreenManager>();
+        // var textureManager = _container.Resolve<ITextureManager>();
+        // var tilesetManager = _container.Resolve<ITilesetManager>();
+        //
+        // // Create debug panel - it handles creation of all debug objects as children
+        // var debugPanel = new DebugPanelGameObject(
+        //     this,
+        //     systemManager,
+        //     entityManager,
+        //     sceneManager,
+        //     screenManager,
+        //     textureManager,
+        //     tilesetManager,
+        //     inputSystem,
+        //     _renderContext
+        // );
+
+        entityManager.AddEntity(entityManager.CreateEntity<DebugPanelGameObject>());
+    }
+
     private void LoadDefaultResources()
     {
         var assetManager = _container.Resolve<IAssetManager>();
@@ -209,7 +236,7 @@ public class LillyQuestBootstrap
         _container.Register<ISystemManager, SystemManager>(Reuse.Singleton);
         _container.Register<IScreenManager, ScreenManager>(
             Reuse.Singleton,
-            made: Parameters.Of.Type(typeof(SpriteBatch))
+            Parameters.Of.Type(typeof(SpriteBatch))
         );
 
         _container.Register<ISceneManager, SceneTransitionManager>(Reuse.Singleton);
@@ -261,33 +288,6 @@ public class LillyQuestBootstrap
         StartSceneManager();
     }
 
-    private void InitDebugMode()
-    {
-        var entityManager = _container.Resolve<IGameEntityManager>();
-
-        // var inputSystem = _container.Resolve<InputSystem>();
-        // var systemManager = _container.Resolve<ISystemManager>();
-        // var sceneManager = _container.Resolve<ISceneManager>();
-        // var screenManager = _container.Resolve<IScreenManager>();
-        // var textureManager = _container.Resolve<ITextureManager>();
-        // var tilesetManager = _container.Resolve<ITilesetManager>();
-        //
-        // // Create debug panel - it handles creation of all debug objects as children
-        // var debugPanel = new DebugPanelGameObject(
-        //     this,
-        //     systemManager,
-        //     entityManager,
-        //     sceneManager,
-        //     screenManager,
-        //     textureManager,
-        //     tilesetManager,
-        //     inputSystem,
-        //     _renderContext
-        // );
-
-        entityManager.AddEntity(entityManager.CreateEntity<DebugPanelGameObject>());
-    }
-
     private void StartSceneManager()
     {
         if (_container.IsRegistered<List<SceneRegistrationObject>>())
@@ -299,7 +299,7 @@ public class LillyQuestBootstrap
             {
                 var sceneManager = _container.Resolve<ISceneManager>();
                 var sceneInstance = (IScene)_container.Resolve(initialScene.SceneType);
-                sceneManager.SwitchScene(sceneInstance.Name, fadeDuration: 0.5f);
+                sceneManager.SwitchScene(sceneInstance.Name, 0.5f);
                 _logger.Information("Loaded initial scene '{SceneName}'", sceneInstance.Name);
             }
         }

@@ -6,7 +6,6 @@ using LillyQuest.Engine.Extensions;
 using LillyQuest.Engine.Logging;
 using LillyQuest.Game.Scenes;
 using Serilog;
-using Serilog.Sinks.SystemConsole.Themes;
 
 var logDispatcher = new LogEventDispatcher();
 

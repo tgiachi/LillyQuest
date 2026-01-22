@@ -8,9 +8,10 @@ public class TestGameEntity : GameEntity, IIMGuiEntity
 
     public TestGameEntity(string? name = null, Action? drawAction = null)
     {
-        Name  = name ?? "Test Entity";
+        Name = name ?? "Test Entity";
         _drawAction = drawAction;
     }
+
     public void DrawIMGui()
     {
         _drawAction?.Invoke();

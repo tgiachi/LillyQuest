@@ -14,15 +14,7 @@ public abstract class BaseScene : IScene
     private readonly List<IGameEntity> _globalGameObjects = [];
 
     protected BaseScene(string name)
-    {
-        Name = name;
-    }
-
-    protected void AddEntity(IGameEntity entity)
-    {
-        entity.Name = $"[S:{Name}]_{entity.Name}";
-        _sceneGameObjects.Add(entity);
-    }
+        => Name = name;
 
     public IEnumerable<IGameEntity> GetSceneGameObjects()
         => _sceneGameObjects;
@@ -41,5 +33,11 @@ public abstract class BaseScene : IScene
         {
             gameObjectManager.AddEntity(global);
         }
+    }
+
+    protected void AddEntity(IGameEntity entity)
+    {
+        entity.Name = $"[S:{Name}]_{entity.Name}";
+        _sceneGameObjects.Add(entity);
     }
 }

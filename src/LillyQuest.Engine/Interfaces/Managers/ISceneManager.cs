@@ -26,6 +26,13 @@ public interface ISceneManager
     IReadOnlyList<IScene> GetAvailableScenes();
 
     /// <summary>
+    /// Renders the fade overlay during scene transitions.
+    /// Should be called after all scene rendering is complete.
+    /// </summary>
+    /// <param name="screenSize">Size of the screen in pixels.</param>
+    void RenderFadeOverlay(Vector2D<int> screenSize);
+
+    /// <summary>
     /// Initiates a scene transition with a fade animation.
     /// </summary>
     /// <param name="sceneName">The name of the scene to transition to.</param>
@@ -38,11 +45,4 @@ public interface ISceneManager
     /// </summary>
     /// <param name="gameTime">Current game time information.</param>
     void Update(GameTime gameTime);
-
-    /// <summary>
-    /// Renders the fade overlay during scene transitions.
-    /// Should be called after all scene rendering is complete.
-    /// </summary>
-    /// <param name="screenSize">Size of the screen in pixels.</param>
-    void RenderFadeOverlay(Vector2D<int> screenSize);
 }

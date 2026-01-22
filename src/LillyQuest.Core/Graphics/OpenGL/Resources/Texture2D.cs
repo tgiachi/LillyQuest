@@ -126,6 +126,12 @@ public class Texture2D : IDisposable
         _gl.BindTexture(TextureTarget.Texture2D, Handle);
     }
 
+    public void ConfigureSampling(bool useMipmaps, bool useLinearFiltering, bool clampToEdge)
+    {
+        Bind();
+        ApplyParameters(useMipmaps, useLinearFiltering, clampToEdge);
+    }
+
     public void Dispose()
     {
         _gl.DeleteTexture(Handle);
@@ -152,26 +158,14 @@ public class Texture2D : IDisposable
         }
     }
 
-    public void ConfigureSampling(bool useMipmaps, bool useLinearFiltering, bool clampToEdge)
-    {
-        Bind();
-        ApplyParameters(useMipmaps, useLinearFiltering, clampToEdge);
-    }
-
-    private void SetParameters(bool useMipmaps = true)
-    {
-        ApplyParameters(useMipmaps, useLinearFiltering: true, clampToEdge: !useMipmaps);
-    }
-
     private void ApplyParameters(bool useMipmaps, bool useLinearFiltering, bool clampToEdge)
     {
         var wrapMode = clampToEdge ? GLEnum.ClampToEdge : GLEnum.Repeat;
         _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapS, (int)wrapMode);
         _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureWrapT, (int)wrapMode);
 
-        var minFilter = useMipmaps
-                            ? (useLinearFiltering ? GLEnum.LinearMipmapLinear : GLEnum.NearestMipmapNearest)
-                            : (useLinearFiltering ? GLEnum.Linear : GLEnum.Nearest);
+        var minFilter = useMipmaps ? useLinearFiltering ? GLEnum.LinearMipmapLinear : GLEnum.NearestMipmapNearest :
+                        useLinearFiltering ? GLEnum.Linear : GLEnum.Nearest;
         var magFilter = useLinearFiltering ? GLEnum.Linear : GLEnum.Nearest;
 
         if (useMipmaps)
@@ -189,5 +183,10 @@ public class Texture2D : IDisposable
             _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureBaseLevel, 0);
             _gl.TexParameter(TextureTarget.Texture2D, TextureParameterName.TextureMaxLevel, 0);
         }
+    }
+
+    private void SetParameters(bool useMipmaps = true)
+    {
+        ApplyParameters(useMipmaps, true, !useMipmaps);
     }
 }

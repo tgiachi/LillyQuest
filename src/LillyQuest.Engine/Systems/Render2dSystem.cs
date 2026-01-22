@@ -33,7 +33,7 @@ public class Render2dSystem : BaseSystem<IRenderableEntity>
 
     public override void Initialize()
     {
-        _spriteBatch = new SpriteBatch(_renderContext, _shaderManager, _fontManager, textureManager: _textureManager);
+        _spriteBatch = new(_renderContext, _shaderManager, _fontManager, textureManager: _textureManager);
         base.Initialize();
     }
 

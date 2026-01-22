@@ -1,27 +1,39 @@
+using LillyQuest.Core.Data.Assets.Tiles;
+using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Engine.Screens.UI;
-using NUnit.Framework;
 
 namespace LillyQuest.Tests.Engine.UI;
 
 public class UITileSurfaceControlTests
 {
-    private sealed class StubTilesetManager : LillyQuest.Core.Interfaces.Assets.ITilesetManager
+    private sealed class StubTilesetManager : ITilesetManager
     {
         public void Dispose() { }
-        public LillyQuest.Core.Data.Assets.Tiles.Tileset GetTileset(string name) => throw new NotSupportedException();
-        public bool HasTileset(string name) => false;
+
+        public IReadOnlyDictionary<string, Tileset> GetAllTilesets()
+            => new Dictionary<string, Tileset>();
+
+        public Tileset GetTileset(string name)
+            => throw new NotSupportedException();
+
+        public bool HasTileset(string name)
+            => false;
+
         public void LoadTileset(string name, string filePath, int tileWidth, int tileHeight, int spacing, int margin)
             => throw new NotSupportedException();
+
         public void LoadTileset(string name, Span<byte> content, int tileWidth, int tileHeight, int spacing, int margin)
             => throw new NotSupportedException();
-        public bool TryGetTileset(string name, out LillyQuest.Core.Data.Assets.Tiles.Tileset tileset)
+
+        public bool TryGetTileset(string name, out Tileset tileset)
         {
             tileset = null!;
+
             return false;
         }
-        public IReadOnlyDictionary<string, LillyQuest.Core.Data.Assets.Tiles.Tileset> GetAllTilesets()
-            => new Dictionary<string, LillyQuest.Core.Data.Assets.Tiles.Tileset>();
-        public void UnloadTileset(string name) => throw new NotSupportedException();
+
+        public void UnloadTileset(string name)
+            => throw new NotSupportedException();
     }
 
     [Test]

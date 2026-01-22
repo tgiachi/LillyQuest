@@ -36,9 +36,9 @@ public class TilesetSurfaceEditorScene : BaseScene
         {
             DefaultTilesetName = "roguelike",
             LayerCount = 2,
-            Position = new Vector2(100, 30),
+            Position = new(100, 30),
             TileRenderScale = 1f,
-            TileViewSize = new Vector2(20, 20),
+            TileViewSize = new(20, 20)
         };
 
         screen.TileMouseMoveAllLayers += (index, x, y, mouseX, mouseY) =>
@@ -71,12 +71,13 @@ public class TilesetSurfaceEditorScene : BaseScene
                                             var randX = Random.Shared.Next(0, 100);
                                             var randY = Random.Shared.Next(0, 100);
 
-                                            var randomDenstinationVector = new Vector2(randX + Random.Shared.Next(-1, 2), randY + Random.Shared.Next(-1, 2));
+                                            var randomDenstinationVector = new Vector2(
+                                                randX + Random.Shared.Next(-1, 2),
+                                                randY + Random.Shared.Next(-1, 2)
+                                            );
 
-                                            screen.EnqueueMove(0, new Vector2((float)randX,(float)randY), randomDenstinationVector, 0.2f, true);
-
+                                            screen.EnqueueMove(0, new(randX, randY), randomDenstinationVector, 0.2f, true);
                                         }
-
                                     }
                                 };
 
@@ -86,7 +87,7 @@ public class TilesetSurfaceEditorScene : BaseScene
 
                                      if (delta < 0)
                                      {
-                                         delta = (point * -1);
+                                         delta = point * -1;
                                      }
                                      else
                                      {
@@ -119,20 +120,19 @@ public class TilesetSurfaceEditorScene : BaseScene
         screen.SelectedLayerIndex = 0;
         screen.DrawText(1, "hello from LillyQuest *", 2, 2, LyColor.Yellow, LyColor.Black);
 
-
         // Add the screen to the screen manager
         _screenManager.PushScreen(screen);
 
         var uiRoot = new UIRootScreen
         {
             Position = Vector2.Zero,
-            Size = new Vector2(1600, 900)
+            Size = new(1600, 900)
         };
 
         var label = new UILabel
         {
             Text = "UI Label",
-            Position = new Vector2(20, 200),
+            Position = new(20, 200),
             Color = LyColor.Yellow,
             ZIndex = 0
         };
@@ -140,8 +140,8 @@ public class TilesetSurfaceEditorScene : BaseScene
 
         var window = new UIWindow
         {
-            Position = new Vector2(100, 90),
-            Size = new Vector2(240, 120),
+            Position = new(100, 90),
+            Size = new(240, 120),
             Title = "UI Window",
             IsTitleBarEnabled = true,
             IsWindowMovable = true,
@@ -154,7 +154,7 @@ public class TilesetSurfaceEditorScene : BaseScene
         var windowLabel = new UILabel
         {
             Text = "Hello from UIWindow",
-            Position = new Vector2(8, 26),
+            Position = new(8, 26),
             Color = LyColor.White
         };
         window.Add(windowLabel);
@@ -162,8 +162,8 @@ public class TilesetSurfaceEditorScene : BaseScene
 
         var staticWindow = new UIWindow
         {
-            Position = new Vector2(280, 50),
-            Size = new Vector2(220, 90),
+            Position = new(280, 50),
+            Size = new(220, 90),
             Title = "Static Window",
             IsTitleBarEnabled = false,
             IsWindowMovable = false,
@@ -176,7 +176,7 @@ public class TilesetSurfaceEditorScene : BaseScene
         var staticLabel = new UILabel
         {
             Text = "Non-movable",
-            Position = new Vector2(8, 10),
+            Position = new(8, 10),
             Color = LyColor.White
         };
         staticWindow.Add(staticLabel);

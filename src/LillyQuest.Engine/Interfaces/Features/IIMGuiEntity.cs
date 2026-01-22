@@ -6,7 +6,7 @@ namespace LillyQuest.Engine.Interfaces.Features;
 public interface IIMGuiEntity : IEntityFeature
 {
     /// <summary>
-    ///  The name of the ImGui panel.
+    /// The name of the ImGui panel.
     /// </summary>
     string Name { get; }
 

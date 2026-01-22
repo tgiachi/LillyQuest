@@ -31,15 +31,10 @@ public class SystemManager : ISystemManager
         _lillyQuestBootstrap.Update += LillyQuestBootstrapOnUpdate;
     }
 
-    public void RegisterSystem<TSystem>(TSystem system) where TSystem : ISystem
-    {
-        var queryTypes = system.QueryType.GetFlags();
-
-        foreach (var queryType in queryTypes)
-        {
-            AddSystemInternal(system, queryType);
-        }
-    }
+    public TimeSpan GetSystemProcessingTime(SystemQueryType queryType)
+        => _systemProcessingTimes.TryGetValue(queryType, out var timeSpan)
+               ? timeSpan
+               : TimeSpan.Zero;
 
     public void InitializeAllSystems()
     {
@@ -58,10 +53,15 @@ public class SystemManager : ISystemManager
         }
     }
 
-    public TimeSpan GetSystemProcessingTime(SystemQueryType queryType)
-        => _systemProcessingTimes.TryGetValue(queryType, out var timeSpan)
-               ? timeSpan
-               : TimeSpan.Zero;
+    public void RegisterSystem<TSystem>(TSystem system) where TSystem : ISystem
+    {
+        var queryTypes = system.QueryType.GetFlags();
+
+        foreach (var queryType in queryTypes)
+        {
+            AddSystemInternal(system, queryType);
+        }
+    }
 
     public void RemoveSystem<TSystem>(TSystem system) where TSystem : ISystem
     {

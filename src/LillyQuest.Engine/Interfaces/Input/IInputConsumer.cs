@@ -20,6 +20,11 @@ public interface IInputConsumer
     bool IsActive { get; }
 
     /// <summary>
+    /// Gets child consumers (for hierarchical dispatch).
+    /// </summary>
+    IReadOnlyList<IInputConsumer>? GetChildren();
+
+    /// <summary>
     /// Performs hit-testing at the given screen coordinates.
     /// Returns true if the point is inside this consumer's bounds.
     /// </summary>
@@ -32,28 +37,28 @@ public interface IInputConsumer
     bool OnKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys);
 
     /// <summary>
-    /// Called when a key repeats (after initial delay).
-    /// Returns true if the input was consumed.
-    /// </summary>
-    bool OnKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys);
-
-    /// <summary>
     /// Called when a key is released.
     /// Returns true if the input was consumed.
     /// </summary>
     bool OnKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys);
 
     /// <summary>
-    /// Called when the mouse moves.
+    /// Called when a key repeats (after initial delay).
     /// Returns true if the input was consumed.
     /// </summary>
-    bool OnMouseMove(int x, int y);
+    bool OnKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys);
 
     /// <summary>
     /// Called when a mouse button is pressed.
     /// Returns true if the input was consumed.
     /// </summary>
     bool OnMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons);
+
+    /// <summary>
+    /// Called when the mouse moves.
+    /// Returns true if the input was consumed.
+    /// </summary>
+    bool OnMouseMove(int x, int y);
 
     /// <summary>
     /// Called when a mouse button is released.
@@ -66,9 +71,4 @@ public interface IInputConsumer
     /// Returns true if the input was consumed.
     /// </summary>
     bool OnMouseWheel(int x, int y, float delta);
-
-    /// <summary>
-    /// Gets child consumers (for hierarchical dispatch).
-    /// </summary>
-    IReadOnlyList<IInputConsumer>? GetChildren();
 }

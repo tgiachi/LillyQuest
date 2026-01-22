@@ -540,6 +540,7 @@ public class TilesetSurfaceScreen : BaseScreen
                 var destinationY = (int)movement.DestinationTile.Y;
 
                 var sourceTile = _surface.GetTile(layerIndex, sourceX, sourceY);
+
                 if (sourceTile.TileIndex < 0)
                 {
                     continue;

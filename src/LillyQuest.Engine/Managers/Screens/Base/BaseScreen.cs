@@ -54,9 +54,7 @@ public abstract class BaseScreen : IScreen
     public string ConsumerId { get; protected set; }
 
     protected BaseScreen()
-    {
-        ConsumerId = GetType().Name;
-    }
+        => ConsumerId = GetType().Name;
 
     /// <summary>
     /// Adds a UI entity to this screen.

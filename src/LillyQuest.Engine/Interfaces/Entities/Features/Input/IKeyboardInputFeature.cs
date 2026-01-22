@@ -14,12 +14,12 @@ public interface IKeyboardInputFeature
     void OnKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys);
 
     /// <summary>
-    /// Called when pressed keys repeat (after initial delay).
-    /// </summary>
-    void OnKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys);
-
-    /// <summary>
     /// Called when one or more keys are released.
     /// </summary>
     void OnKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys);
+
+    /// <summary>
+    /// Called when pressed keys repeat (after initial delay).
+    /// </summary>
+    void OnKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys);
 }

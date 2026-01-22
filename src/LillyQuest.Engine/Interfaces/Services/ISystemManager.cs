@@ -9,20 +9,19 @@ namespace LillyQuest.Engine.Interfaces.Services;
 public interface ISystemManager
 {
     /// <summary>
-    /// Registers a system so it can run for its declared query types.
+    /// Gets the last recorded processing time for a query type.
     /// </summary>
-    void RegisterSystem<TSystem>(TSystem system) where TSystem : ISystem;
-
+    TimeSpan GetSystemProcessingTime(SystemQueryType queryType);
 
     /// <summary>
-    ///  Initializes all registered systems.
+    /// Initializes all registered systems.
     /// </summary>
     void InitializeAllSystems();
 
     /// <summary>
-    /// Gets the last recorded processing time for a query type.
+    /// Registers a system so it can run for its declared query types.
     /// </summary>
-    TimeSpan GetSystemProcessingTime(SystemQueryType queryType);
+    void RegisterSystem<TSystem>(TSystem system) where TSystem : ISystem;
 
     /// <summary>
     /// Unregisters a system from all its declared query types.
