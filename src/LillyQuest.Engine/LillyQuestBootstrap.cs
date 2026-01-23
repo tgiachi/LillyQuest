@@ -57,6 +57,8 @@ public class LillyQuestBootstrap
 
     public delegate void TickEventHandler(GameTime gameTime);
 
+    public delegate void WindowResizeEventHandler(Vector2 newSize);
+
     private readonly ILogger _logger = Log.ForContext<LillyQuestBootstrap>();
 
     private IContainer _container = new Container();
@@ -79,6 +81,10 @@ public class LillyQuestBootstrap
     private GL _gl;
     private IWindow _window;
     private PluginLifecycleExecutor? _pluginLifecycleExecutor;
+    private int _skipRenderFrames;
+    private Vector2? _pendingResizeSize;
+    private long _pendingResizeTimestamp;
+    private static readonly TimeSpan ResizeDebounce = TimeSpan.FromMilliseconds(100);
 
     /// <summary>
     /// Event invoked at fixed timestep intervals during the game loop.
@@ -94,6 +100,11 @@ public class LillyQuestBootstrap
     /// Event invoked every frame during the rendering phase of the game loop. fm
     /// </summary>
     public event TickEventHandler? Render;
+
+    /// <summary>
+    ///  Event invoked when the window is resized.
+    /// </summary>
+    public event WindowResizeEventHandler? WindowResize;
 
     public LillyQuestBootstrap(LillyQuestEngineConfig engineConfig)
     {
@@ -496,6 +507,12 @@ public class LillyQuestBootstrap
 
     private void WindowOnRender(double obj)
     {
+        if (_skipRenderFrames > 0)
+        {
+            _skipRenderFrames--;
+            return;
+        }
+
         var sw = Stopwatch.GetTimestamp();
         BeginFrame();
         Render?.Invoke(_gameTime);
@@ -507,12 +524,27 @@ public class LillyQuestBootstrap
     {
         _logger.Information("Window Resized to {Width}x{Height}", obj.X, obj.Y);
         _renderContext.Gl.Viewport(0, 0, (uint)obj.X, (uint)obj.Y);
+        _skipRenderFrames = 2;
+        _pendingResizeSize = new Vector2(obj.X, obj.Y);
+        _pendingResizeTimestamp = Stopwatch.GetTimestamp();
     }
 
     private void WindowOnUpdate(double deltaSeconds)
     {
         var sw = Stopwatch.GetTimestamp();
         _gameTime.Update(deltaSeconds);
+
+        if (_pendingResizeSize.HasValue &&
+            Stopwatch.GetElapsedTime(_pendingResizeTimestamp) >= ResizeDebounce)
+        {
+            _logger.Debug(
+                "Window resize debounced: {Width}x{Height}",
+                _pendingResizeSize.Value.X,
+                _pendingResizeSize.Value.Y
+            );
+            WindowResize?.Invoke(_pendingResizeSize.Value);
+            _pendingResizeSize = null;
+        }
 
         _resourceLoadingFlow.Update();
 

@@ -69,20 +69,8 @@ public class LogScreen : BaseScreen
 
     public override void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
     {
-        if (spriteBatch == null || renderContext == null)
-        {
-            return;
-        }
 
-        var scissorX = (int)(Position.X + Margin.X);
-        var scissorY = (int)(Position.Y + Margin.Y);
-        var scissorWidth = (int)(Size.X - Margin.X - Margin.Z);
-        var scissorHeight = (int)(Size.Y - Margin.Y - Margin.W);
 
-        scissorWidth = Math.Max(0, scissorWidth);
-        scissorHeight = Math.Max(0, scissorHeight);
-
-        spriteBatch.SetScissor(scissorX, scissorY, scissorWidth, scissorHeight);
         spriteBatch.PushTranslation(Position);
 
         spriteBatch.DrawRectangle(Vector2.Zero, Size, GetBackgroundColorWithAlpha());
@@ -104,7 +92,6 @@ public class LogScreen : BaseScreen
         }
 
         spriteBatch.PopTranslation();
-        spriteBatch.DisableScissor();
     }
 
     public override void Update(GameTime gameTime)

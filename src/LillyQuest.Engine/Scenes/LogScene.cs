@@ -1,5 +1,4 @@
 using System.Numerics;
-using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Interfaces.Managers;
@@ -14,17 +13,24 @@ public class LogScene : BaseScene
     private readonly IScreenManager _screenManager;
     private readonly ILogEventDispatcher _logDispatcher;
     private readonly IFontManager _fontManager;
-    private readonly EngineRenderContext _renderContext;
+    private readonly LillyQuestBootstrap _bootstrap;
+    private bool _subscribed;
 
     private LogScreen? _logScreen;
 
-    public LogScene(IScreenManager screenManager, ILogEventDispatcher logDispatcher, IFontManager fontManager, EngineRenderContext renderContext)
+    public LogScene(
+        IScreenManager screenManager,
+        ILogEventDispatcher logDispatcher,
+        IFontManager fontManager,
+        LillyQuestBootstrap bootstrap
+    )
         : base("log_scene")
     {
         _screenManager = screenManager;
         _logDispatcher = logDispatcher;
         _fontManager = fontManager;
-        _renderContext = renderContext;
+        _bootstrap = bootstrap;
+        Subscribe();
     }
 
     public override void OnLoad()
@@ -32,11 +38,11 @@ public class LogScene : BaseScene
         _logScreen = new LogScreen(_logDispatcher, _fontManager)
         {
             Position = Vector2.Zero,
-            Size = new(1600, 900),
+            Size = new Vector2(800, 600),
             Margin = new(10, 10, 10, 10),
-            FontSize = 8,
+            FontSize = 10,
             BackgroundColor = LyColor.Black,
-            BackgroundAlpha = 0.6f
+            BackgroundAlpha = 0.9f
         };
 
         _screenManager.PushScreen(_logScreen);
@@ -48,6 +54,38 @@ public class LogScene : BaseScene
         {
             _screenManager.PopScreen(_logScreen);
             _logScreen = null;
+        }
+
+        Unsubscribe();
+    }
+
+    private void Subscribe()
+    {
+        if (_subscribed)
+        {
+            return;
+        }
+
+        _bootstrap.WindowResize += OnWindowResize;
+        _subscribed = true;
+    }
+
+    private void Unsubscribe()
+    {
+        if (!_subscribed)
+        {
+            return;
+        }
+
+        _bootstrap.WindowResize -= OnWindowResize;
+        _subscribed = false;
+    }
+
+    private void OnWindowResize(Vector2 size)
+    {
+        if (_logScreen != null)
+        {
+            _logScreen.Size = size;
         }
     }
 }

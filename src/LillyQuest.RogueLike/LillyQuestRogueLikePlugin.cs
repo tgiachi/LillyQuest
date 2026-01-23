@@ -42,6 +42,13 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
     public async  Task OnLoadResources(IContainer container)
     {
 
+        foreach (var i in Enumerable.Range(1, 14))
+        {
+            Log.Information("Loading RogueLike assets... {Step}/14", i);
+
+
+            await Task.Delay(500);
+        }
         await Task.Delay(1000);
 
         Log.Information("Loading RogueLike plugin...");
