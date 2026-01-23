@@ -21,4 +21,4 @@ namespace LillyQuest.RogueLike.Json.Context;
  JsonSerializable(typeof(TileAnimationFrame)),
  JsonSerializable(typeof(List<TileAnimationFrame>))
 ]
-public partial class QuestLillyRogueLikeJsonContext : JsonSerializerContext { }
+public partial class LillyQuestRogueLikeJsonContext : JsonSerializerContext { }

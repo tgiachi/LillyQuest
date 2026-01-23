@@ -4,6 +4,7 @@ using LillyQuest.RogueLike.Json.Context;
 using LillyQuest.RogueLike.Json.Entities.Base;
 using LillyQuest.RogueLike.Json.Entities.Colorschemas;
 using LillyQuest.RogueLike.Json.Entities.Tiles;
+using LillyQuest.RogueLike.Types;
 
 namespace LillyQuest.Tests.RogueLike.Json;
 
@@ -21,7 +22,7 @@ public class RogueLikeJsonSerializationTests
 
         var entity = JsonUtils.Deserialize<BaseJsonEntity>(
             json,
-            QuestLillyRogueLikeJsonContext.Default
+            LillyQuestRogueLikeJsonContext.Default
         );
 
         Assert.That(entity.Id, Is.EqualTo("base"));
@@ -46,7 +47,7 @@ public class RogueLikeJsonSerializationTests
 
         var definition = JsonUtils.Deserialize<ColorSchemaDefintionJson>(
             json,
-            QuestLillyRogueLikeJsonContext.Default
+            LillyQuestRogueLikeJsonContext.Default
         );
 
         Assert.That(definition.Id, Is.EqualTo("schema"));
@@ -70,7 +71,7 @@ public class RogueLikeJsonSerializationTests
 
         var schema = JsonUtils.Deserialize<ColorSchemaJson>(
             json,
-            QuestLillyRogueLikeJsonContext.Default
+            LillyQuestRogueLikeJsonContext.Default
         );
 
         Assert.That(schema.Id, Is.EqualTo("color-1"));
@@ -90,7 +91,7 @@ public class RogueLikeJsonSerializationTests
 
         var tile = JsonUtils.Deserialize<TileDefinition>(
             json,
-            QuestLillyRogueLikeJsonContext.Default
+            LillyQuestRogueLikeJsonContext.Default
         );
 
         Assert.That(tile.Id, Is.EqualTo("tile-1"));
@@ -109,7 +110,7 @@ public class RogueLikeJsonSerializationTests
 
         var tileset = JsonUtils.Deserialize<TilesetDefinitionJson>(
             json,
-            QuestLillyRogueLikeJsonContext.Default
+            LillyQuestRogueLikeJsonContext.Default
         );
 
         Assert.That(tileset.Name, Is.EqualTo("tileset"));
@@ -128,11 +129,127 @@ public class RogueLikeJsonSerializationTests
 
         var tilesets = JsonUtils.Deserialize<List<TilesetDefinitionJson>>(
             json,
-            QuestLillyRogueLikeJsonContext.Default
+            LillyQuestRogueLikeJsonContext.Default
         );
 
         Assert.That(tilesets.Count, Is.EqualTo(2));
         Assert.That(tilesets[0].Name, Is.EqualTo("a"));
         Assert.That(tilesets[1].TexturePath, Is.EqualTo("b.png"));
+    }
+
+    [Test]
+    public void Deserialize_TileAnimation_UsesContext()
+    {
+        const string json = """
+                            {
+                              "type": "pingPong",
+                              "frameDurationMs": 120,
+                              "frames": [
+                                { "symbol": ".", "fgColor": "#FF112233", "bgColor": "#FF445566" },
+                                { "symbol": ",", "fgColor": "#FF778899" }
+                              ]
+                            }
+                            """;
+
+        var animation = JsonUtils.Deserialize<TileAnimation>(
+            json,
+            LillyQuestRogueLikeJsonContext.Default
+        );
+
+        Assert.That(animation.Type, Is.EqualTo(TileAnimationType.PingPong));
+        Assert.That(animation.FrameDurationMs, Is.EqualTo(120));
+        Assert.That(animation.Frames.Count, Is.EqualTo(2));
+        Assert.That(animation.Frames[0].Symbol, Is.EqualTo("."));
+        Assert.That(animation.Frames[0].FgColor, Is.EqualTo("#FF112233"));
+        Assert.That(animation.Frames[0].BgColor, Is.EqualTo("#FF445566"));
+        Assert.That(animation.Frames[1].Symbol, Is.EqualTo(","));
+        Assert.That(animation.Frames[1].BgColor, Is.Null);
+    }
+
+    [Test]
+    public void Deserialize_TileDefinition_WithAnimation_UsesContext()
+    {
+        const string json = """
+                            {
+                              "id": "tile-animated",
+                              "tags": ["animated"],
+                              "symbol": "@",
+                              "fgColor": "#FFFFFFFF",
+                              "bgColor": "#FF000000",
+                              "animation": {
+                                "type": "loop",
+                                "frameDurationMs": 75,
+                                "frames": [
+                                  { "symbol": "A" },
+                                  { "symbol": "B", "fgColor": "#FF00FF00" }
+                                ]
+                              }
+                            }
+                            """;
+
+        var tile = JsonUtils.Deserialize<TileDefinition>(
+            json,
+            LillyQuestRogueLikeJsonContext.Default
+        );
+
+        Assert.That(tile.Id, Is.EqualTo("tile-animated"));
+        Assert.That(tile.Tags, Is.EquivalentTo(new[] { "animated" }));
+        Assert.That(tile.Symbol, Is.EqualTo("@"));
+        Assert.That(tile.FgColor, Is.EqualTo("#FFFFFFFF"));
+        Assert.That(tile.BgColor, Is.EqualTo("#FF000000"));
+        Assert.That(tile.Animation, Is.Not.Null);
+        Assert.That(tile.Animation!.Type, Is.EqualTo(TileAnimationType.Loop));
+        Assert.That(tile.Animation.FrameDurationMs, Is.EqualTo(75));
+        Assert.That(tile.Animation.Frames.Count, Is.EqualTo(2));
+        Assert.That(tile.Animation.Frames[1].Symbol, Is.EqualTo("B"));
+        Assert.That(tile.Animation.Frames[1].FgColor, Is.EqualTo("#FF00FF00"));
+    }
+
+    [Test]
+    public void Deserialize_TilesetDefinition_WithTiles_UsesContext()
+    {
+        const string json = """
+                            {
+                              "name": "animated-tiles",
+                              "texturePath": "tiles.png",
+                              "tiles": [
+                                {
+                                  "id": "tile-1",
+                                  "tags": ["floor"],
+                                  "symbol": ".",
+                                  "fgColor": "#FFAAAAAA",
+                                  "bgColor": "#FF111111"
+                                },
+                                {
+                                  "id": "tile-2",
+                                  "tags": ["lava"],
+                                  "symbol": "~",
+                                  "fgColor": "#FFFF3300",
+                                  "bgColor": "#FF220000",
+                                  "animation": {
+                                    "type": "once",
+                                    "frameDurationMs": 200,
+                                    "frames": [
+                                      { "symbol": "~" },
+                                      { "symbol": "^" }
+                                    ]
+                                  }
+                                }
+                              ]
+                            }
+                            """;
+
+        var tileset = JsonUtils.Deserialize<TilesetDefinitionJson>(
+            json,
+            LillyQuestRogueLikeJsonContext.Default
+        );
+
+        Assert.That(tileset.Name, Is.EqualTo("animated-tiles"));
+        Assert.That(tileset.TexturePath, Is.EqualTo("tiles.png"));
+        Assert.That(tileset.Tiles.Count, Is.EqualTo(2));
+        Assert.That(tileset.Tiles[0].Id, Is.EqualTo("tile-1"));
+        Assert.That(tileset.Tiles[1].Animation, Is.Not.Null);
+        Assert.That(tileset.Tiles[1].Animation!.Type, Is.EqualTo(TileAnimationType.Once));
+        Assert.That(tileset.Tiles[1].Animation.Frames.Count, Is.EqualTo(2));
     }
 }
