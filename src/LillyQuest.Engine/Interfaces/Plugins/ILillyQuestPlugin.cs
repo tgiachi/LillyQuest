@@ -35,4 +35,34 @@ public interface ILillyQuestPlugin
     /// Called when the engine is shutting down.
     /// </summary>
     void Shutdown();
+
+    /// <summary>
+    /// Called when the engine is fully initialized but before the window is visible.
+    /// Use this for non-rendering setup tasks.
+    /// </summary>
+    /// <param name="container">The DI container.</param>
+    async Task OnEngineReady(IContainer container)
+    {
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Called after the window is created and rendering is available.
+    /// Use this for graphics resource setup.
+    /// </summary>
+    /// <param name="container">The DI container.</param>
+    async Task OnReadyToRender(IContainer container)
+    {
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Called when the bootstrap is loading resources. The LogScreen is displayed during this phase
+    /// showing all historical logs. Plugins should log their loading progress here.
+    /// </summary>
+    /// <param name="container">The DI container.</param>
+    async Task OnLoadResources(IContainer container)
+    {
+        await Task.CompletedTask;
+    }
 }

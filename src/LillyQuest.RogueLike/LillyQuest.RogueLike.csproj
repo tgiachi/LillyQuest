@@ -11,4 +11,8 @@
       <ProjectReference Include="..\LillyQuest.Engine\LillyQuest.Engine.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="Services\" />
+    </ItemGroup>
+
 </Project>

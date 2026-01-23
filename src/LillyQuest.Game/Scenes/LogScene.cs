@@ -31,7 +31,7 @@ public class LogScene : BaseScene
             Position = Vector2.Zero,
             Size = new(1600, 900),
             Margin = new(10, 10, 10, 10),
-            FontSize = 14,
+            FontSize = 8,
             BackgroundColor = LyColor.Black,
             BackgroundAlpha = 0.6f
         };
