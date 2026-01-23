@@ -417,7 +417,8 @@ public class LillyQuestBootstrap
             InitDebugMode();
         }
 
-        StartSceneManager();
+        // Scene manager will be started after plugin resource loading
+        // This is done in WindowOnLoad after ExecuteOnLoadResources()
     }
 
     private void StartSceneManager()
@@ -467,6 +468,41 @@ public class LillyQuestBootstrap
 
         LoadDefaultResources();
         StartInternalServices();
+
+        // Show LogScene while plugins load resources
+        // This allows users to see loading progress in real-time
+        try
+        {
+            var sceneManager = _container.Resolve<ISceneManager>();
+            if (_container.IsRegistered<IScene>())
+            {
+                // Try to find and show LogScene
+                var sceneType = AppDomain.CurrentDomain.GetAssemblies()
+                    .SelectMany(a => a.GetTypes())
+                    .FirstOrDefault(t => typeof(IScene).IsAssignableFrom(t) && t.Name == "LogScene");
+
+                if (sceneType != null)
+                {
+                    var logSceneInstance = (IScene)_container.Resolve(sceneType);
+                    sceneManager.SwitchScene(logSceneInstance.Name, 0);
+                    _logger.Information("Showing LogScene for resource loading...");
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Warning(ex, "Could not show LogScene during resource loading");
+        }
+
+        // Execute OnLoadResources hook with LogScene visible
+        // Plugins can load resources asynchronously while LogScreen shows progress
+        ExecuteOnLoadResources().GetAwaiter().GetResult();
+
+        // Wait for async loading to complete
+        WaitForResourcesLoaded().GetAwaiter().GetResult();
+
+        // Now load the initial scene
+        StartSceneManager();
     }
 
     private void WindowOnRender(double obj)
