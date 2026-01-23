@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace LillyQuest.Engine.Screens.UI;
@@ -65,9 +66,20 @@ public sealed class UIFocusManager
             focusables.Add(control);
         }
 
-        foreach (var child in control.Children)
+        foreach (var child in GetChildren(control))
         {
             CollectFocusables(child, focusables);
         }
+    }
+
+    private static IReadOnlyList<UIScreenControl> GetChildren(UIScreenControl control)
+    {
+        return control switch
+        {
+            UIWindow window => window.Children,
+            UIScrollContent scroll => scroll.Children,
+            UIButton button => button.Children,
+            _ => Array.Empty<UIScreenControl>()
+        };
     }
 }

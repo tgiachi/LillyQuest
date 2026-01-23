@@ -1,5 +1,5 @@
-using System.Numerics;
 using System;
+using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Primitives;
@@ -153,7 +153,7 @@ public sealed class UIRootScreen : BaseScreen
 
     private static UIScreenControl? ResolveFocusableAtPoint(UIScreenControl control, Vector2 point)
     {
-        var children = control.Children;
+        var children = GetChildren(control);
 
         if (children.Count > 0)
         {
@@ -201,6 +201,17 @@ public sealed class UIRootScreen : BaseScreen
         }
 
         return control.IsFocusable ? control : null;
+    }
+
+    private static IReadOnlyList<UIScreenControl> GetChildren(UIScreenControl control)
+    {
+        return control switch
+        {
+            UIWindow window => window.Children,
+            UIScrollContent scroll => scroll.Children,
+            UIButton button => button.Children,
+            _ => Array.Empty<UIScreenControl>()
+        };
     }
 
     public override void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
