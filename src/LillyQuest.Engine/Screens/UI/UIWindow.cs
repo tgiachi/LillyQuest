@@ -8,12 +8,8 @@ namespace LillyQuest.Engine.Screens.UI;
 /// <summary>
 /// Draggable UI window with optional title bar and child controls.
 /// </summary>
-public sealed class UIWindow : UIScreenControl
+public class UIWindow : UIScreenControl
 {
-    private readonly List<UIScreenControl> _children = [];
-
-    public IReadOnlyList<UIScreenControl> Children => _children;
-
     public string Title { get; set; } = string.Empty;
     public string TitleFontName { get; set; } = "default_font";
     public int TitleFontSize { get; set; } = 14;
@@ -24,9 +20,21 @@ public sealed class UIWindow : UIScreenControl
     public LyColor BorderColor { get; set; } = LyColor.White;
     public float BorderThickness { get; set; } = 1f;
     public float TitleBarHeight { get; set; } = 18f;
+    public bool IsModal { get; set; }
+    public bool IsResizable { get; set; } = true;
+    public Vector2 MinSize { get; set; } = Vector2.Zero;
+    public Vector2 MaxSize { get; set; } = new(float.PositiveInfinity, float.PositiveInfinity);
+    public Vector2 ResizeHandleSize { get; set; } = new(10f, 10f);
 
     private bool _isDragging;
     private Vector2 _dragOffset;
+    private bool _isResizing;
+    private Vector2 _resizeStartAnchor;
+    private Vector2 _resizeStartSize;
+    private UIScreenControl? _activeChild;
+
+    public UIWindow()
+        => IsFocusable = true;
 
     public void Add(UIScreenControl control)
     {
@@ -35,8 +43,8 @@ public sealed class UIWindow : UIScreenControl
             return;
         }
 
-        control.Parent = this;
-        _children.Add(control);
+        control.Position += GetContentOffset();
+        AddChild(control);
     }
 
     public LyColor GetBackgroundColorWithAlpha()
@@ -46,6 +54,12 @@ public sealed class UIWindow : UIScreenControl
         return BackgroundColor.WithAlpha(alpha);
     }
 
+    public virtual Vector2 GetContentOrigin()
+        => GetWorldPosition() + GetContentOffset();
+
+    public virtual Vector2 GetTitlePosition()
+        => GetWorldPosition() + new Vector2(4f, 2f);
+
     public override bool HandleMouseDown(Vector2 point)
     {
         if (!IsEnabled || !IsVisible)
@@ -53,9 +67,16 @@ public sealed class UIWindow : UIScreenControl
             return false;
         }
 
-        foreach (var child in _children
+        if (OnMouseDown?.Invoke(point) == true)
+        {
+            return true;
+        }
+
+        var childList = Children.ToList();
+
+        foreach (var child in childList
                               .OrderByDescending(control => control.ZIndex)
-                              .ThenByDescending(control => _children.IndexOf(control)))
+                              .ThenByDescending(control => childList.IndexOf(control)))
         {
             var childBounds = child.GetBounds();
 
@@ -66,6 +87,8 @@ public sealed class UIWindow : UIScreenControl
             {
                 if (child.HandleMouseDown(point))
                 {
+                    _activeChild = child;
+
                     return true;
                 }
             }
@@ -81,6 +104,20 @@ public sealed class UIWindow : UIScreenControl
             return false;
         }
 
+        if (IsPointInResizeHandle(point))
+        {
+            if (!IsResizable)
+            {
+                return false;
+            }
+
+            _isResizing = true;
+            _resizeStartAnchor = GetWorldPosition() + Size;
+            _resizeStartSize = Size;
+
+            return true;
+        }
+
         if (IsTitleBarEnabled && IsWindowMovable && point.Y <= bounds.Origin.Y + TitleBarHeight)
         {
             _isDragging = true;
@@ -94,6 +131,18 @@ public sealed class UIWindow : UIScreenControl
 
     public override bool HandleMouseMove(Vector2 point)
     {
+        if (_activeChild != null)
+        {
+            return _activeChild.HandleMouseMove(point);
+        }
+
+        if (_isResizing)
+        {
+            ApplyResize(point);
+
+            return true;
+        }
+
         if (!_isDragging)
         {
             return false;
@@ -107,6 +156,21 @@ public sealed class UIWindow : UIScreenControl
 
     public override bool HandleMouseUp(Vector2 point)
     {
+        if (_activeChild != null)
+        {
+            var handled = _activeChild.HandleMouseUp(point);
+            _activeChild = null;
+
+            return handled;
+        }
+
+        if (_isResizing)
+        {
+            _isResizing = false;
+
+            return true;
+        }
+
         if (!_isDragging)
         {
             return false;
@@ -124,12 +188,7 @@ public sealed class UIWindow : UIScreenControl
             return;
         }
 
-        _children.Remove(control);
-
-        if (control.Parent == this)
-        {
-            control.Parent = null;
-        }
+        RemoveChild(control);
     }
 
     public override void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext)
@@ -139,6 +198,37 @@ public sealed class UIWindow : UIScreenControl
             return;
         }
 
+        spriteBatch.SetScissor((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
+
+        RenderBackground(spriteBatch, renderContext);
+        RenderTitle(spriteBatch);
+
+        foreach (var child in Children.OrderBy(control => control.ZIndex))
+        {
+            if (!child.IsVisible)
+            {
+                continue;
+            }
+
+            child.Render(spriteBatch, renderContext);
+        }
+
+        spriteBatch.DisableScissor();
+    }
+
+    public override void Update(GameTime gameTime)
+    {
+        foreach (var child in Children)
+        {
+            child.Update(gameTime);
+        }
+    }
+
+    protected virtual Vector2 GetContentOffset()
+        => Vector2.Zero;
+
+    protected virtual void RenderBackground(SpriteBatch spriteBatch, EngineRenderContext renderContext)
+    {
         var world = GetWorldPosition();
         var background = GetBackgroundColorWithAlpha();
         spriteBatch.DrawRectangle(world, Size, background);
@@ -148,22 +238,28 @@ public sealed class UIWindow : UIScreenControl
         {
             var titlebarSize = new Vector2(Size.X, TitleBarHeight);
             spriteBatch.DrawRectangle(world, titlebarSize, background);
-
-            if (!string.IsNullOrWhiteSpace(Title))
-            {
-                spriteBatch.DrawFont(TitleFontName, TitleFontSize, Title, world + new Vector2(4, 2), LyColor.White);
-            }
         }
+    }
 
-        foreach (var child in _children.OrderBy(control => control.ZIndex))
+    protected virtual void RenderTitle(SpriteBatch spriteBatch)
+    {
+        if (!string.IsNullOrWhiteSpace(Title))
         {
-            if (!child.IsVisible)
-            {
-                continue;
-            }
-
-            child.Render(spriteBatch, renderContext);
+            spriteBatch.DrawFont(TitleFontName, TitleFontSize, Title, GetTitlePosition(), LyColor.White);
         }
+    }
+
+    private void ApplyResize(Vector2 point)
+    {
+        var delta = point - _resizeStartAnchor;
+        var target = _resizeStartSize + delta;
+        var clamped = new Vector2(
+            Math.Clamp(target.X, MinSize.X, MaxSize.X),
+            Math.Clamp(target.Y, MinSize.Y, MaxSize.Y)
+        );
+
+        Size = clamped;
+        ClampToParent();
     }
 
     private void ClampToParent()
@@ -178,5 +274,19 @@ public sealed class UIWindow : UIScreenControl
         var clampedX = Math.Clamp(Position.X, 0f, maxX);
         var clampedY = Math.Clamp(Position.Y, 0f, maxY);
         Position = new(clampedX, clampedY);
+    }
+
+    private bool IsPointInResizeHandle(Vector2 point)
+    {
+        var world = GetWorldPosition();
+        var handleOrigin = new Vector2(
+            world.X + Size.X - ResizeHandleSize.X,
+            world.Y + Size.Y - ResizeHandleSize.Y
+        );
+
+        return point.X >= handleOrigin.X &&
+               point.X <= handleOrigin.X + ResizeHandleSize.X &&
+               point.Y >= handleOrigin.Y &&
+               point.Y <= handleOrigin.Y + ResizeHandleSize.Y;
     }
 }

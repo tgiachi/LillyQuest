@@ -22,6 +22,21 @@ public sealed class UIScreenRoot
         _children.Add(control);
     }
 
+    public void BringToFront(UIScreenControl control)
+    {
+        if (control == null || !_children.Contains(control))
+        {
+            return;
+        }
+
+        var maxZ = _children.Max(child => child.ZIndex);
+
+        if (control.ZIndex <= maxZ)
+        {
+            control.ZIndex = maxZ + 1;
+        }
+    }
+
     /// <summary>
     /// Returns the top-most control containing the point.
     /// </summary>
@@ -43,5 +58,15 @@ public sealed class UIScreenRoot
         }
 
         return null;
+    }
+
+    public void Remove(UIScreenControl control)
+    {
+        if (control == null)
+        {
+            return;
+        }
+
+        _children.Remove(control);
     }
 }

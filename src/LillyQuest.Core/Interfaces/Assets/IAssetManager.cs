@@ -30,4 +30,9 @@ public interface IAssetManager : IDisposable
     /// Gets the tileset manager for handling tileset assets.
     /// </summary>
     ITilesetManager TilesetManager { get; }
+
+    /// <summary>
+    /// Gets the nine-slice manager for UI nine-patch assets.
+    /// </summary>
+    INineSliceAssetManager NineSliceManager { get; }
 }

@@ -22,6 +22,7 @@ public class ShaderManager : IShaderManager
     /// 
     /// 
     /// 
+    /// 
     /// </param>
     public ShaderManager(EngineRenderContext renderContext)
         => _gl = renderContext.Gl;

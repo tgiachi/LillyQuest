@@ -21,12 +21,24 @@ public class TilesetSurfaceEditorScene : BaseScene
 {
     private readonly IScreenManager _screenManager;
     private readonly ITilesetManager _tilesetManager;
+    private readonly ITextureManager _textureManager;
+    private readonly INineSliceAssetManager _nineSliceManager;
+    private readonly IFontManager _fontManager;
 
-    public TilesetSurfaceEditorScene(IScreenManager screenManager, ITilesetManager tilesetManager)
+    public TilesetSurfaceEditorScene(
+        IScreenManager screenManager,
+        ITilesetManager tilesetManager,
+        ITextureManager textureManager,
+        INineSliceAssetManager nineSliceManager,
+        IFontManager fontManager
+    )
         : base("tileset_surface_editor")
     {
         _screenManager = screenManager;
         _tilesetManager = tilesetManager;
+        _textureManager = textureManager;
+        _nineSliceManager = nineSliceManager;
+        _fontManager = fontManager;
     }
 
     public override void OnInitialize(ISceneManager sceneManager)
@@ -146,7 +158,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             IsTitleBarEnabled = true,
             IsWindowMovable = true,
             BackgroundColor = LyColor.Black,
-            BackgroundAlpha = 0.6f,
+            BackgroundAlpha = 0.9f,
             BorderColor = LyColor.White,
             ZIndex = 1
         };
@@ -181,6 +193,103 @@ public class TilesetSurfaceEditorScene : BaseScene
         };
         staticWindow.Add(staticLabel);
         uiRoot.Root.Add(staticWindow);
+
+        var nineSliceWindow = new UINinePatchWindow(_nineSliceManager, _textureManager)
+        {
+            Position = new(520, 240),
+            Size = new(420, 240),
+            Title = "Nine-Slice Window",
+            TitleFontName = "default_font",
+            TitleFontSize = 16,
+            TitleMargin = new(20f, 12f, 0f, 0f),
+            ContentMargin = new(20f, 40f, 0f, 0f),
+            NineSliceScale = 1f,
+            CenterTint = LyColor.FromHex("#e8d7b0"),
+            BorderTint = LyColor.FromHex("#a67c52"),
+            NineSliceKey = "simple_ui",
+            ZIndex = 3
+        };
+
+        var nineSliceLabel = new UILabel
+        {
+            Text = "Nine-slice content",
+            Position = new(0, 0),
+            Color = LyColor.White
+        };
+        nineSliceWindow.Add(nineSliceLabel);
+        uiRoot.Root.Add(nineSliceWindow);
+
+        var buttonWindow = new UINinePatchWindow(_nineSliceManager, _textureManager)
+        {
+            Position = new(100, 260),
+            Size = new(260, 160),
+            Title = "UIButton Demo",
+            TitleFontName = "default_font",
+            TitleFontSize = 16,
+            TitleMargin = new(20f, 12f, 0f, 0f),
+            ContentMargin = new(20f, 40f, 0f, 0f),
+            NineSliceScale = 1f,
+            CenterTint = LyColor.FromHex("#e8d7b0"),
+            BorderTint = LyColor.FromHex("#a67c52"),
+            NineSliceKey = "simple_ui",
+            ZIndex = 4
+        };
+
+        var sampleButton = new UIButton(_nineSliceManager, _textureManager, _fontManager)
+        {
+            Position = new(20, 10),
+            Size = new(180, 48),
+            Text = "Click Me",
+            FontName = "default_font",
+            FontSize = 14,
+            TextColor = LyColor.Black,
+
+            NineSliceKey = "simple_ui",
+            IdleTint = new(200, 200, 200, 255),
+            HoveredTint = new(255, 255, 255, 255),
+            PressedTint = new(160, 160, 160, 255),
+            TransitionTime = 0.2f
+        };
+        sampleButton.OnClick = () => Log.Logger.Information("UIButton clicked");
+
+        buttonWindow.Add(sampleButton);
+        uiRoot.Root.Add(buttonWindow);
+
+        var scrollLabel = new UILabel
+        {
+            Text = "UIScrollContent Demo",
+            Position = new(520, 40),
+            Color = LyColor.White,
+            ZIndex = 10
+        };
+        uiRoot.Root.Add(scrollLabel);
+
+        var scrollContent = new UIScrollContent(_nineSliceManager, _textureManager)
+        {
+            Position = new(520, 70),
+            Size = new(260, 160),
+            ContentSize = new(600, 420),
+            ScrollbarTextureName = "n9_ui_simple_ui",
+            ScrollbarTint = LyColor.FromHex("#c8b27a"),
+            ScrollSpeed = 24f,
+            ZIndex = 10
+        };
+
+        for (var row = 0; row < 6; row++)
+        {
+            for (var col = 0; col < 5; col++)
+            {
+                var entry = new UILabel
+                {
+                    Text = $"Item {col},{row}",
+                    Position = new(12 + col * 110, 12 + row * 60),
+                    Color = LyColor.Yellow
+                };
+                scrollContent.Add(entry);
+            }
+        }
+
+        uiRoot.Root.Add(scrollContent);
 
         // var uiTile = new UITileSurfaceControl(_tilesetManager, 20, 5)
         // {

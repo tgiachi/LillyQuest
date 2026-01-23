@@ -9,7 +9,7 @@ public sealed class UIFocusManager
 
     public void FocusNext(UIScreenRoot root)
     {
-        var focusables = root.Children.Where(child => child.IsFocusable).ToList();
+        var focusables = GetFocusables(root);
 
         if (focusables.Count == 0)
         {
@@ -25,7 +25,7 @@ public sealed class UIFocusManager
 
     public void FocusPrev(UIScreenRoot root)
     {
-        var focusables = root.Children.Where(child => child.IsFocusable).ToList();
+        var focusables = GetFocusables(root);
 
         if (focusables.Count == 0)
         {
@@ -42,5 +42,41 @@ public sealed class UIFocusManager
     public void RequestFocus(UIScreenControl control)
     {
         Focused = control;
+    }
+
+    private static void CollectFocusables(UIScreenControl control, List<UIScreenControl> focusables)
+    {
+        if (control.IsFocusable)
+        {
+            focusables.Add(control);
+        }
+
+        foreach (var child in GetChildren(control))
+        {
+            CollectFocusables(child, focusables);
+        }
+    }
+
+    private static IReadOnlyList<UIScreenControl> GetChildren(UIScreenControl control)
+    {
+        return control switch
+        {
+            UIWindow window        => window.Children,
+            UIScrollContent scroll => scroll.Children,
+            UIButton button        => button.Children,
+            _                      => Array.Empty<UIScreenControl>()
+        };
+    }
+
+    private static List<UIScreenControl> GetFocusables(UIScreenRoot root)
+    {
+        var focusables = new List<UIScreenControl>();
+
+        foreach (var control in root.Children)
+        {
+            CollectFocusables(control, focusables);
+        }
+
+        return focusables;
     }
 }

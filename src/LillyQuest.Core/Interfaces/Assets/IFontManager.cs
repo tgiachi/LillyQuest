@@ -1,3 +1,4 @@
+using System.Numerics;
 using FontStashSharp;
 using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Primitives;
@@ -59,6 +60,15 @@ public interface IFontManager : IDisposable
     /// Loads a font from raw data and stores it with the given asset name.
     /// </summary>
     void LoadFont(string assetName, Span<byte> data);
+
+    /// <summary>
+    /// Measures the rendered size of the given text using the specified font asset and size.
+    /// </summary>
+    /// <param name="fontAssetName"></param>
+    /// <param name="fontSize"></param>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    Vector2 MeasureText(string fontAssetName, int fontSize, string text);
 
     /// <summary>
     /// Attempts to retrieve a bitmap font by its asset name.
