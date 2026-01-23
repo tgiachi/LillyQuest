@@ -1,5 +1,7 @@
 using System.Numerics;
 using FontStashSharp;
+using LillyQuest.Engine;
+using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
@@ -90,7 +92,7 @@ public class LogSceneTests
         var screenManager = new ScreenManager();
         var dispatcher = new LogEventDispatcher();
         var fontManager = new FakeFontManager();
-        var scene = new LogScene(screenManager, dispatcher, fontManager, new EngineRenderContext());
+        var scene = new LogScene(screenManager, dispatcher, fontManager, CreateBootstrap());
 
         scene.OnLoad();
 
@@ -103,5 +105,8 @@ public class LogSceneTests
     }
 
     private static LogScene CreateScene()
-        => new(new ScreenManager(), new LogEventDispatcher(), new FakeFontManager(), new EngineRenderContext());
+        => new(new ScreenManager(), new LogEventDispatcher(), new FakeFontManager(), CreateBootstrap());
+
+    private static LillyQuestBootstrap CreateBootstrap()
+        => new(new LillyQuestEngineConfig());
 }

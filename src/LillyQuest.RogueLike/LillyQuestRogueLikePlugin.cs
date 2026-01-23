@@ -32,27 +32,21 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
 
     public void Shutdown() { }
 
-    public  async Task OnReadyToRender(IContainer container)
+    public async Task OnReadyToRender(IContainer container)
     {
 
 
 
     }
 
-    public async  Task OnLoadResources(IContainer container)
+    public async Task OnLoadResources(IContainer container)
     {
-
-        foreach (var i in Enumerable.Range(1, 140))
-        {
-            Log.Information("Loading RogueLike assets... {Step}/14", i);
-
-
-            await Task.Delay(100);
-        }
-        await Task.Delay(1000);
-
         Log.Information("Loading RogueLike plugin...");
 
-        await Task.Delay(1000);
+        for (var progress = 0; progress <= 100; progress += Random.Shared.Next(0, 4))
+        {
+            Log.Information("\rRogueLike loading {Progress}%", progress);
+            await Task.Delay(100);
+        }
     }
 }

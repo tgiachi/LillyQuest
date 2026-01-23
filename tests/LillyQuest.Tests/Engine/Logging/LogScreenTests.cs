@@ -146,6 +146,23 @@ public class LogScreenTests
         Assert.That(screen.Lines[0].BlinkRemaining, Is.EqualTo(0f));
     }
 
+    [Test]
+    public void Update_CarriageReturn_Overwrites_Last_Line()
+    {
+        var dispatcher = new LogEventDispatcher();
+        var screen = CreateScreen(dispatcher);
+        screen.Size = new(240, 60);
+
+        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "Loading 0%", null));
+        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
+
+        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "Loading 10%\r", null));
+        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
+
+        Assert.That(screen.Lines.Count, Is.EqualTo(1));
+        Assert.That(screen.Lines[0].Text, Is.EqualTo("Loading 10%"));
+    }
+
     private static TestLogScreen CreateScreen(ILogEventDispatcher dispatcher)
     {
         var fontManager = new FakeFontManager();

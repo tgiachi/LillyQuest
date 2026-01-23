@@ -11,8 +11,8 @@ namespace LillyQuest.Engine.Screens.Logging;
 
 public sealed class LogLine
 {
-    public string Text { get; }
-    public LyColor Color { get; }
+    public string Text { get; set; }
+    public LyColor Color { get; set; }
     public float BlinkRemaining { get; set; }
 
     public LogLine(string text, LyColor color, float blinkRemaining)
@@ -138,6 +138,10 @@ public class LogScreen : BaseScreen
 
         var color = GetColorForLevel(entry.Level);
         var blink = entry.Level == LogEventLevel.Fatal ? FatalBlinkDuration : 0f;
+        if (TryOverwriteLastLine(entry.Message, color, blink))
+        {
+            return;
+        }
         var lines = WrapText(entry.Message, maxWidth);
 
         foreach (var line in lines)
@@ -163,6 +167,51 @@ public class LogScreen : BaseScreen
         {
             _lines.RemoveAt(0);
         }
+    }
+
+    private bool TryOverwriteLastLine(string message, LyColor color, float blink)
+    {
+        if (string.IsNullOrEmpty(message))
+        {
+            return false;
+        }
+
+        if (message.Contains("\r\n", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        if (message.Contains('\n'))
+        {
+            return false;
+        }
+
+        var lastIndex = message.LastIndexOf('\r');
+        if (lastIndex < 0)
+        {
+            return false;
+        }
+
+        string newText;
+        if (lastIndex == message.Length - 1)
+        {
+            newText = message[..lastIndex];
+        }
+        else
+        {
+            newText = message[(lastIndex + 1)..];
+        }
+
+        if (_lines.Count == 0)
+        {
+            _lines.Add(new LogLine(newText, color, blink));
+        }
+        else
+        {
+            _lines[^1] = new LogLine(newText, color, blink);
+        }
+
+        return true;
     }
 
     private float GetAvailableWidth()
