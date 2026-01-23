@@ -2,6 +2,42 @@
 
 All notable changes to this project will be documented in this file. See [versionize](https://github.com/versionize/versionize) for commit guidelines.
 
+<a name="0.2.0"></a>
+## [0.2.0](https://www.github.com/tgiachi/LillyQuest/releases/tag/v0.2.0) (2026-01-23)
+
+### Features
+
+* add debug UI controls panel and scrollbar tint customization ([d491783](https://www.github.com/tgiachi/LillyQuest/commit/d491783066186d5c786b8cc48175da12b95232b5))
+* add draggable nine-patch window ([59b5932](https://www.github.com/tgiachi/LillyQuest/commit/59b59327e5beef783134041a1e6fd2544889110f))
+* add font measurement and UI enhancements ([cd1e183](https://www.github.com/tgiachi/LillyQuest/commit/cd1e183b2ba3060367332996625f1cef43da656b))
+* add LyColor hex parsing ([e32fb89](https://www.github.com/tgiachi/LillyQuest/commit/e32fb8934dc6c7bc47753766a63342e1236fdc2d))
+* add modal overlay handling in UIRootScreen ([8147732](https://www.github.com/tgiachi/LillyQuest/commit/81477326d913aa67fa1b9af78b5262f675836d1a))
+* add nine-patch tint colors ([d6824aa](https://www.github.com/tgiachi/LillyQuest/commit/d6824aad0624be1e52eaa056f1d3d8fc1d0aeab3))
+* add nine-patch window basics ([57a06b6](https://www.github.com/tgiachi/LillyQuest/commit/57a06b60c85947763ce68b50e5cf8257543ab9cb))
+* add nine-slice asset manager ([6ce65fc](https://www.github.com/tgiachi/LillyQuest/commit/6ce65fc6ee7941682c092e675c4616533d6513dd))
+* add nine-slice embedded resource loader ([8106dbd](https://www.github.com/tgiachi/LillyQuest/commit/8106dbda54a295f758b9e56be127676c64df0336))
+* add nine-slice load overloads ([b50a8af](https://www.github.com/tgiachi/LillyQuest/commit/b50a8af061afb34d7a487372ac00825d6957980d))
+* add nine-slice window demo ([1657b13](https://www.github.com/tgiachi/LillyQuest/commit/1657b13e6d6a21117936ca86ae711e38d8be2e6a))
+* add texture patch registration and retrieval to NineSliceAssetManager ([c684b05](https://www.github.com/tgiachi/LillyQuest/commit/c684b051cec34e5c554f36ca12d78dadc42bbbb0))
+* add UIButton control ([fccdd15](https://www.github.com/tgiachi/LillyQuest/commit/fccdd1540a6b35e8ae72b71469642f80f89eacb6))
+* add UIButton demo window ([c649258](https://www.github.com/tgiachi/LillyQuest/commit/c649258a55afb535fa8f36d06fba5b3a4d064173))
+* add UIScrollContent demo with scrollbar texture patches ([14f3085](https://www.github.com/tgiachi/LillyQuest/commit/14f3085e253d084305430bd731c0ee9e41d1d274))
+* add UIScrollContent geometry ([fc8cc5a](https://www.github.com/tgiachi/LillyQuest/commit/fc8cc5a8983b79caf81fe2d202391a706c13c2a8))
+* add UIScrollContent mouse wheel ([f1e7611](https://www.github.com/tgiachi/LillyQuest/commit/f1e76118c81c79895821ec07d43cde1960b5f459))
+* add UIStackPanel layout container ([33bd538](https://www.github.com/tgiachi/LillyQuest/commit/33bd538ccae88d46c682931d875085efc93c3c5f))
+* add UIWindow resize with min/max ([902b10c](https://www.github.com/tgiachi/LillyQuest/commit/902b10c32a1dbf61fe3fa5bf765584b7a5133c14))
+* bring focused windows to front ([e5db47b](https://www.github.com/tgiachi/LillyQuest/commit/e5db47bce8914971a1f8e37ed0695db1085445bf))
+* render nine-slice window ([682fc92](https://www.github.com/tgiachi/LillyQuest/commit/682fc929942ac274885d2914d977badcf761fd75))
+* render UIScrollContent ([7beda7d](https://www.github.com/tgiachi/LillyQuest/commit/7beda7d6beb648962edca2155d9a90d8c7622e9a))
+* update UI controls each frame ([cb32ca1](https://www.github.com/tgiachi/LillyQuest/commit/cb32ca11b2bced294ed1fc069509961ead205175))
+* **ui:** add child management to UIScreenControl ([f9ad74d](https://www.github.com/tgiachi/LillyQuest/commit/f9ad74d049d6014fa302954e2ef1259f9b667c8f))
+
+### Bug Fixes
+
+* added text color to button ([8b63385](https://www.github.com/tgiachi/LillyQuest/commit/8b633852f342d42589d6e181a6d19828deee0997))
+* forward window input to active child ([0f8886e](https://www.github.com/tgiachi/LillyQuest/commit/0f8886e3cc1fdc02ef9b58cf7d69ba24dcb2121e))
+* **ui:** unify focus and hit-test over base children ([13b69d6](https://www.github.com/tgiachi/LillyQuest/commit/13b69d64e6abe09b34e68c6dc387cbdba54fd3c1))
+
 <a name="0.1.0"></a>
 ## [0.1.0](https://www.github.com/tgiachi/LillyQuest/releases/tag/v0.1.0) (2026-01-22)
 
