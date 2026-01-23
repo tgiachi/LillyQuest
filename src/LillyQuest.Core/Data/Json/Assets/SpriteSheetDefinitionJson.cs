@@ -1,6 +1,6 @@
 namespace LillyQuest.Core.Data.Json.Assets;
 
-public class TilesetDefinitionJson
+public class SpriteSheetDefinitionJson
 {
     public int TileWidth { get; set; }
     public int TileHeight { get; set; }

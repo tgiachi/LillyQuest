@@ -3,6 +3,7 @@ using LillyQuest.Core.Primitives;
 using LillyQuest.RogueLike.Json.Context;
 using LillyQuest.RogueLike.Json.Entities.Base;
 using LillyQuest.RogueLike.Json.Entities.Colorschemas;
+using LillyQuest.RogueLike.Json.Entities.Terrain;
 using LillyQuest.RogueLike.Json.Entities.Tiles;
 using LillyQuest.RogueLike.Types;
 
@@ -27,6 +28,131 @@ public class RogueLikeJsonSerializationTests
 
         Assert.That(entity.Id, Is.EqualTo("base"));
         Assert.That(entity.Tags, Is.EquivalentTo(new[] { "a", "b" }));
+    }
+
+    [Test]
+    public void Deserialize_BaseJsonEntity_WithColorSchemaType_UsesDerivedType()
+    {
+        const string json = """
+                            {
+                              "type": "color_schema",
+                              "id": "schema",
+                              "colors": [
+                                {
+                                  "id": "color-1",
+                                  "foregroundColor": "#FF010203",
+                                  "backgroundColor": "#FF0A0B0C"
+                                }
+                              ]
+                            }
+                            """;
+
+        var entity = JsonUtils.Deserialize<BaseJsonEntity>(
+            json,
+            LillyQuestRogueLikeJsonContext.Default
+        );
+
+        Assert.That(entity, Is.InstanceOf<ColorSchemaDefintionJson>());
+
+        var definition = (ColorSchemaDefintionJson)entity;
+        Assert.That(definition.Id, Is.EqualTo("schema"));
+        Assert.That(definition.Colors.Count, Is.EqualTo(1));
+        Assert.That(
+            definition.Colors[0].ForegroundColor,
+            Is.EqualTo(new LyColor(0xFF, 0x01, 0x02, 0x03))
+        );
+    }
+
+    [Test]
+    public void Deserialize_BaseJsonEntity_WithTilesetType_UsesDerivedType()
+    {
+        const string json = """
+                            {
+                              "type": "tileset",
+                              "id": "tileset-1",
+                              "name": "main",
+                              "texturePath": "tiles.png",
+                              "tiles": [
+                                {
+                                  "id": "tile-1",
+                                  "tags": ["floor"],
+                                  "symbol": ".",
+                                  "fgColor": "#FFAAAAAA",
+                                  "bgColor": "#FF111111"
+                                }
+                              ]
+                            }
+                            """;
+
+        var entity = JsonUtils.Deserialize<BaseJsonEntity>(json, LillyQuestRogueLikeJsonContext.Default);
+
+        Assert.That(entity, Is.InstanceOf<TilesetDefinitionJson>());
+
+        var tileset = (TilesetDefinitionJson)entity;
+        Assert.That(tileset.Id, Is.EqualTo("tileset-1"));
+        Assert.That(tileset.Name, Is.EqualTo("main"));
+        Assert.That(tileset.TexturePath, Is.EqualTo("tiles.png"));
+        Assert.That(tileset.Tiles.Count, Is.EqualTo(1));
+        Assert.That(tileset.Tiles[0].Id, Is.EqualTo("tile-1"));
+    }
+
+    [Test]
+    public void Deserialize_BaseJsonEntity_WithTerrainType_UsesDerivedType()
+    {
+        const string json = """
+                            {
+                              "type": "terrain",
+                              "id": "terrain-1",
+                              "tags": ["walkable"],
+                              "name": "Grass",
+                              "description": "Soft grass",
+                              "flags": ["outdoor", "ground"],
+                              "movementCost": 2,
+                              "--": "designer note"
+                            }
+                            """;
+
+        var entity = JsonUtils.Deserialize<BaseJsonEntity>(json, LillyQuestRogueLikeJsonContext.Default);
+
+        Assert.That(entity, Is.InstanceOf<TerrainDefinitionJson>());
+
+        var terrain = (TerrainDefinitionJson)entity;
+        Assert.That(terrain.Id, Is.EqualTo("terrain-1"));
+        Assert.That(terrain.Tags, Is.EquivalentTo(new[] { "walkable" }));
+        Assert.That(terrain.Name, Is.EqualTo("Grass"));
+        Assert.That(terrain.Description, Is.EqualTo("Soft grass"));
+        Assert.That(terrain.Flags, Is.EquivalentTo(new[] { "outdoor", "ground" }));
+        Assert.That(terrain.MovementCost, Is.EqualTo(2));
+        Assert.That(terrain.Comment, Is.EqualTo("designer note"));
+    }
+
+    [Test]
+    public void Deserialize_TerrainDefinition_UsesContext()
+    {
+        const string json = """
+                            {
+                              "id": "terrain-2",
+                              "tags": ["rough"],
+                              "name": "Mud",
+                              "description": "Sticky mud",
+                              "flags": ["ground"],
+                              "movementCost": 3,
+                              "--": "slow"
+                            }
+                            """;
+
+        var terrain = JsonUtils.Deserialize<TerrainDefinitionJson>(
+            json,
+            LillyQuestRogueLikeJsonContext.Default
+        );
+
+        Assert.That(terrain.Id, Is.EqualTo("terrain-2"));
+        Assert.That(terrain.Tags, Is.EquivalentTo(new[] { "rough" }));
+        Assert.That(terrain.Name, Is.EqualTo("Mud"));
+        Assert.That(terrain.Description, Is.EqualTo("Sticky mud"));
+        Assert.That(terrain.Flags, Is.EquivalentTo(new[] { "ground" }));
+        Assert.That(terrain.MovementCost, Is.EqualTo(3));
+        Assert.That(terrain.Comment, Is.EqualTo("slow"));
     }
 
     [Test]

@@ -1,6 +1,7 @@
 using System.Text.Json.Serialization;
 using LillyQuest.RogueLike.Json.Entities.Base;
 using LillyQuest.RogueLike.Json.Entities.Colorschemas;
+using LillyQuest.RogueLike.Json.Entities.Terrain;
 using LillyQuest.RogueLike.Json.Entities.Tiles;
 
 namespace LillyQuest.RogueLike.Json.Context;
@@ -19,6 +20,8 @@ namespace LillyQuest.RogueLike.Json.Context;
  JsonSerializable(typeof(TileAnimation)),
  JsonSerializable(typeof(List<TileAnimation>)),
  JsonSerializable(typeof(TileAnimationFrame)),
+ JsonSerializable(typeof(TerrainDefinitionJson)),
+ JsonSerializable(typeof(TerrainDefinitionJson[])),
  JsonSerializable(typeof(List<TileAnimationFrame>))
 ]
 public partial class LillyQuestRogueLikeJsonContext : JsonSerializerContext { }
