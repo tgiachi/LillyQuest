@@ -20,6 +20,18 @@ public class UIWindowTests
     }
 
     [Test]
+    public void Add_Uses_Base_Children()
+    {
+        var window = new UIWindow();
+        var child = new UIScreenControl();
+
+        window.Add(child);
+
+        Assert.That(window.Children.Count, Is.EqualTo(1));
+        Assert.That(window.Children[0], Is.EqualTo(child));
+    }
+
+    [Test]
     public void Drag_Clamps_To_Parent_Bounds()
     {
         var parent = new UIScreenControl

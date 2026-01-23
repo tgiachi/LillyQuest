@@ -18,7 +18,6 @@ public enum UIButtonState
 
 public sealed class UIButton : UIScreenControl
 {
-    private readonly List<UIScreenControl> _children = [];
     private readonly INineSliceAssetManager _nineSliceManager;
     private readonly ITextureManager _textureManager;
     private readonly IFontManager _fontManager;
@@ -30,7 +29,6 @@ public sealed class UIButton : UIScreenControl
     private bool _isHovered;
     private LyColor _transitionStartTint = LyColor.White;
 
-    public IReadOnlyList<UIScreenControl> Children => _children;
     public UIButtonState State => _state;
     public LyColor CurrentTint => _currentTint;
 
@@ -70,8 +68,7 @@ public sealed class UIButton : UIScreenControl
             return;
         }
 
-        control.Parent = this;
-        _children.Add(control);
+        AddChild(control);
     }
 
     public void Remove(UIScreenControl control)
@@ -81,11 +78,7 @@ public sealed class UIButton : UIScreenControl
             return;
         }
 
-        _children.Remove(control);
-        if (control.Parent == this)
-        {
-            control.Parent = null;
-        }
+        RemoveChild(control);
     }
 
     public override bool HandleMouseMove(Vector2 point)

@@ -11,11 +11,8 @@ namespace LillyQuest.Engine.Screens.UI;
 
 public sealed class UIScrollContent : UIScreenControl
 {
-    private readonly List<UIScreenControl> _children = [];
     private readonly INineSliceAssetManager _nineSliceManager;
     private readonly ITextureManager _textureManager;
-
-    public IReadOnlyList<UIScreenControl> Children => _children;
 
     public Vector2 ContentSize { get; set; } = Vector2.Zero;
     public Vector2 ScrollOffset { get; set; } = Vector2.Zero;
@@ -47,9 +44,7 @@ public sealed class UIScrollContent : UIScreenControl
         {
             return;
         }
-
-        control.Parent = this;
-        _children.Add(control);
+        AddChild(control);
     }
 
     public void Remove(UIScreenControl control)
@@ -58,12 +53,7 @@ public sealed class UIScrollContent : UIScreenControl
         {
             return;
         }
-
-        _children.Remove(control);
-        if (control.Parent == this)
-        {
-            control.Parent = null;
-        }
+        RemoveChild(control);
     }
 
     public Rectangle<float> GetViewportBounds()
@@ -212,7 +202,7 @@ public sealed class UIScrollContent : UIScreenControl
 
         spriteBatch.PushTranslation(-ScrollOffset);
 
-        foreach (var child in _children.OrderBy(control => control.ZIndex))
+        foreach (var child in Children.OrderBy(control => control.ZIndex))
         {
             if (!child.IsVisible)
             {

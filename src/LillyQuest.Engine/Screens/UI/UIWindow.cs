@@ -10,10 +10,6 @@ namespace LillyQuest.Engine.Screens.UI;
 /// </summary>
 public class UIWindow : UIScreenControl
 {
-    private readonly List<UIScreenControl> _children = [];
-
-    public IReadOnlyList<UIScreenControl> Children => _children;
-
     public string Title { get; set; } = string.Empty;
     public string TitleFontName { get; set; } = "default_font";
     public int TitleFontSize { get; set; } = 14;
@@ -49,9 +45,8 @@ public class UIWindow : UIScreenControl
             return;
         }
 
-        control.Parent = this;
         control.Position += GetContentOffset();
-        _children.Add(control);
+        AddChild(control);
     }
 
     public LyColor GetBackgroundColorWithAlpha()
@@ -82,9 +77,10 @@ public class UIWindow : UIScreenControl
             return true;
         }
 
-        foreach (var child in _children
+        var childList = Children.ToList();
+        foreach (var child in childList
                               .OrderByDescending(control => control.ZIndex)
-                              .ThenByDescending(control => _children.IndexOf(control)))
+                              .ThenByDescending(control => childList.IndexOf(control)))
         {
             var childBounds = child.GetBounds();
 
@@ -196,12 +192,7 @@ public class UIWindow : UIScreenControl
             return;
         }
 
-        _children.Remove(control);
-
-        if (control.Parent == this)
-        {
-            control.Parent = null;
-        }
+        RemoveChild(control);
     }
 
     public override void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext)
@@ -216,7 +207,7 @@ public class UIWindow : UIScreenControl
         RenderBackground(spriteBatch, renderContext);
         RenderTitle(spriteBatch);
 
-        foreach (var child in _children.OrderBy(control => control.ZIndex))
+        foreach (var child in Children.OrderBy(control => control.ZIndex))
         {
             if (!child.IsVisible)
             {
@@ -231,7 +222,7 @@ public class UIWindow : UIScreenControl
 
     public override void Update(GameTime gameTime)
     {
-        foreach (var child in _children)
+        foreach (var child in Children)
         {
             child.Update(gameTime);
         }
