@@ -81,4 +81,25 @@ public class UIRootScreenTests
 
         Assert.That(root.Root.Children.Any(c => c is UIBackgroundControl), Is.True);
     }
+
+    [Test]
+    public void MouseDown_Focuses_Child_Control_When_Clicked()
+    {
+        var root = new UIRootScreen();
+        var window = new UIWindow { Position = Vector2.Zero, Size = new(100, 100) };
+        var child = new UIScreenControl
+        {
+            Position = new Vector2(10, 10),
+            Size = new Vector2(20, 20),
+            IsFocusable = true
+        };
+        child.OnMouseDown = _ => true;
+
+        window.Add(child);
+        root.Root.Add(window);
+
+        root.OnMouseDown(15, 15, Array.Empty<MouseButton>());
+
+        Assert.That(root.Root.FocusManager.Focused, Is.EqualTo(child));
+    }
 }

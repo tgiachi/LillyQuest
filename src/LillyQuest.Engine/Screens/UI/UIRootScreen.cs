@@ -1,4 +1,5 @@
 using System.Numerics;
+using System;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Primitives;
@@ -40,9 +41,10 @@ public sealed class UIRootScreen : BaseScreen
             if (modal.HandleMouseDown(point, buttons))
             {
                 _activeControl = modal;
-                if (modal.IsFocusable)
+                var focusTarget = ResolveFocusableAtPoint(modal, point) ?? (modal.IsFocusable ? modal : null);
+                if (focusTarget != null)
                 {
-                    Root.FocusManager.RequestFocus(modal);
+                    Root.FocusManager.RequestFocus(focusTarget);
                 }
                 Root.BringToFront(modal);
 
@@ -62,9 +64,10 @@ public sealed class UIRootScreen : BaseScreen
         if (hit.HandleMouseDown(new(x, y), buttons))
         {
             _activeControl = hit;
-            if (hit.IsFocusable)
+            var focusTarget = ResolveFocusableAtPoint(hit, new(x, y)) ?? (hit.IsFocusable ? hit : null);
+            if (focusTarget != null)
             {
-                Root.FocusManager.RequestFocus(hit);
+                Root.FocusManager.RequestFocus(focusTarget);
             }
             Root.BringToFront(hit);
 
@@ -146,6 +149,58 @@ public sealed class UIRootScreen : BaseScreen
         _modalBackground.Color = ModalBackgroundColor;
         _modalBackground.Alpha = ModalBackgroundAlpha;
         _modalBackground.ZIndex = modal.ZIndex - 1;
+    }
+
+    private static UIScreenControl? ResolveFocusableAtPoint(UIScreenControl control, Vector2 point)
+    {
+        var children = control.Children;
+
+        if (children.Count > 0)
+        {
+            var childPoint = point;
+
+            if (control is UIScrollContent scroll)
+            {
+                var viewport = scroll.GetViewportBounds();
+                if (point.X < viewport.Origin.X ||
+                    point.X > viewport.Origin.X + viewport.Size.X ||
+                    point.Y < viewport.Origin.Y ||
+                    point.Y > viewport.Origin.Y + viewport.Size.Y)
+                {
+                    return control.IsFocusable ? control : null;
+                }
+
+                childPoint = point + scroll.ScrollOffset;
+            }
+
+            var childList = children.ToList();
+            foreach (var child in childList
+                                  .OrderByDescending(c => c.ZIndex)
+                                  .ThenByDescending(c => childList.IndexOf(c)))
+            {
+                var bounds = child.GetBounds();
+                if (childPoint.X < bounds.Origin.X ||
+                    childPoint.X > bounds.Origin.X + bounds.Size.X ||
+                    childPoint.Y < bounds.Origin.Y ||
+                    childPoint.Y > bounds.Origin.Y + bounds.Size.Y)
+                {
+                    continue;
+                }
+
+                var nested = ResolveFocusableAtPoint(child, childPoint);
+                if (nested != null)
+                {
+                    return nested;
+                }
+
+                if (child.IsFocusable)
+                {
+                    return child;
+                }
+            }
+        }
+
+        return control.IsFocusable ? control : null;
     }
 
     public override void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)

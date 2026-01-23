@@ -20,4 +20,23 @@ public class UIFocusManagerTests
 
         Assert.That(root.FocusManager.Focused, Is.EqualTo(c));
     }
+
+    [Test]
+    public void FocusNext_IncludesNestedControls()
+    {
+        var root = new UIScreenRoot();
+        var window = new UIWindow { IsFocusable = false };
+        var nested = new UIScreenControl { IsFocusable = true };
+        var topLevel = new UIScreenControl { IsFocusable = true };
+
+        window.Add(nested);
+        root.Add(window);
+        root.Add(topLevel);
+
+        root.FocusManager.FocusNext(root);
+        Assert.That(root.FocusManager.Focused, Is.EqualTo(nested));
+
+        root.FocusManager.FocusNext(root);
+        Assert.That(root.FocusManager.Focused, Is.EqualTo(topLevel));
+    }
 }
