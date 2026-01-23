@@ -32,6 +32,34 @@ public class UIScrollContentTests
         Assert.That(hThumb.Size.X, Is.GreaterThanOrEqualTo(16f));
     }
 
+    [Test]
+    public void TrackRects_UseViewportBounds()
+    {
+        var control = new UIScrollContent(new FakeNineSliceManager(), new FakeTextureManager())
+        {
+            Position = new Vector2(10, 20),
+            Size = new Vector2(200, 100),
+            ContentSize = new Vector2(400, 300),
+            EnableVerticalScroll = true,
+            EnableHorizontalScroll = true,
+            ScrollbarThickness = 10f
+        };
+
+        var viewport = control.GetViewportBounds();
+        var vTrack = control.GetVerticalTrackRect();
+        var hTrack = control.GetHorizontalTrackRect();
+
+        Assert.That(vTrack.Origin.X, Is.EqualTo(viewport.Origin.X + viewport.Size.X));
+        Assert.That(vTrack.Origin.Y, Is.EqualTo(viewport.Origin.Y));
+        Assert.That(vTrack.Size.X, Is.EqualTo(10f));
+        Assert.That(vTrack.Size.Y, Is.EqualTo(viewport.Size.Y));
+
+        Assert.That(hTrack.Origin.X, Is.EqualTo(viewport.Origin.X));
+        Assert.That(hTrack.Origin.Y, Is.EqualTo(viewport.Origin.Y + viewport.Size.Y));
+        Assert.That(hTrack.Size.X, Is.EqualTo(viewport.Size.X));
+        Assert.That(hTrack.Size.Y, Is.EqualTo(10f));
+    }
+
     private sealed class FakeNineSliceManager : INineSliceAssetManager
     {
         public void RegisterNineSlice(string key, string textureName, Rectangle<int> sourceRect, Vector4D<float> margins)

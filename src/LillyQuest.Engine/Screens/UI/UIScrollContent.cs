@@ -1,6 +1,7 @@
 using System.Numerics;
 using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Data.Contexts;
+using LillyQuest.Core.Graphics.OpenGL.Resources;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
@@ -76,6 +77,11 @@ public sealed class UIScrollContent : UIScreenControl
 
     public Rectangle<float> GetVerticalThumbRect()
     {
+        if (!EnableVerticalScroll)
+        {
+            return new Rectangle<float>(0f, 0f, 0f, 0f);
+        }
+
         var viewport = GetViewportBounds();
         var trackHeight = viewport.Size.Y;
         var trackX = viewport.Origin.X + viewport.Size.X;
@@ -103,6 +109,11 @@ public sealed class UIScrollContent : UIScreenControl
 
     public Rectangle<float> GetHorizontalThumbRect()
     {
+        if (!EnableHorizontalScroll)
+        {
+            return new Rectangle<float>(0f, 0f, 0f, 0f);
+        }
+
         var viewport = GetViewportBounds();
         var trackWidth = viewport.Size.X;
         var trackX = viewport.Origin.X;
@@ -126,6 +137,38 @@ public sealed class UIScrollContent : UIScreenControl
         var thumbX = trackX + (trackWidth - thumbWidth) * scrollPercent;
 
         return new Rectangle<float>(thumbX, trackY, thumbWidth, ScrollbarThickness);
+    }
+
+    public Rectangle<float> GetVerticalTrackRect()
+    {
+        if (!EnableVerticalScroll)
+        {
+            return new Rectangle<float>(0f, 0f, 0f, 0f);
+        }
+
+        var viewport = GetViewportBounds();
+        return new Rectangle<float>(
+            viewport.Origin.X + viewport.Size.X,
+            viewport.Origin.Y,
+            ScrollbarThickness,
+            viewport.Size.Y
+        );
+    }
+
+    public Rectangle<float> GetHorizontalTrackRect()
+    {
+        if (!EnableHorizontalScroll)
+        {
+            return new Rectangle<float>(0f, 0f, 0f, 0f);
+        }
+
+        var viewport = GetViewportBounds();
+        return new Rectangle<float>(
+            viewport.Origin.X,
+            viewport.Origin.Y + viewport.Size.Y,
+            viewport.Size.X,
+            ScrollbarThickness
+        );
     }
 
     private Vector2 GetMaxScrollOffset(Rectangle<float> viewport)
@@ -154,6 +197,20 @@ public sealed class UIScrollContent : UIScreenControl
         var viewport = GetViewportBounds();
         ScrollOffset = ClampScroll(viewport);
 
+        if (viewport.Size.X <= 0f || viewport.Size.Y <= 0f)
+        {
+            return;
+        }
+
+        spriteBatch.SetScissor(
+            (int)viewport.Origin.X,
+            (int)viewport.Origin.Y,
+            (int)viewport.Size.X,
+            (int)viewport.Size.Y
+        );
+
+        spriteBatch.PushTranslation(-ScrollOffset);
+
         foreach (var child in _children.OrderBy(control => control.ZIndex))
         {
             if (!child.IsVisible)
@@ -163,5 +220,78 @@ public sealed class UIScrollContent : UIScreenControl
 
             child.Render(spriteBatch, renderContext);
         }
+
+        spriteBatch.PopTranslation();
+        spriteBatch.DisableScissor();
+
+        RenderScrollbars(spriteBatch);
+    }
+
+    private void RenderScrollbars(SpriteBatch spriteBatch)
+    {
+        if (string.IsNullOrWhiteSpace(ScrollbarTextureName))
+        {
+            return;
+        }
+
+        if (!_textureManager.TryGetTexture(ScrollbarTextureName, out var texture))
+        {
+            return;
+        }
+
+        if (EnableVerticalScroll)
+        {
+            if (_nineSliceManager.TryGetTexturePatch(ScrollbarTextureName, VerticalTrackElement, out var trackPatch))
+            {
+                DrawPatch(spriteBatch, texture, GetVerticalTrackRect(), trackPatch.Section);
+            }
+
+            if (_nineSliceManager.TryGetTexturePatch(ScrollbarTextureName, VerticalThumbElement, out var thumbPatch))
+            {
+                DrawPatch(spriteBatch, texture, GetVerticalThumbRect(), thumbPatch.Section);
+            }
+        }
+
+        if (EnableHorizontalScroll)
+        {
+            if (_nineSliceManager.TryGetTexturePatch(ScrollbarTextureName, HorizontalTrackElement, out var trackPatch))
+            {
+                DrawPatch(spriteBatch, texture, GetHorizontalTrackRect(), trackPatch.Section);
+            }
+
+            if (_nineSliceManager.TryGetTexturePatch(ScrollbarTextureName, HorizontalThumbElement, out var thumbPatch))
+            {
+                DrawPatch(spriteBatch, texture, GetHorizontalThumbRect(), thumbPatch.Section);
+            }
+        }
+    }
+
+    private static void DrawPatch(SpriteBatch spriteBatch, Texture2D texture, Rectangle<float> dest, Rectangle<int> source)
+    {
+        if (dest.Size.X <= 0f || dest.Size.Y <= 0f)
+        {
+            return;
+        }
+
+        var uv = ToUvRect(texture, source);
+        spriteBatch.Draw(
+            texture,
+            new Vector2(dest.Origin.X, dest.Origin.Y),
+            new Vector2(dest.Size.X, dest.Size.Y),
+            LyColor.White,
+            0f,
+            Vector2.Zero,
+            uv,
+            0f
+        );
+    }
+
+    private static Rectangle<float> ToUvRect(Texture2D texture, Rectangle<int> sourceRect)
+    {
+        var u = (float)sourceRect.Origin.X / texture.Width;
+        var v = (float)sourceRect.Origin.Y / texture.Height;
+        var width = (float)sourceRect.Size.X / texture.Width;
+        var height = (float)sourceRect.Size.Y / texture.Height;
+        return new Rectangle<float>(u, v, width, height);
     }
 }
