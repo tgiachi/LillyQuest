@@ -90,6 +90,18 @@ public sealed class UIRootScreen : BaseScreen
         return handled;
     }
 
+    public override bool OnMouseWheel(int x, int y, float delta)
+    {
+        var modal = GetTopmostModal();
+        if (modal != null)
+        {
+            return modal.HandleMouseWheel(new(x, y), delta);
+        }
+
+        var hit = Root.HitTest(new(x, y));
+        return hit?.HandleMouseWheel(new(x, y), delta) ?? false;
+    }
+
     public override void Update(GameTime gameTime)
     {
         base.Update(gameTime);

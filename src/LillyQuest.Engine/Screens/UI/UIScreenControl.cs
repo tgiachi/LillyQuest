@@ -24,6 +24,7 @@ public class UIScreenControl
     public Func<Vector2, bool>? OnMouseDown { get; set; }
     public Func<Vector2, bool>? OnMouseMove { get; set; }
     public Func<Vector2, bool>? OnMouseUp { get; set; }
+    public Func<Vector2, float, bool>? OnMouseWheel { get; set; }
 
     /// <summary>
     /// Gets the bounds of the control in world space.
@@ -73,6 +74,12 @@ public class UIScreenControl
     /// </summary>
     public virtual bool HandleMouseUp(Vector2 point)
         => OnMouseUp?.Invoke(point) ?? false;
+
+    /// <summary>
+    /// Handles mouse wheel input for this control.
+    /// </summary>
+    public virtual bool HandleMouseWheel(Vector2 point, float delta)
+        => OnMouseWheel?.Invoke(point, delta) ?? false;
 
     /// <summary>
     /// Renders the control.

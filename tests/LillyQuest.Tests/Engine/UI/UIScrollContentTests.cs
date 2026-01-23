@@ -60,6 +60,21 @@ public class UIScrollContentTests
         Assert.That(hTrack.Size.Y, Is.EqualTo(10f));
     }
 
+    [Test]
+    public void HandleMouseWheel_ScrollsVerticalByDefault()
+    {
+        var control = new UIScrollContent(new FakeNineSliceManager(), new FakeTextureManager())
+        {
+            Size = new Vector2(100, 100),
+            ContentSize = new Vector2(100, 200),
+            ScrollSpeed = 10f
+        };
+
+        control.HandleMouseWheel(new Vector2(10, 10), 1f);
+
+        Assert.That(control.ScrollOffset.Y, Is.GreaterThan(0f));
+    }
+
     private sealed class FakeNineSliceManager : INineSliceAssetManager
     {
         public void RegisterNineSlice(string key, string textureName, Rectangle<int> sourceRect, Vector4D<float> margins)

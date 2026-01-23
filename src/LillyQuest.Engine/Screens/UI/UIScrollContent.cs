@@ -227,6 +227,41 @@ public sealed class UIScrollContent : UIScreenControl
         RenderScrollbars(spriteBatch);
     }
 
+    public override bool HandleMouseWheel(Vector2 point, float delta)
+    {
+        if (!IsEnabled || !IsVisible)
+        {
+            return false;
+        }
+
+        var bounds = GetBounds();
+        if (point.X < bounds.Origin.X ||
+            point.X > bounds.Origin.X + bounds.Size.X ||
+            point.Y < bounds.Origin.Y ||
+            point.Y > bounds.Origin.Y + bounds.Size.Y)
+        {
+            return false;
+        }
+
+        var viewport = GetViewportBounds();
+
+        if (EnableVerticalScroll && ContentSize.Y > viewport.Size.Y)
+        {
+            ScrollOffset = new Vector2(ScrollOffset.X, ScrollOffset.Y + delta * ScrollSpeed);
+        }
+        else if (EnableHorizontalScroll && ContentSize.X > viewport.Size.X)
+        {
+            ScrollOffset = new Vector2(ScrollOffset.X + delta * ScrollSpeed, ScrollOffset.Y);
+        }
+        else
+        {
+            return false;
+        }
+
+        ScrollOffset = ClampScroll(viewport);
+        return true;
+    }
+
     private void RenderScrollbars(SpriteBatch spriteBatch)
     {
         if (string.IsNullOrWhiteSpace(ScrollbarTextureName))
