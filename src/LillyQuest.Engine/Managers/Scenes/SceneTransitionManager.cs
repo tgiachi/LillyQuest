@@ -82,6 +82,12 @@ public sealed class SceneTransitionManager : ISceneManager
         => _initializedScenes.Values.ToList().AsReadOnly();
 
     /// <summary>
+    /// Gets all registered scene names (including those not yet initialized).
+    /// </summary>
+    public IReadOnlyList<string> GetRegisteredSceneNames()
+        => SceneRegistrationNameResolver.ResolveRegisteredSceneNames(_sceneRegistrations, _container);
+
+    /// <summary>
     /// Renders the fade overlay on top of all scene rendering.
     /// </summary>
     public void RenderFadeOverlay(Vector2D<int> screenSize)

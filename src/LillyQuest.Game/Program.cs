@@ -1,6 +1,7 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using ConsoleAppFramework;
+using DryIoc;
 using LillyQuest.Engine;
 using LillyQuest.Engine.Extensions;
 using LillyQuest.Engine.Logging;
@@ -35,8 +36,10 @@ await ConsoleApp.RunAsync(
         lillyQuestBootstrap.RegisterServices(
             container =>
             {
+                container.RegisterInstance<ILogEventDispatcher>(logDispatcher);
                 container.RegisterScene<TestSceneA>();
                 container.RegisterScene<TestSceneB>();
+                container.RegisterScene<LogScene>();
                 container.RegisterScene<TilesetSurfaceEditorScene>(true);
 
                 return container;
