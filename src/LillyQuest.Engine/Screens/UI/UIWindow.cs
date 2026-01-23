@@ -34,9 +34,7 @@ public class UIWindow : UIScreenControl
     private UIScreenControl? _activeChild;
 
     public UIWindow()
-    {
-        IsFocusable = true;
-    }
+        => IsFocusable = true;
 
     public void Add(UIScreenControl control)
     {
@@ -59,9 +57,6 @@ public class UIWindow : UIScreenControl
     public virtual Vector2 GetContentOrigin()
         => GetWorldPosition() + GetContentOffset();
 
-    protected virtual Vector2 GetContentOffset()
-        => Vector2.Zero;
-
     public virtual Vector2 GetTitlePosition()
         => GetWorldPosition() + new Vector2(4f, 2f);
 
@@ -78,6 +73,7 @@ public class UIWindow : UIScreenControl
         }
 
         var childList = Children.ToList();
+
         foreach (var child in childList
                               .OrderByDescending(control => control.ZIndex)
                               .ThenByDescending(control => childList.IndexOf(control)))
@@ -228,6 +224,9 @@ public class UIWindow : UIScreenControl
         }
     }
 
+    protected virtual Vector2 GetContentOffset()
+        => Vector2.Zero;
+
     protected virtual void RenderBackground(SpriteBatch spriteBatch, EngineRenderContext renderContext)
     {
         var world = GetWorldPosition();
@@ -248,6 +247,19 @@ public class UIWindow : UIScreenControl
         {
             spriteBatch.DrawFont(TitleFontName, TitleFontSize, Title, GetTitlePosition(), LyColor.White);
         }
+    }
+
+    private void ApplyResize(Vector2 point)
+    {
+        var delta = point - _resizeStartAnchor;
+        var target = _resizeStartSize + delta;
+        var clamped = new Vector2(
+            Math.Clamp(target.X, MinSize.X, MaxSize.X),
+            Math.Clamp(target.Y, MinSize.Y, MaxSize.Y)
+        );
+
+        Size = clamped;
+        ClampToParent();
     }
 
     private void ClampToParent()
@@ -276,18 +288,5 @@ public class UIWindow : UIScreenControl
                point.X <= handleOrigin.X + ResizeHandleSize.X &&
                point.Y >= handleOrigin.Y &&
                point.Y <= handleOrigin.Y + ResizeHandleSize.Y;
-    }
-
-    private void ApplyResize(Vector2 point)
-    {
-        var delta = point - _resizeStartAnchor;
-        var target = _resizeStartSize + delta;
-        var clamped = new Vector2(
-            Math.Clamp(target.X, MinSize.X, MaxSize.X),
-            Math.Clamp(target.Y, MinSize.Y, MaxSize.Y)
-        );
-
-        Size = clamped;
-        ClampToParent();
     }
 }

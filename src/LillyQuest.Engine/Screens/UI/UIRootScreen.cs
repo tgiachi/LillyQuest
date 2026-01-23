@@ -1,4 +1,3 @@
-using System;
 using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
@@ -42,6 +41,7 @@ public sealed class UIRootScreen : BaseScreen
             {
                 _activeControl = modal;
                 var focusTarget = ResolveFocusableAtPoint(modal, point) ?? (modal.IsFocusable ? modal : null);
+
                 if (focusTarget != null)
                 {
                     Root.FocusManager.RequestFocus(focusTarget);
@@ -65,6 +65,7 @@ public sealed class UIRootScreen : BaseScreen
         {
             _activeControl = hit;
             var focusTarget = ResolveFocusableAtPoint(hit, new(x, y)) ?? (hit.IsFocusable ? hit : null);
+
             if (focusTarget != null)
             {
                 Root.FocusManager.RequestFocus(focusTarget);
@@ -96,13 +97,28 @@ public sealed class UIRootScreen : BaseScreen
     public override bool OnMouseWheel(int x, int y, float delta)
     {
         var modal = GetTopmostModal();
+
         if (modal != null)
         {
             return modal.HandleMouseWheel(new(x, y), delta);
         }
 
         var hit = Root.HitTest(new(x, y));
+
         return hit?.HandleMouseWheel(new(x, y), delta) ?? false;
+    }
+
+    public override void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
+    {
+        foreach (var control in Root.Children.OrderBy(c => c.ZIndex))
+        {
+            if (!control.IsVisible)
+            {
+                continue;
+            }
+
+            control.Render(spriteBatch, renderContext);
+        }
     }
 
     public override void Update(GameTime gameTime)
@@ -113,16 +129,6 @@ public sealed class UIRootScreen : BaseScreen
         {
             control.Update(gameTime);
         }
-    }
-
-    private UIWindow? GetTopmostModal()
-    {
-        return Root.Children
-                   .OfType<UIWindow>()
-                   .Where(window => window.IsModal)
-                   .OrderByDescending(window => window.ZIndex)
-                   .ThenByDescending(window => Root.Children.ToList().IndexOf(window))
-                   .FirstOrDefault();
     }
 
     private void EnsureModalBackground(UIWindow? modal)
@@ -140,7 +146,7 @@ public sealed class UIRootScreen : BaseScreen
 
         if (_modalBackground == null)
         {
-            _modalBackground = new UIBackgroundControl();
+            _modalBackground = new();
             Root.Add(_modalBackground);
         }
 
@@ -149,6 +155,27 @@ public sealed class UIRootScreen : BaseScreen
         _modalBackground.Color = ModalBackgroundColor;
         _modalBackground.Alpha = ModalBackgroundAlpha;
         _modalBackground.ZIndex = modal.ZIndex - 1;
+    }
+
+    private static IReadOnlyList<UIScreenControl> GetChildren(UIScreenControl control)
+    {
+        return control switch
+        {
+            UIWindow window        => window.Children,
+            UIScrollContent scroll => scroll.Children,
+            UIButton button        => button.Children,
+            _                      => Array.Empty<UIScreenControl>()
+        };
+    }
+
+    private UIWindow? GetTopmostModal()
+    {
+        return Root.Children
+                   .OfType<UIWindow>()
+                   .Where(window => window.IsModal)
+                   .OrderByDescending(window => window.ZIndex)
+                   .ThenByDescending(window => Root.Children.ToList().IndexOf(window))
+                   .FirstOrDefault();
     }
 
     private static UIScreenControl? ResolveFocusableAtPoint(UIScreenControl control, Vector2 point)
@@ -162,6 +189,7 @@ public sealed class UIRootScreen : BaseScreen
             if (control is UIScrollContent scroll)
             {
                 var viewport = scroll.GetViewportBounds();
+
                 if (point.X < viewport.Origin.X ||
                     point.X > viewport.Origin.X + viewport.Size.X ||
                     point.Y < viewport.Origin.Y ||
@@ -174,11 +202,13 @@ public sealed class UIRootScreen : BaseScreen
             }
 
             var childList = children.ToList();
+
             foreach (var child in childList
                                   .OrderByDescending(c => c.ZIndex)
                                   .ThenByDescending(c => childList.IndexOf(c)))
             {
                 var bounds = child.GetBounds();
+
                 if (childPoint.X < bounds.Origin.X ||
                     childPoint.X > bounds.Origin.X + bounds.Size.X ||
                     childPoint.Y < bounds.Origin.Y ||
@@ -188,6 +218,7 @@ public sealed class UIRootScreen : BaseScreen
                 }
 
                 var nested = ResolveFocusableAtPoint(child, childPoint);
+
                 if (nested != null)
                 {
                     return nested;
@@ -201,29 +232,5 @@ public sealed class UIRootScreen : BaseScreen
         }
 
         return control.IsFocusable ? control : null;
-    }
-
-    private static IReadOnlyList<UIScreenControl> GetChildren(UIScreenControl control)
-    {
-        return control switch
-        {
-            UIWindow window => window.Children,
-            UIScrollContent scroll => scroll.Children,
-            UIButton button => button.Children,
-            _ => Array.Empty<UIScreenControl>()
-        };
-    }
-
-    public override void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
-    {
-        foreach (var control in Root.Children.OrderBy(c => c.ZIndex))
-        {
-            if (!control.IsVisible)
-            {
-                continue;
-            }
-
-            control.Render(spriteBatch, renderContext);
-        }
     }
 }

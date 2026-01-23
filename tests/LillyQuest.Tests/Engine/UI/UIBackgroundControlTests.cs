@@ -14,8 +14,8 @@ public class UIBackgroundControlTests
             Size = new(100, 100)
         };
 
-        Assert.That(background.HandleMouseDown(new Vector2(10, 10)), Is.False);
-        Assert.That(background.HandleMouseMove(new Vector2(10, 10)), Is.False);
-        Assert.That(background.HandleMouseUp(new Vector2(10, 10)), Is.False);
+        Assert.That(background.HandleMouseDown(new(10, 10)), Is.False);
+        Assert.That(background.HandleMouseMove(new(10, 10)), Is.False);
+        Assert.That(background.HandleMouseUp(new(10, 10)), Is.False);
     }
 }

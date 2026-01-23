@@ -1,6 +1,5 @@
 using System.Numerics;
 using LillyQuest.Core.Primitives;
-using Silk.NET.Maths;
 
 namespace LillyQuest.Engine.Screens.UI;
 
@@ -87,6 +86,7 @@ public sealed class UIStackPanel : UIScreenControl
         }
 
         _children.Remove(control);
+
         if (control.Parent == this)
         {
             control.Parent = null;
@@ -105,18 +105,19 @@ public sealed class UIStackPanel : UIScreenControl
     private void ApplyLayout()
     {
         var cursor = _orientation == UIStackOrientation.Vertical ? _padding.Y : _padding.X;
+
         foreach (var child in _children)
         {
             if (_orientation == UIStackOrientation.Vertical)
             {
                 var x = ComputeCrossAxisPosition(Size.X, child.Size.X, _padding.X, _padding.Z);
-                child.Position = new Vector2(x, cursor);
+                child.Position = new(x, cursor);
                 cursor += child.Size.Y + _spacing;
             }
             else
             {
                 var y = ComputeCrossAxisPosition(Size.Y, child.Size.Y, _padding.Y, _padding.W);
-                child.Position = new Vector2(cursor, y);
+                child.Position = new(cursor, y);
                 cursor += child.Size.X + _spacing;
             }
         }
@@ -125,12 +126,13 @@ public sealed class UIStackPanel : UIScreenControl
     private float ComputeCrossAxisPosition(float total, float child, float startPad, float endPad)
     {
         var available = total - startPad - endPad;
+
         return _crossAxisAlignment switch
         {
-            UICrossAlignment.Left => startPad,
+            UICrossAlignment.Left   => startPad,
             UICrossAlignment.Center => startPad + (available - child) * 0.5f,
-            UICrossAlignment.Right => startPad + (available - child),
-            _ => startPad
+            UICrossAlignment.Right  => startPad + (available - child),
+            _                       => startPad
         };
     }
 }

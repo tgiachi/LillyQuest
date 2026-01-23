@@ -6,6 +6,21 @@ namespace LillyQuest.Tests.Engine.UI;
 public class UIScreenControlTests
 {
     [Test]
+    public void Add_Remove_Manage_Children()
+    {
+        var parent = new UIScreenControl();
+        var child = new UIScreenControl();
+
+        parent.AddChild(child);
+        Assert.That(parent.Children.Count, Is.EqualTo(1));
+        Assert.That(child.Parent, Is.EqualTo(parent));
+
+        parent.RemoveChild(child);
+        Assert.That(parent.Children.Count, Is.EqualTo(0));
+        Assert.That(child.Parent, Is.Null);
+    }
+
+    [Test]
     public void GetWorldPosition_UsesParentAndAnchor()
     {
         var parent = new UIScreenControl
@@ -22,20 +37,5 @@ public class UIScreenControlTests
         };
 
         Assert.That(child.GetWorldPosition(), Is.EqualTo(new Vector2(15, 15)));
-    }
-
-    [Test]
-    public void Add_Remove_Manage_Children()
-    {
-        var parent = new UIScreenControl();
-        var child = new UIScreenControl();
-
-        parent.AddChild(child);
-        Assert.That(parent.Children.Count, Is.EqualTo(1));
-        Assert.That(child.Parent, Is.EqualTo(parent));
-
-        parent.RemoveChild(child);
-        Assert.That(parent.Children.Count, Is.EqualTo(0));
-        Assert.That(child.Parent, Is.Null);
     }
 }

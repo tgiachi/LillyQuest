@@ -1,4 +1,3 @@
-using System.Numerics;
 using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Graphics.OpenGL.Resources;
 using LillyQuest.Core.Interfaces.Assets;
@@ -9,78 +8,21 @@ namespace LillyQuest.Tests.Engine.UI;
 
 public class UIScrollContentTests
 {
-    [Test]
-    public void ViewportAndThumb_ComputeExpectedSizes()
-    {
-        var control = new UIScrollContent(new FakeNineSliceManager(), new FakeTextureManager())
-        {
-            Size = new Vector2(200, 100),
-            ContentSize = new Vector2(400, 300),
-            EnableVerticalScroll = true,
-            EnableHorizontalScroll = true,
-            ScrollbarThickness = 10f,
-            MinThumbSize = 16f
-        };
-
-        var viewport = control.GetViewportBounds();
-        Assert.That(viewport.Size.X, Is.EqualTo(190f));
-        Assert.That(viewport.Size.Y, Is.EqualTo(90f));
-
-        var vThumb = control.GetVerticalThumbRect();
-        Assert.That(vThumb.Size.Y, Is.GreaterThanOrEqualTo(16f));
-        var hThumb = control.GetHorizontalThumbRect();
-        Assert.That(hThumb.Size.X, Is.GreaterThanOrEqualTo(16f));
-    }
-
-    [Test]
-    public void TrackRects_UseViewportBounds()
-    {
-        var control = new UIScrollContent(new FakeNineSliceManager(), new FakeTextureManager())
-        {
-            Position = new Vector2(10, 20),
-            Size = new Vector2(200, 100),
-            ContentSize = new Vector2(400, 300),
-            EnableVerticalScroll = true,
-            EnableHorizontalScroll = true,
-            ScrollbarThickness = 10f
-        };
-
-        var viewport = control.GetViewportBounds();
-        var vTrack = control.GetVerticalTrackRect();
-        var hTrack = control.GetHorizontalTrackRect();
-
-        Assert.That(vTrack.Origin.X, Is.EqualTo(viewport.Origin.X + viewport.Size.X));
-        Assert.That(vTrack.Origin.Y, Is.EqualTo(viewport.Origin.Y));
-        Assert.That(vTrack.Size.X, Is.EqualTo(10f));
-        Assert.That(vTrack.Size.Y, Is.EqualTo(viewport.Size.Y));
-
-        Assert.That(hTrack.Origin.X, Is.EqualTo(viewport.Origin.X));
-        Assert.That(hTrack.Origin.Y, Is.EqualTo(viewport.Origin.Y + viewport.Size.Y));
-        Assert.That(hTrack.Size.X, Is.EqualTo(viewport.Size.X));
-        Assert.That(hTrack.Size.Y, Is.EqualTo(10f));
-    }
-
-    [Test]
-    public void HandleMouseWheel_ScrollsVerticalByDefault()
-    {
-        var control = new UIScrollContent(new FakeNineSliceManager(), new FakeTextureManager())
-        {
-            Size = new Vector2(100, 100),
-            ContentSize = new Vector2(100, 200),
-            ScrollSpeed = 10f
-        };
-
-        control.HandleMouseWheel(new Vector2(10, 10), 1f);
-
-        Assert.That(control.ScrollOffset.Y, Is.GreaterThan(0f));
-    }
-
     private sealed class FakeNineSliceManager : INineSliceAssetManager
     {
-        public void RegisterNineSlice(string key, string textureName, Rectangle<int> sourceRect, Vector4D<float> margins)
+        public NineSliceDefinition GetNineSlice(string key)
             => throw new NotSupportedException();
 
-        public void LoadNineSlice(string key, string textureName, string filePath, Rectangle<int> sourceRect, Vector4D<float> margins)
+        public TexturePatch GetTexturePatch(string textureName, string elementName)
+            => throw new NotSupportedException();
+
+        public void LoadNineSlice(
+            string key,
+            string textureName,
+            string filePath,
+            Rectangle<int> sourceRect,
+            Vector4D<float> margins
+        )
             => throw new NotSupportedException();
 
         public void LoadNineSlice(
@@ -103,24 +45,23 @@ public class UIScrollContentTests
         )
             => throw new NotSupportedException();
 
+        public void RegisterNineSlice(string key, string textureName, Rectangle<int> sourceRect, Vector4D<float> margins)
+            => throw new NotSupportedException();
+
         public void RegisterTexturePatches(string textureName, IReadOnlyList<TexturePatchDefinition> patches)
-            => throw new NotSupportedException();
-
-        public TexturePatch GetTexturePatch(string textureName, string elementName)
-            => throw new NotSupportedException();
-
-        public bool TryGetTexturePatch(string textureName, string elementName, out TexturePatch patch)
-        {
-            patch = default;
-            return false;
-        }
-
-        public NineSliceDefinition GetNineSlice(string key)
             => throw new NotSupportedException();
 
         public bool TryGetNineSlice(string key, out NineSliceDefinition definition)
         {
             definition = default;
+
+            return false;
+        }
+
+        public bool TryGetTexturePatch(string textureName, string elementName, out TexturePatch patch)
+        {
+            patch = default;
+
             return false;
         }
     }
@@ -129,6 +70,8 @@ public class UIScrollContentTests
     {
         public Texture2D DefaultWhiteTexture => throw new NotSupportedException();
         public Texture2D DefaultBlackTexture => throw new NotSupportedException();
+
+        public void Dispose() { }
 
         public IReadOnlyDictionary<string, Texture2D> GetAllTextures()
             => throw new NotSupportedException();
@@ -157,14 +100,77 @@ public class UIScrollContentTests
         public bool TryGetTexture(string assetName, out Texture2D texture)
         {
             texture = null!;
+
             return false;
         }
 
         public void UnloadTexture(string assetName)
             => throw new NotSupportedException();
+    }
 
-        public void Dispose()
+    [Test]
+    public void HandleMouseWheel_ScrollsVerticalByDefault()
+    {
+        var control = new UIScrollContent(new FakeNineSliceManager(), new FakeTextureManager())
         {
-        }
+            Size = new(100, 100),
+            ContentSize = new(100, 200),
+            ScrollSpeed = 10f
+        };
+
+        control.HandleMouseWheel(new(10, 10), 1f);
+
+        Assert.That(control.ScrollOffset.Y, Is.GreaterThan(0f));
+    }
+
+    [Test]
+    public void TrackRects_UseViewportBounds()
+    {
+        var control = new UIScrollContent(new FakeNineSliceManager(), new FakeTextureManager())
+        {
+            Position = new(10, 20),
+            Size = new(200, 100),
+            ContentSize = new(400, 300),
+            EnableVerticalScroll = true,
+            EnableHorizontalScroll = true,
+            ScrollbarThickness = 10f
+        };
+
+        var viewport = control.GetViewportBounds();
+        var vTrack = control.GetVerticalTrackRect();
+        var hTrack = control.GetHorizontalTrackRect();
+
+        Assert.That(vTrack.Origin.X, Is.EqualTo(viewport.Origin.X + viewport.Size.X));
+        Assert.That(vTrack.Origin.Y, Is.EqualTo(viewport.Origin.Y));
+        Assert.That(vTrack.Size.X, Is.EqualTo(10f));
+        Assert.That(vTrack.Size.Y, Is.EqualTo(viewport.Size.Y));
+
+        Assert.That(hTrack.Origin.X, Is.EqualTo(viewport.Origin.X));
+        Assert.That(hTrack.Origin.Y, Is.EqualTo(viewport.Origin.Y + viewport.Size.Y));
+        Assert.That(hTrack.Size.X, Is.EqualTo(viewport.Size.X));
+        Assert.That(hTrack.Size.Y, Is.EqualTo(10f));
+    }
+
+    [Test]
+    public void ViewportAndThumb_ComputeExpectedSizes()
+    {
+        var control = new UIScrollContent(new FakeNineSliceManager(), new FakeTextureManager())
+        {
+            Size = new(200, 100),
+            ContentSize = new(400, 300),
+            EnableVerticalScroll = true,
+            EnableHorizontalScroll = true,
+            ScrollbarThickness = 10f,
+            MinThumbSize = 16f
+        };
+
+        var viewport = control.GetViewportBounds();
+        Assert.That(viewport.Size.X, Is.EqualTo(190f));
+        Assert.That(viewport.Size.Y, Is.EqualTo(90f));
+
+        var vThumb = control.GetVerticalThumbRect();
+        Assert.That(vThumb.Size.Y, Is.GreaterThanOrEqualTo(16f));
+        var hThumb = control.GetHorizontalThumbRect();
+        Assert.That(hThumb.Size.X, Is.GreaterThanOrEqualTo(16f));
     }
 }

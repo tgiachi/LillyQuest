@@ -11,89 +11,12 @@ namespace LillyQuest.Tests.Engine.UI;
 
 public class UIButtonTests
 {
-    [Test]
-    public void Hover_Invokes_OnHover_On_Enter()
-    {
-        var button = CreateButton();
-        var hoverCount = 0;
-        button.OnHover = () => hoverCount++;
-
-        button.HandleMouseMove(new Vector2(10, 10));
-        button.HandleMouseMove(new Vector2(11, 11));
-        button.HandleMouseMove(new Vector2(200, 200));
-        button.HandleMouseMove(new Vector2(10, 10));
-
-        Assert.That(hoverCount, Is.EqualTo(2));
-    }
-
-    [Test]
-    public void Click_Invokes_OnClick_When_Pressed_And_Released_Inside()
-    {
-        var button = CreateButton();
-        var clicks = 0;
-        button.OnClick = () => clicks++;
-
-        button.HandleMouseDown(new Vector2(10, 10));
-        button.HandleMouseUp(new Vector2(10, 10));
-
-        Assert.That(clicks, Is.EqualTo(1));
-
-        button.HandleMouseDown(new Vector2(10, 10));
-        button.HandleMouseUp(new Vector2(200, 200));
-
-        Assert.That(clicks, Is.EqualTo(1));
-    }
-
-    [Test]
-    public void TransitionTime_Lerps_Tint_Toward_Target()
-    {
-        var button = CreateButton();
-        button.TransitionTime = 1f;
-        button.IdleTint = new LyColor(0, 0, 0, 255);
-        button.HoveredTint = new LyColor(255, 255, 255, 255);
-
-        button.Update(new GameTime(TimeSpan.Zero, TimeSpan.Zero));
-        button.HandleMouseMove(new Vector2(10, 10));
-        var gameTime = new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(0.5));
-        button.Update(gameTime);
-
-        Assert.That(button.CurrentTint.R, Is.GreaterThan(0));
-        Assert.That(button.CurrentTint.R, Is.LessThan(255));
-    }
-
-    [Test]
-    public void Update_Advances_Transition()
-    {
-        var button = CreateButton();
-        button.TransitionTime = 1f;
-        button.IdleTint = new LyColor(0, 0, 0, 255);
-        button.HoveredTint = new LyColor(255, 255, 255, 255);
-
-        button.Update(new GameTime(TimeSpan.Zero, TimeSpan.Zero));
-        button.HandleMouseMove(new Vector2(10, 10));
-        var gameTime = new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(1));
-        button.Update(gameTime);
-
-        Assert.That(button.CurrentTint.R, Is.EqualTo(255));
-    }
-
-    private static UIButton CreateButton()
-    {
-        var textureManager = new FakeTextureManager();
-        var nineSliceManager = new NineSliceAssetManager(textureManager);
-        var fontManager = new FakeFontManager();
-
-        return new UIButton(nineSliceManager, textureManager, fontManager)
-        {
-            Position = Vector2.Zero,
-            Size = new Vector2(100, 40)
-        };
-    }
-
     private sealed class FakeTextureManager : ITextureManager
     {
         public Texture2D DefaultWhiteTexture => throw new NotSupportedException();
         public Texture2D DefaultBlackTexture => throw new NotSupportedException();
+
+        public void Dispose() { }
 
         public IReadOnlyDictionary<string, Texture2D> GetAllTextures()
             => throw new NotSupportedException();
@@ -128,12 +51,12 @@ public class UIButtonTests
 
         public void UnloadTexture(string assetName)
             => throw new NotSupportedException();
-
-        public void Dispose() { }
     }
 
     private sealed class FakeFontManager : IFontManager
     {
+        public void Dispose() { }
+
         public BitmapFont GetBitmapFont(string assetName)
             => throw new NotSupportedException();
 
@@ -171,6 +94,9 @@ public class UIButtonTests
         public void LoadFont(string assetName, Span<byte> data)
             => throw new NotSupportedException();
 
+        public Vector2 MeasureText(string fontAssetName, int fontSize, string text)
+            => throw new NotSupportedException();
+
         public bool TryGetBitmapFont(string assetName, out BitmapFont font)
         {
             font = null!;
@@ -187,10 +113,84 @@ public class UIButtonTests
 
         public void UnloadFont(string assetName)
             => throw new NotSupportedException();
+    }
 
-        public Vector2 MeasureText(string fontAssetName, int fontSize, string text)
-            => throw new NotSupportedException();
+    [Test]
+    public void Click_Invokes_OnClick_When_Pressed_And_Released_Inside()
+    {
+        var button = CreateButton();
+        var clicks = 0;
+        button.OnClick = () => clicks++;
 
-        public void Dispose() { }
+        button.HandleMouseDown(new(10, 10));
+        button.HandleMouseUp(new(10, 10));
+
+        Assert.That(clicks, Is.EqualTo(1));
+
+        button.HandleMouseDown(new(10, 10));
+        button.HandleMouseUp(new(200, 200));
+
+        Assert.That(clicks, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void Hover_Invokes_OnHover_On_Enter()
+    {
+        var button = CreateButton();
+        var hoverCount = 0;
+        button.OnHover = () => hoverCount++;
+
+        button.HandleMouseMove(new(10, 10));
+        button.HandleMouseMove(new(11, 11));
+        button.HandleMouseMove(new(200, 200));
+        button.HandleMouseMove(new(10, 10));
+
+        Assert.That(hoverCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void TransitionTime_Lerps_Tint_Toward_Target()
+    {
+        var button = CreateButton();
+        button.TransitionTime = 1f;
+        button.IdleTint = new(0, 0, 0, 255);
+        button.HoveredTint = new(255, 255, 255, 255);
+
+        button.Update(new(TimeSpan.Zero, TimeSpan.Zero));
+        button.HandleMouseMove(new(10, 10));
+        var gameTime = new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(0.5));
+        button.Update(gameTime);
+
+        Assert.That(button.CurrentTint.R, Is.GreaterThan(0));
+        Assert.That(button.CurrentTint.R, Is.LessThan(255));
+    }
+
+    [Test]
+    public void Update_Advances_Transition()
+    {
+        var button = CreateButton();
+        button.TransitionTime = 1f;
+        button.IdleTint = new(0, 0, 0, 255);
+        button.HoveredTint = new(255, 255, 255, 255);
+
+        button.Update(new(TimeSpan.Zero, TimeSpan.Zero));
+        button.HandleMouseMove(new(10, 10));
+        var gameTime = new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(1));
+        button.Update(gameTime);
+
+        Assert.That(button.CurrentTint.R, Is.EqualTo(255));
+    }
+
+    private static UIButton CreateButton()
+    {
+        var textureManager = new FakeTextureManager();
+        var nineSliceManager = new NineSliceAssetManager(textureManager);
+        var fontManager = new FakeFontManager();
+
+        return new(nineSliceManager, textureManager, fontManager)
+        {
+            Position = Vector2.Zero,
+            Size = new(100, 40)
+        };
     }
 }

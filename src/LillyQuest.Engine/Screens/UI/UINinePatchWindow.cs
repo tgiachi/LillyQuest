@@ -27,16 +27,18 @@ public sealed class UINinePatchWindow : UIWindow
         _textureManager = textureManager;
     }
 
-    public override Vector2 GetTitlePosition()
-    {
-        var world = GetWorldPosition();
-        return new Vector2(world.X + TitleMargin.X, world.Y + TitleMargin.Y);
-    }
-
     public override Vector2 GetContentOrigin()
     {
         var world = GetWorldPosition();
-        return new Vector2(world.X + ContentMargin.X, world.Y + ContentMargin.Y);
+
+        return new(world.X + ContentMargin.X, world.Y + ContentMargin.Y);
+    }
+
+    public override Vector2 GetTitlePosition()
+    {
+        var world = GetWorldPosition();
+
+        return new(world.X + TitleMargin.X, world.Y + TitleMargin.Y);
     }
 
     protected override Vector2 GetContentOffset()
@@ -74,47 +76,61 @@ public sealed class UINinePatchWindow : UIWindow
         var centerWidth = MathF.Max(0f, Size.X - leftWidth - rightWidth);
         var centerHeight = MathF.Max(0f, Size.Y - topHeight - bottomHeight);
 
-        DrawSlice(spriteBatch, texture, world, new Vector2(leftWidth, topHeight), slice.TopLeft, BorderTint);
+        DrawSlice(spriteBatch, texture, world, new(leftWidth, topHeight), slice.TopLeft, BorderTint);
         DrawSlice(
             spriteBatch,
             texture,
-            new Vector2(world.X + leftWidth + centerWidth, world.Y),
-            new Vector2(rightWidth, topHeight),
+            new(world.X + leftWidth + centerWidth, world.Y),
+            new(rightWidth, topHeight),
             slice.TopRight,
             BorderTint
         );
         DrawSlice(
             spriteBatch,
             texture,
-            new Vector2(world.X, world.Y + topHeight + centerHeight),
-            new Vector2(leftWidth, bottomHeight),
+            new(world.X, world.Y + topHeight + centerHeight),
+            new(leftWidth, bottomHeight),
             slice.BottomLeft,
             BorderTint
         );
         DrawSlice(
             spriteBatch,
             texture,
-            new Vector2(world.X + leftWidth + centerWidth, world.Y + topHeight + centerHeight),
-            new Vector2(rightWidth, bottomHeight),
+            new(world.X + leftWidth + centerWidth, world.Y + topHeight + centerHeight),
+            new(rightWidth, bottomHeight),
             slice.BottomRight,
             BorderTint
         );
 
-        DrawTiled(spriteBatch, texture, new Vector2(world.X + leftWidth, world.Y), new Vector2(centerWidth, topHeight), slice.Top, BorderTint);
         DrawTiled(
             spriteBatch,
             texture,
-            new Vector2(world.X + leftWidth, world.Y + topHeight + centerHeight),
-            new Vector2(centerWidth, bottomHeight),
+            new(world.X + leftWidth, world.Y),
+            new(centerWidth, topHeight),
+            slice.Top,
+            BorderTint
+        );
+        DrawTiled(
+            spriteBatch,
+            texture,
+            new(world.X + leftWidth, world.Y + topHeight + centerHeight),
+            new(centerWidth, bottomHeight),
             slice.Bottom,
             BorderTint
         );
-        DrawTiled(spriteBatch, texture, new Vector2(world.X, world.Y + topHeight), new Vector2(leftWidth, centerHeight), slice.Left, BorderTint);
         DrawTiled(
             spriteBatch,
             texture,
-            new Vector2(world.X + leftWidth + centerWidth, world.Y + topHeight),
-            new Vector2(rightWidth, centerHeight),
+            new(world.X, world.Y + topHeight),
+            new(leftWidth, centerHeight),
+            slice.Left,
+            BorderTint
+        );
+        DrawTiled(
+            spriteBatch,
+            texture,
+            new(world.X + leftWidth + centerWidth, world.Y + topHeight),
+            new(rightWidth, centerHeight),
             slice.Right,
             BorderTint
         );
@@ -122,8 +138,8 @@ public sealed class UINinePatchWindow : UIWindow
         DrawTiled(
             spriteBatch,
             texture,
-            new Vector2(world.X + leftWidth, world.Y + topHeight),
-            new Vector2(centerWidth, centerHeight),
+            new(world.X + leftWidth, world.Y + topHeight),
+            new(centerWidth, centerHeight),
             slice.Center,
             CenterTint
         );
@@ -163,6 +179,7 @@ public sealed class UINinePatchWindow : UIWindow
 
         var tileWidth = sourceRect.Size.X * NineSliceScale;
         var tileHeight = sourceRect.Size.Y * NineSliceScale;
+
         if (tileWidth <= 0f || tileHeight <= 0f)
         {
             return;
@@ -180,8 +197,8 @@ public sealed class UINinePatchWindow : UIWindow
                 var uv = ToUvRect(texture, sourceRect, uScale, vScale);
                 spriteBatch.Draw(
                     texture,
-                    new Vector2(position.X + x, position.Y + y),
-                    new Vector2(drawWidth, drawHeight),
+                    new(position.X + x, position.Y + y),
+                    new(drawWidth, drawHeight),
                     tint,
                     0f,
                     Vector2.Zero,
@@ -196,8 +213,9 @@ public sealed class UINinePatchWindow : UIWindow
     {
         var u = (float)sourceRect.Origin.X / texture.Width;
         var v = (float)sourceRect.Origin.Y / texture.Height;
-        var width = (sourceRect.Size.X * uScale) / texture.Width;
-        var height = (sourceRect.Size.Y * vScale) / texture.Height;
-        return new Rectangle<float>(u, v, width, height);
+        var width = sourceRect.Size.X * uScale / texture.Width;
+        var height = sourceRect.Size.Y * vScale / texture.Height;
+
+        return new(u, v, width, height);
     }
 }

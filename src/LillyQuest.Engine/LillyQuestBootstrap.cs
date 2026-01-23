@@ -199,17 +199,17 @@ public class LillyQuestBootstrap
         assetManager.LoadNineSliceFromEmbeddedResource(
             "simple_ui",
             "Assets/_9patch/simple_ui.png",
-            new Vector4D<float>(16, 16, 16, 16),
+            new(16, 16, 16, 16),
             typeof(SpriteBatch).Assembly
         );
         assetManager.NineSliceManager.RegisterTexturePatches(
             "n9_ui_simple_ui",
             new[]
             {
-                new TexturePatchDefinition("scroll.v.track", new Rectangle<int>(16, 0, 16, 16)),
-                new TexturePatchDefinition("scroll.v.thumb", new Rectangle<int>(32, 0, 16, 16)),
-                new TexturePatchDefinition("scroll.h.track", new Rectangle<int>(16, 16, 16, 16)),
-                new TexturePatchDefinition("scroll.h.thumb", new Rectangle<int>(32, 16, 16, 16))
+                new TexturePatchDefinition("scroll.v.track", new(16, 0, 16, 16)),
+                new TexturePatchDefinition("scroll.v.thumb", new(32, 0, 16, 16)),
+                new TexturePatchDefinition("scroll.h.track", new(16, 16, 16, 16)),
+                new TexturePatchDefinition("scroll.h.thumb", new(32, 16, 16, 16))
             }
         );
 

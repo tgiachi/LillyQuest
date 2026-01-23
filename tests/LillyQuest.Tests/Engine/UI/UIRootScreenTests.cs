@@ -7,6 +7,50 @@ namespace LillyQuest.Tests.Engine.UI;
 public class UIRootScreenTests
 {
     [Test]
+    public void Modal_Adds_Background_Overlay()
+    {
+        var root = new UIRootScreen();
+        var modal = new UIWindow { Position = Vector2.Zero, Size = new(50, 50), IsModal = true };
+
+        root.Root.Add(modal);
+
+        root.OnMouseDown(10, 10, Array.Empty<MouseButton>());
+
+        Assert.That(root.Root.Children.Any(c => c is UIBackgroundControl), Is.True);
+    }
+
+    [Test]
+    public void Modal_Window_Blocks_Input_To_Other_Controls()
+    {
+        var root = new UIRootScreen();
+        var modal = new UIWindow { Position = Vector2.Zero, Size = new(50, 50), IsModal = true };
+        var modalHit = false;
+        modal.OnMouseDown = _ =>
+                            {
+                                modalHit = true;
+
+                                return true;
+                            };
+        var other = new UIScreenControl { Position = Vector2.Zero, Size = new(100, 100) };
+        var otherHit = false;
+        other.OnMouseDown = _ =>
+                            {
+                                otherHit = true;
+
+                                return true;
+                            };
+
+        root.Root.Add(other);
+        root.Root.Add(modal);
+
+        var handled = root.OnMouseDown(10, 10, Array.Empty<MouseButton>());
+
+        Assert.That(handled, Is.True);
+        Assert.That(modalHit, Is.True);
+        Assert.That(otherHit, Is.False);
+    }
+
+    [Test]
     public void MouseDown_Captures_Control_And_Forwards_Move_Up()
     {
         var root = new UIRootScreen();
@@ -41,56 +85,14 @@ public class UIRootScreenTests
     }
 
     [Test]
-    public void Modal_Window_Blocks_Input_To_Other_Controls()
-    {
-        var root = new UIRootScreen();
-        var modal = new UIWindow { Position = Vector2.Zero, Size = new(50, 50), IsModal = true };
-        var modalHit = false;
-        modal.OnMouseDown = _ =>
-                            {
-                                modalHit = true;
-                                return true;
-                            };
-        var other = new UIScreenControl { Position = Vector2.Zero, Size = new(100, 100) };
-        var otherHit = false;
-        other.OnMouseDown = _ =>
-                            {
-                                otherHit = true;
-                                return true;
-                            };
-
-        root.Root.Add(other);
-        root.Root.Add(modal);
-
-        var handled = root.OnMouseDown(10, 10, Array.Empty<MouseButton>());
-
-        Assert.That(handled, Is.True);
-        Assert.That(modalHit, Is.True);
-        Assert.That(otherHit, Is.False);
-    }
-
-    [Test]
-    public void Modal_Adds_Background_Overlay()
-    {
-        var root = new UIRootScreen();
-        var modal = new UIWindow { Position = Vector2.Zero, Size = new(50, 50), IsModal = true };
-
-        root.Root.Add(modal);
-
-        root.OnMouseDown(10, 10, Array.Empty<MouseButton>());
-
-        Assert.That(root.Root.Children.Any(c => c is UIBackgroundControl), Is.True);
-    }
-
-    [Test]
     public void MouseDown_Focuses_Child_Control_When_Clicked()
     {
         var root = new UIRootScreen();
         var window = new UIWindow { Position = Vector2.Zero, Size = new(100, 100) };
         var child = new UIScreenControl
         {
-            Position = new Vector2(10, 10),
-            Size = new Vector2(20, 20),
+            Position = new(10, 10),
+            Size = new(20, 20),
             IsFocusable = true
         };
         child.OnMouseDown = _ => true;

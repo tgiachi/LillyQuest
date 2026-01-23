@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-
 namespace LillyQuest.Engine.Screens.UI;
 
 /// <summary>
@@ -47,18 +44,6 @@ public sealed class UIFocusManager
         Focused = control;
     }
 
-    private static List<UIScreenControl> GetFocusables(UIScreenRoot root)
-    {
-        var focusables = new List<UIScreenControl>();
-
-        foreach (var control in root.Children)
-        {
-            CollectFocusables(control, focusables);
-        }
-
-        return focusables;
-    }
-
     private static void CollectFocusables(UIScreenControl control, List<UIScreenControl> focusables)
     {
         if (control.IsFocusable)
@@ -76,10 +61,22 @@ public sealed class UIFocusManager
     {
         return control switch
         {
-            UIWindow window => window.Children,
+            UIWindow window        => window.Children,
             UIScrollContent scroll => scroll.Children,
-            UIButton button => button.Children,
-            _ => Array.Empty<UIScreenControl>()
+            UIButton button        => button.Children,
+            _                      => Array.Empty<UIScreenControl>()
         };
+    }
+
+    private static List<UIScreenControl> GetFocusables(UIScreenRoot root)
+    {
+        var focusables = new List<UIScreenControl>();
+
+        foreach (var control in root.Children)
+        {
+            CollectFocusables(control, focusables);
+        }
+
+        return focusables;
     }
 }

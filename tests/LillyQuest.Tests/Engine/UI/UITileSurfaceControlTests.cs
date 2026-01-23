@@ -1,9 +1,8 @@
+using System.Numerics;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Engine.Screens.UI;
-using LillyQuest.Core.Primitives;
 using Silk.NET.Input;
-using System.Numerics;
 
 namespace LillyQuest.Tests.Engine.UI;
 
@@ -40,11 +39,17 @@ public class UITileSurfaceControlTests
     }
 
     [Test]
-    public void TileSurfaceControl_RendersWithoutException()
+    public void AutoSizeFromTileView_Disabled_WritesSurfaceSize()
     {
-        var control = new UITileSurfaceControl(new StubTilesetManager(), 10, 10);
+        var control = new UITileSurfaceControl(new StubTilesetManager(), 10, 10)
+        {
+            AutoSizeFromTileView = false,
+            Size = new(200, 80)
+        };
 
-        Assert.DoesNotThrow(() => control.Render(null, null));
+        control.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.016)));
+
+        Assert.That(control.Surface.Size, Is.EqualTo(new Vector2(200, 80)));
     }
 
     [Test]
@@ -54,25 +59,11 @@ public class UITileSurfaceControlTests
         {
             AutoSizeFromTileView = true
         };
-        control.Surface.Size = new Vector2(123, 45);
+        control.Surface.Size = new(123, 45);
 
-        control.Update(new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(0.016)));
+        control.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.016)));
 
         Assert.That(control.Size, Is.EqualTo(new Vector2(123, 45)));
-    }
-
-    [Test]
-    public void AutoSizeFromTileView_Disabled_WritesSurfaceSize()
-    {
-        var control = new UITileSurfaceControl(new StubTilesetManager(), 10, 10)
-        {
-            AutoSizeFromTileView = false,
-            Size = new Vector2(200, 80)
-        };
-
-        control.Update(new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(0.016)));
-
-        Assert.That(control.Surface.Size, Is.EqualTo(new Vector2(200, 80)));
     }
 
     [Test]
@@ -81,15 +72,23 @@ public class UITileSurfaceControlTests
         var control = new UITileSurfaceControl(new StubTilesetManager(), 10, 10)
         {
             AutoSizeFromTileView = false,
-            Position = new Vector2(10, 20),
-            Size = new Vector2(100, 100)
+            Position = new(10, 20),
+            Size = new(100, 100)
         };
         var invoked = false;
         control.Surface.TileMouseDown += (_, _, _, _) => invoked = true;
 
-        var handled = control.HandleMouseDown(new Vector2(15, 25), new[] { MouseButton.Left });
+        var handled = control.HandleMouseDown(new(15, 25), new[] { MouseButton.Left });
 
         Assert.That(handled, Is.True);
         Assert.That(invoked, Is.True);
+    }
+
+    [Test]
+    public void TileSurfaceControl_RendersWithoutException()
+    {
+        var control = new UITileSurfaceControl(new StubTilesetManager(), 10, 10);
+
+        Assert.DoesNotThrow(() => control.Render(null, null));
     }
 }

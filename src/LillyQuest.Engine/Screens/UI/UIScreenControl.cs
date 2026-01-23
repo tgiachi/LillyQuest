@@ -2,8 +2,8 @@ using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Primitives;
-using Silk.NET.Maths;
 using Silk.NET.Input;
+using Silk.NET.Maths;
 
 namespace LillyQuest.Engine.Screens.UI;
 
@@ -26,6 +26,13 @@ public class UIScreenControl
 
     public UIScreenControl? Parent { get; set; }
 
+    public Func<Vector2, bool>? OnMouseDown { get; set; }
+    public Func<Vector2, bool>? OnMouseMove { get; set; }
+    public Func<Vector2, bool>? OnMouseUp { get; set; }
+    public Func<Vector2, float, bool>? OnMouseWheel { get; set; }
+    public Func<Vector2, IReadOnlyList<MouseButton>, bool>? OnMouseDownWithButtons { get; set; }
+    public Func<Vector2, IReadOnlyList<MouseButton>, bool>? OnMouseUpWithButtons { get; set; }
+
     public void AddChild(UIScreenControl control)
     {
         if (control == null)
@@ -36,27 +43,6 @@ public class UIScreenControl
         control.Parent = this;
         _children.Add(control);
     }
-
-    public void RemoveChild(UIScreenControl control)
-    {
-        if (control == null)
-        {
-            return;
-        }
-
-        _children.Remove(control);
-        if (control.Parent == this)
-        {
-            control.Parent = null;
-        }
-    }
-
-    public Func<Vector2, bool>? OnMouseDown { get; set; }
-    public Func<Vector2, bool>? OnMouseMove { get; set; }
-    public Func<Vector2, bool>? OnMouseUp { get; set; }
-    public Func<Vector2, float, bool>? OnMouseWheel { get; set; }
-    public Func<Vector2, IReadOnlyList<MouseButton>, bool>? OnMouseDownWithButtons { get; set; }
-    public Func<Vector2, IReadOnlyList<MouseButton>, bool>? OnMouseUpWithButtons { get; set; }
 
     /// <summary>
     /// Gets the bounds of the control in world space.
@@ -124,6 +110,21 @@ public class UIScreenControl
     /// </summary>
     public virtual bool HandleMouseWheel(Vector2 point, float delta)
         => OnMouseWheel?.Invoke(point, delta) ?? false;
+
+    public void RemoveChild(UIScreenControl control)
+    {
+        if (control == null)
+        {
+            return;
+        }
+
+        _children.Remove(control);
+
+        if (control.Parent == this)
+        {
+            control.Parent = null;
+        }
+    }
 
     /// <summary>
     /// Renders the control.

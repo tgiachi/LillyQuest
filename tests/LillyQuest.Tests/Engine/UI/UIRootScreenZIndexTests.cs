@@ -1,4 +1,3 @@
-using System.Numerics;
 using LillyQuest.Engine.Screens.UI;
 using Silk.NET.Input;
 

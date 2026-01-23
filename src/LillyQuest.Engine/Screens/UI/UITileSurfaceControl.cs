@@ -38,6 +38,7 @@ public sealed class UITileSurfaceControl : UIScreenControl
         }
 
         SyncSurfaceLayout();
+
         return Surface.OnMouseDown((int)point.X, (int)point.Y, buttons);
     }
 
@@ -49,6 +50,7 @@ public sealed class UITileSurfaceControl : UIScreenControl
         }
 
         SyncSurfaceLayout();
+
         return Surface.OnMouseMove((int)point.X, (int)point.Y);
     }
 
@@ -60,6 +62,7 @@ public sealed class UITileSurfaceControl : UIScreenControl
         }
 
         SyncSurfaceLayout();
+
         return Surface.OnMouseUp((int)point.X, (int)point.Y, buttons);
     }
 
@@ -71,13 +74,8 @@ public sealed class UITileSurfaceControl : UIScreenControl
         }
 
         SyncSurfaceLayout();
-        return Surface.OnMouseWheel((int)point.X, (int)point.Y, delta);
-    }
 
-    public override void Update(GameTime gameTime)
-    {
-        SyncSurfaceLayout();
-        Surface.Update(gameTime);
+        return Surface.OnMouseWheel((int)point.X, (int)point.Y, delta);
     }
 
     public override void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext)
@@ -91,19 +89,10 @@ public sealed class UITileSurfaceControl : UIScreenControl
         Surface.Render(spriteBatch, renderContext);
     }
 
-    private void SyncSurfaceLayout()
+    public override void Update(GameTime gameTime)
     {
-        if (AutoSizeFromTileView)
-        {
-            EnsureSurfaceLoaded();
-            Size = Surface.Size;
-        }
-        else
-        {
-            Surface.Size = Size;
-        }
-
-        Surface.Position = GetWorldPosition();
+        SyncSurfaceLayout();
+        Surface.Update(gameTime);
     }
 
     private void EnsureSurfaceLoaded()
@@ -120,5 +109,20 @@ public sealed class UITileSurfaceControl : UIScreenControl
 
         Surface.OnLoad();
         _surfaceLoaded = true;
+    }
+
+    private void SyncSurfaceLayout()
+    {
+        if (AutoSizeFromTileView)
+        {
+            EnsureSurfaceLoaded();
+            Size = Surface.Size;
+        }
+        else
+        {
+            Surface.Size = Size;
+        }
+
+        Surface.Position = GetWorldPosition();
     }
 }

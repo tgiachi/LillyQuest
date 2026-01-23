@@ -22,15 +22,14 @@ public sealed class UIButton : UIScreenControl
     private readonly ITextureManager _textureManager;
     private readonly IFontManager _fontManager;
 
-    private UIButtonState _state = UIButtonState.Idle;
-    private LyColor _currentTint = LyColor.White;
     private LyColor _targetTint = LyColor.White;
     private float _transitionElapsed;
     private bool _isHovered;
     private LyColor _transitionStartTint = LyColor.White;
 
-    public UIButtonState State => _state;
-    public LyColor CurrentTint => _currentTint;
+    public UIButtonState State { get; private set; } = UIButtonState.Idle;
+
+    public LyColor CurrentTint { get; private set; } = LyColor.White;
 
     public string NineSliceKey { get; set; } = string.Empty;
     public float NineSliceScale { get; set; } = 1f;
@@ -54,7 +53,7 @@ public sealed class UIButton : UIScreenControl
         _nineSliceManager = nineSliceManager;
         _textureManager = textureManager;
         _fontManager = fontManager;
-        _currentTint = IdleTint;
+        CurrentTint = IdleTint;
         _targetTint = IdleTint;
         _transitionStartTint = IdleTint;
         _tintInitialized = true;
@@ -71,14 +70,29 @@ public sealed class UIButton : UIScreenControl
         AddChild(control);
     }
 
-    public void Remove(UIScreenControl control)
+    public override bool HandleMouseDown(Vector2 point)
     {
-        if (control == null)
+        if (!IsEnabled || !IsVisible)
         {
-            return;
+            return false;
         }
 
-        RemoveChild(control);
+        SyncIdleTintIfNeeded();
+
+        var bounds = GetBounds();
+        var inside = point.X >= bounds.Origin.X &&
+                     point.X <= bounds.Origin.X + bounds.Size.X &&
+                     point.Y >= bounds.Origin.Y &&
+                     point.Y <= bounds.Origin.Y + bounds.Size.Y;
+
+        if (!inside)
+        {
+            return false;
+        }
+
+        SetState(UIButtonState.Pressed);
+
+        return true;
     }
 
     public override bool HandleMouseMove(Vector2 point)
@@ -105,37 +119,14 @@ public sealed class UIButton : UIScreenControl
         else if (!inside && _isHovered)
         {
             _isHovered = false;
-            if (_state != UIButtonState.Pressed)
+
+            if (State != UIButtonState.Pressed)
             {
                 SetState(UIButtonState.Idle);
             }
         }
 
         return inside;
-    }
-
-    public override bool HandleMouseDown(Vector2 point)
-    {
-        if (!IsEnabled || !IsVisible)
-        {
-            return false;
-        }
-
-        SyncIdleTintIfNeeded();
-
-        var bounds = GetBounds();
-        var inside = point.X >= bounds.Origin.X &&
-                     point.X <= bounds.Origin.X + bounds.Size.X &&
-                     point.Y >= bounds.Origin.Y &&
-                     point.Y <= bounds.Origin.Y + bounds.Size.Y;
-
-        if (!inside)
-        {
-            return false;
-        }
-
-        SetState(UIButtonState.Pressed);
-        return true;
     }
 
     public override bool HandleMouseUp(Vector2 point)
@@ -153,10 +144,11 @@ public sealed class UIButton : UIScreenControl
                      point.Y >= bounds.Origin.Y &&
                      point.Y <= bounds.Origin.Y + bounds.Size.Y;
 
-        if (_state == UIButtonState.Pressed && inside)
+        if (State == UIButtonState.Pressed && inside)
         {
             OnClick?.Invoke();
             SetState(UIButtonState.Hovered);
+
             return true;
         }
 
@@ -168,19 +160,14 @@ public sealed class UIButton : UIScreenControl
         return inside;
     }
 
-    public override void Update(GameTime gameTime)
+    public void Remove(UIScreenControl control)
     {
-        SyncIdleTintIfNeeded();
-
-        if (TransitionTime <= 0f)
+        if (control == null)
         {
-            _currentTint = _targetTint;
             return;
         }
 
-        _transitionElapsed += (float)gameTime.Elapsed.TotalSeconds;
-        var t = Math.Clamp(_transitionElapsed / TransitionTime, 0f, 1f);
-        _currentTint = LerpColor(_transitionStartTint, _targetTint, t);
+        RemoveChild(control);
     }
 
     public override void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext)
@@ -205,7 +192,7 @@ public sealed class UIButton : UIScreenControl
             return;
         }
 
-        DrawNineSlice(spriteBatch, texture, slice, _currentTint);
+        DrawNineSlice(spriteBatch, texture, slice, CurrentTint);
 
         if (!string.IsNullOrWhiteSpace(Text))
         {
@@ -216,61 +203,20 @@ public sealed class UIButton : UIScreenControl
         }
     }
 
-    private void SetState(UIButtonState state)
+    public override void Update(GameTime gameTime)
     {
-        if (_state == state)
-        {
-            return;
-        }
-
-        _state = state;
-        _transitionElapsed = 0f;
-        if (!_tintInitialized)
-        {
-            _currentTint = IdleTint;
-            _tintInitialized = true;
-        }
-        _transitionStartTint = _currentTint;
-        _targetTint = state switch
-        {
-            UIButtonState.Idle => IdleTint,
-            UIButtonState.Hovered => HoveredTint,
-            UIButtonState.Pressed => PressedTint,
-            _ => IdleTint
-        };
+        SyncIdleTintIfNeeded();
 
         if (TransitionTime <= 0f)
         {
-            _currentTint = _targetTint;
-        }
-    }
+            CurrentTint = _targetTint;
 
-    private void SyncIdleTintIfNeeded()
-    {
-        if (!_tintInitialized)
-        {
-            _currentTint = IdleTint;
-            _targetTint = IdleTint;
-            _transitionStartTint = IdleTint;
-            _tintInitialized = true;
             return;
         }
 
-        if (_state == UIButtonState.Idle && _transitionElapsed == 0f)
-        {
-            _currentTint = IdleTint;
-            _targetTint = IdleTint;
-            _transitionStartTint = IdleTint;
-        }
-    }
-
-    private static LyColor LerpColor(LyColor start, LyColor end, float t)
-    {
-        var r = (byte)Math.Clamp(start.R + (end.R - start.R) * t, 0, 255);
-        var g = (byte)Math.Clamp(start.G + (end.G - start.G) * t, 0, 255);
-        var b = (byte)Math.Clamp(start.B + (end.B - start.B) * t, 0, 255);
-        var a = (byte)Math.Clamp(start.A + (end.A - start.A) * t, 0, 255);
-        return new LyColor(r, g, b, a);
+        _transitionElapsed += (float)gameTime.Elapsed.TotalSeconds;
+        var t = Math.Clamp(_transitionElapsed / TransitionTime, 0f, 1f);
+        CurrentTint = LerpColor(_transitionStartTint, _targetTint, t);
     }
 
     private void DrawNineSlice(SpriteBatch spriteBatch, Texture2D texture, NineSliceDefinition slice, LyColor tint)
@@ -285,47 +231,47 @@ public sealed class UIButton : UIScreenControl
         var centerWidth = MathF.Max(0f, Size.X - leftWidth - rightWidth);
         var centerHeight = MathF.Max(0f, Size.Y - topHeight - bottomHeight);
 
-        DrawSlice(spriteBatch, texture, world, new Vector2(leftWidth, topHeight), slice.TopLeft, tint);
+        DrawSlice(spriteBatch, texture, world, new(leftWidth, topHeight), slice.TopLeft, tint);
         DrawSlice(
             spriteBatch,
             texture,
-            new Vector2(world.X + leftWidth + centerWidth, world.Y),
-            new Vector2(rightWidth, topHeight),
+            new(world.X + leftWidth + centerWidth, world.Y),
+            new(rightWidth, topHeight),
             slice.TopRight,
             tint
         );
         DrawSlice(
             spriteBatch,
             texture,
-            new Vector2(world.X, world.Y + topHeight + centerHeight),
-            new Vector2(leftWidth, bottomHeight),
+            new(world.X, world.Y + topHeight + centerHeight),
+            new(leftWidth, bottomHeight),
             slice.BottomLeft,
             tint
         );
         DrawSlice(
             spriteBatch,
             texture,
-            new Vector2(world.X + leftWidth + centerWidth, world.Y + topHeight + centerHeight),
-            new Vector2(rightWidth, bottomHeight),
+            new(world.X + leftWidth + centerWidth, world.Y + topHeight + centerHeight),
+            new(rightWidth, bottomHeight),
             slice.BottomRight,
             tint
         );
 
-        DrawTiled(spriteBatch, texture, new Vector2(world.X + leftWidth, world.Y), new Vector2(centerWidth, topHeight), slice.Top, tint);
+        DrawTiled(spriteBatch, texture, new(world.X + leftWidth, world.Y), new(centerWidth, topHeight), slice.Top, tint);
         DrawTiled(
             spriteBatch,
             texture,
-            new Vector2(world.X + leftWidth, world.Y + topHeight + centerHeight),
-            new Vector2(centerWidth, bottomHeight),
+            new(world.X + leftWidth, world.Y + topHeight + centerHeight),
+            new(centerWidth, bottomHeight),
             slice.Bottom,
             tint
         );
-        DrawTiled(spriteBatch, texture, new Vector2(world.X, world.Y + topHeight), new Vector2(leftWidth, centerHeight), slice.Left, tint);
+        DrawTiled(spriteBatch, texture, new(world.X, world.Y + topHeight), new(leftWidth, centerHeight), slice.Left, tint);
         DrawTiled(
             spriteBatch,
             texture,
-            new Vector2(world.X + leftWidth + centerWidth, world.Y + topHeight),
-            new Vector2(rightWidth, centerHeight),
+            new(world.X + leftWidth + centerWidth, world.Y + topHeight),
+            new(rightWidth, centerHeight),
             slice.Right,
             tint
         );
@@ -333,8 +279,8 @@ public sealed class UIButton : UIScreenControl
         DrawTiled(
             spriteBatch,
             texture,
-            new Vector2(world.X + leftWidth, world.Y + topHeight),
-            new Vector2(centerWidth, centerHeight),
+            new(world.X + leftWidth, world.Y + topHeight),
+            new(centerWidth, centerHeight),
             slice.Center,
             tint
         );
@@ -374,6 +320,7 @@ public sealed class UIButton : UIScreenControl
 
         var tileWidth = sourceRect.Size.X * NineSliceScale;
         var tileHeight = sourceRect.Size.Y * NineSliceScale;
+
         if (tileWidth <= 0f || tileHeight <= 0f)
         {
             return;
@@ -391,8 +338,8 @@ public sealed class UIButton : UIScreenControl
                 var uv = ToUvRect(texture, sourceRect, uScale, vScale);
                 spriteBatch.Draw(
                     texture,
-                    new Vector2(position.X + x, position.Y + y),
-                    new Vector2(drawWidth, drawHeight),
+                    new(position.X + x, position.Y + y),
+                    new(drawWidth, drawHeight),
                     tint,
                     0f,
                     Vector2.Zero,
@@ -403,12 +350,73 @@ public sealed class UIButton : UIScreenControl
         }
     }
 
+    private static LyColor LerpColor(LyColor start, LyColor end, float t)
+    {
+        var r = (byte)Math.Clamp(start.R + (end.R - start.R) * t, 0, 255);
+        var g = (byte)Math.Clamp(start.G + (end.G - start.G) * t, 0, 255);
+        var b = (byte)Math.Clamp(start.B + (end.B - start.B) * t, 0, 255);
+        var a = (byte)Math.Clamp(start.A + (end.A - start.A) * t, 0, 255);
+
+        return new(r, g, b, a);
+    }
+
+    private void SetState(UIButtonState state)
+    {
+        if (State == state)
+        {
+            return;
+        }
+
+        State = state;
+        _transitionElapsed = 0f;
+
+        if (!_tintInitialized)
+        {
+            CurrentTint = IdleTint;
+            _tintInitialized = true;
+        }
+        _transitionStartTint = CurrentTint;
+        _targetTint = state switch
+        {
+            UIButtonState.Idle    => IdleTint,
+            UIButtonState.Hovered => HoveredTint,
+            UIButtonState.Pressed => PressedTint,
+            _                     => IdleTint
+        };
+
+        if (TransitionTime <= 0f)
+        {
+            CurrentTint = _targetTint;
+        }
+    }
+
+    private void SyncIdleTintIfNeeded()
+    {
+        if (!_tintInitialized)
+        {
+            CurrentTint = IdleTint;
+            _targetTint = IdleTint;
+            _transitionStartTint = IdleTint;
+            _tintInitialized = true;
+
+            return;
+        }
+
+        if (State == UIButtonState.Idle && _transitionElapsed == 0f)
+        {
+            CurrentTint = IdleTint;
+            _targetTint = IdleTint;
+            _transitionStartTint = IdleTint;
+        }
+    }
+
     private static Rectangle<float> ToUvRect(Texture2D texture, Rectangle<int> sourceRect, float uScale, float vScale)
     {
         var u = (float)sourceRect.Origin.X / texture.Width;
         var v = (float)sourceRect.Origin.Y / texture.Height;
-        var width = (sourceRect.Size.X * uScale) / texture.Width;
-        var height = (sourceRect.Size.Y * vScale) / texture.Height;
-        return new Rectangle<float>(u, v, width, height);
+        var width = sourceRect.Size.X * uScale / texture.Width;
+        var height = sourceRect.Size.Y * vScale / texture.Height;
+
+        return new(u, v, width, height);
     }
 }

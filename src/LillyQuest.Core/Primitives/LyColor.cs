@@ -1,4 +1,5 @@
 using System.Drawing;
+using System.Globalization;
 
 namespace LillyQuest.Core.Primitives;
 
@@ -187,9 +188,6 @@ public readonly struct LyColor : IEquatable<LyColor>
     public static LyColor FromArgb(int a, int r, int g, int b)
         => new(ToByte(a, nameof(a)), ToByte(r, nameof(r)), ToByte(g, nameof(g)), ToByte(b, nameof(b)));
 
-    public static LyColor FromRgb(int r, int g, int b)
-        => new(255, ToByte(r, nameof(r)), ToByte(g, nameof(g)), ToByte(b, nameof(b)));
-
     public static LyColor FromHex(string hex)
     {
         if (string.IsNullOrWhiteSpace(hex))
@@ -198,6 +196,7 @@ public readonly struct LyColor : IEquatable<LyColor>
         }
 
         var trimmed = hex.Trim();
+
         if (trimmed.StartsWith('#'))
         {
             trimmed = trimmed[1..];
@@ -208,7 +207,7 @@ public readonly struct LyColor : IEquatable<LyColor>
             throw new ArgumentException("Hex color must be 6 or 8 characters long.", nameof(hex));
         }
 
-        if (!uint.TryParse(trimmed, System.Globalization.NumberStyles.HexNumber, null, out var value))
+        if (!uint.TryParse(trimmed, NumberStyles.HexNumber, null, out var value))
         {
             throw new ArgumentException("Hex color contains invalid characters.", nameof(hex));
         }
@@ -221,6 +220,9 @@ public readonly struct LyColor : IEquatable<LyColor>
 
         return new(a, r, g, b);
     }
+
+    public static LyColor FromRgb(int r, int g, int b)
+        => new(255, ToByte(r, nameof(r)), ToByte(g, nameof(g)), ToByte(b, nameof(b)));
 
     public override int GetHashCode()
         => HashCode.Combine(A, R, G, B);

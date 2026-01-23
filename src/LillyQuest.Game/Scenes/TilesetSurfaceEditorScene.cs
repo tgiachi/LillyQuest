@@ -1,6 +1,4 @@
-using System.IO;
 using System.Numerics;
-using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
@@ -12,7 +10,6 @@ using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.Engine.Screens.UI;
 using Serilog;
 using Silk.NET.Input;
-using Silk.NET.Maths;
 
 namespace LillyQuest.Game.Scenes;
 
@@ -204,16 +201,14 @@ public class TilesetSurfaceEditorScene : BaseScene
             Title = "Nine-Slice Window",
             TitleFontName = "default_font",
             TitleFontSize = 16,
-            TitleMargin = new Vector4D<float>(20f, 12f, 0f, 0f),
-            ContentMargin = new Vector4D<float>(20f, 40f, 0f, 0f),
+            TitleMargin = new(20f, 12f, 0f, 0f),
+            ContentMargin = new(20f, 40f, 0f, 0f),
             NineSliceScale = 1f,
             CenterTint = LyColor.FromHex("#e8d7b0"),
             BorderTint = LyColor.FromHex("#a67c52"),
             NineSliceKey = "simple_ui",
-            ZIndex = 3,
+            ZIndex = 3
         };
-
-
 
         var nineSliceLabel = new UILabel
         {
@@ -231,13 +226,13 @@ public class TilesetSurfaceEditorScene : BaseScene
             Title = "UIButton Demo",
             TitleFontName = "default_font",
             TitleFontSize = 16,
-            TitleMargin = new Vector4D<float>(20f, 12f, 0f, 0f),
-            ContentMargin = new Vector4D<float>(20f, 40f, 0f, 0f),
+            TitleMargin = new(20f, 12f, 0f, 0f),
+            ContentMargin = new(20f, 40f, 0f, 0f),
             NineSliceScale = 1f,
             CenterTint = LyColor.FromHex("#e8d7b0"),
             BorderTint = LyColor.FromHex("#a67c52"),
             NineSliceKey = "simple_ui",
-            ZIndex = 4,
+            ZIndex = 4
         };
 
         var sampleButton = new UIButton(_nineSliceManager, _textureManager, _fontManager)
@@ -250,9 +245,9 @@ public class TilesetSurfaceEditorScene : BaseScene
             TextColor = LyColor.Black,
 
             NineSliceKey = "simple_ui",
-            IdleTint = new LyColor(200, 200, 200, 255),
-            HoveredTint = new LyColor(255, 255, 255, 255),
-            PressedTint = new LyColor(160, 160, 160, 255),
+            IdleTint = new(200, 200, 200, 255),
+            HoveredTint = new(255, 255, 255, 255),
+            PressedTint = new(160, 160, 160, 255),
             TransitionTime = 0.2f
         };
         sampleButton.OnClick = () => Log.Logger.Information("UIButton clicked");
@@ -287,7 +282,7 @@ public class TilesetSurfaceEditorScene : BaseScene
                 var entry = new UILabel
                 {
                     Text = $"Item {col},{row}",
-                    Position = new Vector2(12 + col * 110, 12 + row * 60),
+                    Position = new(12 + col * 110, 12 + row * 60),
                     Color = LyColor.Yellow
                 };
                 scrollContent.Add(entry);

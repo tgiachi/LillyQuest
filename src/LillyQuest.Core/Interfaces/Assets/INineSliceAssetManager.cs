@@ -5,12 +5,9 @@ namespace LillyQuest.Core.Interfaces.Assets;
 
 public interface INineSliceAssetManager
 {
-    void RegisterNineSlice(
-        string key,
-        string textureName,
-        Rectangle<int> sourceRect,
-        Vector4D<float> margins
-    );
+    NineSliceDefinition GetNineSlice(string key);
+
+    TexturePatch GetTexturePatch(string textureName, string elementName);
 
     void LoadNineSlice(
         string key,
@@ -38,16 +35,19 @@ public interface INineSliceAssetManager
         Vector4D<float> margins
     );
 
+    void RegisterNineSlice(
+        string key,
+        string textureName,
+        Rectangle<int> sourceRect,
+        Vector4D<float> margins
+    );
+
     void RegisterTexturePatches(
         string textureName,
         IReadOnlyList<TexturePatchDefinition> patches
     );
 
-    TexturePatch GetTexturePatch(string textureName, string elementName);
+    bool TryGetNineSlice(string key, out NineSliceDefinition definition);
 
     bool TryGetTexturePatch(string textureName, string elementName, out TexturePatch patch);
-
-    NineSliceDefinition GetNineSlice(string key);
-
-    bool TryGetNineSlice(string key, out NineSliceDefinition definition);
 }

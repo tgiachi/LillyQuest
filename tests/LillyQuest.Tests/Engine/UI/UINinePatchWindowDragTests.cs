@@ -8,37 +8,12 @@ namespace LillyQuest.Tests.Engine.UI;
 
 public class UINinePatchWindowDragTests
 {
-    [Test]
-    public void HandleMouseDrag_MovesWindow_WhenEnabled()
-    {
-        var textureManager = new FakeTextureManager();
-        var nineSliceManager = new NineSliceAssetManager(textureManager);
-        var window = new UINinePatchWindow(nineSliceManager, textureManager)
-        {
-            Position = new(10, 10),
-            Size = new(100, 100),
-            IsTitleBarEnabled = true,
-            IsWindowMovable = true,
-            TitleBarHeight = 10f
-        };
-
-        var pressed = window.HandleMouseDown(new Vector2(15, 15));
-        var moved = window.HandleMouseMove(new Vector2(30, 40));
-        var released = window.HandleMouseUp(new Vector2(30, 40));
-
-        Assert.That(pressed, Is.True);
-        Assert.That(moved, Is.True);
-        Assert.That(released, Is.True);
-        Assert.That(window.Position, Is.EqualTo(new Vector2(25, 35)));
-
-        window.HandleMouseMove(new Vector2(60, 60));
-        Assert.That(window.Position, Is.EqualTo(new Vector2(25, 35)));
-    }
-
     private sealed class FakeTextureManager : ITextureManager
     {
         public Texture2D DefaultWhiteTexture => throw new NotSupportedException();
         public Texture2D DefaultBlackTexture => throw new NotSupportedException();
+
+        public void Dispose() { }
 
         public IReadOnlyDictionary<string, Texture2D> GetAllTextures()
             => throw new NotSupportedException();
@@ -67,14 +42,38 @@ public class UINinePatchWindowDragTests
         public bool TryGetTexture(string assetName, out Texture2D texture)
         {
             texture = null!;
+
             return false;
         }
 
         public void UnloadTexture(string assetName)
             => throw new NotSupportedException();
+    }
 
-        public void Dispose()
+    [Test]
+    public void HandleMouseDrag_MovesWindow_WhenEnabled()
+    {
+        var textureManager = new FakeTextureManager();
+        var nineSliceManager = new NineSliceAssetManager(textureManager);
+        var window = new UINinePatchWindow(nineSliceManager, textureManager)
         {
-        }
+            Position = new(10, 10),
+            Size = new(100, 100),
+            IsTitleBarEnabled = true,
+            IsWindowMovable = true,
+            TitleBarHeight = 10f
+        };
+
+        var pressed = window.HandleMouseDown(new(15, 15));
+        var moved = window.HandleMouseMove(new(30, 40));
+        var released = window.HandleMouseUp(new(30, 40));
+
+        Assert.That(pressed, Is.True);
+        Assert.That(moved, Is.True);
+        Assert.That(released, Is.True);
+        Assert.That(window.Position, Is.EqualTo(new Vector2(25, 35)));
+
+        window.HandleMouseMove(new(60, 60));
+        Assert.That(window.Position, Is.EqualTo(new Vector2(25, 35)));
     }
 }

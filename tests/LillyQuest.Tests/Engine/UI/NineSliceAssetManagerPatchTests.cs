@@ -2,43 +2,17 @@ using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Graphics.OpenGL.Resources;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Managers.Assets;
-using Silk.NET.Maths;
 
 namespace LillyQuest.Tests.Engine.UI;
 
 public class NineSliceAssetManagerPatchTests
 {
-    [Test]
-    public void RegisterTexturePatches_StoresAndRetrieves()
-    {
-        var textureManager = new FakeTextureManager();
-        var manager = new NineSliceAssetManager(textureManager);
-        var patches = new[]
-        {
-            new TexturePatchDefinition("scroll.track", new Rectangle<int>(0, 0, 16, 64)),
-            new TexturePatchDefinition("scroll.thumb", new Rectangle<int>(16, 0, 16, 32))
-        };
-
-        manager.RegisterTexturePatches("ui_atlas", patches);
-
-        var track = manager.GetTexturePatch("ui_atlas", "scroll.track");
-        var thumb = manager.GetTexturePatch("ui_atlas", "scroll.thumb");
-
-        Assert.That(track.TextureName, Is.EqualTo("ui_atlas"));
-        Assert.That(track.ElementName, Is.EqualTo("scroll.track"));
-        Assert.That(track.Section.Size.X, Is.EqualTo(16));
-        Assert.That(track.Section.Size.Y, Is.EqualTo(64));
-
-        Assert.That(thumb.TextureName, Is.EqualTo("ui_atlas"));
-        Assert.That(thumb.ElementName, Is.EqualTo("scroll.thumb"));
-        Assert.That(thumb.Section.Origin.X, Is.EqualTo(16));
-        Assert.That(thumb.Section.Size.Y, Is.EqualTo(32));
-    }
-
     private sealed class FakeTextureManager : ITextureManager
     {
         public Texture2D DefaultWhiteTexture => throw new NotSupportedException();
         public Texture2D DefaultBlackTexture => throw new NotSupportedException();
+
+        public void Dispose() { }
 
         public IReadOnlyDictionary<string, Texture2D> GetAllTextures()
             => throw new NotSupportedException();
@@ -67,14 +41,38 @@ public class NineSliceAssetManagerPatchTests
         public bool TryGetTexture(string assetName, out Texture2D texture)
         {
             texture = null!;
+
             return false;
         }
 
         public void UnloadTexture(string assetName)
             => throw new NotSupportedException();
+    }
 
-        public void Dispose()
+    [Test]
+    public void RegisterTexturePatches_StoresAndRetrieves()
+    {
+        var textureManager = new FakeTextureManager();
+        var manager = new NineSliceAssetManager(textureManager);
+        var patches = new[]
         {
-        }
+            new TexturePatchDefinition("scroll.track", new(0, 0, 16, 64)),
+            new TexturePatchDefinition("scroll.thumb", new(16, 0, 16, 32))
+        };
+
+        manager.RegisterTexturePatches("ui_atlas", patches);
+
+        var track = manager.GetTexturePatch("ui_atlas", "scroll.track");
+        var thumb = manager.GetTexturePatch("ui_atlas", "scroll.thumb");
+
+        Assert.That(track.TextureName, Is.EqualTo("ui_atlas"));
+        Assert.That(track.ElementName, Is.EqualTo("scroll.track"));
+        Assert.That(track.Section.Size.X, Is.EqualTo(16));
+        Assert.That(track.Section.Size.Y, Is.EqualTo(64));
+
+        Assert.That(thumb.TextureName, Is.EqualTo("ui_atlas"));
+        Assert.That(thumb.ElementName, Is.EqualTo("scroll.thumb"));
+        Assert.That(thumb.Section.Origin.X, Is.EqualTo(16));
+        Assert.That(thumb.Section.Size.Y, Is.EqualTo(32));
     }
 }

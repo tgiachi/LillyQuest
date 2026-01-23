@@ -209,6 +209,14 @@ public class FontManager : IFontManager
         _logger.Information("Font {FontName} loaded successfully", name);
     }
 
+    public Vector2 MeasureText(string fontAssetName, int fontSize, string text)
+    {
+        var font = GetFont(fontAssetName, fontSize);
+        var dimensions = font.MeasureString(text);
+
+        return new Vector2(dimensions.X, dimensions.Y) * 2f;
+    }
+
     public bool TryGetBitmapFont(string assetName, out BitmapFont font)
         => _bitmapFonts.TryGetValue(assetName, out font);
 
@@ -236,12 +244,5 @@ public class FontManager : IFontManager
         {
             _logger.Warning("Font {FontName} not found for unloading", assetName);
         }
-    }
-
-    public Vector2 MeasureText(string fontAssetName, int fontSize, string text)
-    {
-        var font = GetFont(fontAssetName, fontSize);
-        var dimensions = font.MeasureString(text);
-        return new Vector2(dimensions.X, dimensions.Y) * 2f;
     }
 }
