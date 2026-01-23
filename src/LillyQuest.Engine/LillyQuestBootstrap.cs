@@ -65,6 +65,7 @@ public class LillyQuestBootstrap
 
     private readonly PluginRegistry _pluginRegistry = new();
     private readonly AsyncResourceLoader _asyncResourceLoader = new();
+    private readonly ResourceLoadingFlow _resourceLoadingFlow;
 
     private readonly GameTime _gameTime = new();
     private readonly GameTime _fixedGameTime = new();
@@ -100,6 +101,7 @@ public class LillyQuestBootstrap
         _container.RegisterInstance(_engineConfig);
         _container.RegisterInstance(_renderContext);
         _container.RegisterInstance(this);
+        _resourceLoadingFlow = new(_asyncResourceLoader);
 
         if (string.IsNullOrEmpty(_engineConfig.RootDirectory))
         {
@@ -334,13 +336,12 @@ public class LillyQuestBootstrap
         );
         assetManager.NineSliceManager.RegisterTexturePatches(
             "n9_ui_simple_ui",
-            new[]
-            {
+            [
                 new TexturePatchDefinition("scroll.v.track", new(16, 0, 16, 16)),
                 new TexturePatchDefinition("scroll.v.thumb", new(32, 0, 16, 16)),
                 new TexturePatchDefinition("scroll.h.track", new(16, 16, 16, 16)),
                 new TexturePatchDefinition("scroll.h.thumb", new(32, 16, 16, 16))
-            }
+            ]
         );
 
         // assetManager.NineSliceManager.LoadNineSliceFromEmbeddedResource(
@@ -444,6 +445,12 @@ public class LillyQuestBootstrap
         }
     }
 
+    private void ShowLogScene()
+    {
+        var sceneManager = _container.Resolve<ISceneManager>();
+        sceneManager.SwitchScene("log_scene", 0.1f);
+    }
+
     private void WindowOnClosing()
     {
         _logger.Information("Shutting down LillyQuest Engine...");
@@ -469,31 +476,22 @@ public class LillyQuestBootstrap
         _logger.Information("GLSL Version: {GLSL}", glsl);
         _logger.Information("Extensions: {Ext}", extensions ?? "None");
 
-        // Execute OnReadyToRender hook after OpenGL is initialized
-        ExecuteOnReadyToRender().GetAwaiter().GetResult();
-
         LoadDefaultResources();
         StartInternalServices();
 
         try
         {
-            var sceneManager = _container.Resolve<ISceneManager>();
-            sceneManager.SwitchScene("log_scene", 0.1f);
+            _resourceLoadingFlow.StartLoading(
+                ExecuteOnReadyToRender,
+                ExecuteOnLoadResources,
+                ShowLogScene,
+                StartSceneManager
+            );
         }
         catch (Exception ex)
         {
             _logger.Warning(ex, "Could not show LogScene during resource loading");
         }
-
-        // Execute OnLoadResources hook with LogScene visible
-        // Plugins can load resources asynchronously while LogScreen shows progress
-        ExecuteOnLoadResources().GetAwaiter().GetResult();
-
-        // Wait for async loading to complete
-        WaitForResourcesLoaded().GetAwaiter().GetResult();
-
-        // Now load the initial scene
-        StartSceneManager();
     }
 
     private void WindowOnRender(double obj)
@@ -515,6 +513,8 @@ public class LillyQuestBootstrap
     {
         var sw = Stopwatch.GetTimestamp();
         _gameTime.Update(deltaSeconds);
+
+        _resourceLoadingFlow.Update();
 
         // Update scene transitions
         var sceneManager = _container.Resolve<ISceneManager>();

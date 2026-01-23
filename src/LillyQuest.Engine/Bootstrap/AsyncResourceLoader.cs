@@ -7,16 +7,15 @@ namespace LillyQuest.Engine.Bootstrap;
 /// Manages asynchronous resource loading without blocking the render loop.
 /// Allows plugins to load resources while the game continues rendering.
 /// </summary>
-public sealed class AsyncResourceLoader
+public sealed class AsyncResourceLoader : IAsyncResourceLoader
 {
     private readonly ILogger _logger = Log.ForContext<AsyncResourceLoader>();
     private Task? _loadingTask;
-    private bool _isLoading;
 
     /// <summary>
     /// Gets whether resources are currently being loaded.
     /// </summary>
-    public bool IsLoading => _isLoading;
+    public bool IsLoading { get; private set; }
 
     /// <summary>
     /// Starts an async resource loading operation without blocking the render loop.
@@ -25,31 +24,35 @@ public sealed class AsyncResourceLoader
     /// <param name="loadingOperation">The async operation to execute in background.</param>
     public void StartAsyncLoading(Func<Task> loadingOperation)
     {
-        if (_isLoading)
+        if (IsLoading)
         {
             _logger.Warning("A loading operation is already in progress");
+
             return;
         }
 
-        _isLoading = true;
-        _loadingTask = Task.Run(async () =>
-        {
-            try
+        IsLoading = true;
+        _loadingTask = Task.Run(
+            async () =>
             {
-                _logger.Information("Starting async resource loading...");
-                await loadingOperation();
-                _logger.Information("✓ Async resource loading completed");
+                try
+                {
+                    _logger.Information("Starting async resource loading...");
+                    await loadingOperation();
+                    _logger.Information("✓ Async resource loading completed");
+                }
+                catch (Exception ex)
+                {
+                    _logger.Error(ex, "✗ Async resource loading failed");
+
+                    throw;
+                }
+                finally
+                {
+                    IsLoading = false;
+                }
             }
-            catch (Exception ex)
-            {
-                _logger.Error(ex, "✗ Async resource loading failed");
-                throw;
-            }
-            finally
-            {
-                _isLoading = false;
-            }
-        });
+        );
     }
 
     /// <summary>

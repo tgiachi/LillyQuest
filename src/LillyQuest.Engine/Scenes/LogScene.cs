@@ -1,4 +1,5 @@
 using System.Numerics;
+using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Interfaces.Managers;
@@ -13,15 +14,17 @@ public class LogScene : BaseScene
     private readonly IScreenManager _screenManager;
     private readonly ILogEventDispatcher _logDispatcher;
     private readonly IFontManager _fontManager;
+    private readonly EngineRenderContext _renderContext;
 
     private LogScreen? _logScreen;
 
-    public LogScene(IScreenManager screenManager, ILogEventDispatcher logDispatcher, IFontManager fontManager)
+    public LogScene(IScreenManager screenManager, ILogEventDispatcher logDispatcher, IFontManager fontManager, EngineRenderContext renderContext)
         : base("log_scene")
     {
         _screenManager = screenManager;
         _logDispatcher = logDispatcher;
         _fontManager = fontManager;
+        _renderContext = renderContext;
     }
 
     public override void OnLoad()
