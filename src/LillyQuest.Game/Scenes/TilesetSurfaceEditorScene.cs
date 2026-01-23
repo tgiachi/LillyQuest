@@ -25,6 +25,9 @@ public class TilesetSurfaceEditorScene : BaseScene
     private readonly INineSliceAssetManager _nineSliceManager;
     private readonly IFontManager _fontManager;
 
+    private UIRootScreen? _uiRoot;
+    private TilesetSurfaceScreen? _screen;
+
     public TilesetSurfaceEditorScene(
         IScreenManager screenManager,
         ITilesetManager tilesetManager,
@@ -41,10 +44,16 @@ public class TilesetSurfaceEditorScene : BaseScene
         _fontManager = fontManager;
     }
 
-    public override void OnInitialize(ISceneManager sceneManager)
+    public override void OnLoad()
     {
+        _uiRoot = new UIRootScreen
+        {
+            Position = Vector2.Zero,
+            Size = new(1600, 900)
+        };
+
         // Create the tileset surface screen
-        var screen = new TilesetSurfaceScreen(_tilesetManager)
+        _screen = new TilesetSurfaceScreen(_tilesetManager)
         {
             DefaultTilesetName = "roguelike",
             LayerCount = 2,
@@ -53,93 +62,87 @@ public class TilesetSurfaceEditorScene : BaseScene
             TileViewSize = new(20, 20)
         };
 
-        screen.TileMouseMoveAllLayers += (index, x, y, mouseX, mouseY) =>
-                                         {
-                                             if (index != 0)
-                                             {
-                                                 return;
-                                             }
-                                             screen.ClearLayer(1);
-                                             screen.DrawTextPixel(
-                                                 1,
-                                                 $"Tile X: {x}, Tile Y: {y}",
-                                                 mouseX,
-                                                 mouseY,
-                                                 LyColor.White,
-                                                 LyColor.Black
-                                             );
-                                         };
-        screen.TileMouseDown += (layerIndex, tileX, tileY, buttons) =>
-                                {
-                                    if (buttons.Contains(MouseButton.Right))
-                                    {
-                                        screen.CenterViewOnTile(0, tileX, tileY);
-                                    }
-
-                                    if (buttons.Contains(MouseButton.Middle))
-                                    {
-                                        foreach (var i in Enumerable.Range(0, 1000))
-                                        {
-                                            var randX = Random.Shared.Next(0, 100);
-                                            var randY = Random.Shared.Next(0, 100);
-
-                                            var randomDenstinationVector = new Vector2(
-                                                randX + Random.Shared.Next(-1, 2),
-                                                randY + Random.Shared.Next(-1, 2)
-                                            );
-
-                                            screen.EnqueueMove(0, new(randX, randY), randomDenstinationVector, 0.2f, true);
-                                        }
-                                    }
-                                };
-
-        screen.TileMouseWheel += (layerIndex, x, y, delta) =>
+        _screen.TileMouseMoveAllLayers += (index, x, y, mouseX, mouseY) =>
+                                          {
+                                              if (index != 0)
+                                              {
+                                                  return;
+                                              }
+                                              _screen.ClearLayer(1);
+                                              _screen.DrawTextPixel(
+                                                  1,
+                                                  $"Tile X: {x}, Tile Y: {y}",
+                                                  mouseX,
+                                                  mouseY,
+                                                  LyColor.White,
+                                                  LyColor.Black
+                                              );
+                                          };
+        _screen.TileMouseDown += (layerIndex, tileX, tileY, buttons) =>
                                  {
-                                     var point = 0.1f;
-
-                                     if (delta < 0)
+                                     if (buttons.Contains(MouseButton.Right))
                                      {
-                                         delta = point * -1;
-                                     }
-                                     else
-                                     {
-                                         delta = point;
+                                         _screen.CenterViewOnTile(0, tileX, tileY);
                                      }
 
-                                     var scale = screen.GetLayerRenderScale(0);
-
-                                     if (scale + delta > 0)
+                                     if (buttons.Contains(MouseButton.Middle))
                                      {
-                                         screen.SetLayerRenderScaleTarget(0, scale + delta, 1f);
+                                         foreach (var i in Enumerable.Range(0, 1000))
+                                         {
+                                             var randX = Random.Shared.Next(0, 100);
+                                             var randY = Random.Shared.Next(0, 100);
 
-                                         // screen.CenterViewOnTile(0, x, y);
-                                         Log.Logger.Information("Scale adjusted to {Scale}", scale + delta);
+                                             var randomDenstinationVector = new Vector2(
+                                                 randX + Random.Shared.Next(-1, 2),
+                                                 randY + Random.Shared.Next(-1, 2)
+                                             );
+
+                                             _screen.EnqueueMove(0, new(randX, randY), randomDenstinationVector, 0.2f, true);
+                                         }
                                      }
                                  };
 
+        _screen.TileMouseWheel += (layerIndex, x, y, delta) =>
+                                  {
+                                      var point = 0.1f;
+
+                                      if (delta < 0)
+                                      {
+                                          delta = point * -1;
+                                      }
+                                      else
+                                      {
+                                          delta = point;
+                                      }
+
+                                      var scale = _screen.GetLayerRenderScale(0);
+
+                                      if (scale + delta > 0)
+                                      {
+                                          _screen.SetLayerRenderScaleTarget(0, scale + delta, 1f);
+
+                                          // screen.CenterViewOnTile(0, x, y);
+                                          Log.Logger.Information("Scale adjusted to {Scale}", scale + delta);
+                                      }
+                                  };
+
         // Initialize the surface layers before population
-        screen.InitializeLayers(screen.LayerCount);
-        screen.SetLayerTileset(0, "roguelike");
-        screen.SetLayerTileset(1, "alloy");
+        _screen.InitializeLayers(_screen.LayerCount);
+        _screen.SetLayerTileset(0, "roguelike");
+        _screen.SetLayerTileset(1, "alloy");
 
-        screen.SetLayerRenderScaleSmoothing(0, true, 0.1f);
+        _screen.SetLayerRenderScaleSmoothing(0, true, 0.1f);
 
-        screen.SetLayerViewSmoothing(0, true);
+        _screen.SetLayerViewSmoothing(0, true);
 
         // Populate with random tiles and colors
-        PopulateWithRandomTiles(screen);
+        PopulateWithRandomTiles(_screen);
 
-        screen.SelectedLayerIndex = 0;
-        screen.DrawText(1, "hello from LillyQuest *", 2, 2, LyColor.Yellow, LyColor.Black);
+        _screen.SelectedLayerIndex = 0;
+        _screen.DrawText(1, "hello from LillyQuest *", 2, 2, LyColor.Yellow, LyColor.Black);
 
         // Add the screen to the screen manager
-        _screenManager.PushScreen(screen);
-
-        var uiRoot = new UIRootScreen
-        {
-            Position = Vector2.Zero,
-            Size = new(1600, 900)
-        };
+        _screenManager.PushScreen(_screen);
 
         var label = new UILabel
         {
@@ -148,7 +151,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             Color = LyColor.Yellow,
             ZIndex = 0
         };
-        uiRoot.Root.Add(label);
+        _uiRoot.Root.Add(label);
 
         var window = new UIWindow
         {
@@ -170,7 +173,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             Color = LyColor.White
         };
         window.Add(windowLabel);
-        uiRoot.Root.Add(window);
+        _uiRoot.Root.Add(window);
 
         var staticWindow = new UIWindow
         {
@@ -192,7 +195,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             Color = LyColor.White
         };
         staticWindow.Add(staticLabel);
-        uiRoot.Root.Add(staticWindow);
+        _uiRoot.Root.Add(staticWindow);
 
         var nineSliceWindow = new UINinePatchWindow(_nineSliceManager, _textureManager)
         {
@@ -217,7 +220,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             Color = LyColor.White
         };
         nineSliceWindow.Add(nineSliceLabel);
-        uiRoot.Root.Add(nineSliceWindow);
+        _uiRoot.Root.Add(nineSliceWindow);
 
         var buttonWindow = new UINinePatchWindow(_nineSliceManager, _textureManager)
         {
@@ -253,7 +256,7 @@ public class TilesetSurfaceEditorScene : BaseScene
         sampleButton.OnClick = () => Log.Logger.Information("UIButton clicked");
 
         buttonWindow.Add(sampleButton);
-        uiRoot.Root.Add(buttonWindow);
+        _uiRoot.Root.Add(buttonWindow);
 
         var scrollLabel = new UILabel
         {
@@ -262,7 +265,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             Color = LyColor.White,
             ZIndex = 10
         };
-        uiRoot.Root.Add(scrollLabel);
+        _uiRoot.Root.Add(scrollLabel);
 
         var scrollContent = new UIScrollContent(_nineSliceManager, _textureManager)
         {
@@ -289,10 +292,14 @@ public class TilesetSurfaceEditorScene : BaseScene
             }
         }
 
-        uiRoot.Root.Add(scrollContent);
+        _uiRoot.Root.Add(scrollContent);
 
-        _screenManager.PushScreen(uiRoot);
+        _screenManager.PushScreen(_uiRoot);
+        base.OnLoad();
+    }
 
+    public override void OnInitialize(ISceneManager sceneManager)
+    {
         base.OnInitialize(sceneManager);
     }
 
@@ -348,5 +355,22 @@ public class TilesetSurfaceEditorScene : BaseScene
         // Set opacity variations for layers
         screen.SetLayerOpacity(0, 1.0f);
         screen.SetLayerOpacity(1, 1.0f);
+    }
+
+    public override void OnUnload()
+    {
+        if (_uiRoot != null)
+        {
+            _screenManager.PopScreen(_uiRoot);
+            _uiRoot = null;
+        }
+
+        if (_screen != null)
+        {
+            _screenManager.PopScreen(_screen);
+            _screen = null;
+        }
+
+        base.OnUnload();
     }
 }
