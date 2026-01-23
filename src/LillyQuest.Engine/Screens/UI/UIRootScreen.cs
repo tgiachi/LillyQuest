@@ -37,7 +37,7 @@ public sealed class UIRootScreen : BaseScreen
                 return false;
             }
 
-            if (modal.HandleMouseDown(point))
+            if (modal.HandleMouseDown(point, buttons))
             {
                 _activeControl = modal;
                 if (modal.IsFocusable)
@@ -59,7 +59,7 @@ public sealed class UIRootScreen : BaseScreen
             return false;
         }
 
-        if (hit.HandleMouseDown(new(x, y)))
+        if (hit.HandleMouseDown(new(x, y), buttons))
         {
             _activeControl = hit;
             if (hit.IsFocusable)
@@ -84,7 +84,7 @@ public sealed class UIRootScreen : BaseScreen
             return false;
         }
 
-        var handled = _activeControl.HandleMouseUp(new(x, y));
+        var handled = _activeControl.HandleMouseUp(new(x, y), buttons);
         _activeControl = null;
 
         return handled;

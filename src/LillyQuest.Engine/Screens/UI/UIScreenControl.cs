@@ -3,6 +3,7 @@ using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Primitives;
 using Silk.NET.Maths;
+using Silk.NET.Input;
 
 namespace LillyQuest.Engine.Screens.UI;
 
@@ -25,6 +26,8 @@ public class UIScreenControl
     public Func<Vector2, bool>? OnMouseMove { get; set; }
     public Func<Vector2, bool>? OnMouseUp { get; set; }
     public Func<Vector2, float, bool>? OnMouseWheel { get; set; }
+    public Func<Vector2, IReadOnlyList<MouseButton>, bool>? OnMouseDownWithButtons { get; set; }
+    public Func<Vector2, IReadOnlyList<MouseButton>, bool>? OnMouseUpWithButtons { get; set; }
 
     /// <summary>
     /// Gets the bounds of the control in world space.
@@ -64,6 +67,12 @@ public class UIScreenControl
         => OnMouseDown?.Invoke(point) ?? false;
 
     /// <summary>
+    /// Handles mouse down for this control with button information.
+    /// </summary>
+    public virtual bool HandleMouseDown(Vector2 point, IReadOnlyList<MouseButton> buttons)
+        => OnMouseDownWithButtons?.Invoke(point, buttons) == true || HandleMouseDown(point);
+
+    /// <summary>
     /// Handles mouse move for this control.
     /// </summary>
     public virtual bool HandleMouseMove(Vector2 point)
@@ -74,6 +83,12 @@ public class UIScreenControl
     /// </summary>
     public virtual bool HandleMouseUp(Vector2 point)
         => OnMouseUp?.Invoke(point) ?? false;
+
+    /// <summary>
+    /// Handles mouse up for this control with button information.
+    /// </summary>
+    public virtual bool HandleMouseUp(Vector2 point, IReadOnlyList<MouseButton> buttons)
+        => OnMouseUpWithButtons?.Invoke(point, buttons) == true || HandleMouseUp(point);
 
     /// <summary>
     /// Handles mouse wheel input for this control.

@@ -1,10 +1,7 @@
-using System;
 using System.Numerics;
-using System.Linq;
 using ImGuiNET;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Interfaces.Managers;
-using LillyQuest.Engine.Interfaces.Screens;
 using LillyQuest.Engine.Screens.UI;
 
 namespace LillyQuest.Engine.Entities.Debug;
@@ -36,6 +33,7 @@ public sealed class DebugUIControlsGameObject : GameEntity, IIMGuiEntity
         if (uiScreens.Count == 0)
         {
             ImGui.TextDisabled("No UIRootScreen instances found.");
+
             return;
         }
 
@@ -49,6 +47,7 @@ public sealed class DebugUIControlsGameObject : GameEntity, IIMGuiEntity
             {
                 ImGui.Text("Focused:");
                 ImGui.SameLine();
+
                 if (focused != null)
                 {
                     ImGui.PushStyleColor(ImGuiCol.Text, new Vector4(1f, 1f, 0.2f, 1f));
@@ -63,6 +62,7 @@ public sealed class DebugUIControlsGameObject : GameEntity, IIMGuiEntity
                 ImGui.Separator();
 
                 var rootChildren = screen.Root.Children.ToList();
+
                 foreach (var control in rootChildren
                                         .OrderByDescending(child => child.ZIndex)
                                         .ThenByDescending(child => rootChildren.IndexOf(child)))
@@ -75,7 +75,7 @@ public sealed class DebugUIControlsGameObject : GameEntity, IIMGuiEntity
         }
     }
 
-    private void DrawControlNode(
+    private static void DrawControlNode(
         UIScreenControl control,
         UIScreenControl? focused,
         UIFocusManager focusManager
@@ -85,8 +85,8 @@ public sealed class DebugUIControlsGameObject : GameEntity, IIMGuiEntity
         var children = GetChildren(control);
         var label = GetControlDisplayName(control);
         var flags = children.Count > 0
-            ? ImGuiTreeNodeFlags.OpenOnArrow
-            : ImGuiTreeNodeFlags.Leaf;
+                        ? ImGuiTreeNodeFlags.OpenOnArrow
+                        : ImGuiTreeNodeFlags.Leaf;
 
         if (isFocused)
         {
@@ -116,6 +116,7 @@ public sealed class DebugUIControlsGameObject : GameEntity, IIMGuiEntity
         if (nodeOpen)
         {
             var childList = children.ToList();
+
             foreach (var child in childList
                                   .OrderByDescending(child => child.ZIndex)
                                   .ThenByDescending(child => childList.IndexOf(child)))
@@ -136,10 +137,10 @@ public sealed class DebugUIControlsGameObject : GameEntity, IIMGuiEntity
     {
         return control switch
         {
-            UIWindow window => window.Children,
+            UIWindow window        => window.Children,
             UIScrollContent scroll => scroll.Children,
-            UIButton button => button.Children,
-            _ => Array.Empty<UIScreenControl>()
+            UIButton button        => button.Children,
+            _                      => Array.Empty<UIScreenControl>()
         };
     }
 
@@ -147,17 +148,12 @@ public sealed class DebugUIControlsGameObject : GameEntity, IIMGuiEntity
     {
         var label = control switch
         {
-            UIWindow window when !string.IsNullOrWhiteSpace(window.Title) => window.Title,
-            UIButton button when !string.IsNullOrWhiteSpace(button.Text) => button.Text,
+            UIWindow window when !string.IsNullOrWhiteSpace(window.Title)           => window.Title,
+            UIButton button when !string.IsNullOrWhiteSpace(button.Text)            => button.Text,
             UILabel labelControl when !string.IsNullOrWhiteSpace(labelControl.Text) => labelControl.Text,
-            _ => string.Empty
+            _                                                                       => string.Empty
         };
 
-        if (!string.IsNullOrWhiteSpace(label))
-        {
-            return $"{control.GetType().Name}: \"{label}\"";
-        }
-
-        return control.GetType().Name;
+        return !string.IsNullOrWhiteSpace(label) ? $"{control.GetType().Name}: \"{label}\"" : control.GetType().Name;
     }
 }
