@@ -5,6 +5,7 @@ using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Data.Directories;
+using LillyQuest.Core.Data.Plugins;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Internal.Data.Registrations;
@@ -23,6 +24,7 @@ using LillyQuest.Engine.Managers.Scenes;
 using LillyQuest.Engine.Managers.Screens;
 using LillyQuest.Engine.Managers.Services;
 using LillyQuest.Engine.Services;
+using LillyQuest.Engine.Services.Plugins;
 using LillyQuest.Engine.Systems;
 using LillyQuest.Scripting.Lua.Data.Config;
 using LillyQuest.Scripting.Lua.Extensions.Scripts;
@@ -58,6 +60,9 @@ public class LillyQuestBootstrap
     private IContainer _container = new Container();
     private readonly EngineRenderContext _renderContext = new();
     private readonly DirectoriesConfig _directoriesConfig;
+
+    private readonly PluginRegistry _pluginRegistry = new();
+    private readonly AsyncResourceLoader _asyncResourceLoader = new();
 
     private readonly GameTime _gameTime = new();
     private readonly GameTime _fixedGameTime = new();
@@ -135,33 +140,73 @@ public class LillyQuestBootstrap
     public void Run()
     {
         ExecuteOnEngineReady().GetAwaiter().GetResult();
-        _window.Run();  // Window triggers WindowOnLoad where OnReadyToRender is executed
+        _window.Run(); // Window triggers WindowOnLoad where OnReadyToRender is executed
     }
 
     private void InitializePluginLifecycle()
     {
-        var plugins = new List<ILillyQuestPlugin>();
+        // Register the async resource loader in the container for plugins to use
+        _container.RegisterInstance(_asyncResourceLoader);
 
-        // Try to resolve plugins from container
+        // Try to resolve plugin registrations, or use empty list if not available
+        var pluginRegistration = new List<EnginePluginRegistration>();
+        try
+        {
+            if (_container.IsRegistered<List<EnginePluginRegistration>>())
+            {
+                pluginRegistration = _container.Resolve<List<EnginePluginRegistration>>();
+            }
+        }
+        catch
+        {
+            // No plugin registrations available
+        }
+
+        // Process registered plugin types
+        foreach (var registration in pluginRegistration)
+        {
+            // Try to resolve plugins from container
+            try
+            {
+                var plugin = _container.Resolve(registration.PluginType) as ILillyQuestPlugin;
+                if (plugin != null)
+                {
+                    InitializePlugin(plugin);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failed to initialize plugin lifecycle");
+            }
+        }
+
+        // Also support direct ILillyQuestPlugin registration for backward compatibility
         try
         {
             if (_container.IsRegistered<ILillyQuestPlugin>())
             {
                 var plugin = _container.Resolve<ILillyQuestPlugin>();
-                plugins.Add(plugin);
-
-                // Call the plugin's RegisterServices method
-                _logger.Information("Calling RegisterServices for plugin {PluginId}", plugin.PluginInfo.Id);
-                plugin.RegisterServices(_container);
+                InitializePlugin(plugin);
             }
         }
         catch (Exception ex)
         {
-            _logger.Error(ex, "Failed to initialize plugin lifecycle");
-            // No plugins registered or resolution failed
+            _logger.Error(ex, "Failed to resolve direct ILillyQuestPlugin registration");
         }
 
-        _pluginLifecycleExecutor = new PluginLifecycleExecutor(plugins);
+        _pluginLifecycleExecutor = new PluginLifecycleExecutor(_pluginRegistry.GetLoadedPlugins());
+    }
+
+    private void InitializePlugin(ILillyQuestPlugin plugin)
+    {
+        _pluginRegistry.RegisterPlugin(plugin);
+        _logger.Information("Calling RegisterServices for plugin {PluginId}", plugin.PluginInfo.Id);
+        plugin.RegisterServices(_container);
+        _logger.Information(
+            "Loaded plugin {PluginId} v{PluginVersion}",
+            plugin.PluginInfo.Id,
+            plugin.PluginInfo.Version
+        );
     }
 
     /// <summary>
@@ -198,6 +243,20 @@ public class LillyQuestBootstrap
         {
             await _pluginLifecycleExecutor.ExecuteOnLoadResources(_container);
         }
+    }
+
+    /// <summary>
+    /// Gets whether plugins are currently loading resources asynchronously.
+    /// </summary>
+    public bool IsLoadingResources => _asyncResourceLoader.IsLoading;
+
+    /// <summary>
+    /// Waits for all async resource loading operations to complete.
+    /// Safe to call even if no loading is in progress.
+    /// </summary>
+    public async Task WaitForResourcesLoaded()
+    {
+        await _asyncResourceLoader.WaitForLoadingComplete();
     }
 
     /// <summary>

@@ -1,7 +1,10 @@
 using DryIoc;
 using LillyQuest.Core.Data.Directories;
 using LillyQuest.Core.Data.Plugins;
+using LillyQuest.Core.Json;
 using LillyQuest.Engine.Interfaces.Plugins;
+using LillyQuest.RogueLike.Json.Context;
+using Serilog;
 
 namespace LillyQuest.RogueLike;
 
@@ -22,9 +25,27 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
 
     public void RegisterServices(IContainer container)
     {
+        JsonUtils.RegisterJsonContext(LillyQuestRogueLikeJsonContext.Default);
 
         var directoriesConfig = container.Resolve<DirectoriesConfig>();
+    }
+
+    public void Shutdown() { }
+
+    public  async Task OnReadyToRender(IContainer container)
+    {
+
+
 
     }
-    public void Shutdown() { }
+
+    public async  Task OnLoadResources(IContainer container)
+    {
+
+        await Task.Delay(1000);
+
+        Log.Information("Loading RogueLike plugin...");
+
+        await Task.Delay(1000);
+    }
 }

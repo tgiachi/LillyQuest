@@ -32,6 +32,7 @@
     <ItemGroup>
         <ProjectReference Include="..\LillyQuest.Core\LillyQuest.Core.csproj" />
         <ProjectReference Include="..\LillyQuest.Engine\LillyQuest.Engine.csproj" />
+        <ProjectReference Include="..\LillyQuest.RogueLike\LillyQuest.RogueLike.csproj" />
     </ItemGroup>
 
 </Project>
