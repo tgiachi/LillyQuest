@@ -8,6 +8,7 @@ public sealed class NineSliceAssetManager : INineSliceAssetManager
 {
     private readonly ITextureManager _textureManager;
     private readonly Dictionary<string, NineSliceDefinition> _definitions = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, TexturePatch> _patches = new(StringComparer.OrdinalIgnoreCase);
 
     public NineSliceAssetManager(ITextureManager textureManager)
     {
@@ -96,6 +97,36 @@ public sealed class NineSliceAssetManager : INineSliceAssetManager
         RegisterNineSlice(key, textureName, sourceRect, margins);
     }
 
+    public void RegisterTexturePatches(
+        string textureName,
+        IReadOnlyList<TexturePatchDefinition> patches
+    )
+    {
+        if (patches == null || patches.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var patch in patches)
+        {
+            var key = BuildPatchKey(textureName, patch.ElementName);
+            _patches[key] = new TexturePatch(textureName, patch.ElementName, patch.Section);
+        }
+    }
+
+    public TexturePatch GetTexturePatch(string textureName, string elementName)
+    {
+        if (!_patches.TryGetValue(BuildPatchKey(textureName, elementName), out var patch))
+        {
+            throw new KeyNotFoundException($"Texture patch not found: {textureName}:{elementName}");
+        }
+
+        return patch;
+    }
+
+    public bool TryGetTexturePatch(string textureName, string elementName, out TexturePatch patch)
+        => _patches.TryGetValue(BuildPatchKey(textureName, elementName), out patch);
+
     public NineSliceDefinition GetNineSlice(string key)
     {
         if (!_definitions.TryGetValue(key, out var definition))
@@ -108,4 +139,7 @@ public sealed class NineSliceAssetManager : INineSliceAssetManager
 
     public bool TryGetNineSlice(string key, out NineSliceDefinition definition)
         => _definitions.TryGetValue(key, out definition);
+
+    private static string BuildPatchKey(string textureName, string elementName)
+        => $"{textureName}:{elementName}";
 }

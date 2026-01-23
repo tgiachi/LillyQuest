@@ -38,6 +38,15 @@ public interface INineSliceAssetManager
         Vector4D<float> margins
     );
 
+    void RegisterTexturePatches(
+        string textureName,
+        IReadOnlyList<TexturePatchDefinition> patches
+    );
+
+    TexturePatch GetTexturePatch(string textureName, string elementName);
+
+    bool TryGetTexturePatch(string textureName, string elementName, out TexturePatch patch);
+
     NineSliceDefinition GetNineSlice(string key);
 
     bool TryGetNineSlice(string key, out NineSliceDefinition definition);
