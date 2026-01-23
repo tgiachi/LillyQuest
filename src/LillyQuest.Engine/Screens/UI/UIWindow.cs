@@ -96,6 +96,7 @@ public class UIWindow : UIScreenControl
                 if (child.HandleMouseDown(point))
                 {
                     _activeChild = child;
+
                     return true;
                 }
             }
@@ -167,6 +168,7 @@ public class UIWindow : UIScreenControl
         {
             var handled = _activeChild.HandleMouseUp(point);
             _activeChild = null;
+
             return handled;
         }
 
@@ -209,6 +211,8 @@ public class UIWindow : UIScreenControl
             return;
         }
 
+        spriteBatch.SetScissor((int)Position.X, (int)Position.Y, (int)Size.X, (int)Size.Y);
+
         RenderBackground(spriteBatch, renderContext);
         RenderTitle(spriteBatch);
 
@@ -221,6 +225,8 @@ public class UIWindow : UIScreenControl
 
             child.Render(spriteBatch, renderContext);
         }
+
+        spriteBatch.DisableScissor();
     }
 
     public override void Update(GameTime gameTime)

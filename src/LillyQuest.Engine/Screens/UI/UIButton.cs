@@ -216,8 +216,7 @@ public sealed class UIButton : UIScreenControl
 
         if (!string.IsNullOrWhiteSpace(Text))
         {
-            var font = _fontManager.GetFont(FontName, FontSize);
-            var textSize = font.MeasureString(Text);
+            var textSize = _fontManager.MeasureText(FontName, FontSize, Text);
             var world = GetWorldPosition();
             var position = world + (Size - textSize) * 0.5f;
             spriteBatch.DrawFont(FontName, FontSize, Text, position, TextColor);

@@ -122,6 +122,7 @@ public class UIButtonTests
         public bool TryGetTexture(string assetName, out Texture2D texture)
         {
             texture = null!;
+
             return false;
         }
 
@@ -142,12 +143,26 @@ public class UIButtonTests
         public bool HasFont(string assetName)
             => false;
 
-        public void LoadBmpFont(string assetName, string filePath, int tileWidth, int tileHeight, int spacing = 0,
-            LyColor? transparentColor = null, string? characterMap = null)
+        public void LoadBmpFont(
+            string assetName,
+            string filePath,
+            int tileWidth,
+            int tileHeight,
+            int spacing = 0,
+            LyColor? transparentColor = null,
+            string? characterMap = null
+        )
             => throw new NotSupportedException();
 
-        public void LoadBmpFont(string assetName, Span<byte> data, int tileWidth, int tileHeight, int spacing = 0,
-            LyColor? transparentColor = null, string? characterMap = null)
+        public void LoadBmpFont(
+            string assetName,
+            Span<byte> data,
+            int tileWidth,
+            int tileHeight,
+            int spacing = 0,
+            LyColor? transparentColor = null,
+            string? characterMap = null
+        )
             => throw new NotSupportedException();
 
         public void LoadFont(string assetName, string filePath)
@@ -159,16 +174,21 @@ public class UIButtonTests
         public bool TryGetBitmapFont(string assetName, out BitmapFont font)
         {
             font = null!;
+
             return false;
         }
 
         public bool TryGetFont(string assetName, out DynamicSpriteFont font)
         {
             font = null!;
+
             return false;
         }
 
         public void UnloadFont(string assetName)
+            => throw new NotSupportedException();
+
+        public Vector2 MeasureText(string fontAssetName, int fontSize, string text)
             => throw new NotSupportedException();
 
         public void Dispose() { }

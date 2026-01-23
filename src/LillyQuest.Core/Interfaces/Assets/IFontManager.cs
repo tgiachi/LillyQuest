@@ -1,3 +1,4 @@
+using System.Numerics;
 using FontStashSharp;
 using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Primitives;
@@ -74,4 +75,13 @@ public interface IFontManager : IDisposable
     /// Unloads a font by its asset name.
     /// </summary>
     void UnloadFont(string assetName);
+
+    /// <summary>
+    ///  Measures the rendered size of the given text using the specified font asset and size.
+    /// </summary>
+    /// <param name="fontAssetName"></param>
+    /// <param name="fontSize"></param>
+    /// <param name="text"></param>
+    /// <returns></returns>
+    Vector2 MeasureText(string fontAssetName, int fontSize, string text);
 }

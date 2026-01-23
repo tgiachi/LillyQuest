@@ -1,3 +1,4 @@
+using System.Numerics;
 using FontStashSharp;
 using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
@@ -235,5 +236,12 @@ public class FontManager : IFontManager
         {
             _logger.Warning("Font {FontName} not found for unloading", assetName);
         }
+    }
+
+    public Vector2 MeasureText(string fontAssetName, int fontSize, string text)
+    {
+        var font = GetFont(fontAssetName, fontSize);
+        var dimensions = font.MeasureString(text);
+        return new Vector2(dimensions.X, dimensions.Y) * 2f;
     }
 }
