@@ -12,6 +12,10 @@ namespace LillyQuest.Engine.Screens.UI;
 /// </summary>
 public class UIScreenControl
 {
+    private readonly List<UIScreenControl> _children = [];
+
+    public IReadOnlyList<UIScreenControl> Children => _children;
+
     public Vector2 Position { get; set; } = Vector2.Zero;
     public Vector2 Size { get; set; } = Vector2.Zero;
     public UIAnchor Anchor { get; set; } = UIAnchor.TopLeft;
@@ -21,6 +25,31 @@ public class UIScreenControl
     public int ZIndex { get; set; }
 
     public UIScreenControl? Parent { get; set; }
+
+    public void AddChild(UIScreenControl control)
+    {
+        if (control == null)
+        {
+            return;
+        }
+
+        control.Parent = this;
+        _children.Add(control);
+    }
+
+    public void RemoveChild(UIScreenControl control)
+    {
+        if (control == null)
+        {
+            return;
+        }
+
+        _children.Remove(control);
+        if (control.Parent == this)
+        {
+            control.Parent = null;
+        }
+    }
 
     public Func<Vector2, bool>? OnMouseDown { get; set; }
     public Func<Vector2, bool>? OnMouseMove { get; set; }
