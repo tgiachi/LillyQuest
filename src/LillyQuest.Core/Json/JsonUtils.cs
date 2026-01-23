@@ -82,6 +82,37 @@ public static class JsonUtils
     }
 
     /// <summary>
+    /// Deserializes a JSON string to an object using a JsonSerializerContext.
+    /// </summary>
+    /// <typeparam name="T">The type to deserialize to.</typeparam>
+    /// <param name="json">The JSON string to deserialize.</param>
+    /// <param name="context">The JsonSerializerContext to use for deserialization.</param>
+    /// <returns>Deserialized object.</returns>
+    public static T Deserialize<T>(string json, JsonSerializerContext context)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(json);
+        ArgumentNullException.ThrowIfNull(context);
+
+        try
+        {
+            var baseOptions = GetJsonSerializerOptions();
+            var options = new JsonSerializerOptions(baseOptions)
+            {
+                TypeInfoResolver = JsonTypeInfoResolver.Combine(context, baseOptions.TypeInfoResolver)
+            };
+            var result = JsonSerializer.Deserialize(json, typeof(T), options);
+
+            return result is T typedResult
+                       ? typedResult
+                       : throw new JsonException($"Deserialization returned null for type {typeof(T).Name}");
+        }
+        catch (JsonException ex)
+        {
+            throw new JsonException($"Failed to deserialize JSON to type {typeof(T).Name}: {ex.Message}", ex);
+        }
+    }
+
+    /// <summary>
     /// Deserializes an object from a JSON file.
     /// </summary>
     /// <typeparam name="T">The type to deserialize to.</typeparam>

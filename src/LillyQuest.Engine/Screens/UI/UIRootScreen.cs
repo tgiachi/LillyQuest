@@ -157,17 +157,6 @@ public sealed class UIRootScreen : BaseScreen
         _modalBackground.ZIndex = modal.ZIndex - 1;
     }
 
-    private static IReadOnlyList<UIScreenControl> GetChildren(UIScreenControl control)
-    {
-        return control switch
-        {
-            UIWindow window        => window.Children,
-            UIScrollContent scroll => scroll.Children,
-            UIButton button        => button.Children,
-            _                      => Array.Empty<UIScreenControl>()
-        };
-    }
-
     private UIWindow? GetTopmostModal()
     {
         return Root.Children
@@ -180,7 +169,7 @@ public sealed class UIRootScreen : BaseScreen
 
     private static UIScreenControl? ResolveFocusableAtPoint(UIScreenControl control, Vector2 point)
     {
-        var children = GetChildren(control);
+        var children = control.Children;
 
         if (children.Count > 0)
         {

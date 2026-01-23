@@ -6,4 +6,9 @@
         <Nullable>enable</Nullable>
     </PropertyGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\LillyQuest.Core\LillyQuest.Core.csproj" />
+      <ProjectReference Include="..\LillyQuest.Engine\LillyQuest.Engine.csproj" />
+    </ItemGroup>
+
 </Project>
