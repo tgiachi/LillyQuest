@@ -82,7 +82,7 @@ public sealed class DebugUIControlsGameObject : GameEntity, IIMGuiEntity
     )
     {
         var isFocused = ReferenceEquals(control, focused);
-        var children = GetChildren(control);
+        var children = control.Children;
         var label = GetControlDisplayName(control);
         var flags = children.Count > 0
                         ? ImGuiTreeNodeFlags.OpenOnArrow
@@ -131,17 +131,6 @@ public sealed class DebugUIControlsGameObject : GameEntity, IIMGuiEntity
         {
             ImGui.PopStyleColor();
         }
-    }
-
-    private static IReadOnlyList<UIScreenControl> GetChildren(UIScreenControl control)
-    {
-        return control switch
-        {
-            UIWindow window        => window.Children,
-            UIScrollContent scroll => scroll.Children,
-            UIButton button        => button.Children,
-            _                      => Array.Empty<UIScreenControl>()
-        };
     }
 
     private static string GetControlDisplayName(UIScreenControl control)
