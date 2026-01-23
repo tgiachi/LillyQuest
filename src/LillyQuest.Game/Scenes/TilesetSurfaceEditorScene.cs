@@ -275,6 +275,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             Size = new(260, 160),
             ContentSize = new(600, 420),
             ScrollbarTextureName = "n9_ui_simple_ui",
+            ScrollbarTint = LyColor.FromHex("#c8b27a"),
             ScrollSpeed = 24f,
             ZIndex = 10
         };

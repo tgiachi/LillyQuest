@@ -26,6 +26,7 @@ public sealed class UIScrollContent : UIScreenControl
 
     public float ScrollbarThickness { get; set; } = 12f;
     public float MinThumbSize { get; set; } = 16f;
+    public LyColor ScrollbarTint { get; set; } = LyColor.White;
 
     public string ScrollbarTextureName { get; set; } = string.Empty;
     public string VerticalTrackElement { get; set; } = "scroll.v.track";
@@ -278,12 +279,12 @@ public sealed class UIScrollContent : UIScreenControl
         {
             if (_nineSliceManager.TryGetTexturePatch(ScrollbarTextureName, VerticalTrackElement, out var trackPatch))
             {
-                DrawPatch(spriteBatch, texture, GetVerticalTrackRect(), trackPatch.Section);
+                DrawPatch(spriteBatch, texture, GetVerticalTrackRect(), trackPatch.Section, ScrollbarTint);
             }
 
             if (_nineSliceManager.TryGetTexturePatch(ScrollbarTextureName, VerticalThumbElement, out var thumbPatch))
             {
-                DrawPatch(spriteBatch, texture, GetVerticalThumbRect(), thumbPatch.Section);
+                DrawPatch(spriteBatch, texture, GetVerticalThumbRect(), thumbPatch.Section, ScrollbarTint);
             }
         }
 
@@ -291,17 +292,23 @@ public sealed class UIScrollContent : UIScreenControl
         {
             if (_nineSliceManager.TryGetTexturePatch(ScrollbarTextureName, HorizontalTrackElement, out var trackPatch))
             {
-                DrawPatch(spriteBatch, texture, GetHorizontalTrackRect(), trackPatch.Section);
+                DrawPatch(spriteBatch, texture, GetHorizontalTrackRect(), trackPatch.Section, ScrollbarTint);
             }
 
             if (_nineSliceManager.TryGetTexturePatch(ScrollbarTextureName, HorizontalThumbElement, out var thumbPatch))
             {
-                DrawPatch(spriteBatch, texture, GetHorizontalThumbRect(), thumbPatch.Section);
+                DrawPatch(spriteBatch, texture, GetHorizontalThumbRect(), thumbPatch.Section, ScrollbarTint);
             }
         }
     }
 
-    private static void DrawPatch(SpriteBatch spriteBatch, Texture2D texture, Rectangle<float> dest, Rectangle<int> source)
+    private static void DrawPatch(
+        SpriteBatch spriteBatch,
+        Texture2D texture,
+        Rectangle<float> dest,
+        Rectangle<int> source,
+        LyColor tint
+    )
     {
         if (dest.Size.X <= 0f || dest.Size.Y <= 0f)
         {
@@ -313,7 +320,7 @@ public sealed class UIScrollContent : UIScreenControl
             texture,
             new Vector2(dest.Origin.X, dest.Origin.Y),
             new Vector2(dest.Size.X, dest.Size.Y),
-            LyColor.White,
+            tint,
             0f,
             Vector2.Zero,
             uv,

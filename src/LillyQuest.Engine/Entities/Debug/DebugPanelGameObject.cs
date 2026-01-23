@@ -25,6 +25,7 @@ public class DebugPanelGameObject : GameEntity, IIMGuiEntity
         var debugLabel = entityManager.CreateEntity<DebugLabelGameObject>();
         var debugScene = entityManager.CreateEntity<DebugSceneExplorerGameObject>();
         var debugScreen = entityManager.CreateEntity<DebugScreenExplorerGameObject>();
+        var debugUiControls = entityManager.CreateEntity<DebugUIControlsGameObject>();
         var debugTexture = entityManager.CreateEntity<DebugTextureExplorerGameObject>();
         var debugTile = entityManager.CreateEntity<DebugTileExplorerGameObject>();
 
@@ -35,6 +36,7 @@ public class DebugPanelGameObject : GameEntity, IIMGuiEntity
         debugLabel.IsActive = false;
         debugScene.IsActive = false;
         debugScreen.IsActive = false;
+        debugUiControls.IsActive = false;
         debugTexture.IsActive = false;
         debugTile.IsActive = false;
 
@@ -45,6 +47,7 @@ public class DebugPanelGameObject : GameEntity, IIMGuiEntity
         AddChild(debugLabel);
         AddChild(debugScene);
         AddChild(debugScreen);
+        AddChild(debugUiControls);
         AddChild(debugTexture);
         AddChild(debugTile);
 
@@ -55,6 +58,7 @@ public class DebugPanelGameObject : GameEntity, IIMGuiEntity
         _debugObjects["Label"] = debugLabel;
         _debugObjects["Scene Explorer"] = debugScene;
         _debugObjects["Screen Explorer"] = debugScreen;
+        _debugObjects["UI Controls"] = debugUiControls;
         _debugObjects["Texture Explorer"] = debugTexture;
         _debugObjects["Tile Explorer"] = debugTile;
     }
