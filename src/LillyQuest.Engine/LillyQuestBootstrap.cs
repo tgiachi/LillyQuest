@@ -11,8 +11,10 @@ using LillyQuest.Core.Internal.Data.Registrations;
 using LillyQuest.Core.Managers.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
+using LillyQuest.Engine.Bootstrap;
 using LillyQuest.Engine.Entities.Debug;
 using LillyQuest.Engine.Interfaces.Managers;
+using LillyQuest.Engine.Interfaces.Plugins;
 using LillyQuest.Engine.Interfaces.Scenes;
 using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Interfaces.Systems;
@@ -68,6 +70,7 @@ public class LillyQuestBootstrap
 
     private GL _gl;
     private IWindow _window;
+    private PluginLifecycleExecutor? _pluginLifecycleExecutor;
 
     /// <summary>
     /// Event invoked at fixed timestep intervals during the game loop.
@@ -126,11 +129,47 @@ public class LillyQuestBootstrap
     public void RegisterServices(Func<IContainer, IContainer> registerServices)
     {
         _container = registerServices(_container);
+        InitializePluginLifecycle();
     }
 
     public void Run()
     {
+        ExecuteOnEngineReady().GetAwaiter().GetResult();
         _window.Run();
+    }
+
+    private void InitializePluginLifecycle()
+    {
+        var plugins = new List<ILillyQuestPlugin>();
+
+        // Try to resolve plugins from container
+        try
+        {
+            if (_container.IsRegistered<ILillyQuestPlugin>())
+            {
+                var plugin = _container.Resolve<ILillyQuestPlugin>();
+                plugins.Add(plugin);
+
+                // Call the plugin's RegisterServices method
+                _logger.Information("Calling RegisterServices for plugin {PluginId}", plugin.PluginInfo.Id);
+                plugin.RegisterServices(_container);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failed to initialize plugin lifecycle");
+            // No plugins registered or resolution failed
+        }
+
+        _pluginLifecycleExecutor = new PluginLifecycleExecutor(plugins);
+    }
+
+    private async Task ExecuteOnEngineReady()
+    {
+        if (_pluginLifecycleExecutor != null)
+        {
+            await _pluginLifecycleExecutor.ExecuteOnEngineReady(_container);
+        }
     }
 
     /// <summary>
