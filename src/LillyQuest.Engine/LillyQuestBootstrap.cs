@@ -1,6 +1,7 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
 using DryIoc;
+using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Data.Directories;
@@ -200,6 +201,16 @@ public class LillyQuestBootstrap
             "Assets/_9patch/simple_ui.png",
             new Vector4D<float>(16, 16, 16, 16),
             typeof(SpriteBatch).Assembly
+        );
+        assetManager.NineSliceManager.RegisterTexturePatches(
+            "n9_ui_simple_ui",
+            new[]
+            {
+                new TexturePatchDefinition("scroll.v.track", new Rectangle<int>(16, 0, 16, 16)),
+                new TexturePatchDefinition("scroll.v.thumb", new Rectangle<int>(32, 0, 16, 16)),
+                new TexturePatchDefinition("scroll.h.track", new Rectangle<int>(16, 16, 16, 16)),
+                new TexturePatchDefinition("scroll.h.thumb", new Rectangle<int>(32, 16, 16, 16))
+            }
         );
 
         // assetManager.NineSliceManager.LoadNineSliceFromEmbeddedResource(

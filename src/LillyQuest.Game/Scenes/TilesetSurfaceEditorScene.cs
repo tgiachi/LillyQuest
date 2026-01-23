@@ -1,5 +1,6 @@
 using System.IO;
 using System.Numerics;
+using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
@@ -258,6 +259,41 @@ public class TilesetSurfaceEditorScene : BaseScene
 
         buttonWindow.Add(sampleButton);
         uiRoot.Root.Add(buttonWindow);
+
+        var scrollLabel = new UILabel
+        {
+            Text = "UIScrollContent Demo",
+            Position = new(520, 40),
+            Color = LyColor.White,
+            ZIndex = 10
+        };
+        uiRoot.Root.Add(scrollLabel);
+
+        var scrollContent = new UIScrollContent(_nineSliceManager, _textureManager)
+        {
+            Position = new(520, 70),
+            Size = new(260, 160),
+            ContentSize = new(600, 420),
+            ScrollbarTextureName = "n9_ui_simple_ui",
+            ScrollSpeed = 24f,
+            ZIndex = 10
+        };
+
+        for (var row = 0; row < 6; row++)
+        {
+            for (var col = 0; col < 5; col++)
+            {
+                var entry = new UILabel
+                {
+                    Text = $"Item {col},{row}",
+                    Position = new Vector2(12 + col * 110, 12 + row * 60),
+                    Color = LyColor.Yellow
+                };
+                scrollContent.Add(entry);
+            }
+        }
+
+        uiRoot.Root.Add(scrollContent);
 
         // var uiTile = new UITileSurfaceControl(_tilesetManager, 20, 5)
         // {
