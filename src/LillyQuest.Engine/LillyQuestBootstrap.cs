@@ -135,7 +135,7 @@ public class LillyQuestBootstrap
     public void Run()
     {
         ExecuteOnEngineReady().GetAwaiter().GetResult();
-        _window.Run();
+        _window.Run();  // Window triggers WindowOnLoad where OnReadyToRender is executed
     }
 
     private void InitializePluginLifecycle()
@@ -164,11 +164,39 @@ public class LillyQuestBootstrap
         _pluginLifecycleExecutor = new PluginLifecycleExecutor(plugins);
     }
 
-    private async Task ExecuteOnEngineReady()
+    /// <summary>
+    /// Executes the OnEngineReady lifecycle hook for all plugins.
+    /// Called when the engine is fully initialized but before the window is visible.
+    /// </summary>
+    public async Task ExecuteOnEngineReady()
     {
         if (_pluginLifecycleExecutor != null)
         {
             await _pluginLifecycleExecutor.ExecuteOnEngineReady(_container);
+        }
+    }
+
+    /// <summary>
+    /// Executes the OnReadyToRender lifecycle hook for all plugins.
+    /// Called after the window is created and rendering is available.
+    /// </summary>
+    public async Task ExecuteOnReadyToRender()
+    {
+        if (_pluginLifecycleExecutor != null)
+        {
+            await _pluginLifecycleExecutor.ExecuteOnReadyToRender(_container);
+        }
+    }
+
+    /// <summary>
+    /// Executes the OnLoadResources lifecycle hook for all plugins.
+    /// Called when loading resources with the LogScreen displayed.
+    /// </summary>
+    public async Task ExecuteOnLoadResources()
+    {
+        if (_pluginLifecycleExecutor != null)
+        {
+            await _pluginLifecycleExecutor.ExecuteOnLoadResources(_container);
         }
     }
 
@@ -374,6 +402,9 @@ public class LillyQuestBootstrap
         _logger.Information("OpenGL Version: {Version}", version);
         _logger.Information("GLSL Version: {GLSL}", glsl);
         _logger.Information("Extensions: {Ext}", extensions ?? "None");
+
+        // Execute OnReadyToRender hook after OpenGL is initialized
+        ExecuteOnReadyToRender().GetAwaiter().GetResult();
 
         LoadDefaultResources();
         StartInternalServices();
