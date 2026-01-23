@@ -4,7 +4,9 @@ using ConsoleAppFramework;
 using DryIoc;
 using LillyQuest.Engine;
 using LillyQuest.Engine.Extensions;
+using LillyQuest.Engine.Interfaces.Screens;
 using LillyQuest.Engine.Logging;
+using LillyQuest.Engine.Scenes;
 using LillyQuest.Game.Scenes;
 using LillyQuest.RogueLike;
 using Serilog;
@@ -40,7 +42,6 @@ await ConsoleApp.RunAsync(
                 container.RegisterInstance<ILogEventDispatcher>(logDispatcher);
                 container.RegisterScene<TestSceneA>();
                 container.RegisterScene<TestSceneB>();
-                container.RegisterScene<LogScene>();
                 container.RegisterScene<TilesetSurfaceEditorScene>(true);
 
                 container.RegisterPlugin(typeof(LillyQuestRogueLikePlugin).Assembly);

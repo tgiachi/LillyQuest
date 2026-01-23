@@ -3,8 +3,10 @@ using FontStashSharp;
 using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
+using LillyQuest.Engine.Interfaces.Screens;
 using LillyQuest.Engine.Logging;
 using LillyQuest.Engine.Managers.Screens;
+using LillyQuest.Engine.Scenes;
 using LillyQuest.Engine.Screens.Logging;
 using LillyQuest.Game.Scenes;
 

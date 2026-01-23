@@ -6,7 +6,7 @@ using LillyQuest.Engine.Logging;
 using LillyQuest.Engine.Managers.Scenes.Base;
 using LillyQuest.Engine.Screens.Logging;
 
-namespace LillyQuest.Game.Scenes;
+namespace LillyQuest.Engine.Scenes;
 
 public class LogScene : BaseScene
 {

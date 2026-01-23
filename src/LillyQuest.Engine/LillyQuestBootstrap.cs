@@ -14,6 +14,7 @@ using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
 using LillyQuest.Engine.Bootstrap;
 using LillyQuest.Engine.Entities.Debug;
+using LillyQuest.Engine.Extensions;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Plugins;
 using LillyQuest.Engine.Interfaces.Scenes;
@@ -23,6 +24,7 @@ using LillyQuest.Engine.Managers.Entities;
 using LillyQuest.Engine.Managers.Scenes;
 using LillyQuest.Engine.Managers.Screens;
 using LillyQuest.Engine.Managers.Services;
+using LillyQuest.Engine.Scenes;
 using LillyQuest.Engine.Services;
 using LillyQuest.Engine.Services.Plugins;
 using LillyQuest.Engine.Systems;
@@ -150,6 +152,7 @@ public class LillyQuestBootstrap
 
         // Try to resolve plugin registrations, or use empty list if not available
         var pluginRegistration = new List<EnginePluginRegistration>();
+
         try
         {
             if (_container.IsRegistered<List<EnginePluginRegistration>>())
@@ -169,6 +172,7 @@ public class LillyQuestBootstrap
             try
             {
                 var plugin = _container.Resolve(registration.PluginType) as ILillyQuestPlugin;
+
                 if (plugin != null)
                 {
                     InitializePlugin(plugin);
@@ -353,6 +357,8 @@ public class LillyQuestBootstrap
         {
             assetManager.TilesetManager.LoadTileset("roguelike", graphicTileSet, 32, 32, 0, 0);
         }
+
+        _container.RegisterScene<LogScene>();
     }
 
     private void RegisterInternalServices()
@@ -469,25 +475,10 @@ public class LillyQuestBootstrap
         LoadDefaultResources();
         StartInternalServices();
 
-        // Show LogScene while plugins load resources
-        // This allows users to see loading progress in real-time
         try
         {
             var sceneManager = _container.Resolve<ISceneManager>();
-            if (_container.IsRegistered<IScene>())
-            {
-                // Try to find and show LogScene
-                var sceneType = AppDomain.CurrentDomain.GetAssemblies()
-                    .SelectMany(a => a.GetTypes())
-                    .FirstOrDefault(t => typeof(IScene).IsAssignableFrom(t) && t.Name == "LogScene");
-
-                if (sceneType != null)
-                {
-                    var logSceneInstance = (IScene)_container.Resolve(sceneType);
-                    sceneManager.SwitchScene(logSceneInstance.Name, 0);
-                    _logger.Information("Showing LogScene for resource loading...");
-                }
-            }
+            sceneManager.SwitchScene("log_scene", 0.1f);
         }
         catch (Exception ex)
         {
