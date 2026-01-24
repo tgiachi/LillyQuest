@@ -169,6 +169,20 @@ public class LogScreenTests
         Assert.That(GetLineText(screen.Lines[0]), Is.EqualTo("Loading 10%"));
     }
 
+    [Test]
+    public void Update_Renders_Immediately_Without_Typewriter_Delay()
+    {
+        var dispatcher = new LogEventDispatcher();
+        var screen = CreateScreen(dispatcher);
+        screen.TypewriterSpeed = 0.1f;
+
+        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "Hello", null));
+        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.01)));
+
+        Assert.That(screen.Lines.Count, Is.EqualTo(1));
+        Assert.That(GetLineText(screen.Lines[0]), Is.EqualTo("Hello"));
+    }
+
     private static TestLogScreen CreateScreen(ILogEventDispatcher dispatcher)
     {
         var fontManager = new FakeFontManager();
