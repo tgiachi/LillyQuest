@@ -1,6 +1,7 @@
 using MoonSharp.Interpreter;
 using MoonSharp.Interpreter.Loaders;
 using Serilog;
+using System.Linq;
 
 namespace LillyQuest.Scripting.Lua.Loaders;
 
@@ -11,7 +12,7 @@ namespace LillyQuest.Scripting.Lua.Loaders;
 public class LuaScriptLoader : ScriptLoaderBase
 {
     private readonly ILogger _logger = Log.ForContext<LuaScriptLoader>();
-    private readonly string _scriptsDirectory;
+    private readonly List<string> _scriptsDirectories;
 
     /// <summary>
     /// Initializes a new instance of the LuaScriptLoader class.
@@ -21,7 +22,7 @@ public class LuaScriptLoader : ScriptLoaderBase
     {
         ArgumentNullException.ThrowIfNull(rootDirectory);
 
-        _scriptsDirectory = rootDirectory;
+        _scriptsDirectories = new List<string> { rootDirectory };
 
         // Configure default module search paths
         ModulePaths =
@@ -32,7 +33,7 @@ public class LuaScriptLoader : ScriptLoaderBase
             "modules/?/init.lua"
         ];
 
-        _logger.Debug("Lua script loader initialized with scripts directory: {ScriptsDirectory}", _scriptsDirectory);
+        _logger.Debug("Lua script loader initialized with scripts directories: {ScriptsDirectories}", _scriptsDirectories);
     }
 
     /// <summary>
@@ -40,8 +41,37 @@ public class LuaScriptLoader : ScriptLoaderBase
     /// </summary>
     /// <param name="searchDirectories">Ordered list of directories to search.</param>
     public LuaScriptLoader(IReadOnlyList<string> searchDirectories)
-        : this(searchDirectories[0])
+        : this(searchDirectories, true)
     {
+    }
+
+    private LuaScriptLoader(IReadOnlyList<string> searchDirectories, bool _)
+    {
+        ArgumentNullException.ThrowIfNull(searchDirectories);
+        if (searchDirectories.Count == 0)
+        {
+            throw new ArgumentException("Search directories cannot be empty.", nameof(searchDirectories));
+        }
+
+        _scriptsDirectories = searchDirectories.Where(d => !string.IsNullOrWhiteSpace(d))
+                                               .Select(Path.GetFullPath)
+                                               .Distinct(StringComparer.OrdinalIgnoreCase)
+                                               .ToList();
+
+        if (_scriptsDirectories.Count == 0)
+        {
+            throw new ArgumentException("Search directories cannot be empty.", nameof(searchDirectories));
+        }
+
+        ModulePaths =
+        [
+            "?.lua",
+            "?/init.lua",
+            "modules/?.lua",
+            "modules/?/init.lua"
+        ];
+
+        _logger.Debug("Lua script loader initialized with scripts directories: {ScriptsDirectories}", _scriptsDirectories);
     }
 
     /// <summary>
@@ -105,27 +135,38 @@ public class LuaScriptLoader : ScriptLoaderBase
     private string? ResolveModulePath(string moduleName)
     {
         // Try each module path pattern
-        foreach (var pattern in ModulePaths)
+        foreach (var searchDirectory in _scriptsDirectories)
         {
-            var fileName = pattern.Replace("?", moduleName);
-            var fullPath = Path.Combine(_scriptsDirectory, fileName);
-
-            if (File.Exists(fullPath))
+            foreach (var pattern in ModulePaths)
             {
-                _logger.Debug("Resolved module '{ModuleName}' to path: {FullPath}", moduleName, fullPath);
+                var fileName = pattern.Replace("?", moduleName);
+                var fullPath = Path.Combine(searchDirectory, fileName);
 
-                return fullPath;
+                if (File.Exists(fullPath))
+                {
+                    _logger.Debug(
+                        "Resolved module '{ModuleName}' to path: {FullPath}",
+                        moduleName,
+                        fullPath
+                    );
+
+                    return fullPath;
+                }
             }
-        }
 
-        // If no pattern matched, try the direct path
-        var directPath = Path.Combine(_scriptsDirectory, moduleName);
+            // If no pattern matched, try the direct path
+            var directPath = Path.Combine(searchDirectory, moduleName);
 
-        if (File.Exists(directPath))
-        {
-            _logger.Debug("Resolved module '{ModuleName}' to direct path: {DirectPath}", moduleName, directPath);
+            if (File.Exists(directPath))
+            {
+                _logger.Debug(
+                    "Resolved module '{ModuleName}' to direct path: {DirectPath}",
+                    moduleName,
+                    directPath
+                );
 
-            return directPath;
+                return directPath;
+            }
         }
 
         return null;
