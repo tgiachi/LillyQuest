@@ -1,4 +1,5 @@
 using DryIoc;
+using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Data.Directories;
 using LillyQuest.Core.Data.Plugins;
 using LillyQuest.Core.Json;
@@ -43,10 +44,15 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
     {
         Log.Information("Loading RogueLike plugin...");
 
+        var renderContext = container.Resolve<EngineRenderContext>();
+
         for (var progress = 0; progress <= 100; progress += Random.Shared.Next(0, 4))
         {
             Log.Information("\rRogueLike loading {Progress}%", progress);
             await Task.Delay(100);
         }
+
+        renderContext.Window.Title = "LillyQuest RogueLike";
+
     }
 }
