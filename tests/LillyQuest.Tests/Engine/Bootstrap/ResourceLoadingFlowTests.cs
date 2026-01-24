@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using LillyQuest.Engine.Bootstrap;
 
 namespace LillyQuest.Tests.Engine.Bootstrap;
@@ -69,5 +70,42 @@ public class ResourceLoadingFlowTests
 
         flow.Update();
         Assert.That(completed, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void StartLoading_Runs_Lua_Before_Ready_And_Load()
+    {
+        var loader = new FakeLoader();
+        var flow = new ResourceLoadingFlow(loader);
+
+        var calls = new List<string>();
+        var luaGate = new TaskCompletionSource();
+
+        flow.StartLoading(
+            () =>
+            {
+                calls.Add("lua");
+                return luaGate.Task;
+            },
+            () =>
+            {
+                calls.Add("ready");
+                return Task.CompletedTask;
+            },
+            () =>
+            {
+                calls.Add("load");
+                return Task.CompletedTask;
+            },
+            () => { },
+            () => { }
+        );
+
+        Assert.That(calls, Is.EqualTo(new[] { "lua" }));
+
+        luaGate.SetResult();
+        flow.Update();
+
+        Assert.That(calls, Is.EqualTo(new[] { "lua", "ready", "load" }));
     }
 }
