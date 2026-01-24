@@ -223,6 +223,10 @@ public class LillyQuestBootstrap
         Directory.CreateDirectory(pluginRoot);
         var pluginDirectories = new DirectoriesConfig(pluginRoot, Enum.GetNames<DirectoryType>());
         plugin.OnDirectories(_directoriesConfig, pluginDirectories);
+        var pluginScriptsDir = Path.Combine(pluginRoot, "Scripts");
+        Directory.CreateDirectory(pluginScriptsDir);
+        var scriptEngine = _container.Resolve<IScriptEngineService>();
+        scriptEngine.AddSearchDirectory(pluginScriptsDir);
         _logger.Information(
             "Loaded plugin {PluginId} v{PluginVersion}",
             plugin.PluginInfo.Id,
