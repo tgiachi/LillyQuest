@@ -20,6 +20,7 @@ public class OnLoadResourcesIntegrationTests
             Version: "1.0.0",
             Author: "Test",
             Description: "Plugin that loads resources",
+            InitScriptName: "",
             Dependencies: []
         );
 

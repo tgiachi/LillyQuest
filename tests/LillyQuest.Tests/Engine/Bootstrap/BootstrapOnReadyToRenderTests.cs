@@ -19,6 +19,7 @@ public class BootstrapOnReadyToRenderTests
             Version: "1.0.0",
             Author: "Test",
             Description: "",
+            InitScriptName: "",
             Dependencies: []
         );
 

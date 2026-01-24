@@ -17,6 +17,7 @@ public class PluginLifecycleTests
             Version: "1.0.0",
             Author: "Test",
             Description: "Test plugin",
+            InitScriptName: "",
             Dependencies: []
         );
 
@@ -62,6 +63,7 @@ public class PluginLifecycleTests
             Version: "1.0.0",
             Author: "Test",
             Description: "Plugin that fails on a specific hook",
+            InitScriptName: "",
             Dependencies: []
         );
 

@@ -18,6 +18,7 @@ public class PluginLifecycleExecutorTests
             Version: "1.0.0",
             Author: "Test",
             Description: "",
+            InitScriptName: "",
             Dependencies: []
         );
 
@@ -58,6 +59,7 @@ public class PluginLifecycleExecutorTests
             Version: "1.0.0",
             Author: "Test",
             Description: "",
+            InitScriptName: "",
             Dependencies: []
         );
 
@@ -90,6 +92,7 @@ public class PluginLifecycleExecutorTests
             Version: "1.0.0",
             Author: "Test",
             Description: "",
+            InitScriptName: "",
             Dependencies: []
         );
 
