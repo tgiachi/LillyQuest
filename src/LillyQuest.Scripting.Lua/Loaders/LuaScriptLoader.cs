@@ -36,6 +36,15 @@ public class LuaScriptLoader : ScriptLoaderBase
     }
 
     /// <summary>
+    /// Initializes a new instance of the LuaScriptLoader class with multiple search directories.
+    /// </summary>
+    /// <param name="searchDirectories">Ordered list of directories to search.</param>
+    public LuaScriptLoader(IReadOnlyList<string> searchDirectories)
+        : this(searchDirectories[0])
+    {
+    }
+
+    /// <summary>
     /// Loads a Lua script file from the configured scripts directory.
     /// </summary>
     /// <param name="file">The filename or module name to load.</param>
