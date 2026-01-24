@@ -1,4 +1,5 @@
 using DryIoc;
+using LillyQuest.Core.Data.Directories;
 using LillyQuest.Core.Data.Plugins;
 
 namespace LillyQuest.Engine.Interfaces.Plugins;
@@ -30,6 +31,13 @@ public interface ILillyQuestPlugin
     /// </summary>
     /// <param name="container">The DI container.</param>
     void RegisterServices(IContainer container);
+
+    /// <summary>
+    /// Provides directory configurations for global and plugin-specific roots.
+    /// </summary>
+    /// <param name="global">The global directories configuration.</param>
+    /// <param name="plugin">The plugin-specific directories configuration.</param>
+    void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin);
 
     /// <summary>
     /// Called when the engine is shutting down.

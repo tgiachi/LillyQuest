@@ -1,4 +1,5 @@
 using DryIoc;
+using LillyQuest.Core.Data.Directories;
 using LillyQuest.Core.Data.Plugins;
 using LillyQuest.Engine.Interfaces.Plugins;
 
@@ -27,6 +28,8 @@ public class PluginLifecycleTests
         public string? GetScriptOnLoadFunctionName() => null;
 
         public void RegisterServices(IContainer container) { }
+
+        public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin) { }
 
         public void Shutdown() { }
 
@@ -70,6 +73,8 @@ public class PluginLifecycleTests
         public string? GetScriptOnLoadFunctionName() => null;
 
         public void RegisterServices(IContainer container) { }
+
+        public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin) { }
 
         public void Shutdown() { }
 

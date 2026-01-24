@@ -31,6 +31,8 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         var directoriesConfig = container.Resolve<DirectoriesConfig>();
     }
 
+    public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin) { }
+
     public void Shutdown() { }
 
     public async Task OnReadyToRender(IContainer container) { }

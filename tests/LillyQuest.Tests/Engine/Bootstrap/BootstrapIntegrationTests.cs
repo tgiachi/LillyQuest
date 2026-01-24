@@ -1,5 +1,6 @@
 using DryIoc;
 using LillyQuest.Core.Data.Configs;
+using LillyQuest.Core.Data.Directories;
 using LillyQuest.Core.Data.Plugins;
 using LillyQuest.Engine;
 using LillyQuest.Engine.Interfaces.Plugins;
@@ -31,6 +32,11 @@ public class BootstrapIntegrationTests
         public void RegisterServices(IContainer container)
         {
             _events.Add("RegisterServices");
+        }
+
+        public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin)
+        {
+            _events.Add("OnDirectories");
         }
 
         public void Shutdown() { }
@@ -103,5 +109,36 @@ public class BootstrapIntegrationTests
         // Verify RegisterServices was called
         var registerIdx = events.IndexOf("RegisterServices");
         Assert.That(registerIdx, Is.GreaterThanOrEqualTo(0), "RegisterServices should be called");
+    }
+
+    [Test]
+    public void RegisterServices_CallsOnDirectoriesWithPluginRootAndCreatesDirectory()
+    {
+        var events = new List<string>();
+        var plugin = new TrackingPlugin(events);
+
+        var root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, RootDirectory = root };
+        var bootstrap = new LillyQuestBootstrap(config);
+
+        bootstrap.Initialize();
+        bootstrap.RegisterServices(container =>
+        {
+            container.RegisterInstance<ILillyQuestPlugin>(plugin);
+            return container;
+        });
+
+        var pluginRoot = Path.Combine(root, "Plugins", plugin.PluginInfo.Id);
+
+        Assert.That(events, Does.Contain("OnDirectories"));
+        Assert.That(Directory.Exists(pluginRoot), Is.True);
+
+        Assert.That(
+            events.IndexOf("RegisterServices"),
+            Is.LessThan(events.IndexOf("OnDirectories"))
+        );
+
+        if (Directory.Exists(root))
+            Directory.Delete(root, recursive: true);
     }
 }
