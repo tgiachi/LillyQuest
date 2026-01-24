@@ -7,6 +7,9 @@ The LillyQuest Engine provides a plugin lifecycle system with three main hooks:
 - **OnReadyToRender()** - Window created, OpenGL available
 - **OnLoadResources()** - Resources being loaded
 
+Before these hooks, the Lua script engine loads on the LogScreen so plugins can rely on Lua being ready.
+Startup order: **LogScreen (Lua)** → **OnReadyToRender** → **OnLoadResources**.
+
 This guide shows how to use **non-blocking async loading** to prevent freezing the render loop.
 
 ## The Problem: Blocking Render Loop
