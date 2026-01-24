@@ -11,6 +11,8 @@ namespace LillyQuest.RogueLike;
 
 public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
 {
+
+    private readonly ILogger _logger = Log.ForContext<LillyQuestRogueLikePlugin>();
     public PluginInfo PluginInfo
         => new PluginInfo(
             "com.github.tgiachi.lillyquest.roguelike",
@@ -18,6 +20,7 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
             "0.5.0",
             "squid",
             "Adds RogueLike specific features to LillyQuest Engine",
+            "roguelike.lua",
             []
         );
 
@@ -34,6 +37,7 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
     public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin)
     {
 
+        _logger.Information("Plugin Directories Configuration: {Root}", plugin.Root);
     }
 
     public void Shutdown() { }
