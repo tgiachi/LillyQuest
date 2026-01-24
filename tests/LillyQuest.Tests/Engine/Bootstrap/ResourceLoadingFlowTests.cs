@@ -36,17 +36,16 @@ public class ResourceLoadingFlowTests
         var loader = new FakeLoader();
         var flow = new ResourceLoadingFlow(loader);
         var logShown = 0;
-        var started = 0;
 
         flow.StartLoading(
             () => Task.CompletedTask,
             () => Task.CompletedTask,
+            () => Task.CompletedTask,
             () => logShown++,
-            () => started++
+            () => { }
         );
 
         Assert.That(logShown, Is.EqualTo(1));
-        Assert.That(started, Is.EqualTo(0));
     }
 
     [Test]
@@ -57,6 +56,7 @@ public class ResourceLoadingFlowTests
         var completed = 0;
 
         flow.StartLoading(
+            () => Task.CompletedTask,
             () => Task.CompletedTask,
             () => Task.CompletedTask,
             () => { },

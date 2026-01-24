@@ -5,7 +5,11 @@ public sealed class ResourceLoadingFlow
     private readonly IAsyncResourceLoader _loader;
     private bool _started;
     private bool _completed;
+    private Func<Task>? _onLoadLua;
+    private Func<Task>? _onReadyToRender;
+    private Func<Task>? _onLoadResources;
     private Action? _onLoadingComplete;
+    private Task? _luaTask;
     private Task? _readyTask;
     private Task? _loadTask;
 
@@ -13,6 +17,7 @@ public sealed class ResourceLoadingFlow
         => _loader = loader ?? throw new ArgumentNullException(nameof(loader));
 
     public void StartLoading(
+        Func<Task> onLoadLua,
         Func<Task> onReadyToRender,
         Func<Task> onLoadResources,
         Action showLogScreen,
@@ -25,10 +30,12 @@ public sealed class ResourceLoadingFlow
         }
 
         _started = true;
+        _onLoadLua = onLoadLua;
+        _onReadyToRender = onReadyToRender;
+        _onLoadResources = onLoadResources;
         _onLoadingComplete = onLoadingComplete;
         showLogScreen();
-        _readyTask = onReadyToRender();
-        _loadTask = onLoadResources();
+        _luaTask = _onLoadLua();
     }
 
     public void Update()
@@ -38,12 +45,27 @@ public sealed class ResourceLoadingFlow
             return;
         }
 
-        if (_readyTask == null || _loadTask == null)
+        if (_luaTask == null || _onReadyToRender == null || _onLoadResources == null)
         {
             return;
         }
 
-        if (!_readyTask.IsCompleted || !_loadTask.IsCompleted)
+        if (!_luaTask.IsCompleted)
+        {
+            return;
+        }
+
+        if (_luaTask.IsFaulted)
+        {
+            _luaTask.GetAwaiter().GetResult();
+        }
+
+        if (_readyTask == null)
+        {
+            _readyTask = _onReadyToRender();
+        }
+
+        if (!_readyTask.IsCompleted)
         {
             return;
         }
@@ -51,6 +73,16 @@ public sealed class ResourceLoadingFlow
         if (_readyTask.IsFaulted)
         {
             _readyTask.GetAwaiter().GetResult();
+        }
+
+        if (_loadTask == null)
+        {
+            _loadTask = _onLoadResources();
+        }
+
+        if (!_loadTask.IsCompleted)
+        {
+            return;
         }
 
         if (_loadTask.IsFaulted)

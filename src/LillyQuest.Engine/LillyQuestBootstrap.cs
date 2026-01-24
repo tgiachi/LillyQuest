@@ -263,6 +263,15 @@ public class LillyQuestBootstrap
     }
 
     /// <summary>
+    /// Executes Lua script engine loading before plugin render/resource hooks.
+    /// </summary>
+    public Task ExecuteOnLoadLuaScripts()
+    {
+        var scriptEngine = _container.Resolve<IScriptEngineService>();
+        return Task.Run(async () => await scriptEngine.StartAsync());
+    }
+
+    /// <summary>
     /// Gets whether plugins are currently loading resources asynchronously.
     /// </summary>
     public bool IsLoadingResources => _asyncResourceLoader.IsLoading;
@@ -427,9 +436,6 @@ public class LillyQuestBootstrap
 
         _container.RegisterLuaUserData<Vector2>();
 
-        var scriptEngine = _container.Resolve<IScriptEngineService>();
-        scriptEngine.StartAsync().GetAwaiter().GetResult();
-
         if (_engineConfig.IsDebugMode)
         {
             InitDebugMode();
@@ -493,6 +499,7 @@ public class LillyQuestBootstrap
         try
         {
             _resourceLoadingFlow.StartLoading(
+                ExecuteOnLoadLuaScripts,
                 ExecuteOnReadyToRender,
                 ExecuteOnLoadResources,
                 ShowLogScene,
