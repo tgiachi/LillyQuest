@@ -2,9 +2,13 @@ namespace LillyQuest.Engine.Logging;
 
 public sealed class TypewriterQueue
 {
-    private readonly Queue<TypewriterLine> _pendingLines = new();
-    private readonly List<IReadOnlyList<StyledSpan>> _completedLines = [];
+    public readonly record struct TypewriterLineState(IReadOnlyList<StyledSpan> Spans, float BlinkRemaining);
+
+    private readonly Queue<TypewriterLineState> _pendingLines = new();
+    private readonly List<TypewriterLineState> _completedLines = [];
     private TypewriterLine? _currentLine;
+    private TypewriterLineState _currentLineState;
+    private int _currentLineSequence;
     private float _charactersPerSecond;
     private int _visibleChars;
     private IReadOnlyList<StyledSpan> _visibleSpans = Array.Empty<StyledSpan>();
@@ -21,16 +25,27 @@ public sealed class TypewriterQueue
         set => _charactersPerSecond = MathF.Max(0f, value);
     }
 
-    public IReadOnlyList<IReadOnlyList<StyledSpan>> CompletedLines => _completedLines;
+    public IReadOnlyList<TypewriterLineState> CompletedLines => _completedLines;
 
     public IReadOnlyList<StyledSpan> CurrentLineSpans => _visibleSpans;
 
     public string CurrentLineText => _visibleText;
 
+    public float CurrentLineBlinkRemaining => _currentLine == null ? 0f : _currentLineState.BlinkRemaining;
+
+    public int CurrentLineSequence => _currentLineSequence;
+
+    public bool HasCurrentLine => _currentLine != null;
+
     public void EnqueueLine(IReadOnlyList<StyledSpan> line)
     {
+        EnqueueLine(line, 0f);
+    }
+
+    public void EnqueueLine(IReadOnlyList<StyledSpan> line, float blinkRemaining)
+    {
         ArgumentNullException.ThrowIfNull(line);
-        _pendingLines.Enqueue(new TypewriterLine(line));
+        _pendingLines.Enqueue(new TypewriterLineState(line, blinkRemaining));
     }
 
     public void EnqueueLines(IEnumerable<IReadOnlyList<StyledSpan>> lines)
@@ -53,6 +68,22 @@ public sealed class TypewriterQueue
         Advance(deltaChars);
     }
 
+    public bool ReplaceCurrentLine(IReadOnlyList<StyledSpan> line, float blinkRemaining)
+    {
+        if (_currentLine == null)
+        {
+            return false;
+        }
+
+        _currentLineState = new TypewriterLineState(line, blinkRemaining);
+        _currentLine = new TypewriterLine(line);
+        _visibleChars = 0;
+        _visibleSpans = Array.Empty<StyledSpan>();
+        _visibleText = string.Empty;
+        _currentLineSequence++;
+        return true;
+    }
+
     private void Advance(float charactersToConsume)
     {
         while (charactersToConsume > 0f)
@@ -64,7 +95,9 @@ public sealed class TypewriterQueue
                     return;
                 }
 
-                _currentLine = _pendingLines.Dequeue();
+                _currentLineState = _pendingLines.Dequeue();
+                _currentLine = new TypewriterLine(_currentLineState.Spans);
+                _currentLineSequence++;
                 _visibleChars = 0;
                 _visibleSpans = Array.Empty<StyledSpan>();
                 _visibleText = string.Empty;
@@ -102,7 +135,7 @@ public sealed class TypewriterQueue
             return;
         }
 
-        _completedLines.Add(_currentLine.Spans);
+        _completedLines.Add(_currentLineState);
         _currentLine = null;
         _visibleChars = 0;
         _visibleSpans = Array.Empty<StyledSpan>();

@@ -1,4 +1,5 @@
 using System.Numerics;
+using System.Linq;
 using FontStashSharp;
 using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
@@ -78,7 +79,7 @@ public class LogScreenTests
         public TestLogScreen(ILogEventDispatcher dispatcher, IFontManager fontManager)
             : base(dispatcher, fontManager) { }
 
-        public IReadOnlyList<LogLine> Lines => GetLines();
+        public IReadOnlyList<RenderedLine> Lines => GetLines();
     }
 
     [Test]
@@ -86,6 +87,7 @@ public class LogScreenTests
     {
         var dispatcher = new LogEventDispatcher();
         var screen = CreateScreen(dispatcher);
+        screen.TypewriterSpeed = 10000f;
 
         for (var i = 0; i < 6; i++)
         {
@@ -95,8 +97,8 @@ public class LogScreenTests
         screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
 
         Assert.That(screen.Lines.Count, Is.EqualTo(4));
-        Assert.That(screen.Lines[0].Text, Is.EqualTo("Line 2"));
-        Assert.That(screen.Lines[3].Text, Is.EqualTo("Line 5"));
+        Assert.That(GetLineText(screen.Lines[0]), Is.EqualTo("Line 2"));
+        Assert.That(GetLineText(screen.Lines[3]), Is.EqualTo("Line 5"));
     }
 
     [Test]
@@ -105,14 +107,15 @@ public class LogScreenTests
         var dispatcher = new LogEventDispatcher();
         var screen = CreateScreen(dispatcher);
         screen.Size = new(70, 60);
+        screen.TypewriterSpeed = 10000f;
 
         dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "AAAAAAAAA", null));
 
         screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
 
         Assert.That(screen.Lines.Count, Is.EqualTo(2));
-        Assert.That(screen.Lines[0].Text, Is.EqualTo("AAAAA"));
-        Assert.That(screen.Lines[1].Text, Is.EqualTo("AAAA"));
+        Assert.That(GetLineText(screen.Lines[0]), Is.EqualTo("AAAAA"));
+        Assert.That(GetLineText(screen.Lines[1]), Is.EqualTo("AAAA"));
     }
 
     [Test]
@@ -120,13 +123,14 @@ public class LogScreenTests
     {
         var dispatcher = new LogEventDispatcher();
         var screen = CreateScreen(dispatcher);
+        screen.TypewriterSpeed = 10000f;
 
         dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Warning, "Warn", null));
 
         screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
 
         Assert.That(screen.Lines.Count, Is.EqualTo(1));
-        Assert.That(screen.Lines[0].Color, Is.EqualTo(LogScreen.WarningColor));
+        Assert.That(screen.Lines[0].Spans[0].Foreground, Is.EqualTo(LogScreen.WarningColor));
     }
 
     [Test]
@@ -134,12 +138,13 @@ public class LogScreenTests
     {
         var dispatcher = new LogEventDispatcher();
         var screen = CreateScreen(dispatcher);
+        screen.TypewriterSpeed = 10000f;
 
         dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Fatal, "Boom", null));
 
-        screen.Update(new(TimeSpan.Zero, TimeSpan.Zero));
+        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.01)));
 
-        Assert.That(screen.Lines[0].BlinkRemaining, Is.EqualTo(1f));
+        Assert.That(screen.Lines[0].BlinkRemaining, Is.EqualTo(1f).Within(0.05f));
 
         screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(1.1)));
 
@@ -152,6 +157,7 @@ public class LogScreenTests
         var dispatcher = new LogEventDispatcher();
         var screen = CreateScreen(dispatcher);
         screen.Size = new(240, 60);
+        screen.TypewriterSpeed = 10000f;
 
         dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "Loading 0%", null));
         screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
@@ -160,7 +166,7 @@ public class LogScreenTests
         screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
 
         Assert.That(screen.Lines.Count, Is.EqualTo(1));
-        Assert.That(screen.Lines[0].Text, Is.EqualTo("Loading 10%"));
+        Assert.That(GetLineText(screen.Lines[0]), Is.EqualTo("Loading 10%"));
     }
 
     private static TestLogScreen CreateScreen(ILogEventDispatcher dispatcher)
@@ -177,4 +183,7 @@ public class LogScreenTests
 
         return screen;
     }
+
+    private static string GetLineText(RenderedLine line)
+        => string.Concat(line.Spans.Select(span => span.Text));
 }
