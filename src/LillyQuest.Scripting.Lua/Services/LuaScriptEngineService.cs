@@ -66,6 +66,7 @@ public class LuaScriptEngineService : IScriptEngineService, IDisposable
     private bool _disposed;
     private bool _isInitialized;
     private Func<string, string> _nameResolver;
+    private LuaScriptLoader _scriptLoader;
 
     private FileSystemWatcher? _watcher;
 
@@ -180,6 +181,11 @@ public class LuaScriptEngineService : IScriptEngineService, IDisposable
         }
 
         _initScripts.Add(script);
+    }
+
+    public void AddSearchDirectory(string path)
+    {
+        _scriptLoader.AddSearchDirectory(path);
     }
 
     /// <summary>
@@ -1013,13 +1019,14 @@ public class LuaScriptEngineService : IScriptEngineService, IDisposable
 
     private Script CreateOptimizedEngine()
     {
+        _scriptLoader = new LuaScriptLoader(new[] { _engineConfig.ScriptsDirectory });
         var script = new Script
         {
             Options =
             {
                 // Configure MoonSharp options
                 DebugPrint = s => _logger.Debug("[Lua] {Message}", s),
-                ScriptLoader = new LuaScriptLoader(_engineConfig.ScriptsDirectory)
+                ScriptLoader = _scriptLoader
             }
         };
 

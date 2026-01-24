@@ -22,7 +22,7 @@ public class LuaScriptLoader : ScriptLoaderBase
     {
         ArgumentNullException.ThrowIfNull(rootDirectory);
 
-        _scriptsDirectories = new List<string> { rootDirectory };
+        _scriptsDirectories = new List<string> { Path.GetFullPath(rootDirectory) };
 
         // Configure default module search paths
         ModulePaths =
@@ -72,6 +72,24 @@ public class LuaScriptLoader : ScriptLoaderBase
         ];
 
         _logger.Debug("Lua script loader initialized with scripts directories: {ScriptsDirectories}", _scriptsDirectories);
+    }
+
+    public void AddSearchDirectory(string directory)
+    {
+        if (string.IsNullOrWhiteSpace(directory))
+        {
+            return;
+        }
+
+        var fullPath = Path.GetFullPath(directory);
+
+        if (_scriptsDirectories.Contains(fullPath, StringComparer.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        _scriptsDirectories.Add(fullPath);
+        _logger.Debug("Lua script loader added scripts directory: {ScriptsDirectory}", fullPath);
     }
 
     /// <summary>
