@@ -17,4 +17,19 @@ public class TypewriterQueueTests
 
         Assert.That(queue.CurrentLineText, Is.EqualTo("H"));
     }
+
+    [Test]
+    public void Typewriter_Accumulates_Fractional_Progress()
+    {
+        var queue = new TypewriterQueue(charactersPerSecond: 1f);
+        queue.EnqueueLine([
+            new StyledSpan("Hi", LyColor.White, null, false, false, false)
+        ]);
+
+        queue.Update(TimeSpan.FromSeconds(0.4));
+        Assert.That(queue.CurrentLineText, Is.EqualTo(string.Empty));
+
+        queue.Update(TimeSpan.FromSeconds(0.6));
+        Assert.That(queue.CurrentLineText, Is.EqualTo("H"));
+    }
 }

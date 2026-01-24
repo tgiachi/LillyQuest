@@ -10,6 +10,7 @@ public sealed class TypewriterQueue
     private TypewriterLineState _currentLineState;
     private int _currentLineSequence;
     private float _charactersPerSecond;
+    private float _charRemainder;
     private int _visibleChars;
     private IReadOnlyList<StyledSpan> _visibleSpans = Array.Empty<StyledSpan>();
     private string _visibleText = string.Empty;
@@ -65,7 +66,15 @@ public sealed class TypewriterQueue
             return;
         }
 
-        Advance(deltaChars);
+        _charRemainder += deltaChars;
+        var wholeChars = (int)MathF.Floor(_charRemainder);
+        if (wholeChars <= 0)
+        {
+            return;
+        }
+
+        _charRemainder -= wholeChars;
+        Advance(wholeChars);
     }
 
     public bool ReplaceCurrentLine(IReadOnlyList<StyledSpan> line, float blinkRemaining)
@@ -84,9 +93,9 @@ public sealed class TypewriterQueue
         return true;
     }
 
-    private void Advance(float charactersToConsume)
+    private void Advance(int charactersToConsume)
     {
-        while (charactersToConsume > 0f)
+        while (charactersToConsume > 0)
         {
             if (_currentLine == null)
             {
@@ -110,7 +119,7 @@ public sealed class TypewriterQueue
                 continue;
             }
 
-            var step = Math.Min(remaining, (int)MathF.Floor(charactersToConsume));
+            var step = Math.Min(remaining, charactersToConsume);
             if (step <= 0)
             {
                 return;
