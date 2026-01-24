@@ -33,16 +33,12 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
 
     public void Shutdown() { }
 
-    public async Task OnReadyToRender(IContainer container)
-    {
-
-
-
-    }
+    public async Task OnReadyToRender(IContainer container) { }
 
     public async Task OnLoadResources(IContainer container)
     {
         Log.Information("Loading RogueLike plugin...");
+        await Task.Delay(1000);
 
         var renderContext = container.Resolve<EngineRenderContext>();
 
@@ -54,5 +50,10 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
 
         renderContext.Window.Title = "LillyQuest RogueLike";
 
+        Log.Information("RogueLike plugin loaded");
+
+        await Task.Delay(1000);
+        Log.Information("\n");
+        await Task.Delay(1000);
     }
 }

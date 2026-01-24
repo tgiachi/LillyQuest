@@ -25,8 +25,8 @@
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
-        <PackageReference Include="Silk.NET.Input.Common" Version="2.22.0" />
-        <PackageReference Include="Silk.NET.Input.Glfw" Version="2.22.0" />
+        <PackageReference Include="Silk.NET.Input.Common" Version="2.23.0" />
+        <PackageReference Include="Silk.NET.Input.Glfw" Version="2.23.0" />
     </ItemGroup>
 
     <ItemGroup>
