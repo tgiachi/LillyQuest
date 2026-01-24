@@ -33,15 +33,9 @@ public class LogScreen : BaseScreen
     private readonly ILogEventDispatcher _dispatcher;
     private readonly IFontManager _fontManager;
     private readonly BBCodeParser _bbcodeParser = new();
-    private readonly TypewriterQueue _typewriterQueue;
     private readonly List<RenderedLine> _lines = [];
-    private RenderedLine? _currentLine;
-    private float _currentLineBlinkRemaining;
-    private int _currentLineSequence;
-    private int _consumedCompletedLines;
 
     private float _blinkElapsed;
-    private float _cursorBlinkElapsed;
 
     public string FontName { get; set; } = "default_font_log";
     public int FontSize { get; set; } = 14;
@@ -50,15 +44,11 @@ public class LogScreen : BaseScreen
     public int DispatchBatchSize { get; set; } = 64;
     public float FatalBlinkDuration { get; set; } = 1f;
     public float FatalBlinkFrequency { get; set; } = 6f;
-    public float TypewriterSpeed { get; set; } = 120f;
-    public float CursorBlinkFrequency { get; set; } = 4f;
-    public LyColor CursorColor { get; set; } = LyColor.White;
 
     public LogScreen(ILogEventDispatcher dispatcher, IFontManager fontManager)
     {
         _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
         _fontManager = fontManager ?? throw new ArgumentNullException(nameof(fontManager));
-        _typewriterQueue = new(TypewriterSpeed);
         Margin = new(10, 10, 10, 10);
         _dispatcher.OnLogEntries += HandleLogEntries;
     }
@@ -85,32 +75,16 @@ public class LogScreen : BaseScreen
         var lineHeight = GetLineHeight();
         var y = Size.Y - Margin.W - lineHeight;
         var x = Margin.X;
-        var cursorPosition = (Vector2?)null;
-        var cursorHeight = lineHeight;
-
-        var totalLines = _lines.Count + (_currentLine != null ? 1 : 0);
-        for (var i = totalLines - 1; i >= 0 && y >= Margin.Y; i--)
+        for (var i = _lines.Count - 1; i >= 0 && y >= Margin.Y; i--)
         {
-            var line = ResolveRenderLine(i, totalLines);
+            var line = _lines[i];
             var lineVisible = ResolveLineVisibility(line);
             if (lineVisible)
             {
                 DrawStyledLine(spriteBatch, line, new Vector2(x, y));
             }
 
-            if (_currentLine != null && ReferenceEquals(line, _currentLine))
-            {
-                var cursorX = x + MeasureWidth(_typewriterQueue.CurrentLineText);
-                cursorPosition = new Vector2(cursorX, y);
-            }
-
             y -= lineHeight;
-        }
-
-        if (cursorPosition.HasValue && IsCursorVisible())
-        {
-            var cursorWidth = MathF.Max(2f, MeasureWidth("W") * 0.6f);
-            spriteBatch.DrawRectangle(cursorPosition.Value, new Vector2(cursorWidth, cursorHeight), CursorColor);
         }
 
         spriteBatch.PopTranslation();
@@ -121,13 +95,6 @@ public class LogScreen : BaseScreen
         _dispatcher.Dispatch(DispatchBatchSize);
         var deltaSeconds = (float)gameTime.Elapsed.TotalSeconds;
         _blinkElapsed += deltaSeconds;
-        _cursorBlinkElapsed += deltaSeconds;
-
-        _typewriterQueue.CharactersPerSecond = TypewriterSpeed;
-        _typewriterQueue.Update(gameTime.Elapsed);
-        ConsumeCompletedLines();
-        UpdateCurrentLine();
-        TrimToMaxLines();
 
         foreach (var line in _lines)
         {
@@ -137,12 +104,6 @@ public class LogScreen : BaseScreen
             }
 
             line.BlinkRemaining = Math.Max(0f, line.BlinkRemaining - deltaSeconds);
-        }
-
-        if (_currentLine != null && _currentLineBlinkRemaining > 0f)
-        {
-            _currentLineBlinkRemaining = Math.Max(0f, _currentLineBlinkRemaining - deltaSeconds);
-            _currentLine.BlinkRemaining = _currentLineBlinkRemaining;
         }
     }
 
@@ -183,8 +144,10 @@ public class LogScreen : BaseScreen
 
         foreach (var line in lines)
         {
-            _typewriterQueue.EnqueueLine(line, blink);
+            _lines.Add(new RenderedLine(line, blink));
         }
+
+        TrimToMaxLines();
     }
 
     private void TrimToMaxLines()
@@ -198,10 +161,7 @@ public class LogScreen : BaseScreen
             return;
         }
 
-        var reserved = _currentLine != null ? 1 : 0;
-        var maxStored = Math.Max(0, maxLines - reserved);
-
-        while (_lines.Count > maxStored)
+        while (_lines.Count > maxLines)
         {
             _lines.RemoveAt(0);
         }
@@ -244,11 +204,7 @@ public class LogScreen : BaseScreen
         var spans = _bbcodeParser.Parse(newText, defaultStyle);
         var lines = WrapSpans(spans, GetAvailableWidth());
 
-        if (_typewriterQueue.HasCurrentLine)
-        {
-            _typewriterQueue.ReplaceCurrentLine(lines.Count > 0 ? lines[^1] : Array.Empty<StyledSpan>(), blink);
-        }
-        else if (_lines.Count > 0)
+        if (_lines.Count > 0)
         {
             _lines.RemoveAt(_lines.Count - 1);
             foreach (var line in lines)
@@ -460,67 +416,6 @@ public class LogScreen : BaseScreen
 
     private string NormalizeMessage(string message)
         => message.Replace("\r\n", "\n").Replace('\r', '\n');
-
-    private RenderedLine ResolveRenderLine(int index, int totalLines)
-    {
-        if (_currentLine == null)
-        {
-            return _lines[index];
-        }
-
-        if (index == totalLines - 1)
-        {
-            return _currentLine;
-        }
-
-        return _lines[index];
-    }
-
-    private void ConsumeCompletedLines()
-    {
-        var completed = _typewriterQueue.CompletedLines;
-        for (var i = _consumedCompletedLines; i < completed.Count; i++)
-        {
-            var line = completed[i];
-            _lines.Add(new RenderedLine(line.Spans, line.BlinkRemaining));
-        }
-
-        _consumedCompletedLines = completed.Count;
-    }
-
-    private void UpdateCurrentLine()
-    {
-        if (!_typewriterQueue.HasCurrentLine)
-        {
-            _currentLine = null;
-            _currentLineBlinkRemaining = 0f;
-            return;
-        }
-
-        if (_currentLineSequence != _typewriterQueue.CurrentLineSequence)
-        {
-            _currentLineSequence = _typewriterQueue.CurrentLineSequence;
-            _currentLineBlinkRemaining = _typewriterQueue.CurrentLineBlinkRemaining;
-        }
-
-        _currentLine = new RenderedLine(_typewriterQueue.CurrentLineSpans, _currentLineBlinkRemaining);
-    }
-
-    private bool IsCursorVisible()
-    {
-        if (_currentLine == null)
-        {
-            return false;
-        }
-
-        if (CursorBlinkFrequency <= 0f)
-        {
-            return true;
-        }
-
-        var blinkPhase = (int)MathF.Floor(_cursorBlinkElapsed * CursorBlinkFrequency) % 2;
-        return blinkPhase == 0;
-    }
 
     private void DrawStyledLine(SpriteBatch spriteBatch, RenderedLine line, Vector2 origin)
     {

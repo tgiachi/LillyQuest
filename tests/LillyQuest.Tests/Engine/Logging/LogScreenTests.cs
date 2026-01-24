@@ -87,7 +87,6 @@ public class LogScreenTests
     {
         var dispatcher = new LogEventDispatcher();
         var screen = CreateScreen(dispatcher);
-        screen.TypewriterSpeed = 10000f;
 
         for (var i = 0; i < 6; i++)
         {
@@ -107,7 +106,6 @@ public class LogScreenTests
         var dispatcher = new LogEventDispatcher();
         var screen = CreateScreen(dispatcher);
         screen.Size = new(70, 60);
-        screen.TypewriterSpeed = 10000f;
 
         dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "AAAAAAAAA", null));
 
@@ -123,7 +121,6 @@ public class LogScreenTests
     {
         var dispatcher = new LogEventDispatcher();
         var screen = CreateScreen(dispatcher);
-        screen.TypewriterSpeed = 10000f;
 
         dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Warning, "Warn", null));
 
@@ -138,7 +135,6 @@ public class LogScreenTests
     {
         var dispatcher = new LogEventDispatcher();
         var screen = CreateScreen(dispatcher);
-        screen.TypewriterSpeed = 10000f;
 
         dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Fatal, "Boom", null));
 
@@ -157,7 +153,6 @@ public class LogScreenTests
         var dispatcher = new LogEventDispatcher();
         var screen = CreateScreen(dispatcher);
         screen.Size = new(240, 60);
-        screen.TypewriterSpeed = 10000f;
 
         dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "Loading 0%", null));
         screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
@@ -174,7 +169,6 @@ public class LogScreenTests
     {
         var dispatcher = new LogEventDispatcher();
         var screen = CreateScreen(dispatcher);
-        screen.TypewriterSpeed = 0.1f;
 
         dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "Hello", null));
         screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.01)));
