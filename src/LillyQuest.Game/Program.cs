@@ -44,6 +44,7 @@ await ConsoleApp.RunAsync(
                 container.RegisterScene<TestSceneA>();
                 container.RegisterScene<TestSceneB>();
                 container.RegisterScene<TilesetSurfaceEditorScene>(true);
+                container.RegisterScene<UiWidgetsDemoScene>();
 
                 container.RegisterPlugin(typeof(LillyQuestRogueLikePlugin).Assembly);
 
