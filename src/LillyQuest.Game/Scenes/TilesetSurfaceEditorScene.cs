@@ -1,5 +1,6 @@
 using System.Numerics;
 using LillyQuest.Core.Data.Assets.Tiles;
+using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
@@ -23,7 +24,6 @@ public class TilesetSurfaceEditorScene : BaseScene
     private readonly ITilesetManager _tilesetManager;
     private readonly ITextureManager _textureManager;
     private readonly INineSliceAssetManager _nineSliceManager;
-    private readonly IFontManager _fontManager;
 
     private UIRootScreen? _uiRoot;
     private TilesetSurfaceScreen? _screen;
@@ -32,8 +32,7 @@ public class TilesetSurfaceEditorScene : BaseScene
         IScreenManager screenManager,
         ITilesetManager tilesetManager,
         ITextureManager textureManager,
-        INineSliceAssetManager nineSliceManager,
-        IFontManager fontManager
+        INineSliceAssetManager nineSliceManager
     )
         : base("tileset_surface_editor")
     {
@@ -41,7 +40,6 @@ public class TilesetSurfaceEditorScene : BaseScene
         _tilesetManager = tilesetManager;
         _textureManager = textureManager;
         _nineSliceManager = nineSliceManager;
-        _fontManager = fontManager;
     }
 
     public override void OnLoad()
@@ -202,8 +200,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             Position = new(520, 240),
             Size = new(420, 240),
             Title = "Nine-Slice Window",
-            TitleFontName = "default_font",
-            TitleFontSize = 16,
+            TitleFont = new("default_font", 16, FontKind.TrueType),
             TitleMargin = new(20f, 12f, 0f, 0f),
             ContentMargin = new(20f, 40f, 0f, 0f),
             NineSliceScale = 1f,
@@ -227,8 +224,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             Position = new(100, 260),
             Size = new(260, 160),
             Title = "UIButton Demo",
-            TitleFontName = "default_font",
-            TitleFontSize = 16,
+            TitleFont = new("default_font", 16, FontKind.TrueType),
             TitleMargin = new(20f, 12f, 0f, 0f),
             ContentMargin = new(20f, 40f, 0f, 0f),
             NineSliceScale = 1f,
@@ -238,13 +234,12 @@ public class TilesetSurfaceEditorScene : BaseScene
             ZIndex = 4
         };
 
-        var sampleButton = new UIButton(_nineSliceManager, _textureManager, _fontManager)
+        var sampleButton = new UIButton(_nineSliceManager, _textureManager)
         {
             Position = new(20, 10),
             Size = new(180, 48),
             Text = "Click Me",
-            FontName = "default_font",
-            FontSize = 14,
+            Font = new("default_font", 14, FontKind.TrueType),
             TextColor = LyColor.Black,
 
             NineSliceKey = "simple_ui",

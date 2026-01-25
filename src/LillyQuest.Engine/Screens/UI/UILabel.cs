@@ -1,5 +1,6 @@
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
+using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Primitives;
 
 namespace LillyQuest.Engine.Screens.UI;
@@ -10,8 +11,7 @@ namespace LillyQuest.Engine.Screens.UI;
 public sealed class UILabel : UIScreenControl
 {
     public string Text { get; set; } = string.Empty;
-    public string FontName { get; set; } = "default_font";
-    public int FontSize { get; set; } = 14;
+    public FontRef Font { get; set; } = new("default_font", 14, FontKind.TrueType);
     public LyColor Color { get; set; } = LyColor.White;
 
     public override void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext)
@@ -21,6 +21,6 @@ public sealed class UILabel : UIScreenControl
             return;
         }
 
-        spriteBatch.DrawFont(FontName, FontSize, Text, GetWorldPosition(), Color);
+        spriteBatch.DrawText(Font, Text, GetWorldPosition(), Color);
     }
 }

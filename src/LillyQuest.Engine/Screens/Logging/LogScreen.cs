@@ -1,6 +1,7 @@
 using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
+using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Logging;
@@ -37,8 +38,7 @@ public class LogScreen : BaseScreen
 
     private float _blinkElapsed;
 
-    public string FontName { get; set; } = "default_font_log";
-    public int FontSize { get; set; } = 14;
+    public FontRef Font { get; set; } = new("default_font_log", 14, FontKind.TrueType);
     public LyColor BackgroundColor { get; set; } = LyColor.Black;
     public float BackgroundAlpha { get; set; } = 0.6f;
     public int DispatchBatchSize { get; set; } = 64;
@@ -228,7 +228,7 @@ public class LogScreen : BaseScreen
 
     private float GetLineHeight()
     {
-        var height = _fontManager.MeasureText(FontName, FontSize, "Ag").Y;
+        var height = MeasureText("Ag").Y;
 
         return height > 0f ? height : 1f;
     }
@@ -412,7 +412,7 @@ public class LogScreen : BaseScreen
     }
 
     private float MeasureWidth(string text)
-        => _fontManager.MeasureText(FontName, FontSize, text).X;
+        => MeasureText(text).X;
 
     private string NormalizeMessage(string message)
         => message.Replace("\r\n", "\n").Replace('\r', '\n');
@@ -424,7 +424,7 @@ public class LogScreen : BaseScreen
         {
             if (span.Background.HasValue)
             {
-                var size = _fontManager.MeasureText(FontName, FontSize, span.Text);
+                var size = MeasureText(span.Text);
                 if (size.X > 0 && size.Y > 0)
                 {
                     spriteBatch.DrawRectangle(new Vector2(x, origin.Y), size, span.Background.Value);
@@ -434,16 +434,16 @@ public class LogScreen : BaseScreen
             var drawColor = span.Foreground;
             if (span.Bold)
             {
-                spriteBatch.DrawFont(FontName, FontSize, span.Text, new Vector2(x + 1, origin.Y), drawColor);
+                spriteBatch.DrawText(Font, span.Text, new Vector2(x + 1, origin.Y), drawColor);
             }
 
             var italicOffset = span.Italic ? 1f : 0f;
-            spriteBatch.DrawFont(FontName, FontSize, span.Text, new Vector2(x + italicOffset, origin.Y), drawColor);
+            spriteBatch.DrawText(Font, span.Text, new Vector2(x + italicOffset, origin.Y), drawColor);
 
             if (span.Underline)
             {
-                var size = _fontManager.MeasureText(FontName, FontSize, span.Text);
-                var thickness = MathF.Max(1f, FontSize * 0.05f);
+                var size = MeasureText(span.Text);
+                var thickness = GetUnderlineThickness();
                 var underlineY = origin.Y + size.Y - thickness;
                 spriteBatch.DrawRectangle(new Vector2(x, underlineY), new Vector2(size.X, thickness), drawColor);
             }
@@ -455,5 +455,14 @@ public class LogScreen : BaseScreen
     private readonly record struct StyledToken(StyledSpan Span, bool IsLineBreak)
     {
         public static StyledToken LineBreak => new(new StyledSpan(string.Empty, LyColor.White, null, false, false, false), true);
+    }
+
+    private Vector2 MeasureText(string text)
+        => _fontManager.GetFontHandle(Font).MeasureText(text);
+
+    private float GetUnderlineThickness()
+    {
+        var baseSize = Font.Size > 0 ? Font.Size : GetLineHeight();
+        return MathF.Max(1f, baseSize * 0.05f);
     }
 }

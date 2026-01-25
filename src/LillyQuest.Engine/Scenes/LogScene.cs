@@ -1,4 +1,5 @@
 using System.Numerics;
+using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Interfaces.Managers;
@@ -40,7 +41,7 @@ public class LogScene : BaseScene
             Position = Vector2.Zero,
             Size = new Vector2(800, 600),
             Margin = new(10, 10, 10, 10),
-            FontSize = 10,
+            Font = new("default_font_log", 10, FontKind.TrueType),
             BackgroundColor = LyColor.Black,
             BackgroundAlpha = 0.9f
         };

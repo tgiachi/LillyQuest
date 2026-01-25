@@ -3,6 +3,7 @@ using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.OpenGL.Resources;
 using LillyQuest.Core.Graphics.Rendering2D;
+using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using Silk.NET.Maths;
@@ -20,7 +21,6 @@ public sealed class UIButton : UIScreenControl
 {
     private readonly INineSliceAssetManager _nineSliceManager;
     private readonly ITextureManager _textureManager;
-    private readonly IFontManager _fontManager;
 
     private LyColor _targetTint = LyColor.White;
     private float _transitionElapsed;
@@ -34,8 +34,7 @@ public sealed class UIButton : UIScreenControl
     public string NineSliceKey { get; set; } = string.Empty;
     public float NineSliceScale { get; set; } = 1f;
     public string Text { get; set; } = string.Empty;
-    public string FontName { get; set; } = "default_font";
-    public int FontSize { get; set; } = 14;
+    public FontRef Font { get; set; } = new("default_font", 14, FontKind.TrueType);
     public LyColor TextColor { get; set; } = LyColor.White;
 
     public LyColor IdleTint { get; set; } = LyColor.White;
@@ -48,11 +47,10 @@ public sealed class UIButton : UIScreenControl
     public Action? OnClick { get; set; }
     public Action? OnHover { get; set; }
 
-    public UIButton(INineSliceAssetManager nineSliceManager, ITextureManager textureManager, IFontManager fontManager)
+    public UIButton(INineSliceAssetManager nineSliceManager, ITextureManager textureManager)
     {
         _nineSliceManager = nineSliceManager;
         _textureManager = textureManager;
-        _fontManager = fontManager;
         CurrentTint = IdleTint;
         _targetTint = IdleTint;
         _transitionStartTint = IdleTint;
@@ -196,10 +194,10 @@ public sealed class UIButton : UIScreenControl
 
         if (!string.IsNullOrWhiteSpace(Text))
         {
-            var textSize = _fontManager.MeasureText(FontName, FontSize, Text);
+            var textSize = spriteBatch.MeasureText(Font, Text);
             var world = GetWorldPosition();
             var position = world + (Size - textSize) * 0.5f;
-            spriteBatch.DrawFont(FontName, FontSize, Text, position, TextColor);
+            spriteBatch.DrawText(Font, Text, position, TextColor);
         }
     }
 
