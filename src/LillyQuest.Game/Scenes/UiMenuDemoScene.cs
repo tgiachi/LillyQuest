@@ -1,7 +1,8 @@
 using System.Numerics;
-using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Data.Contexts;
+using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Primitives;
+using LillyQuest.Engine;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Managers.Scenes.Base;
 using LillyQuest.Engine.Screens.UI;
@@ -11,14 +12,20 @@ namespace LillyQuest.Game.Scenes;
 public class UiMenuDemoScene : BaseScene
 {
     private readonly IScreenManager _screenManager;
+    private readonly LillyQuestBootstrap _bootstrap;
     private readonly EngineRenderContext _renderContext;
     private UIRootScreen? _screen;
     private bool _subscribed;
 
-    public UiMenuDemoScene(IScreenManager screenManager, EngineRenderContext renderContext)
+    public UiMenuDemoScene(
+        IScreenManager screenManager,
+        LillyQuestBootstrap bootstrap,
+        EngineRenderContext renderContext
+    )
         : base("ui_menu_demo")
     {
         _screenManager = screenManager;
+        _bootstrap = bootstrap;
         _renderContext = renderContext;
     }
 
@@ -63,9 +70,9 @@ public class UiMenuDemoScene : BaseScene
         _screen.Root.Add(menu);
         _screenManager.PushScreen(_screen);
 
-        if (!_subscribed && _renderContext.Window != null)
+        if (!_subscribed)
         {
-            _renderContext.Window.Resize += OnWindowResize;
+            _bootstrap.WindowResize += OnWindowResize;
             _subscribed = true;
         }
     }
@@ -78,20 +85,20 @@ public class UiMenuDemoScene : BaseScene
             _screen = null;
         }
 
-        if (_subscribed && _renderContext.Window != null)
+        if (_subscribed)
         {
-            _renderContext.Window.Resize -= OnWindowResize;
+            _bootstrap.WindowResize -= OnWindowResize;
             _subscribed = false;
         }
     }
 
-    private void OnWindowResize(Silk.NET.Maths.Vector2D<int> size)
+    private void OnWindowResize(Vector2 size)
     {
         if (_screen == null)
         {
             return;
         }
 
-        _screen.HandleResize(new(size.X, size.Y));
+        _screen.HandleResize(size);
     }
 }

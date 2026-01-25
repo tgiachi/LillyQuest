@@ -7,7 +7,7 @@ public class UiMenuDemoSceneTests
     [Test]
     public void UiMenuDemoScene_CanBeConstructed()
     {
-        var scene = new UiMenuDemoScene(null!, null!);
+        var scene = new UiMenuDemoScene(null!, null!, null!);
         Assert.That(scene, Is.Not.Null);
     }
 }
