@@ -2,6 +2,7 @@ using MoonSharp.Interpreter;
 using MoonSharp.Interpreter.Loaders;
 using Serilog;
 using System.Linq;
+using LillyQuest.Core.Extensions.Directories;
 
 namespace LillyQuest.Scripting.Lua.Loaders;
 
@@ -54,7 +55,7 @@ public class LuaScriptLoader : ScriptLoaderBase
         }
 
         _scriptsDirectories = searchDirectories.Where(d => !string.IsNullOrWhiteSpace(d))
-                                               .Select(Path.GetFullPath)
+                                               .Select( d => Path.GetFullPath(d.ResolvePathAndEnvs()).ResolvePathAndEnvs() )
                                                .Distinct(StringComparer.OrdinalIgnoreCase)
                                                .ToList();
 

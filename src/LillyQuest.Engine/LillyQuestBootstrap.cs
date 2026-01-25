@@ -6,6 +6,7 @@ using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Data.Directories;
 using LillyQuest.Core.Data.Plugins;
+using LillyQuest.Core.Extensions.Directories;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Internal.Data.Registrations;
@@ -119,7 +120,7 @@ public class LillyQuestBootstrap
             _engineConfig.RootDirectory = Path.Combine(Directory.GetCurrentDirectory(), "LillyQuest");
         }
 
-        _directoriesConfig = new(_engineConfig.RootDirectory, Enum.GetNames<DirectoryType>());
+        _directoriesConfig = new(_engineConfig.RootDirectory.ResolvePathAndEnvs(), Enum.GetNames<DirectoryType>());
         _container.RegisterInstance(_directoriesConfig);
         _logger.Information("Root Directory: {RootDirectory}", _engineConfig.RootDirectory);
     }
@@ -223,7 +224,7 @@ public class LillyQuestBootstrap
         Directory.CreateDirectory(pluginRoot);
         var pluginDirectories = new DirectoriesConfig(pluginRoot, "Scripts");
         plugin.OnDirectories(_directoriesConfig, pluginDirectories);
-        var pluginScriptsDir = Path.Combine(pluginRoot, "Scripts");
+        var pluginScriptsDir = Path.Combine(pluginRoot, "Scripts").ResolvePathAndEnvs();
         Directory.CreateDirectory(pluginScriptsDir);
         var scriptEngine = _container.Resolve<IScriptEngineService>();
         scriptEngine.AddSearchDirectory(pluginScriptsDir);

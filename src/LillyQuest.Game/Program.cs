@@ -4,9 +4,7 @@ using ConsoleAppFramework;
 using DryIoc;
 using LillyQuest.Engine;
 using LillyQuest.Engine.Extensions;
-using LillyQuest.Engine.Interfaces.Screens;
 using LillyQuest.Engine.Logging;
-using LillyQuest.Engine.Scenes;
 using LillyQuest.Game.Scenes;
 using LillyQuest.RogueLike;
 using Serilog;
@@ -26,10 +24,13 @@ await ConsoleApp.RunAsync(
     args,
     () =>
     {
+        var rootDirectory = Environment.GetEnvironmentVariable("LILYQUEST_ROOT") ?? Directory.GetCurrentDirectory();
+
         var lillyQuestBootstrap = new LillyQuestBootstrap(
             new()
             {
-                IsDebugMode = true
+                IsDebugMode = true,
+                RootDirectory =  rootDirectory,
             }
         );
 
