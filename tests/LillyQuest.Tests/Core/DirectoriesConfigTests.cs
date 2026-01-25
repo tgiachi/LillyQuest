@@ -1,4 +1,5 @@
 using LillyQuest.Core.Data.Directories;
+using LillyQuest.Core.Types;
 
 namespace LillyQuest.Tests.Core;
 
@@ -276,5 +277,60 @@ public class DirectoriesConfigTests
         var result = config.ToString();
 
         Assert.That(result, Is.EqualTo(_testRootDirectory));
+    }
+
+    [Test]
+    public void SearchFiles_WithDirectoryType_ReturnsMetadata()
+    {
+        var config = new DirectoriesConfig(_testRootDirectory, DirectoryType.Assets);
+        var assetsPath = config.GetPath(DirectoryType.Assets);
+        var filePath = Path.Combine(assetsPath, "sample.txt");
+        File.WriteAllText(filePath, "hello");
+        var expectedModified = File.GetLastWriteTimeUtc(filePath);
+
+        var results = config.SearchFiles(DirectoryType.Assets, "txt");
+
+        Assert.That(results.Count, Is.EqualTo(1));
+        var result = results[0];
+        Assert.That(result.Path, Is.EqualTo(filePath));
+        Assert.That(result.Name, Is.EqualTo("sample.txt"));
+        Assert.That(result.Extension, Is.EqualTo(".txt"));
+        Assert.That(result.SizeBytes, Is.EqualTo(new FileInfo(filePath).Length));
+        Assert.That(result.LastModifiedUtc, Is.EqualTo(expectedModified));
+    }
+
+    [Test]
+    public void SearchFiles_WithPath_ReturnsMetadata()
+    {
+        var config = new DirectoriesConfig(_testRootDirectory, Array.Empty<string>());
+        var customPath = Path.Combine(_testRootDirectory, "custom");
+        Directory.CreateDirectory(customPath);
+        var filePath = Path.Combine(customPath, "data.json");
+        File.WriteAllText(filePath, "{}");
+        var expectedModified = File.GetLastWriteTimeUtc(filePath);
+
+        var results = config.SearchFiles(customPath, ".json");
+
+        Assert.That(results.Count, Is.EqualTo(1));
+        var result = results[0];
+        Assert.That(result.Path, Is.EqualTo(filePath));
+        Assert.That(result.Name, Is.EqualTo("data.json"));
+        Assert.That(result.Extension, Is.EqualTo(".json"));
+        Assert.That(result.SizeBytes, Is.EqualTo(new FileInfo(filePath).Length));
+        Assert.That(result.LastModifiedUtc, Is.EqualTo(expectedModified));
+    }
+
+    [Test]
+    public void SearchFiles_WithStringKey_UsesRootDirectory()
+    {
+        var config = new DirectoriesConfig(_testRootDirectory, "Assets");
+        var assetsPath = config.GetPath("Assets");
+        var filePath = Path.Combine(assetsPath, "note.txt");
+        File.WriteAllText(filePath, "data");
+
+        var results = config.SearchFiles("Assets", "txt");
+
+        Assert.That(results.Count, Is.EqualTo(1));
+        Assert.That(results[0].Path, Is.EqualTo(filePath));
     }
 }
