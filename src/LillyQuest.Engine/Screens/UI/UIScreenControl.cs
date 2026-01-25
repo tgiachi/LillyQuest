@@ -2,6 +2,7 @@ using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Primitives;
+using LillyQuest.Engine.Data.Input;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 
@@ -33,6 +34,9 @@ public class UIScreenControl
     public Func<Vector2, float, bool>? OnMouseWheel { get; set; }
     public Func<Vector2, IReadOnlyList<MouseButton>, bool>? OnMouseDownWithButtons { get; set; }
     public Func<Vector2, IReadOnlyList<MouseButton>, bool>? OnMouseUpWithButtons { get; set; }
+    public Func<KeyModifierType, IReadOnlyList<Key>, bool>? OnKeyPress { get; set; }
+    public Func<KeyModifierType, IReadOnlyList<Key>, bool>? OnKeyRelease { get; set; }
+    public Func<KeyModifierType, IReadOnlyList<Key>, bool>? OnKeyRepeat { get; set; }
 
     public void AddChild(UIScreenControl control)
     {
@@ -111,6 +115,15 @@ public class UIScreenControl
     /// </summary>
     public virtual bool HandleMouseWheel(Vector2 point, float delta)
         => OnMouseWheel?.Invoke(point, delta) ?? false;
+
+    public virtual bool HandleKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => OnKeyPress?.Invoke(modifier, keys) ?? false;
+
+    public virtual bool HandleKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => OnKeyRelease?.Invoke(modifier, keys) ?? false;
+
+    public virtual bool HandleKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => OnKeyRepeat?.Invoke(modifier, keys) ?? false;
 
     public void RemoveChild(UIScreenControl control)
     {

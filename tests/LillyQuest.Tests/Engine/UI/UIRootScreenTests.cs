@@ -1,4 +1,5 @@
 using System.Numerics;
+using LillyQuest.Engine.Data.Input;
 using LillyQuest.Engine.Screens.UI;
 using Silk.NET.Input;
 
@@ -117,5 +118,26 @@ public class UIRootScreenTests
 
         root.HandleResize(new(200, 200));
         Assert.That(control.Position, Is.EqualTo(new Vector2(95, 95)));
+    }
+
+    [Test]
+    public void OnKeyPress_Forwards_To_Focused_Control()
+    {
+        var root = new UIRootScreen();
+        var control = new UIScreenControl { IsFocusable = true };
+        var handled = false;
+        control.OnKeyPress = (_, _) =>
+                             {
+                                 handled = true;
+                                 return true;
+                             };
+
+        root.Root.Add(control);
+        root.Root.FocusManager.RequestFocus(control);
+
+        var consumed = root.OnKeyPress(KeyModifierType.None, new[] { Key.Up });
+
+        Assert.That(consumed, Is.True);
+        Assert.That(handled, Is.True);
     }
 }
