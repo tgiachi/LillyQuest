@@ -165,7 +165,16 @@ public class DirectoriesConfig
         if (directoryType.Contains(Path.DirectorySeparatorChar) ||
             directoryType.Contains(Path.AltDirectorySeparatorChar))
         {
-            return directoryType;
+            if (Path.IsPathRooted(directoryType))
+            {
+                return directoryType;
+            }
+
+            var normalized = directoryType.Replace(Path.AltDirectorySeparatorChar, Path.DirectorySeparatorChar);
+            var parts = normalized.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries);
+            var loweredParts = parts.Select(segment => segment.ToLowerInvariant());
+
+            return Path.Combine(loweredParts.ToArray());
         }
 
         var snakeCase = directoryType.ToSnakeCase();

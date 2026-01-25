@@ -184,6 +184,18 @@ public class DirectoriesConfigTests
     }
 
     [Test]
+    public void GetPath_WithNestedPath_UsesLowercaseSegments()
+    {
+        var config = new DirectoriesConfig(_testRootDirectory, Array.Empty<string>());
+        var customPath = $"Assets{Path.DirectorySeparatorChar}Textures";
+
+        var path = config.GetPath(customPath);
+
+        var expectedPath = Path.Combine(_testRootDirectory, "assets", "textures");
+        Assert.That(path, Is.EqualTo(expectedPath));
+    }
+
+    [Test]
     public void GetPath_WithRootKey_ReturnsRootDirectory()
     {
         var config = new DirectoriesConfig(_testRootDirectory, "Assets");

@@ -2,6 +2,7 @@ using DryIoc;
 using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Directories;
 using LillyQuest.Core.Data.Plugins;
+using LillyQuest.Core.Utils;
 using LillyQuest.Engine;
 using LillyQuest.Engine.Interfaces.Plugins;
 using LillyQuest.Scripting.Lua.Data.Scripts;
@@ -11,6 +12,15 @@ namespace LillyQuest.Tests.Engine.Bootstrap;
 
 public class BootstrapIntegrationTests
 {
+    [SetUp]
+    public void SkipIfHeadless()
+    {
+        if (IsHeadlessEnvironment())
+        {
+            Assert.Ignore("Skipping bootstrap integration tests on headless/CI environment.");
+        }
+    }
+
     private sealed class RecordingScriptEngineService : IScriptEngineService
     {
         public readonly List<string> AddedDirectories = new();
@@ -235,5 +245,23 @@ public class BootstrapIntegrationTests
 
         if (Directory.Exists(root))
             Directory.Delete(root, recursive: true);
+    }
+
+    private static bool IsHeadlessEnvironment()
+    {
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI")))
+        {
+            return true;
+        }
+
+        if (!PlatformUtils.IsRunningOnLinux())
+        {
+            return false;
+        }
+
+        var display = Environment.GetEnvironmentVariable("DISPLAY");
+        var waylandDisplay = Environment.GetEnvironmentVariable("WAYLAND_DISPLAY");
+
+        return string.IsNullOrEmpty(display) && string.IsNullOrEmpty(waylandDisplay);
     }
 }
