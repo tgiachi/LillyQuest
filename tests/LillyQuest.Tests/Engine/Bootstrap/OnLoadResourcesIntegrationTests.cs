@@ -2,6 +2,7 @@ using DryIoc;
 using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Directories;
 using LillyQuest.Core.Data.Plugins;
+using LillyQuest.Core.Utils;
 using LillyQuest.Engine;
 using LillyQuest.Engine.Interfaces.Plugins;
 
@@ -12,6 +13,15 @@ namespace LillyQuest.Tests.Engine.Bootstrap;
 /// </summary>
 public class OnLoadResourcesIntegrationTests
 {
+    [SetUp]
+    public void SkipIfHeadless()
+    {
+        if (IsHeadlessEnvironment())
+        {
+            Assert.Ignore("Skipping bootstrap integration tests on headless/CI environment.");
+        }
+    }
+
     private sealed class ResourceLoadingPlugin : ILillyQuestPlugin
     {
         public PluginInfo PluginInfo => new(
@@ -119,5 +129,23 @@ public class OnLoadResourcesIntegrationTests
 
         // Initially not loading
         Assert.That(bootstrap.IsLoadingResources, Is.False);
+    }
+
+    private static bool IsHeadlessEnvironment()
+    {
+        if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("CI")))
+        {
+            return true;
+        }
+
+        if (!PlatformUtils.IsRunningOnLinux())
+        {
+            return false;
+        }
+
+        var display = Environment.GetEnvironmentVariable("DISPLAY");
+        var waylandDisplay = Environment.GetEnvironmentVariable("WAYLAND_DISPLAY");
+
+        return string.IsNullOrEmpty(display) && string.IsNullOrEmpty(waylandDisplay);
     }
 }
