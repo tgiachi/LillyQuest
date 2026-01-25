@@ -23,6 +23,7 @@ public class UIScreenControl
     public bool IsEnabled { get; set; } = true;
     public bool IsFocusable { get; set; }
     public int ZIndex { get; set; }
+    public bool KeepCentered { get; set; }
 
     public UIScreenControl? Parent { get; set; }
 
@@ -135,4 +136,20 @@ public class UIScreenControl
     /// Updates the control.
     /// </summary>
     public virtual void Update(GameTime gameTime) { }
+
+    public void Center()
+    {
+        KeepCentered = true;
+        var referenceSize = Parent?.Size ?? Vector2.Zero;
+        Position = GetCenteredPosition(referenceSize);
+    }
+
+    public void CenterIn(Vector2 referenceSize)
+    {
+        KeepCentered = true;
+        Position = GetCenteredPosition(referenceSize);
+    }
+
+    private Vector2 GetCenteredPosition(Vector2 referenceSize)
+        => new((referenceSize.X - Size.X) * 0.5f, (referenceSize.Y - Size.Y) * 0.5f);
 }
