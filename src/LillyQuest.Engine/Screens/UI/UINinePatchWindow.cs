@@ -44,6 +44,9 @@ public sealed class UINinePatchWindow : UIWindow
     protected override Vector2 GetContentOffset()
         => new(ContentMargin.X, ContentMargin.Y);
 
+    protected override Vector4 GetContentPadding()
+        => new(ContentMargin.X, ContentMargin.Y, ContentMargin.Z, ContentMargin.W);
+
     protected override void RenderBackground(SpriteBatch spriteBatch, EngineRenderContext renderContext)
     {
         if (string.IsNullOrWhiteSpace(NineSliceKey))
