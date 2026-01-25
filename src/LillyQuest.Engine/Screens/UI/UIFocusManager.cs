@@ -51,21 +51,10 @@ public sealed class UIFocusManager
             focusables.Add(control);
         }
 
-        foreach (var child in GetChildren(control))
+        foreach (var child in control.Children)
         {
             CollectFocusables(child, focusables);
         }
-    }
-
-    private static IReadOnlyList<UIScreenControl> GetChildren(UIScreenControl control)
-    {
-        return control switch
-        {
-            UIWindow window        => window.Children,
-            UIScrollContent scroll => scroll.Children,
-            UIButton button        => button.Children,
-            _                      => Array.Empty<UIScreenControl>()
-        };
     }
 
     private static List<UIScreenControl> GetFocusables(UIScreenRoot root)

@@ -1,7 +1,8 @@
 <Solution>
-    <Project Path="src/LillyQuest.Engine/LillyQuest.Engine.csproj"/>
-    <Project Path="src/LillyQuest.Core/LillyQuest.Core.csproj"/>
-    <Project Path="src/LillyQuest.Game/LillyQuest.Game.csproj"/>
-    <Project Path="src/LillyQuest.Scripting.Lua/LillyQuest.Scripting.Lua.csproj"/>
-    <Project Path="tests/LillyQuest.Tests/LillyQuest.Tests.csproj"/>
+    <Project Path="src/LillyQuest.Engine/LillyQuest.Engine.csproj" />
+    <Project Path="src/LillyQuest.Core/LillyQuest.Core.csproj" />
+    <Project Path="src/LillyQuest.Game/LillyQuest.Game.csproj" />
+    <Project Path="src/LillyQuest.RogueLike/LillyQuest.RogueLike.csproj" />
+    <Project Path="src/LillyQuest.Scripting.Lua/LillyQuest.Scripting.Lua.csproj" />
+    <Project Path="tests/LillyQuest.Tests/LillyQuest.Tests.csproj" />
 </Solution>

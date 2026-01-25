@@ -1,10 +1,12 @@
 ﻿// See https://aka.ms/new-console-template for more information
 
 using ConsoleAppFramework;
+using DryIoc;
 using LillyQuest.Engine;
 using LillyQuest.Engine.Extensions;
 using LillyQuest.Engine.Logging;
 using LillyQuest.Game.Scenes;
+using LillyQuest.RogueLike;
 using Serilog;
 
 var logDispatcher = new LogEventDispatcher();
@@ -22,10 +24,13 @@ await ConsoleApp.RunAsync(
     args,
     () =>
     {
+        var rootDirectory = Environment.GetEnvironmentVariable("LILYQUEST_ROOT") ?? Directory.GetCurrentDirectory();
+
         var lillyQuestBootstrap = new LillyQuestBootstrap(
             new()
             {
-                IsDebugMode = true
+                IsDebugMode = true,
+                RootDirectory =  rootDirectory,
             }
         );
 
@@ -35,9 +40,12 @@ await ConsoleApp.RunAsync(
         lillyQuestBootstrap.RegisterServices(
             container =>
             {
+                container.RegisterInstance<ILogEventDispatcher>(logDispatcher);
                 container.RegisterScene<TestSceneA>();
                 container.RegisterScene<TestSceneB>();
                 container.RegisterScene<TilesetSurfaceEditorScene>(true);
+
+                container.RegisterPlugin(typeof(LillyQuestRogueLikePlugin).Assembly);
 
                 return container;
             }

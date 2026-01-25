@@ -1,6 +1,7 @@
 using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
+using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Primitives;
 
 namespace LillyQuest.Engine.Screens.UI;
@@ -11,8 +12,7 @@ namespace LillyQuest.Engine.Screens.UI;
 public class UIWindow : UIScreenControl
 {
     public string Title { get; set; } = string.Empty;
-    public string TitleFontName { get; set; } = "default_font";
-    public int TitleFontSize { get; set; } = 14;
+    public FontRef TitleFont { get; set; } = new("default_font", 14, FontKind.TrueType);
     public bool IsTitleBarEnabled { get; set; } = true;
     public bool IsWindowMovable { get; set; } = true;
     public LyColor BackgroundColor { get; set; } = LyColor.Black;
@@ -245,7 +245,7 @@ public class UIWindow : UIScreenControl
     {
         if (!string.IsNullOrWhiteSpace(Title))
         {
-            spriteBatch.DrawFont(TitleFontName, TitleFontSize, Title, GetTitlePosition(), LyColor.White);
+            spriteBatch.DrawText(TitleFont, Title, GetTitlePosition(), LyColor.White);
         }
     }
 

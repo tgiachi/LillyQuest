@@ -11,7 +11,7 @@ namespace LillyQuest.Core.Json;
  JsonSerializable(typeof(EngineKeyBinding[])),
  JsonSerializable(typeof(EngineRenderConfig)),
  JsonSerializable(typeof(EngineLoggingConfig)),
- JsonSerializable(typeof(TilesetDefinitionJson))
+ JsonSerializable(typeof(SpriteSheetDefinitionJson))
 ]
 public partial class JsonEngineContext : JsonSerializerContext
 {

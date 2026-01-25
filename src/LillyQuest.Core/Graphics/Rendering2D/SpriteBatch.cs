@@ -394,308 +394,29 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     }
 
     /// <summary>
-    /// Draws text using a named font and size.
+    /// Draws text using a unified font reference.
     /// </summary>
-    public float DrawFont(
-        string fontName,
-        int size,
-        string text,
-        Vector2 position,
-        LyColor color,
-        float rotation,
-        Vector2 origin,
-        Vector2? scale,
-        float layerDepth,
-        float characterSpacing,
-        float lineSpacing,
-        TextStyle textStyle,
-        FontSystemEffect effect,
-        int effectAmount
-    )
+    public float DrawText(FontRef fontRef, string text, Vector2 position, LyColor color, float depth = 0f)
     {
-        ArgumentNullException.ThrowIfNull(fontName);
         ArgumentNullException.ThrowIfNull(text);
 
         // Apply current translation
         position += _currentTranslation;
 
-        var font = _fontManager.GetFont(fontName, size);
-        var fsColor = ToFsColor(color);
+        var handle = _fontManager.GetFontHandle(fontRef);
+        handle.DrawText(this, text, position, color, depth);
 
-        return font.DrawText(
-            this,
-            text,
-            position,
-            fsColor,
-            rotation,
-            origin,
-            scale,
-            layerDepth,
-            characterSpacing,
-            lineSpacing,
-            textStyle,
-            effect,
-            effectAmount
-        );
+        return 0f;
     }
 
     /// <summary>
-    /// Draws text using a named font, size, and color.
+    /// Measures text using a unified font reference.
     /// </summary>
-    public float DrawFont(string fontName, int size, string text, Vector2 position, LyColor color)
-        => DrawFont(
-            fontName,
-            size,
-            text,
-            position,
-            color,
-            0f,
-            Vector2.Zero,
-            Vector2.One * 2,
-            0f,
-            0f,
-            0f,
-            TextStyle.None,
-            FontSystemEffect.None,
-            0
-        );
+    public Vector2 MeasureText(FontRef fontRef, string text)
+        => _fontManager.GetFontHandle(fontRef).MeasureText(text);
 
-    /// <summary>
-    /// Draws text using a named font and size with per-character colors.
-    /// </summary>
-    public float DrawFont(
-        string fontName,
-        int size,
-        string text,
-        Vector2 position,
-        LyColor[] colors,
-        float rotation,
-        Vector2 origin,
-        Vector2? scale,
-        float layerDepth,
-        float characterSpacing,
-        float lineSpacing,
-        TextStyle textStyle,
-        FontSystemEffect effect,
-        int effectAmount
-    )
-    {
-        ArgumentNullException.ThrowIfNull(fontName);
-        ArgumentNullException.ThrowIfNull(text);
-        ArgumentNullException.ThrowIfNull(colors);
-
-        // Apply current translation
-        position += _currentTranslation;
-
-        var font = _fontManager.GetFont(fontName, size);
-        var fsColors = ToFsColors(colors);
-
-        return font.DrawText(
-            this,
-            text,
-            position,
-            fsColors,
-            rotation,
-            origin,
-            scale,
-            layerDepth,
-            characterSpacing,
-            lineSpacing,
-            textStyle,
-            effect,
-            effectAmount
-        );
-    }
-
-    /// <summary>
-    /// Draws text using a named font and size.
-    /// </summary>
-    public float DrawFont(
-        string fontName,
-        int size,
-        StringSegment text,
-        Vector2 position,
-        LyColor color,
-        float rotation,
-        Vector2 origin,
-        Vector2? scale,
-        float layerDepth,
-        float characterSpacing,
-        float lineSpacing,
-        TextStyle textStyle,
-        FontSystemEffect effect,
-        int effectAmount
-    )
-    {
-        ArgumentNullException.ThrowIfNull(fontName);
-
-        // Apply current translation
-        position += _currentTranslation;
-
-        var font = _fontManager.GetFont(fontName, size);
-        var fsColor = ToFsColor(color);
-
-        return font.DrawText(
-            this,
-            text,
-            position,
-            fsColor,
-            rotation,
-            origin,
-            scale,
-            layerDepth,
-            characterSpacing,
-            lineSpacing,
-            textStyle,
-            effect,
-            effectAmount
-        );
-    }
-
-    /// <summary>
-    /// Draws text using a named font and size with per-character colors.
-    /// </summary>
-    public float DrawFont(
-        string fontName,
-        int size,
-        StringSegment text,
-        Vector2 position,
-        LyColor[] colors,
-        float rotation,
-        Vector2 origin,
-        Vector2? scale,
-        float layerDepth,
-        float characterSpacing,
-        float lineSpacing,
-        TextStyle textStyle,
-        FontSystemEffect effect,
-        int effectAmount
-    )
-    {
-        ArgumentNullException.ThrowIfNull(fontName);
-        ArgumentNullException.ThrowIfNull(colors);
-
-        // Apply current translation
-        position += _currentTranslation;
-
-        var font = _fontManager.GetFont(fontName, size);
-        var fsColors = ToFsColors(colors);
-
-        return font.DrawText(
-            this,
-            text,
-            position,
-            fsColors,
-            rotation,
-            origin,
-            scale,
-            layerDepth,
-            characterSpacing,
-            lineSpacing,
-            textStyle,
-            effect,
-            effectAmount
-        );
-    }
-
-    /// <summary>
-    /// Draws text using a named font and size.
-    /// </summary>
-    public float DrawFont(
-        string fontName,
-        int size,
-        StringBuilder text,
-        Vector2 position,
-        LyColor color,
-        float rotation,
-        Vector2 origin,
-        Vector2? scale,
-        float layerDepth,
-        float characterSpacing,
-        float lineSpacing,
-        TextStyle textStyle,
-        FontSystemEffect effect,
-        int effectAmount
-    )
-    {
-        ArgumentNullException.ThrowIfNull(fontName);
-        ArgumentNullException.ThrowIfNull(text);
-
-        // Apply current translation
-        position += _currentTranslation;
-
-        var font = _fontManager.GetFont(fontName, size);
-        var fsColor = ToFsColor(color);
-
-        return font.DrawText(
-            this,
-            text,
-            position,
-            fsColor,
-            rotation,
-            origin,
-            scale,
-            layerDepth,
-            characterSpacing,
-            lineSpacing,
-            textStyle,
-            effect,
-            effectAmount
-        );
-    }
-
-    /// <summary>
-    /// Draws text using a named font and size with per-character colors.
-    /// </summary>
-    public float DrawFont(
-        string fontName,
-        int size,
-        StringBuilder text,
-        Vector2 position,
-        LyColor[] colors,
-        float rotation,
-        Vector2 origin,
-        Vector2? scale,
-        float layerDepth,
-        float characterSpacing,
-        float lineSpacing,
-        TextStyle textStyle,
-        FontSystemEffect effect,
-        int effectAmount
-    )
-    {
-        ArgumentNullException.ThrowIfNull(fontName);
-        ArgumentNullException.ThrowIfNull(text);
-        ArgumentNullException.ThrowIfNull(colors);
-
-        // Apply current translation
-        position += _currentTranslation;
-
-        var font = _fontManager.GetFont(fontName, size);
-        var fsColors = ToFsColors(colors);
-
-        return font.DrawText(
-            this,
-            text,
-            position,
-            fsColors,
-            rotation,
-            origin,
-            scale,
-            layerDepth,
-            characterSpacing,
-            lineSpacing,
-            textStyle,
-            effect,
-            effectAmount
-        );
-    }
-
-    /// <summary>
-    /// Draws text using a bitmap font atlas.
-    /// </summary>
-    public void DrawFontBmp(
-        string fontName,
+    internal void DrawTextBitmap(
+        BitmapFont font,
         string text,
         Vector2 position,
         int size,
@@ -703,44 +424,13 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         float depth = 0f
     )
     {
-        ArgumentNullException.ThrowIfNull(fontName);
         ArgumentNullException.ThrowIfNull(text);
 
-        // Apply current translation
-        position += _currentTranslation;
-
-        var font = _fontManager.GetBitmapFont(fontName);
+        var fsColor = ToFsColor(color);
         var glyphHeight = size > 0 ? size : font.TileHeight;
         var aspect = font.TileWidth / (float)font.TileHeight;
         var glyphWidth = size > 0 ? glyphHeight * aspect : font.TileWidth;
-
-        DrawFontBmp(fontName, text, position, new Vector2(glyphWidth, glyphHeight), color, depth);
-    }
-
-    /// <summary>
-    /// Draws text using a bitmap font atlas.
-    /// </summary>
-    public void DrawFontBmp(
-        string fontName,
-        string text,
-        Vector2 position,
-        Vector2 size,
-        LyColor color,
-        float depth = 0f
-    )
-    {
-        ArgumentNullException.ThrowIfNull(fontName);
-        ArgumentNullException.ThrowIfNull(text);
-
-        var font = _fontManager.GetBitmapFont(fontName);
-        var fsColor = ToFsColor(color);
-
-        var glyphSize = size;
-
-        if (glyphSize.X <= 0f || glyphSize.Y <= 0f)
-        {
-            glyphSize = new(font.TileWidth, font.TileHeight);
-        }
+        var glyphSize = new Vector2(glyphWidth, glyphHeight);
 
         var scaleX = glyphSize.X / font.TileWidth;
         var scaleY = glyphSize.Y / font.TileHeight;

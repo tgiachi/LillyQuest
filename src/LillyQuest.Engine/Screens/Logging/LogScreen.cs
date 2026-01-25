@@ -1,0 +1,532 @@
+using System.Numerics;
+using LillyQuest.Core.Data.Contexts;
+using LillyQuest.Core.Graphics.Rendering2D;
+using LillyQuest.Core.Graphics.Text;
+using LillyQuest.Core.Interfaces.Assets;
+using LillyQuest.Core.Primitives;
+using LillyQuest.Engine.Logging;
+using LillyQuest.Engine.Managers.Screens.Base;
+using Serilog.Events;
+
+namespace LillyQuest.Engine.Screens.Logging;
+
+public sealed class RenderedLine
+{
+    public IReadOnlyList<StyledSpan> Spans { get; set; }
+    public float BlinkRemaining { get; set; }
+
+    public RenderedLine(IReadOnlyList<StyledSpan> spans, float blinkRemaining)
+    {
+        Spans = spans;
+        BlinkRemaining = blinkRemaining;
+    }
+}
+
+public class LogScreen : BaseScreen
+{
+    private sealed class RenderedEntry
+    {
+        public IReadOnlyList<StyledSpan> Spans { get; }
+        public float BlinkRemaining { get; set; }
+
+        public RenderedEntry(IReadOnlyList<StyledSpan> spans, float blinkRemaining)
+        {
+            Spans = spans;
+            BlinkRemaining = blinkRemaining;
+        }
+    }
+
+    public static readonly LyColor TraceColor = LyColor.DimGray;
+    public static readonly LyColor DebugColor = LyColor.Gray;
+    public static readonly LyColor InfoColor = LyColor.White;
+    public static readonly LyColor WarningColor = LyColor.Yellow;
+    public static readonly LyColor ErrorColor = LyColor.OrangeRed;
+    public static readonly LyColor FatalColor = LyColor.Red;
+
+    private readonly ILogEventDispatcher _dispatcher;
+    private readonly IFontManager _fontManager;
+    private readonly BBCodeParser _bbcodeParser = new();
+    private readonly List<RenderedLine> _lines = [];
+    private readonly List<RenderedEntry> _entries = [];
+
+    private float _blinkElapsed;
+    private Vector2 _lastWrapSize = new(float.NaN, float.NaN);
+
+    public FontRef Font { get; set; } = new("default_font_topaz", 12, FontKind.TrueType);
+    public LyColor BackgroundColor { get; set; } = LyColor.Black;
+    public float BackgroundAlpha { get; set; } = 0.6f;
+    public int DispatchBatchSize { get; set; } = 64;
+    public float FatalBlinkDuration { get; set; } = 1f;
+    public float FatalBlinkFrequency { get; set; } = 6f;
+
+    public LogScreen(ILogEventDispatcher dispatcher, IFontManager fontManager)
+    {
+        _dispatcher = dispatcher ?? throw new ArgumentNullException(nameof(dispatcher));
+        _fontManager = fontManager ?? throw new ArgumentNullException(nameof(fontManager));
+        Margin = new(10, 10, 10, 10);
+        _dispatcher.OnLogEntries += HandleLogEntries;
+    }
+
+    public LyColor GetBackgroundColorWithAlpha()
+    {
+        var alpha = (byte)Math.Clamp(MathF.Round(BackgroundColor.A * BackgroundAlpha), 0f, 255f);
+
+        return BackgroundColor.WithAlpha(alpha);
+    }
+
+    public override void OnUnload()
+    {
+        _dispatcher.OnLogEntries -= HandleLogEntries;
+        base.OnUnload();
+    }
+
+    public override void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
+    {
+        spriteBatch.PushTranslation(Position);
+
+        spriteBatch.DrawRectangle(Vector2.Zero, Size, GetBackgroundColorWithAlpha());
+
+        var lineHeight = GetLineHeight();
+        var y = Size.Y - Margin.W - lineHeight;
+        var x = Margin.X;
+        for (var i = _lines.Count - 1; i >= 0 && y >= Margin.Y; i--)
+        {
+            var line = _lines[i];
+            var lineVisible = ResolveLineVisibility(line);
+            if (lineVisible)
+            {
+                DrawStyledLine(spriteBatch, line, new Vector2(x, y));
+            }
+
+            y -= lineHeight;
+        }
+
+        spriteBatch.PopTranslation();
+    }
+
+    public override void Update(GameTime gameTime)
+    {
+        _dispatcher.Dispatch(DispatchBatchSize);
+        var deltaSeconds = (float)gameTime.Elapsed.TotalSeconds;
+        _blinkElapsed += deltaSeconds;
+
+        foreach (var entry in _entries)
+        {
+            if (entry.BlinkRemaining <= 0f)
+            {
+                continue;
+            }
+
+            entry.BlinkRemaining = Math.Max(0f, entry.BlinkRemaining - deltaSeconds);
+        }
+
+        var wrapSize = new Vector2(GetAvailableWidth(), GetAvailableHeight());
+        if (wrapSize != _lastWrapSize)
+        {
+            RebuildLines();
+        }
+        else
+        {
+            foreach (var line in _lines)
+            {
+                if (line.BlinkRemaining <= 0f)
+                {
+                    continue;
+                }
+
+                line.BlinkRemaining = Math.Max(0f, line.BlinkRemaining - deltaSeconds);
+            }
+        }
+    }
+
+    protected IReadOnlyList<RenderedLine> GetLines()
+        => _lines.AsReadOnly();
+
+    private void HandleLogEntries(IReadOnlyList<LogEntry> entries)
+    {
+        if (entries == null || entries.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var entry in entries)
+        {
+            AddEntry(entry);
+        }
+    }
+
+    private void AddEntry(LogEntry entry)
+    {
+        var maxWidth = GetAvailableWidth();
+
+        if (maxWidth <= 0f)
+        {
+            return;
+        }
+
+        var color = GetColorForLevel(entry.Level);
+        var blink = entry.Level == LogEventLevel.Fatal ? FatalBlinkDuration : 0f;
+        if (TryOverwriteLastLine(entry.Message, color, blink))
+        {
+            return;
+        }
+        var defaultStyle = new StyledSpan(string.Empty, color, null, false, false, false);
+        var spans = _bbcodeParser.Parse(NormalizeMessage(entry.Message), defaultStyle);
+        _entries.Add(new RenderedEntry(spans, blink));
+
+        RebuildLines();
+    }
+
+    private bool TryOverwriteLastLine(string message, LyColor color, float blink)
+    {
+        if (string.IsNullOrEmpty(message))
+        {
+            return false;
+        }
+
+        if (message.Contains("\r\n", StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        if (message.Contains('\n'))
+        {
+            return false;
+        }
+
+        var lastIndex = message.LastIndexOf('\r');
+        if (lastIndex < 0)
+        {
+            return false;
+        }
+
+        string newText;
+        if (lastIndex == message.Length - 1)
+        {
+            newText = message[..lastIndex];
+        }
+        else
+        {
+            newText = message[(lastIndex + 1)..];
+        }
+
+        var defaultStyle = new StyledSpan(string.Empty, color, null, false, false, false);
+        var spans = _bbcodeParser.Parse(newText, defaultStyle);
+
+        if (_entries.Count > 0)
+        {
+            _entries[^1] = new RenderedEntry(spans, blink);
+        }
+        else
+        {
+            _entries.Add(new RenderedEntry(spans, blink));
+        }
+
+        RebuildLines();
+
+        return true;
+    }
+
+    private float GetAvailableWidth()
+        => MathF.Max(0f, Size.X - Margin.X - Margin.Z);
+
+    private float GetAvailableHeight()
+        => MathF.Max(0f, Size.Y - Margin.Y - Margin.W);
+
+    private float GetLineHeight()
+    {
+        var height = MeasureText("Ag").Y;
+
+        return height > 0f ? height : 1f;
+    }
+
+    private int GetMaxVisibleLines()
+    {
+        var height = GetAvailableHeight();
+        var lineHeight = GetLineHeight();
+
+        if (lineHeight <= 0f)
+        {
+            return 0;
+        }
+
+        return Math.Max(1, (int)MathF.Floor(height / lineHeight));
+    }
+
+    private bool ResolveLineVisibility(RenderedLine line)
+    {
+        if (line.BlinkRemaining <= 0f)
+        {
+            return true;
+        }
+
+        var blinkPhase = (int)MathF.Floor(_blinkElapsed * FatalBlinkFrequency) % 2;
+
+        return blinkPhase == 0;
+    }
+
+    private LyColor GetColorForLevel(LogEventLevel level)
+        => level switch
+        {
+            LogEventLevel.Verbose => TraceColor,
+            LogEventLevel.Debug => DebugColor,
+            LogEventLevel.Information => InfoColor,
+            LogEventLevel.Warning => WarningColor,
+            LogEventLevel.Error => ErrorColor,
+            LogEventLevel.Fatal => FatalColor,
+            _ => InfoColor
+        };
+
+    private List<IReadOnlyList<StyledSpan>> WrapSpans(IReadOnlyList<StyledSpan> spans, float maxWidth)
+    {
+        var lines = new List<IReadOnlyList<StyledSpan>>();
+        if (spans.Count == 0)
+        {
+            return lines;
+        }
+
+        var currentLine = new List<StyledSpan>();
+        var currentWidth = 0f;
+
+        foreach (var token in TokenizeSpans(spans))
+        {
+            if (token.IsLineBreak)
+            {
+                lines.Add(currentLine);
+                currentLine = new List<StyledSpan>();
+                currentWidth = 0f;
+                continue;
+            }
+
+            var tokenWidth = MeasureWidth(token.Span.Text);
+            if (currentWidth + tokenWidth <= maxWidth)
+            {
+                currentLine.Add(token.Span);
+                currentWidth += tokenWidth;
+                continue;
+            }
+
+            if (tokenWidth > maxWidth)
+            {
+                SplitTokenAcrossLines(token.Span, maxWidth, lines, ref currentLine, ref currentWidth);
+                continue;
+            }
+
+            lines.Add(currentLine);
+            currentLine = new List<StyledSpan> { token.Span };
+            currentWidth = tokenWidth;
+        }
+
+        if (currentLine.Count > 0 || lines.Count == 0)
+        {
+            lines.Add(currentLine);
+        }
+
+        return lines;
+    }
+
+    private IEnumerable<StyledToken> TokenizeSpans(IReadOnlyList<StyledSpan> spans)
+    {
+        foreach (var span in spans)
+        {
+            if (string.IsNullOrEmpty(span.Text))
+            {
+                continue;
+            }
+
+            var text = span.Text;
+            var start = 0;
+            for (var i = 0; i < text.Length; i++)
+            {
+                var ch = text[i];
+                if (ch == '\n')
+                {
+                    if (i > start)
+                    {
+                        yield return new StyledToken(span with { Text = text[start..i] }, false);
+                    }
+
+                    yield return StyledToken.LineBreak;
+                    start = i + 1;
+                    continue;
+                }
+
+                if (char.IsWhiteSpace(ch))
+                {
+                    if (i > start)
+                    {
+                        yield return new StyledToken(span with { Text = text[start..i] }, false);
+                    }
+
+                    yield return new StyledToken(span with { Text = ch.ToString() }, false);
+                    start = i + 1;
+                }
+            }
+
+            if (start < text.Length)
+            {
+                yield return new StyledToken(span with { Text = text[start..] }, false);
+            }
+        }
+    }
+
+    private void SplitTokenAcrossLines(
+        StyledSpan token,
+        float maxWidth,
+        List<IReadOnlyList<StyledSpan>> lines,
+        ref List<StyledSpan> currentLine,
+        ref float currentWidth)
+    {
+        var current = string.Empty;
+        var remainingWidth = maxWidth - currentWidth;
+
+        foreach (var ch in token.Text)
+        {
+            var candidate = current + ch;
+            var candidateWidth = MeasureWidth(candidate);
+            if (candidateWidth > remainingWidth && current.Length > 0)
+            {
+                currentLine.Add(token with { Text = current });
+                currentWidth += MeasureWidth(current);
+                lines.Add(currentLine);
+                currentLine = new List<StyledSpan>();
+                currentWidth = 0f;
+                remainingWidth = maxWidth;
+                current = ch.ToString();
+            }
+            else
+            {
+                if (candidateWidth > remainingWidth && current.Length == 0)
+                {
+                    if (currentLine.Count > 0)
+                    {
+                        lines.Add(currentLine);
+                        currentLine = new List<StyledSpan>();
+                        currentWidth = 0f;
+                        remainingWidth = maxWidth;
+                    }
+                }
+
+                current = candidate;
+            }
+        }
+
+        if (!string.IsNullOrEmpty(current))
+        {
+            currentLine.Add(token with { Text = current });
+            currentWidth += MeasureWidth(current);
+        }
+    }
+
+    private float MeasureWidth(string text)
+        => MeasureText(text).X;
+
+    private string NormalizeMessage(string message)
+        => message.Replace("\r\n", "\n").Replace('\r', '\n');
+
+    private void DrawStyledLine(SpriteBatch spriteBatch, RenderedLine line, Vector2 origin)
+    {
+        var x = origin.X;
+        foreach (var span in line.Spans)
+        {
+            if (span.Background.HasValue)
+            {
+                var size = MeasureText(span.Text);
+                if (size.X > 0 && size.Y > 0)
+                {
+                    spriteBatch.DrawRectangle(new Vector2(x, origin.Y), size, span.Background.Value);
+                }
+            }
+
+            var drawColor = span.Foreground;
+            if (span.Bold)
+            {
+                spriteBatch.DrawText(Font, span.Text, new Vector2(x + 1, origin.Y), drawColor);
+            }
+
+            var italicOffset = span.Italic ? 1f : 0f;
+            spriteBatch.DrawText(Font, span.Text, new Vector2(x + italicOffset, origin.Y), drawColor);
+
+            if (span.Underline)
+            {
+                var size = MeasureText(span.Text);
+                var thickness = GetUnderlineThickness();
+                var underlineY = origin.Y + size.Y - thickness;
+                spriteBatch.DrawRectangle(new Vector2(x, underlineY), new Vector2(size.X, thickness), drawColor);
+            }
+
+            x += MeasureWidth(span.Text);
+        }
+    }
+
+    private readonly record struct StyledToken(StyledSpan Span, bool IsLineBreak)
+    {
+        public static StyledToken LineBreak => new(new StyledSpan(string.Empty, LyColor.White, null, false, false, false), true);
+    }
+
+    private Vector2 MeasureText(string text)
+        => _fontManager.GetFontHandle(Font).MeasureText(text);
+
+    private float GetUnderlineThickness()
+    {
+        var baseSize = Font.Size > 0 ? Font.Size : GetLineHeight();
+        return MathF.Max(1f, baseSize * 0.05f);
+    }
+
+    private void RebuildLines()
+    {
+        var maxWidth = GetAvailableWidth();
+        var maxHeight = GetAvailableHeight();
+        _lastWrapSize = new Vector2(maxWidth, maxHeight);
+
+        _lines.Clear();
+
+        if (_entries.Count == 0 || maxWidth <= 0f)
+        {
+            return;
+        }
+
+        var wrappedEntries = new List<IReadOnlyList<IReadOnlyList<StyledSpan>>>(_entries.Count);
+        var lineCounts = new int[_entries.Count];
+        var totalLines = 0;
+
+        for (var i = 0; i < _entries.Count; i++)
+        {
+            var lines = WrapSpans(_entries[i].Spans, maxWidth);
+            wrappedEntries.Add(lines);
+            lineCounts[i] = lines.Count;
+            totalLines += lines.Count;
+        }
+
+        var maxLines = GetMaxVisibleLines();
+        var dropCount = 0;
+
+        if (maxLines > 0)
+        {
+            while (totalLines > maxLines && dropCount < lineCounts.Length)
+            {
+                totalLines -= lineCounts[dropCount];
+                dropCount++;
+            }
+        }
+        else
+        {
+            dropCount = _entries.Count;
+        }
+
+        if (dropCount > 0)
+        {
+            _entries.RemoveRange(0, dropCount);
+            wrappedEntries.RemoveRange(0, dropCount);
+        }
+
+        for (var i = 0; i < wrappedEntries.Count; i++)
+        {
+            var blink = _entries[i].BlinkRemaining;
+            foreach (var line in wrappedEntries[i])
+            {
+                _lines.Add(new RenderedLine(line, blink));
+            }
+        }
+    }
+}

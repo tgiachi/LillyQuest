@@ -5,14 +5,19 @@ using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Data.Directories;
+using LillyQuest.Core.Data.Plugins;
+using LillyQuest.Core.Extensions.Directories;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Internal.Data.Registrations;
 using LillyQuest.Core.Managers.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
+using LillyQuest.Engine.Bootstrap;
 using LillyQuest.Engine.Entities.Debug;
+using LillyQuest.Engine.Extensions;
 using LillyQuest.Engine.Interfaces.Managers;
+using LillyQuest.Engine.Interfaces.Plugins;
 using LillyQuest.Engine.Interfaces.Scenes;
 using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Interfaces.Systems;
@@ -20,7 +25,9 @@ using LillyQuest.Engine.Managers.Entities;
 using LillyQuest.Engine.Managers.Scenes;
 using LillyQuest.Engine.Managers.Screens;
 using LillyQuest.Engine.Managers.Services;
+using LillyQuest.Engine.Scenes;
 using LillyQuest.Engine.Services;
+using LillyQuest.Engine.Services.Plugins;
 using LillyQuest.Engine.Systems;
 using LillyQuest.Scripting.Lua.Data.Config;
 using LillyQuest.Scripting.Lua.Extensions.Scripts;
@@ -51,11 +58,17 @@ public class LillyQuestBootstrap
 
     public delegate void TickEventHandler(GameTime gameTime);
 
+    public delegate void WindowResizeEventHandler(Vector2 newSize);
+
     private readonly ILogger _logger = Log.ForContext<LillyQuestBootstrap>();
 
     private IContainer _container = new Container();
     private readonly EngineRenderContext _renderContext = new();
     private readonly DirectoriesConfig _directoriesConfig;
+
+    private readonly PluginRegistry _pluginRegistry = new();
+    private readonly AsyncResourceLoader _asyncResourceLoader = new();
+    private readonly ResourceLoadingFlow _resourceLoadingFlow;
 
     private readonly GameTime _gameTime = new();
     private readonly GameTime _fixedGameTime = new();
@@ -68,6 +81,11 @@ public class LillyQuestBootstrap
 
     private GL _gl;
     private IWindow _window;
+    private PluginLifecycleExecutor? _pluginLifecycleExecutor;
+    private int _skipRenderFrames;
+    private Vector2? _pendingResizeSize;
+    private long _pendingResizeTimestamp;
+    private static readonly TimeSpan ResizeDebounce = TimeSpan.FromMilliseconds(100);
 
     /// <summary>
     /// Event invoked at fixed timestep intervals during the game loop.
@@ -84,19 +102,25 @@ public class LillyQuestBootstrap
     /// </summary>
     public event TickEventHandler? Render;
 
+    /// <summary>
+    ///  Event invoked when the window is resized.
+    /// </summary>
+    public event WindowResizeEventHandler? WindowResize;
+
     public LillyQuestBootstrap(LillyQuestEngineConfig engineConfig)
     {
         _engineConfig = engineConfig;
         _container.RegisterInstance(_engineConfig);
         _container.RegisterInstance(_renderContext);
         _container.RegisterInstance(this);
+        _resourceLoadingFlow = new(_asyncResourceLoader);
 
         if (string.IsNullOrEmpty(_engineConfig.RootDirectory))
         {
             _engineConfig.RootDirectory = Path.Combine(Directory.GetCurrentDirectory(), "LillyQuest");
         }
 
-        _directoriesConfig = new(_engineConfig.RootDirectory, Enum.GetNames<DirectoryType>());
+        _directoriesConfig = new(_engineConfig.RootDirectory.ResolvePathAndEnvs(), Enum.GetNames<DirectoryType>());
         _container.RegisterInstance(_directoriesConfig);
         _logger.Information("Root Directory: {RootDirectory}", _engineConfig.RootDirectory);
     }
@@ -126,11 +150,148 @@ public class LillyQuestBootstrap
     public void RegisterServices(Func<IContainer, IContainer> registerServices)
     {
         _container = registerServices(_container);
+        InitializePluginLifecycle();
     }
 
     public void Run()
     {
-        _window.Run();
+        ExecuteOnEngineReady().GetAwaiter().GetResult();
+        _window.Run(); // Window triggers WindowOnLoad where OnReadyToRender is executed
+    }
+
+    private void InitializePluginLifecycle()
+    {
+        // Register the async resource loader in the container for plugins to use
+        _container.RegisterInstance(_asyncResourceLoader);
+
+        // Try to resolve plugin registrations, or use empty list if not available
+        var pluginRegistration = new List<EnginePluginRegistration>();
+
+        try
+        {
+            if (_container.IsRegistered<List<EnginePluginRegistration>>())
+            {
+                pluginRegistration = _container.Resolve<List<EnginePluginRegistration>>();
+            }
+        }
+        catch
+        {
+            // No plugin registrations available
+        }
+
+        // Process registered plugin types
+        foreach (var registration in pluginRegistration)
+        {
+            // Try to resolve plugins from container
+            try
+            {
+                var plugin = _container.Resolve(registration.PluginType) as ILillyQuestPlugin;
+
+                if (plugin != null)
+                {
+                    InitializePlugin(plugin);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.Error(ex, "Failed to initialize plugin lifecycle");
+            }
+        }
+
+        // Also support direct ILillyQuestPlugin registration for backward compatibility
+        try
+        {
+            if (_container.IsRegistered<ILillyQuestPlugin>())
+            {
+                var plugin = _container.Resolve<ILillyQuestPlugin>();
+                InitializePlugin(plugin);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.Error(ex, "Failed to resolve direct ILillyQuestPlugin registration");
+        }
+
+        _pluginLifecycleExecutor = new PluginLifecycleExecutor(_pluginRegistry.GetLoadedPlugins());
+    }
+
+    private void InitializePlugin(ILillyQuestPlugin plugin)
+    {
+        _pluginRegistry.RegisterPlugin(plugin);
+        _logger.Information("Calling RegisterServices for plugin {PluginId}", plugin.PluginInfo.Id);
+        plugin.RegisterServices(_container);
+        var pluginRoot = Path.Combine(_engineConfig.RootDirectory, "Plugins", plugin.PluginInfo.Id);
+        Directory.CreateDirectory(pluginRoot);
+        var pluginDirectories = new DirectoriesConfig(pluginRoot, "Scripts");
+        plugin.OnDirectories(_directoriesConfig, pluginDirectories);
+        var pluginScriptsDir = Path.Combine(pluginRoot, "Scripts").ResolvePathAndEnvs();
+        Directory.CreateDirectory(pluginScriptsDir);
+        var scriptEngine = _container.Resolve<IScriptEngineService>();
+        scriptEngine.AddSearchDirectory(pluginScriptsDir);
+        _logger.Information(
+            "Loaded plugin {PluginId} v{PluginVersion}",
+            plugin.PluginInfo.Id,
+            plugin.PluginInfo.Version
+        );
+    }
+
+    /// <summary>
+    /// Executes the OnEngineReady lifecycle hook for all plugins.
+    /// Called when the engine is fully initialized but before the window is visible.
+    /// </summary>
+    public async Task ExecuteOnEngineReady()
+    {
+        if (_pluginLifecycleExecutor != null)
+        {
+            await _pluginLifecycleExecutor.ExecuteOnEngineReady(_container);
+        }
+    }
+
+    /// <summary>
+    /// Executes the OnReadyToRender lifecycle hook for all plugins.
+    /// Called after the window is created and rendering is available.
+    /// </summary>
+    public async Task ExecuteOnReadyToRender()
+    {
+        if (_pluginLifecycleExecutor != null)
+        {
+            await _pluginLifecycleExecutor.ExecuteOnReadyToRender(_container);
+        }
+    }
+
+    /// <summary>
+    /// Executes the OnLoadResources lifecycle hook for all plugins.
+    /// Called when loading resources with the LogScreen displayed.
+    /// </summary>
+    public async Task ExecuteOnLoadResources()
+    {
+        if (_pluginLifecycleExecutor != null)
+        {
+            await _pluginLifecycleExecutor.ExecuteOnLoadResources(_container);
+        }
+    }
+
+    /// <summary>
+    /// Executes Lua script engine loading before plugin render/resource hooks.
+    /// </summary>
+    public Task ExecuteOnLoadLuaScripts()
+    {
+        var scriptEngine = _container.Resolve<IScriptEngineService>();
+        return Task.Run(async () => await scriptEngine.StartAsync());
+    }
+
+    /// <summary>
+    /// Gets whether plugins are currently loading resources asynchronously.
+    /// </summary>
+    public bool IsLoadingResources => _asyncResourceLoader.IsLoading;
+
+    /// <summary>
+    /// Waits for all async resource loading operations to complete.
+    /// Safe to call even if no loading is in progress.
+    /// </summary>
+    public async Task WaitForResourcesLoaded()
+    {
+        await _asyncResourceLoader.WaitForLoadingComplete();
     }
 
     /// <summary>
@@ -174,6 +335,13 @@ public class LillyQuestBootstrap
             typeof(SpriteBatch).Assembly
         );
 
+
+        assetManager.FontManager.LoadFontFromEmbeddedResource(
+            "default_font_topaz",
+            "Assets/Fonts/TopazPlus_a1200_v1.0.ttf",
+            typeof(SpriteBatch).Assembly
+        );
+
         assetManager.FontManager.LoadFontFromEmbeddedResource(
             "default_font_log",
             "Assets/Fonts/default_log_font.ttf",
@@ -204,13 +372,12 @@ public class LillyQuestBootstrap
         );
         assetManager.NineSliceManager.RegisterTexturePatches(
             "n9_ui_simple_ui",
-            new[]
-            {
+            [
                 new TexturePatchDefinition("scroll.v.track", new(16, 0, 16, 16)),
                 new TexturePatchDefinition("scroll.v.thumb", new(32, 0, 16, 16)),
                 new TexturePatchDefinition("scroll.h.track", new(16, 16, 16, 16)),
                 new TexturePatchDefinition("scroll.h.thumb", new(32, 16, 16, 16))
-            }
+            ]
         );
 
         // assetManager.NineSliceManager.LoadNineSliceFromEmbeddedResource(
@@ -227,6 +394,8 @@ public class LillyQuestBootstrap
         {
             assetManager.TilesetManager.LoadTileset("roguelike", graphicTileSet, 32, 32, 0, 0);
         }
+
+        _container.RegisterScene<LogScene>();
     }
 
     private void RegisterInternalServices()
@@ -283,15 +452,13 @@ public class LillyQuestBootstrap
 
         _container.RegisterLuaUserData<Vector2>();
 
-        var scriptEngine = _container.Resolve<IScriptEngineService>();
-        scriptEngine.StartAsync().GetAwaiter().GetResult();
-
         if (_engineConfig.IsDebugMode)
         {
             InitDebugMode();
         }
 
-        StartSceneManager();
+        // Scene manager will be started after plugin resource loading
+        // This is done in WindowOnLoad after ExecuteOnLoadResources()
     }
 
     private void StartSceneManager()
@@ -309,6 +476,12 @@ public class LillyQuestBootstrap
                 _logger.Information("Loaded initial scene '{SceneName}'", sceneInstance.Name);
             }
         }
+    }
+
+    private void ShowLogScene()
+    {
+        var sceneManager = _container.Resolve<ISceneManager>();
+        sceneManager.SwitchScene("log_scene", 0.1f);
     }
 
     private void WindowOnClosing()
@@ -338,10 +511,31 @@ public class LillyQuestBootstrap
 
         LoadDefaultResources();
         StartInternalServices();
+
+        try
+        {
+            _resourceLoadingFlow.StartLoading(
+                ExecuteOnLoadLuaScripts,
+                ExecuteOnReadyToRender,
+                ExecuteOnLoadResources,
+                ShowLogScene,
+                StartSceneManager
+            );
+        }
+        catch (Exception ex)
+        {
+            _logger.Warning(ex, "Could not show LogScene during resource loading");
+        }
     }
 
     private void WindowOnRender(double obj)
     {
+        if (_skipRenderFrames > 0)
+        {
+            _skipRenderFrames--;
+            return;
+        }
+
         var sw = Stopwatch.GetTimestamp();
         BeginFrame();
         Render?.Invoke(_gameTime);
@@ -353,12 +547,29 @@ public class LillyQuestBootstrap
     {
         _logger.Information("Window Resized to {Width}x{Height}", obj.X, obj.Y);
         _renderContext.Gl.Viewport(0, 0, (uint)obj.X, (uint)obj.Y);
+        _skipRenderFrames = 2;
+        _pendingResizeSize = new Vector2(obj.X, obj.Y);
+        _pendingResizeTimestamp = Stopwatch.GetTimestamp();
     }
 
     private void WindowOnUpdate(double deltaSeconds)
     {
         var sw = Stopwatch.GetTimestamp();
         _gameTime.Update(deltaSeconds);
+
+        if (_pendingResizeSize.HasValue &&
+            Stopwatch.GetElapsedTime(_pendingResizeTimestamp) >= ResizeDebounce)
+        {
+            _logger.Debug(
+                "Window resize debounced: {Width}x{Height}",
+                _pendingResizeSize.Value.X,
+                _pendingResizeSize.Value.Y
+            );
+            WindowResize?.Invoke(_pendingResizeSize.Value);
+            _pendingResizeSize = null;
+        }
+
+        _resourceLoadingFlow.Update();
 
         // Update scene transitions
         var sceneManager = _container.Resolve<ISceneManager>();

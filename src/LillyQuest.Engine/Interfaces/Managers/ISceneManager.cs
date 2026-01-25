@@ -26,6 +26,11 @@ public interface ISceneManager
     IReadOnlyList<IScene> GetAvailableScenes();
 
     /// <summary>
+    /// Gets all registered scene names (including those not yet initialized).
+    /// </summary>
+    IReadOnlyList<string> GetRegisteredSceneNames();
+
+    /// <summary>
     /// Renders the fade overlay during scene transitions.
     /// Should be called after all scene rendering is complete.
     /// </summary>

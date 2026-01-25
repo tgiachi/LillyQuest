@@ -1,6 +1,7 @@
 using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
+using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Interfaces.Features;
 
@@ -27,6 +28,6 @@ public class DebugLabelGameObject : GameEntity, IRenderableEntity
         var windowHeight = _renderContext.Window.Size.Y;
         var position = new Vector2(10, windowHeight - 30);
 
-        spriteBatch.DrawFont("default_font", 14, "DEBUG MODE", position, LyColor.Yellow);
+        spriteBatch.DrawText(new FontRef("default_font", 14, FontKind.TrueType), "DEBUG MODE", position, LyColor.Yellow);
     }
 }

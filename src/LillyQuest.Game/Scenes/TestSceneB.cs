@@ -49,6 +49,11 @@ public class TestSceneB : IScene
                     {
                         _sceneManager?.SwitchScene("tileset_surface_editor", 0.5f);
                     }
+
+                    if (ImGui.Button("Go to Logs"))
+                    {
+                        _sceneManager?.SwitchScene("log_scene", 0.5f);
+                    }
                 }
             )
         );

@@ -9,5 +9,6 @@ public record PluginInfo(
     string Version,
     string Author,
     string Description,
+    string InitScriptName,
     params string[]? Dependencies
 );

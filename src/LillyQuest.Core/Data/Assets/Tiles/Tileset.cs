@@ -68,7 +68,7 @@ public class Tileset : IDisposable
         GC.SuppressFinalize(this);
     }
 
-    public static Tileset FromDefinition(TilesetDefinitionJson definition, Texture2D texture)
+    public static Tileset FromDefinition(SpriteSheetDefinitionJson definition, Texture2D texture)
         => new(
             definition.ImagePath,
             definition.TileWidth,

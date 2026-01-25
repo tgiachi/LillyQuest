@@ -53,22 +53,25 @@ public class DebugSceneExplorerGameObject : GameEntity, IIMGuiEntity
 
         // Display available scenes
         ImGui.Text("Available Scenes:");
-        var availableScenes = _sceneManager.GetAvailableScenes().ToList();
-        ImGui.Text($"Total: {availableScenes.Count}");
+        var registeredSceneNames = _sceneManager.GetRegisteredSceneNames().ToList();
+        ImGui.Text($"Total: {registeredSceneNames.Count}");
 
         if (ImGui.BeginChild("ScenesListChild", new(0, 150)))
         {
-            foreach (var scene in availableScenes)
+            foreach (var sceneName in registeredSceneNames)
             {
-                var isCurrent = scene == currentScene;
+                var isCurrent = currentScene != null && sceneName == currentScene.Name;
 
                 if (isCurrent)
                 {
-                    ImGui.TextColored(new(0.2f, 1.0f, 0.2f, 1.0f), $"[*] {scene.Name}");
+                    ImGui.TextColored(new(0.2f, 1.0f, 0.2f, 1.0f), $"[*] {sceneName}");
                 }
                 else
                 {
-                    ImGui.Text($"    {scene.Name}");
+                    if (ImGui.Selectable($"    {sceneName}"))
+                    {
+                        _sceneManager.SwitchScene(sceneName, 0.5f);
+                    }
                 }
             }
             ImGui.EndChild();

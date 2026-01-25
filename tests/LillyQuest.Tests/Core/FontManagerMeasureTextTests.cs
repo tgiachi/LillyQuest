@@ -1,4 +1,6 @@
+using FontStashSharp;
 using LillyQuest.Core.Graphics.OpenGL.Resources;
+using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Managers.Assets;
 using LillyQuest.Core.Utils;
@@ -57,11 +59,24 @@ public class FontManagerMeasureTextTests
         var data = ResourceUtils.GetEmbeddedResourceContent("Assets/Fonts/default_font.ttf", typeof(ResourceUtils).Assembly);
         fontManager.LoadFont("default_font", data);
 
-        var font = fontManager.GetFont("default_font", 14);
+        var settings = new FontSystemSettings
+        {
+            FontResolutionFactor = 2,
+            KernelWidth = 2,
+            KernelHeight = 2
+        };
+        var fontSystem = new FontSystem(settings);
+        using var stream = new MemoryStream(data.ToArray());
+        fontSystem.AddFont(stream);
+        var font = fontSystem.GetFont(14);
         var baseSize = font.MeasureString("Hello");
         var expected = baseSize * 2f;
 
-        var measured = fontManager.MeasureText("default_font", 14, "Hello");
+        var fontRef = new FontRef("default_font", 14, FontKind.TrueType);
+        var handle = fontManager.GetFontHandle(fontRef);
+        var measured = handle.MeasureText("Hello");
+
+        Assert.Throws<KeyNotFoundException>(() => fontManager.GetFontHandle(new("missing", 12, FontKind.TrueType)));
 
         Assert.That(measured.X, Is.EqualTo(expected.X).Within(0.01f));
         Assert.That(measured.Y, Is.EqualTo(expected.Y).Within(0.01f));

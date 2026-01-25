@@ -1,4 +1,6 @@
 using LillyQuest.Core.Extensions.Strings;
+using LillyQuest.Core.Types;
+using LillyQuest.Core.Utils;
 
 namespace LillyQuest.Core.Data.Directories;
 
@@ -92,6 +94,48 @@ public class DirectoriesConfig
     public override string ToString()
         => Root;
 
+    public IReadOnlyList<DirectorySearchResult> SearchFiles(DirectoryType scope, string extension)
+        => SearchFiles(GetPath(scope), extension);
+
+    public IReadOnlyList<DirectorySearchResult> SearchFiles(string path, string extension)
+    {
+        if (string.IsNullOrWhiteSpace(path))
+        {
+            return [];
+        }
+
+        if (!Path.IsPathRooted(path))
+        {
+            path = GetPath(path);
+        }
+
+        var normalizedExtension = NormalizeExtension(extension);
+        var pattern = string.IsNullOrWhiteSpace(normalizedExtension) ? "*" : $"*{normalizedExtension}";
+        var files = DirectoriesUtils.GetFiles(path, true, pattern);
+        var results = new List<DirectorySearchResult>(files.Length);
+
+        foreach (var file in files)
+        {
+            try
+            {
+                var info = new FileInfo(file);
+                var name = Path.GetFileName(file);
+                var ext = Path.GetExtension(file).ToLowerInvariant();
+                results.Add(new DirectorySearchResult(file, name, ext, info.Length, info.LastWriteTimeUtc));
+            }
+            catch (IOException)
+            {
+                // Ignore files that disappear during enumeration.
+            }
+            catch (UnauthorizedAccessException)
+            {
+                // Ignore files we cannot access.
+            }
+        }
+
+        return results;
+    }
+
     /// <summary>
     /// Initializes the directories configuration.
     /// </summary>
@@ -143,5 +187,17 @@ public class DirectoriesConfig
         var nestedPath = remainder.Replace('_', Path.DirectorySeparatorChar);
 
         return Path.Combine(rootSegment, nestedPath);
+    }
+
+    private static string NormalizeExtension(string extension)
+    {
+        if (string.IsNullOrWhiteSpace(extension))
+        {
+            return string.Empty;
+        }
+
+        var trimmed = extension.Trim();
+
+        return trimmed.Length > 0 && trimmed[0] == '.' ? trimmed.ToLowerInvariant() : $".{trimmed.ToLowerInvariant()}";
     }
 }
