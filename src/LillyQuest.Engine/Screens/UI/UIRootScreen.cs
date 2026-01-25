@@ -131,6 +131,16 @@ public sealed class UIRootScreen : BaseScreen
         }
     }
 
+    public void HandleResize(Vector2 newSize)
+    {
+        Size = newSize;
+
+        foreach (var control in Root.Children)
+        {
+            control.ApplyCentering(newSize);
+        }
+    }
+
     private void EnsureModalBackground(UIWindow? modal)
     {
         if (modal == null)

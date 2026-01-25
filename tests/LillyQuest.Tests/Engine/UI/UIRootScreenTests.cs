@@ -104,4 +104,18 @@ public class UIRootScreenTests
 
         Assert.That(root.Root.FocusManager.Focused, Is.EqualTo(child));
     }
+
+    [Test]
+    public void HandleResize_Recenter_KeepCentered_Controls()
+    {
+        var root = new UIRootScreen { Size = new(100, 100) };
+        var control = new UIScreenControl { Size = new(10, 10), KeepCentered = true };
+        root.Root.Add(control);
+
+        root.HandleResize(new(100, 100));
+        Assert.That(control.Position, Is.EqualTo(new Vector2(45, 45)));
+
+        root.HandleResize(new(200, 200));
+        Assert.That(control.Position, Is.EqualTo(new Vector2(95, 95)));
+    }
 }

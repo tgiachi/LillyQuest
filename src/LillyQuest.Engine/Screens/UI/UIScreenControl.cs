@@ -150,6 +150,20 @@ public class UIScreenControl
         Position = GetCenteredPosition(referenceSize);
     }
 
+    internal void ApplyCentering(Vector2 rootSize)
+    {
+        if (KeepCentered)
+        {
+            var referenceSize = Parent?.Size ?? rootSize;
+            Position = GetCenteredPosition(referenceSize);
+        }
+
+        foreach (var child in _children)
+        {
+            child.ApplyCentering(rootSize);
+        }
+    }
+
     private Vector2 GetCenteredPosition(Vector2 referenceSize)
         => new((referenceSize.X - Size.X) * 0.5f, (referenceSize.Y - Size.Y) * 0.5f);
 }
