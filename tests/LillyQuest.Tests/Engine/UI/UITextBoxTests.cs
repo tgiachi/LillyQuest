@@ -3,6 +3,7 @@ using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Graphics.OpenGL.Resources;
 using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
+using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Data.Input;
 using LillyQuest.Engine.Screens.UI;
 using Silk.NET.Input;
@@ -17,6 +18,27 @@ public class UITextBoxTests
     {
         var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager());
         Assert.That(box.NineSliceScale, Is.EqualTo(2f));
+    }
+
+    [Test]
+    public void TextBox_Defaults_CenterTint_To_White()
+    {
+        var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager());
+        Assert.That(box.CenterTint, Is.EqualTo(LyColor.White));
+    }
+
+    [Test]
+    public void TextBox_Defaults_CursorColor_To_White()
+    {
+        var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager());
+        Assert.That(box.CursorColor, Is.EqualTo(LyColor.White));
+    }
+
+    [Test]
+    public void TextBox_Computes_Smaller_NineSlice_Scale_When_Height_Is_Tight()
+    {
+        var scale = UITextBox.ComputeNineSliceAxisScale(2f, 10f, 4f, 4f);
+        Assert.That(scale, Is.EqualTo(1.25f));
     }
 
     [Test]

@@ -52,9 +52,10 @@ public class UiTextBoxDemoScene : BaseScene
         {
             Size = new(360, 24),
             NineSliceKey = "simple_ui",
-            Font = new("default_font", 16, FontKind.TrueType),
+            Font = new("default_font", 12, FontKind.TrueType),
             TextColor = LyColor.White,
             BackgroundTint = LyColor.FromHex("#d9caa3"),
+            CenterTint = LyColor.FromHex("#e8d7b0"),
             VerticalPadding = 1f,
             Text = "Type here..."
         };

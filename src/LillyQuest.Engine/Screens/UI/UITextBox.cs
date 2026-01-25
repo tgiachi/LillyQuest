@@ -25,9 +25,24 @@ public sealed class UITextBox : UIScreenControl
     public float NineSliceScale { get; set; } = 2f;
     public LyColor TextColor { get; set; } = LyColor.White;
     public LyColor BackgroundTint { get; set; } = LyColor.White;
+    public LyColor CenterTint { get; set; } = LyColor.White;
+    public LyColor CursorColor { get; set; } = LyColor.White;
+    public bool ShowCursor { get; set; } = true;
     public bool AutoHeightEnabled { get; set; } = true;
     public float VerticalPadding { get; set; } = 1f;
     public int CursorIndex { get; set; }
+
+    public static float ComputeNineSliceAxisScale(float desiredScale, float availableSize, float startSize, float endSize)
+    {
+        var minSize = (startSize + endSize) * desiredScale;
+
+        if (availableSize <= 0f || minSize <= 0f)
+        {
+            return desiredScale;
+        }
+
+        return availableSize < minSize ? (availableSize / (startSize + endSize)) : desiredScale;
+    }
 
     public UITextBox(INineSliceAssetManager nineSliceManager, ITextureManager textureManager)
     {
@@ -115,7 +130,7 @@ public sealed class UITextBox : UIScreenControl
             return;
         }
 
-        DrawNineSlice(spriteBatch, texture, slice, BackgroundTint);
+        DrawNineSlice(spriteBatch, texture, slice, BackgroundTint, CenterTint);
 
         if (!string.IsNullOrWhiteSpace(Text))
         {
@@ -125,6 +140,32 @@ public sealed class UITextBox : UIScreenControl
                 world.Y + (Size.Y - textSize.Y) * 0.5f
             );
             spriteBatch.DrawText(Font, Text, position, TextColor);
+        }
+
+        if (ShowCursor)
+        {
+            var world = GetWorldPosition();
+            var safeIndex = Math.Clamp(CursorIndex, 0, Text.Length);
+            var beforeText = safeIndex > 0 ? Text[..safeIndex] : string.Empty;
+            var beforeSize = string.IsNullOrEmpty(beforeText)
+                                 ? Vector2.Zero
+                                 : spriteBatch.MeasureText(Font, beforeText);
+            var caretPosition = new Vector2(
+                world.X + DefaultHorizontalPadding + beforeSize.X,
+                world.Y + (Size.Y - textSize.Y) * 0.5f
+            );
+            var caretSize = new Vector2(1f, textSize.Y);
+            var uv = new Rectangle<float>(0f, 0f, 1f, 1f);
+            spriteBatch.Draw(
+                _textureManager.DefaultWhiteTexture,
+                caretPosition,
+                caretSize,
+                CursorColor,
+                0f,
+                Vector2.Zero,
+                uv,
+                0f
+            );
         }
     }
 
@@ -140,14 +181,17 @@ public sealed class UITextBox : UIScreenControl
                 case Key.Left:
                     CursorIndex = Math.Max(0, CursorIndex - 1);
                     handled = true;
+
                     break;
                 case Key.Right:
                     CursorIndex = Math.Min(Text.Length, CursorIndex + 1);
                     handled = true;
+
                     break;
                 case Key.Backspace:
                     HandleBackspace();
                     handled = true;
+
                     break;
                 default:
                     if (TryGetCharacter(key, isShift, out var character))
@@ -155,6 +199,7 @@ public sealed class UITextBox : UIScreenControl
                         HandleTextInput(character);
                         handled = true;
                     }
+
                     break;
             }
         }
@@ -191,26 +236,35 @@ public sealed class UITextBox : UIScreenControl
         return false;
     }
 
-    private void DrawNineSlice(SpriteBatch spriteBatch, Texture2D texture, NineSliceDefinition slice, LyColor tint)
+    private void DrawNineSlice(
+        SpriteBatch spriteBatch,
+        Texture2D texture,
+        NineSliceDefinition slice,
+        LyColor borderTint,
+        LyColor centerTint
+    )
     {
         var world = GetWorldPosition();
 
-        var leftWidth = slice.Left.Size.X * NineSliceScale;
-        var rightWidth = slice.Right.Size.X * NineSliceScale;
-        var topHeight = slice.Top.Size.Y * NineSliceScale;
-        var bottomHeight = slice.Bottom.Size.Y * NineSliceScale;
+        var scaleX = ComputeNineSliceAxisScale(NineSliceScale, Size.X, slice.Left.Size.X, slice.Right.Size.X);
+        var scaleY = ComputeNineSliceAxisScale(NineSliceScale, Size.Y, slice.Top.Size.Y, slice.Bottom.Size.Y);
+
+        var leftWidth = slice.Left.Size.X * scaleX;
+        var rightWidth = slice.Right.Size.X * scaleX;
+        var topHeight = slice.Top.Size.Y * scaleY;
+        var bottomHeight = slice.Bottom.Size.Y * scaleY;
 
         var centerWidth = MathF.Max(0f, Size.X - leftWidth - rightWidth);
         var centerHeight = MathF.Max(0f, Size.Y - topHeight - bottomHeight);
 
-        DrawSlice(spriteBatch, texture, world, new(leftWidth, topHeight), slice.TopLeft, tint);
+        DrawSlice(spriteBatch, texture, world, new(leftWidth, topHeight), slice.TopLeft, borderTint);
         DrawSlice(
             spriteBatch,
             texture,
             new(world.X + leftWidth + centerWidth, world.Y),
             new(rightWidth, topHeight),
             slice.TopRight,
-            tint
+            borderTint
         );
         DrawSlice(
             spriteBatch,
@@ -218,7 +272,7 @@ public sealed class UITextBox : UIScreenControl
             new(world.X, world.Y + topHeight + centerHeight),
             new(leftWidth, bottomHeight),
             slice.BottomLeft,
-            tint
+            borderTint
         );
         DrawSlice(
             spriteBatch,
@@ -226,26 +280,48 @@ public sealed class UITextBox : UIScreenControl
             new(world.X + leftWidth + centerWidth, world.Y + topHeight + centerHeight),
             new(rightWidth, bottomHeight),
             slice.BottomRight,
-            tint
+            borderTint
         );
 
-        DrawTiled(spriteBatch, texture, new(world.X + leftWidth, world.Y), new(centerWidth, topHeight), slice.Top, tint);
+        DrawTiled(
+            spriteBatch,
+            texture,
+            new(world.X + leftWidth, world.Y),
+            new(centerWidth, topHeight),
+            slice.Top,
+            borderTint,
+            scaleX,
+            scaleY
+        );
         DrawTiled(
             spriteBatch,
             texture,
             new(world.X + leftWidth, world.Y + topHeight + centerHeight),
             new(centerWidth, bottomHeight),
             slice.Bottom,
-            tint
+            borderTint,
+            scaleX,
+            scaleY
         );
-        DrawTiled(spriteBatch, texture, new(world.X, world.Y + topHeight), new(leftWidth, centerHeight), slice.Left, tint);
+        DrawTiled(
+            spriteBatch,
+            texture,
+            new(world.X, world.Y + topHeight),
+            new(leftWidth, centerHeight),
+            slice.Left,
+            borderTint,
+            scaleX,
+            scaleY
+        );
         DrawTiled(
             spriteBatch,
             texture,
             new(world.X + leftWidth + centerWidth, world.Y + topHeight),
             new(rightWidth, centerHeight),
             slice.Right,
-            tint
+            borderTint,
+            scaleX,
+            scaleY
         );
 
         DrawTiled(
@@ -254,8 +330,11 @@ public sealed class UITextBox : UIScreenControl
             new(world.X + leftWidth, world.Y + topHeight),
             new(centerWidth, centerHeight),
             slice.Center,
-            tint
+            centerTint,
+            scaleX,
+            scaleY
         );
+
     }
 
     private void DrawSlice(
@@ -282,7 +361,9 @@ public sealed class UITextBox : UIScreenControl
         Vector2 position,
         Vector2 size,
         Rectangle<int> sourceRect,
-        LyColor tint
+        LyColor tint,
+        float scaleX,
+        float scaleY
     )
     {
         if (size.X <= 0f || size.Y <= 0f)
@@ -290,8 +371,8 @@ public sealed class UITextBox : UIScreenControl
             return;
         }
 
-        var tileWidth = sourceRect.Size.X * NineSliceScale;
-        var tileHeight = sourceRect.Size.Y * NineSliceScale;
+        var tileWidth = sourceRect.Size.X * scaleX;
+        var tileHeight = sourceRect.Size.Y * scaleY;
 
         if (tileWidth <= 0f || tileHeight <= 0f)
         {
