@@ -57,7 +57,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             LayerCount = 2,
             Position = new(100, 30),
             TileRenderScale = 1f,
-            TileViewSize = new(20, 20)
+            TileViewSize = new(80, 30)
         };
 
         _screen.TileMouseMoveAllLayers += (index, x, y, mouseX, mouseY) =>
@@ -126,7 +126,7 @@ public class TilesetSurfaceEditorScene : BaseScene
 
         // Initialize the surface layers before population
         _screen.InitializeLayers(_screen.LayerCount);
-        _screen.SetLayerTileset(0, "roguelike");
+        _screen.SetLayerTileset(0, "alloy");
         _screen.SetLayerTileset(1, "alloy");
 
         _screen.SetLayerRenderScaleSmoothing(0, true, 0.1f);
@@ -303,7 +303,7 @@ public class TilesetSurfaceEditorScene : BaseScene
     /// </summary>
     private void PopulateWithRandomTiles(TilesetSurfaceScreen screen)
     {
-        var tileset = _tilesetManager.GetTileset(screen.DefaultTilesetName);
+        var tileset = _tilesetManager.GetTileset("alloy");
 
         var random = Random.Shared;
         screen.SelectedLayerIndex = 0;
