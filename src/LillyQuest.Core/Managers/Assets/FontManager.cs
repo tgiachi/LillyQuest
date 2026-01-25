@@ -1,4 +1,3 @@
-using System.Numerics;
 using FontStashSharp;
 using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
@@ -50,12 +49,36 @@ public class FontManager : IFontManager
         GC.SuppressFinalize(this);
     }
 
-    public BitmapFont GetBitmapFont(string assetName)
+    public IFontHandle GetFontHandle(FontRef fontRef)
+    {
+        return fontRef.Kind switch
+        {
+            FontKind.TrueType => new TrueTypeFontHandle(GetFont(fontRef.Name, fontRef.Size)),
+            FontKind.Bitmap => new BitmapFontHandle(GetBitmapFont(fontRef.Name), fontRef.Size),
+            _ => throw new NotSupportedException($"Unsupported font kind: {fontRef.Kind}")
+        };
+    }
+
+    public bool TryGetFontHandle(FontRef fontRef, out IFontHandle handle)
+    {
+        try
+        {
+            handle = GetFontHandle(fontRef);
+            return true;
+        }
+        catch
+        {
+            handle = null!;
+            return false;
+        }
+    }
+
+    private BitmapFont GetBitmapFont(string assetName)
         => _bitmapFonts.TryGetValue(assetName, out var font)
                ? font
                : throw new KeyNotFoundException($"Bitmap font not found: {assetName}");
 
-    public DynamicSpriteFont GetFont(string assetName, int size)
+    private DynamicSpriteFont GetFont(string assetName, int size)
     {
         var key = $"{assetName}_{size}";
 
@@ -208,20 +231,6 @@ public class FontManager : IFontManager
 
         _logger.Information("Font {FontName} loaded successfully", name);
     }
-
-    public Vector2 MeasureText(string fontAssetName, int fontSize, string text)
-    {
-        var font = GetFont(fontAssetName, fontSize);
-        var dimensions = font.MeasureString(text);
-
-        return new Vector2(dimensions.X, dimensions.Y) * 2f;
-    }
-
-    public bool TryGetBitmapFont(string assetName, out BitmapFont font)
-        => _bitmapFonts.TryGetValue(assetName, out font);
-
-    public bool TryGetFont(string assetName, out DynamicSpriteFont font)
-        => _loadedFonts.TryGetValue(assetName, out font);
 
     public void UnloadFont(string assetName)
     {

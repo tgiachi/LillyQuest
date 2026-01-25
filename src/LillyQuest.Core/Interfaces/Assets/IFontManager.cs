@@ -1,5 +1,3 @@
-using System.Numerics;
-using FontStashSharp;
 using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Primitives;
 
@@ -11,14 +9,9 @@ namespace LillyQuest.Core.Interfaces.Assets;
 public interface IFontManager : IDisposable
 {
     /// <summary>
-    /// Returns a loaded bitmap font by its asset name.
+    /// Returns a font handle for the requested font reference.
     /// </summary>
-    BitmapFont GetBitmapFont(string assetName);
-
-    /// <summary>
-    /// Returns a loaded font by its asset name.
-    /// </summary>
-    DynamicSpriteFont GetFont(string assetName, int size);
+    IFontHandle GetFontHandle(FontRef fontRef);
 
     /// <summary>
     /// Returns true when the font is already loaded.
@@ -62,23 +55,9 @@ public interface IFontManager : IDisposable
     void LoadFont(string assetName, Span<byte> data);
 
     /// <summary>
-    /// Measures the rendered size of the given text using the specified font asset and size.
+    /// Attempts to retrieve a font handle for the requested font reference.
     /// </summary>
-    /// <param name="fontAssetName"></param>
-    /// <param name="fontSize"></param>
-    /// <param name="text"></param>
-    /// <returns></returns>
-    Vector2 MeasureText(string fontAssetName, int fontSize, string text);
-
-    /// <summary>
-    /// Attempts to retrieve a bitmap font by its asset name.
-    /// </summary>
-    bool TryGetBitmapFont(string assetName, out BitmapFont font);
-
-    /// <summary>
-    /// Attempts to retrieve a font handle by its asset name.
-    /// </summary>
-    bool TryGetFont(string assetName, out DynamicSpriteFont font);
+    bool TryGetFontHandle(FontRef fontRef, out IFontHandle handle);
 
     /// <summary>
     /// Unloads a font by its asset name.
