@@ -1,5 +1,6 @@
 using System.Numerics;
 using LillyQuest.Core.Graphics.Text;
+using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Managers.Scenes.Base;
@@ -10,18 +11,27 @@ namespace LillyQuest.Game.Scenes;
 public class UiMenuDemoScene : BaseScene
 {
     private readonly IScreenManager _screenManager;
+    private readonly EngineRenderContext _renderContext;
     private UIRootScreen? _screen;
+    private bool _subscribed;
 
-    public UiMenuDemoScene(IScreenManager screenManager)
+    public UiMenuDemoScene(IScreenManager screenManager, EngineRenderContext renderContext)
         : base("ui_menu_demo")
-        => _screenManager = screenManager;
+    {
+        _screenManager = screenManager;
+        _renderContext = renderContext;
+    }
 
     public override void OnLoad()
     {
+        var initialSize = _renderContext.Window != null
+            ? new Vector2(_renderContext.Window.Size.X, _renderContext.Window.Size.Y)
+            : new Vector2(1280, 720);
+
         _screen = new UIRootScreen
         {
             Position = Vector2.Zero,
-            Size = new(1280, 720)
+            Size = initialSize
         };
 
         var menu = new UIMenu
@@ -52,6 +62,12 @@ public class UiMenuDemoScene : BaseScene
 
         _screen.Root.Add(menu);
         _screenManager.PushScreen(_screen);
+
+        if (!_subscribed && _renderContext.Window != null)
+        {
+            _renderContext.Window.Resize += OnWindowResize;
+            _subscribed = true;
+        }
     }
 
     public override void OnUnload()
@@ -61,5 +77,21 @@ public class UiMenuDemoScene : BaseScene
             _screenManager.PopScreen(_screen);
             _screen = null;
         }
+
+        if (_subscribed && _renderContext.Window != null)
+        {
+            _renderContext.Window.Resize -= OnWindowResize;
+            _subscribed = false;
+        }
+    }
+
+    private void OnWindowResize(Silk.NET.Maths.Vector2D<int> size)
+    {
+        if (_screen == null)
+        {
+            return;
+        }
+
+        _screen.HandleResize(new(size.X, size.Y));
     }
 }
