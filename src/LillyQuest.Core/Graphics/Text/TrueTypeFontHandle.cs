@@ -21,6 +21,6 @@ public sealed class TrueTypeFontHandle : IFontHandle
     public void DrawText(SpriteBatch spriteBatch, string text, Vector2 position, LyColor color, float depth = 0f)
     {
         var fsColor = new FSColor(color.R, color.G, color.B, color.A);
-        _font.DrawText(spriteBatch, text, position, fsColor, 0f, Vector2.Zero, null, depth);
+        _font.DrawText(spriteBatch, text, position, fsColor, 0f, Vector2.Zero, Vector2.One * 2f, depth);
     }
 }
