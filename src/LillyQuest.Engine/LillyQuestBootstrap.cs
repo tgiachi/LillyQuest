@@ -334,6 +334,13 @@ public class LillyQuestBootstrap
             typeof(SpriteBatch).Assembly
         );
 
+
+        assetManager.FontManager.LoadFontFromEmbeddedResource(
+            "default_font_topaz",
+            "Assets/Fonts/TopazPlus_a1200_v1.0.ttf",
+            typeof(SpriteBatch).Assembly
+        );
+
         assetManager.FontManager.LoadFontFromEmbeddedResource(
             "default_font_log",
             "Assets/Fonts/default_log_font.ttf",

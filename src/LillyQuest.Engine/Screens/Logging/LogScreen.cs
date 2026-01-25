@@ -38,7 +38,7 @@ public class LogScreen : BaseScreen
 
     private float _blinkElapsed;
 
-    public FontRef Font { get; set; } = new("default_font_log", 14, FontKind.TrueType);
+    public FontRef Font { get; set; } = new("default_font_topaz", 12, FontKind.TrueType);
     public LyColor BackgroundColor { get; set; } = LyColor.Black;
     public float BackgroundAlpha { get; set; } = 0.6f;
     public int DispatchBatchSize { get; set; } = 64;
