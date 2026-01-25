@@ -24,6 +24,18 @@ public sealed class RenderedLine
 
 public class LogScreen : BaseScreen
 {
+    private sealed class RenderedEntry
+    {
+        public IReadOnlyList<StyledSpan> Spans { get; }
+        public float BlinkRemaining { get; set; }
+
+        public RenderedEntry(IReadOnlyList<StyledSpan> spans, float blinkRemaining)
+        {
+            Spans = spans;
+            BlinkRemaining = blinkRemaining;
+        }
+    }
+
     public static readonly LyColor TraceColor = LyColor.DimGray;
     public static readonly LyColor DebugColor = LyColor.Gray;
     public static readonly LyColor InfoColor = LyColor.White;
@@ -35,8 +47,10 @@ public class LogScreen : BaseScreen
     private readonly IFontManager _fontManager;
     private readonly BBCodeParser _bbcodeParser = new();
     private readonly List<RenderedLine> _lines = [];
+    private readonly List<RenderedEntry> _entries = [];
 
     private float _blinkElapsed;
+    private Vector2 _lastWrapSize = new(float.NaN, float.NaN);
 
     public FontRef Font { get; set; } = new("default_font_topaz", 12, FontKind.TrueType);
     public LyColor BackgroundColor { get; set; } = LyColor.Black;
@@ -96,14 +110,32 @@ public class LogScreen : BaseScreen
         var deltaSeconds = (float)gameTime.Elapsed.TotalSeconds;
         _blinkElapsed += deltaSeconds;
 
-        foreach (var line in _lines)
+        foreach (var entry in _entries)
         {
-            if (line.BlinkRemaining <= 0f)
+            if (entry.BlinkRemaining <= 0f)
             {
                 continue;
             }
 
-            line.BlinkRemaining = Math.Max(0f, line.BlinkRemaining - deltaSeconds);
+            entry.BlinkRemaining = Math.Max(0f, entry.BlinkRemaining - deltaSeconds);
+        }
+
+        var wrapSize = new Vector2(GetAvailableWidth(), GetAvailableHeight());
+        if (wrapSize != _lastWrapSize)
+        {
+            RebuildLines();
+        }
+        else
+        {
+            foreach (var line in _lines)
+            {
+                if (line.BlinkRemaining <= 0f)
+                {
+                    continue;
+                }
+
+                line.BlinkRemaining = Math.Max(0f, line.BlinkRemaining - deltaSeconds);
+            }
         }
     }
 
@@ -140,31 +172,9 @@ public class LogScreen : BaseScreen
         }
         var defaultStyle = new StyledSpan(string.Empty, color, null, false, false, false);
         var spans = _bbcodeParser.Parse(NormalizeMessage(entry.Message), defaultStyle);
-        var lines = WrapSpans(spans, maxWidth);
+        _entries.Add(new RenderedEntry(spans, blink));
 
-        foreach (var line in lines)
-        {
-            _lines.Add(new RenderedLine(line, blink));
-        }
-
-        TrimToMaxLines();
-    }
-
-    private void TrimToMaxLines()
-    {
-        var maxLines = GetMaxVisibleLines();
-
-        if (maxLines <= 0)
-        {
-            _lines.Clear();
-
-            return;
-        }
-
-        while (_lines.Count > maxLines)
-        {
-            _lines.RemoveAt(0);
-        }
+        RebuildLines();
     }
 
     private bool TryOverwriteLastLine(string message, LyColor color, float blink)
@@ -202,20 +212,17 @@ public class LogScreen : BaseScreen
 
         var defaultStyle = new StyledSpan(string.Empty, color, null, false, false, false);
         var spans = _bbcodeParser.Parse(newText, defaultStyle);
-        var lines = WrapSpans(spans, GetAvailableWidth());
 
-        if (_lines.Count > 0)
+        if (_entries.Count > 0)
         {
-            _lines.RemoveAt(_lines.Count - 1);
-            foreach (var line in lines)
-            {
-                _lines.Add(new RenderedLine(line, blink));
-            }
+            _entries[^1] = new RenderedEntry(spans, blink);
         }
-        else if (lines.Count > 0)
+        else
         {
-            _lines.Add(new RenderedLine(lines[0], blink));
+            _entries.Add(new RenderedEntry(spans, blink));
         }
+
+        RebuildLines();
 
         return true;
     }
@@ -464,5 +471,62 @@ public class LogScreen : BaseScreen
     {
         var baseSize = Font.Size > 0 ? Font.Size : GetLineHeight();
         return MathF.Max(1f, baseSize * 0.05f);
+    }
+
+    private void RebuildLines()
+    {
+        var maxWidth = GetAvailableWidth();
+        var maxHeight = GetAvailableHeight();
+        _lastWrapSize = new Vector2(maxWidth, maxHeight);
+
+        _lines.Clear();
+
+        if (_entries.Count == 0 || maxWidth <= 0f)
+        {
+            return;
+        }
+
+        var wrappedEntries = new List<IReadOnlyList<IReadOnlyList<StyledSpan>>>(_entries.Count);
+        var lineCounts = new int[_entries.Count];
+        var totalLines = 0;
+
+        for (var i = 0; i < _entries.Count; i++)
+        {
+            var lines = WrapSpans(_entries[i].Spans, maxWidth);
+            wrappedEntries.Add(lines);
+            lineCounts[i] = lines.Count;
+            totalLines += lines.Count;
+        }
+
+        var maxLines = GetMaxVisibleLines();
+        var dropCount = 0;
+
+        if (maxLines > 0)
+        {
+            while (totalLines > maxLines && dropCount < lineCounts.Length)
+            {
+                totalLines -= lineCounts[dropCount];
+                dropCount++;
+            }
+        }
+        else
+        {
+            dropCount = _entries.Count;
+        }
+
+        if (dropCount > 0)
+        {
+            _entries.RemoveRange(0, dropCount);
+            wrappedEntries.RemoveRange(0, dropCount);
+        }
+
+        for (var i = 0; i < wrappedEntries.Count; i++)
+        {
+            var blink = _entries[i].BlinkRemaining;
+            foreach (var line in wrappedEntries[i])
+            {
+                _lines.Add(new RenderedLine(line, blink));
+            }
+        }
     }
 }

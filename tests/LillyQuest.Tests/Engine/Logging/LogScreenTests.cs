@@ -112,6 +112,26 @@ public class LogScreenTests
     }
 
     [Test]
+    public void Update_Rewraps_Lines_When_Size_Changes()
+    {
+        var dispatcher = new LogEventDispatcher();
+        var screen = CreateScreen(dispatcher);
+        screen.Margin = new(0, 0, 0, 0);
+        screen.Size = new(50, 60);
+
+        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "AAAAAAAAAA", null));
+
+        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
+
+        Assert.That(screen.Lines.Count, Is.EqualTo(2));
+
+        screen.Size = new(200, 60);
+        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
+
+        Assert.That(screen.Lines.Count, Is.EqualTo(1));
+    }
+
+    [Test]
     public void Update_Assigns_Level_Color()
     {
         var dispatcher = new LogEventDispatcher();
