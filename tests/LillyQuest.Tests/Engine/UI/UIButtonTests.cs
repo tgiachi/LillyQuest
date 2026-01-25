@@ -1,7 +1,5 @@
 using System.Numerics;
-using FontStashSharp;
 using LillyQuest.Core.Graphics.OpenGL.Resources;
-using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Managers.Assets;
 using LillyQuest.Core.Primitives;
@@ -50,68 +48,6 @@ public class UIButtonTests
         }
 
         public void UnloadTexture(string assetName)
-            => throw new NotSupportedException();
-    }
-
-    private sealed class FakeFontManager : IFontManager
-    {
-        public void Dispose() { }
-
-        public BitmapFont GetBitmapFont(string assetName)
-            => throw new NotSupportedException();
-
-        public DynamicSpriteFont GetFont(string assetName, int size)
-            => throw new NotSupportedException();
-
-        public bool HasFont(string assetName)
-            => false;
-
-        public void LoadBmpFont(
-            string assetName,
-            string filePath,
-            int tileWidth,
-            int tileHeight,
-            int spacing = 0,
-            LyColor? transparentColor = null,
-            string? characterMap = null
-        )
-            => throw new NotSupportedException();
-
-        public void LoadBmpFont(
-            string assetName,
-            Span<byte> data,
-            int tileWidth,
-            int tileHeight,
-            int spacing = 0,
-            LyColor? transparentColor = null,
-            string? characterMap = null
-        )
-            => throw new NotSupportedException();
-
-        public void LoadFont(string assetName, string filePath)
-            => throw new NotSupportedException();
-
-        public void LoadFont(string assetName, Span<byte> data)
-            => throw new NotSupportedException();
-
-        public Vector2 MeasureText(string fontAssetName, int fontSize, string text)
-            => throw new NotSupportedException();
-
-        public bool TryGetBitmapFont(string assetName, out BitmapFont font)
-        {
-            font = null!;
-
-            return false;
-        }
-
-        public bool TryGetFont(string assetName, out DynamicSpriteFont font)
-        {
-            font = null!;
-
-            return false;
-        }
-
-        public void UnloadFont(string assetName)
             => throw new NotSupportedException();
     }
 
@@ -185,9 +121,8 @@ public class UIButtonTests
     {
         var textureManager = new FakeTextureManager();
         var nineSliceManager = new NineSliceAssetManager(textureManager);
-        var fontManager = new FakeFontManager();
 
-        return new(nineSliceManager, textureManager, fontManager)
+        return new(nineSliceManager, textureManager)
         {
             Position = Vector2.Zero,
             Size = new(100, 40)

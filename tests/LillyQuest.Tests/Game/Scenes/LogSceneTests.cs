@@ -1,8 +1,8 @@
 using System.Numerics;
-using FontStashSharp;
 using LillyQuest.Engine;
 using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Contexts;
+using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
@@ -19,12 +19,6 @@ public class LogSceneTests
     private sealed class FakeFontManager : IFontManager
     {
         public void Dispose() { }
-
-        public BitmapFont GetBitmapFont(string assetName)
-            => throw new NotSupportedException();
-
-        public DynamicSpriteFont GetFont(string assetName, int size)
-            => throw new NotSupportedException();
 
         public bool HasFont(string assetName)
             => false;
@@ -57,25 +51,26 @@ public class LogSceneTests
         public void LoadFont(string assetName, Span<byte> data)
             => throw new NotSupportedException();
 
-        public Vector2 MeasureText(string fontAssetName, int fontSize, string text)
-            => new(text.Length * 10f, 10f);
+        public IFontHandle GetFontHandle(FontRef fontRef)
+            => new FakeFontHandle();
 
-        public bool TryGetBitmapFont(string assetName, out BitmapFont font)
+        public bool TryGetFontHandle(FontRef fontRef, out IFontHandle handle)
         {
-            font = null!;
+            handle = new FakeFontHandle();
 
-            return false;
-        }
-
-        public bool TryGetFont(string assetName, out DynamicSpriteFont font)
-        {
-            font = null!;
-
-            return false;
+            return true;
         }
 
         public void UnloadFont(string assetName)
             => throw new NotSupportedException();
+    }
+
+    private sealed class FakeFontHandle : IFontHandle
+    {
+        public Vector2 MeasureText(string text)
+            => new(text.Length * 10f, 10f);
+
+        public void DrawText(SpriteBatch spriteBatch, string text, Vector2 position, LyColor color, float depth = 0f) { }
     }
 
     [Test]

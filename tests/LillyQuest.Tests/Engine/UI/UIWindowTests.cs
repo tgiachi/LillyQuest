@@ -1,4 +1,5 @@
 using System.Numerics;
+using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Engine.Screens.UI;
 
 namespace LillyQuest.Tests.Engine.UI;
@@ -246,11 +247,9 @@ public class UIWindowTests
     {
         var window = new UIWindow
         {
-            TitleFontName = "alloy",
-            TitleFontSize = 18
+            TitleFont = new("alloy", 18, FontKind.TrueType)
         };
 
-        Assert.That(window.TitleFontName, Is.EqualTo("alloy"));
-        Assert.That(window.TitleFontSize, Is.EqualTo(18));
+        Assert.That(window.TitleFont, Is.EqualTo(new FontRef("alloy", 18, FontKind.TrueType)));
     }
 }
