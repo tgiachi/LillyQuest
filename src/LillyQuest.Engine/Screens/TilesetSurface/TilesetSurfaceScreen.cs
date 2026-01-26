@@ -122,6 +122,54 @@ public class TilesetSurfaceScreen : BaseScreen
         }
     }
 
+    /// <summary>
+    /// Computes a tile view size that fits within the provided screen size.
+    /// </summary>
+    /// <param name="screenSize">Target screen size in logical units.</param>
+    /// <param name="includeMargins">Whether to subtract margins from the available size.</param>
+    public Vector2 ComputeTileViewSizeFromScreen(Vector2 screenSize, bool includeMargins = true)
+    {
+        if (_tileset == null)
+        {
+            return _tileViewSize;
+        }
+
+        var masterTileset = GetMasterTileset();
+        var availableSize = includeMargins
+            ? new Vector2(
+                MathF.Max(0f, screenSize.X - Margin.X - Margin.Z),
+                MathF.Max(0f, screenSize.Y - Margin.Y - Margin.W)
+            )
+            : screenSize;
+
+        var tileWidth = masterTileset.TileWidth * TileRenderScale;
+        var tileHeight = masterTileset.TileHeight * TileRenderScale;
+
+        var cols = tileWidth > 0 ? MathF.Floor(availableSize.X / tileWidth) : 0f;
+        var rows = tileHeight > 0 ? MathF.Floor(availableSize.Y / tileHeight) : 0f;
+
+        return new Vector2(MathF.Max(1f, cols), MathF.Max(1f, rows));
+    }
+
+    /// <summary>
+    /// Updates the tile view size to fit within the provided screen size.
+    /// </summary>
+    /// <param name="screenSize">Target screen size in logical units.</param>
+    /// <param name="keepScreenSize">Whether to preserve the passed screen size as the screen size.</param>
+    /// <param name="includeMargins">Whether to subtract margins from the available size.</param>
+    public void FitTileViewToScreen(Vector2 screenSize, bool keepScreenSize = true, bool includeMargins = true)
+    {
+        _tileViewSize = ComputeTileViewSizeFromScreen(screenSize, includeMargins);
+
+        if (keepScreenSize)
+        {
+            Size = screenSize;
+            return;
+        }
+
+        UpdateScreenSizeFromTileView();
+    }
+
     public TilesetSurfaceScreen(ITilesetManager tilesetManager)
     {
         _tilesetManager = tilesetManager;

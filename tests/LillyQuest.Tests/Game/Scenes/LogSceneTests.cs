@@ -104,4 +104,5 @@ public class LogSceneTests
 
     private static LillyQuestBootstrap CreateBootstrap()
         => new(new LillyQuestEngineConfig());
+
 }

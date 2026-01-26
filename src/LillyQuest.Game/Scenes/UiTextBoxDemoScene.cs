@@ -42,7 +42,7 @@ public class UiTextBoxDemoScene : BaseScene
             ? new Vector2(_renderContext.Window.Size.X, _renderContext.Window.Size.Y)
             : new Vector2(1280, 720);
 
-        _screen = new UIRootScreen
+        _screen = new()
         {
             Position = Vector2.Zero,
             Size = initialSize

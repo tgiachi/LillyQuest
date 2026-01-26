@@ -11,7 +11,6 @@ public class EngineRenderContext
     public IWindow Window { get; set; }
     public IInputContext InputContext { get; set; }
     public GL Gl { get; set; }
-
     /// <summary>
     /// Handler used to dispatch fire-and-forget work on the main thread.
     /// </summary>
