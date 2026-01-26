@@ -23,7 +23,8 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
 
     private readonly List<Type> _dataReceiverTypes =
     [
-        typeof(ColorService)
+        typeof(ColorService),
+        typeof(TileSetService)
     ];
 
     public PluginInfo PluginInfo
