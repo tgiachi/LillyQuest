@@ -433,6 +433,8 @@ public class LillyQuestBootstrap
         _container.Register<IShortcutService, ShortcutService>(Reuse.Singleton);
         _container.Register<IMainThreadDispatcher, MainThreadDispatcher>(Reuse.Singleton);
 
+        BindMainThreadDispatcher();
+
         foreach (var systemType in _renderSystems)
         {
             _container.Register(systemType, Reuse.Singleton);
@@ -446,6 +448,14 @@ public class LillyQuestBootstrap
             )
         );
         _container.Register<IScriptEngineService, LuaScriptEngineService>(Reuse.Singleton);
+    }
+
+    private void BindMainThreadDispatcher()
+    {
+        var dispatcher = _container.Resolve<IMainThreadDispatcher>();
+        _renderContext.PostOnMainThreadHandler = action => dispatcher.Post(action);
+        _renderContext.InvokeOnMainThreadHandler = action => dispatcher.Invoke(action);
+        _renderContext.InvokeOnMainThreadFuncHandler = func => dispatcher.Invoke(func.DynamicInvoke);
     }
 
     private void StartInternalServices()
