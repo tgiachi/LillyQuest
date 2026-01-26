@@ -130,6 +130,12 @@ public class LillyQuestBootstrap
         _renderContext.ClearColor = LyColor.CornflowerBlue;
         _logger.Information("Initializing LillyQuest Engine...");
 
+        if (_engineConfig.IsHeadless)
+        {
+            RegisterInternalServices();
+            return;
+        }
+
         var options = WindowOptions.Default;
         options.Size = new(_engineConfig.Render.Width, _engineConfig.Render.Height);
         options.Title = _engineConfig.Render.Title;
@@ -155,6 +161,11 @@ public class LillyQuestBootstrap
 
     public void Run()
     {
+        if (_engineConfig.IsHeadless)
+        {
+            throw new InvalidOperationException("Cannot run the engine in headless mode.");
+        }
+
         ExecuteOnEngineReady().GetAwaiter().GetResult();
         _window.Run(); // Window triggers WindowOnLoad where OnReadyToRender is executed
     }

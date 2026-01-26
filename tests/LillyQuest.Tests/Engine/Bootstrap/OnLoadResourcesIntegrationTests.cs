@@ -68,7 +68,7 @@ public class OnLoadResourcesIntegrationTests
     [Test]
     public void Bootstrap_HasPublicMethodExecuteOnLoadResources()
     {
-        var config = new LillyQuestEngineConfig { IsDebugMode = true };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
         var bootstrap = new LillyQuestBootstrap(config);
 
         // Bootstrap should have ExecuteOnLoadResources method
@@ -81,7 +81,7 @@ public class OnLoadResourcesIntegrationTests
     [Test]
     public void Bootstrap_CanCallExecuteOnLoadResources()
     {
-        var config = new LillyQuestEngineConfig { IsDebugMode = true };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
         var bootstrap = new LillyQuestBootstrap(config);
 
         bootstrap.Initialize();
@@ -99,7 +99,7 @@ public class OnLoadResourcesIntegrationTests
     [Test]
     public async Task ExecuteOnLoadResources_CanBeAwaited()
     {
-        var config = new LillyQuestEngineConfig { IsDebugMode = true };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
         var bootstrap = new LillyQuestBootstrap(config);
 
         bootstrap.Initialize();
@@ -117,7 +117,7 @@ public class OnLoadResourcesIntegrationTests
     [Test]
     public void Bootstrap_IsLoadingResources_ReflectsAsyncLoaderState()
     {
-        var config = new LillyQuestEngineConfig { IsDebugMode = true };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
         var bootstrap = new LillyQuestBootstrap(config);
 
         bootstrap.Initialize();

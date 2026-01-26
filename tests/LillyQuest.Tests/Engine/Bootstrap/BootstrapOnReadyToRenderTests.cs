@@ -55,7 +55,7 @@ public class BootstrapOnReadyToRenderTests
     [Test]
     public void Bootstrap_HasPublicMethodToExecuteOnReadyToRender()
     {
-        var config = new LillyQuestEngineConfig { IsDebugMode = true };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
         var bootstrap = new LillyQuestBootstrap(config);
 
         // Bootstrap should expose a method to execute OnReadyToRender hooks
@@ -69,7 +69,7 @@ public class BootstrapOnReadyToRenderTests
     [Test]
     public void Bootstrap_OnReadyToRenderIsPublic()
     {
-        var config = new LillyQuestEngineConfig { IsDebugMode = true };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
         var bootstrap = new LillyQuestBootstrap(config);
 
         // ExecuteOnReadyToRender should be public
@@ -81,7 +81,7 @@ public class BootstrapOnReadyToRenderTests
     [Test]
     public void Bootstrap_OnReadyToRenderReturnsTask()
     {
-        var config = new LillyQuestEngineConfig { IsDebugMode = true };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
         var bootstrap = new LillyQuestBootstrap(config);
 
         // ExecuteOnReadyToRender should return Task
