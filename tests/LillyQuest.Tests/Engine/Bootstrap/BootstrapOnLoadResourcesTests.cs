@@ -40,6 +40,7 @@ public class BootstrapOnLoadResourcesTests
 
         public string? GetScriptOnLoadFunctionName() => null;
         public void RegisterServices(IContainer container) { }
+        public string[]? DirectoriesToCreate() => null;
         public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin) { }
         public void Shutdown() { }
 

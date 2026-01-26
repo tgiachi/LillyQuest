@@ -103,6 +103,11 @@ public class BootstrapIntegrationTests
             _events.Add("RegisterServices");
         }
 
+        public string[]? DirectoriesToCreate()
+        {
+            return null;
+        }
+
         public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin)
         {
             _events.Add("OnDirectories");
