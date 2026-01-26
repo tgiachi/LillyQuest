@@ -70,7 +70,12 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
             await Task.Delay(100);
         }
 
-        renderContext.Window.Title = "LillyQuest RogueLike";
+        renderContext.PostOnMainThread(
+            () =>
+            {
+                renderContext.Window.Title = "LillyQuest RogueLike";
+            }
+        );
 
         Log.Information("RogueLike plugin loaded");
 

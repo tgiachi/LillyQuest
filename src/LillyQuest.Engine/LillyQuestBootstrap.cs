@@ -455,7 +455,7 @@ public class LillyQuestBootstrap
         var dispatcher = _container.Resolve<IMainThreadDispatcher>();
         _renderContext.PostOnMainThreadHandler = action => dispatcher.Post(action);
         _renderContext.InvokeOnMainThreadHandler = action => dispatcher.Invoke(action);
-        _renderContext.InvokeOnMainThreadFuncHandler = func => dispatcher.Invoke(func.DynamicInvoke);
+        _renderContext.InvokeOnMainThreadFuncHandler = func => dispatcher.Invoke(() => func.DynamicInvoke());
     }
 
     private void StartInternalServices()
