@@ -5,9 +5,12 @@ using LillyQuest.Core.Data.Plugins;
 using LillyQuest.Core.Json;
 using LillyQuest.Engine.Interfaces.Plugins;
 using LillyQuest.RogueLike.Data;
+using LillyQuest.RogueLike.Data.Configs;
+using LillyQuest.RogueLike.Interfaces;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Json.Context;
 using LillyQuest.RogueLike.Services;
+using LillyQuest.RogueLike.Services.Loader;
 using Serilog;
 
 namespace LillyQuest.RogueLike;
@@ -17,6 +20,11 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
     private readonly ILogger _logger = Log.ForContext<LillyQuestRogueLikePlugin>();
 
     private IContainer _container;
+
+    private readonly List<Type> _dataReceiverTypes =
+    [
+        typeof(ColorService)
+    ];
 
     public PluginInfo PluginInfo
         => new PluginInfo(
@@ -39,6 +47,13 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         _container = container;
 
         container.Register<IDataLoaderService, DataLoaderService>();
+
+        foreach (var receiverType in _dataReceiverTypes)
+        {
+            _logger.Debug("Registering receiver type: {ReceiverType}", receiverType);
+
+            _container.Register(receiverType, Reuse.Singleton);
+        }
     }
 
     public string[] DirectoriesToCreate()
@@ -66,9 +81,17 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         await Task.Delay(1000);
 
         var dataLoader = container.Resolve<IDataLoaderService>();
+
+        foreach (var receiverType in _dataReceiverTypes)
+        {
+            var receiver = (IDataLoaderReceiver)container.Resolve(receiverType);
+            dataLoader.RegisterDataReceiver(receiver);
+        }
+
         _logger.Information("Loading RogueLike data");
         await dataLoader.LoadDataAsync();
         _logger.Information("RogueLike data loaded");
+        await dataLoader.DispatchDataToReceiversAsync();
 
         // var renderContext = container.Resolve<EngineRenderContext>();
         //

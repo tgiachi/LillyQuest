@@ -1,6 +1,6 @@
 using LillyQuest.Core.Data.Directories;
 
-namespace LillyQuest.RogueLike.Data;
+namespace LillyQuest.RogueLike.Data.Configs;
 
 public class DataLoaderConfig
 {
