@@ -1,0 +1,91 @@
+{
+  "type": "color_schema",
+  "id": "default",
+  "tags": ["default", "palette", "basic"],
+  "colors": [
+    {
+      "id": "black",
+      "color": "#FF000000"
+    },
+    {
+      "id": "white",
+      "color": "#FFFFFFFF"
+    },
+    {
+      "id": "gray",
+      "color": "#FF808080"
+    },
+    {
+      "id": "light_gray",
+      "color": "#FFC0C0C0"
+    },
+    {
+      "id": "dark_gray",
+      "color": "#FF404040"
+    },
+    {
+      "id": "red",
+      "color": "#FFFF0000"
+    },
+    {
+      "id": "dark_red",
+      "color": "#FF800000"
+    },
+    {
+      "id": "green",
+      "color": "#FF00FF00"
+    },
+    {
+      "id": "dark_green",
+      "color": "#FF008000"
+    },
+    {
+      "id": "blue",
+      "color": "#FF0000FF"
+    },
+    {
+      "id": "dark_blue",
+      "color": "#FF000080"
+    },
+    {
+      "id": "yellow",
+      "color": "#FFFFFF00"
+    },
+    {
+      "id": "orange",
+      "color": "#FFFFA500"
+    },
+    {
+      "id": "cyan",
+      "color": "#FF00FFFF"
+    },
+    {
+      "id": "magenta",
+      "color": "#FFFF00FF"
+    },
+    {
+      "id": "purple",
+      "color": "#FF800080"
+    },
+    {
+      "id": "pink",
+      "color": "#FFFFC0CB"
+    },
+    {
+      "id": "brown",
+      "color": "#FF8B4513"
+    },
+    {
+      "id": "tan",
+      "color": "#FFD2B48C"
+    },
+    {
+      "id": "gold",
+      "color": "#FFFFD700"
+    },
+    {
+      "id": "silver",
+      "color": "#FFC0C0C0"
+    }
+  ]
+}
