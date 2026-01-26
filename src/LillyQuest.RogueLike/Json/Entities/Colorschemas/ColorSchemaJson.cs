@@ -5,7 +5,5 @@ namespace LillyQuest.RogueLike.Json.Entities.Colorschemas;
 
 public class ColorSchemaJson : BaseJsonEntity
 {
-    public LyColor BackgroundColor { get; set; }
-
-    public LyColor ForegroundColor { get; set; }
+    public LyColor Color { get; set; }
 }

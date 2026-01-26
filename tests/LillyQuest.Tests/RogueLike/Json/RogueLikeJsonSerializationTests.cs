@@ -40,8 +40,7 @@ public class RogueLikeJsonSerializationTests
                               "colors": [
                                 {
                                   "id": "color-1",
-                                  "foregroundColor": "#FF010203",
-                                  "backgroundColor": "#FF0A0B0C"
+                                  "color": "#FF010203"
                                 }
                               ]
                             }
@@ -58,7 +57,7 @@ public class RogueLikeJsonSerializationTests
         Assert.That(definition.Id, Is.EqualTo("schema"));
         Assert.That(definition.Colors.Count, Is.EqualTo(1));
         Assert.That(
-            definition.Colors[0].ForegroundColor,
+            definition.Colors[0].Color,
             Is.EqualTo(new LyColor(0xFF, 0x01, 0x02, 0x03))
         );
     }
@@ -164,8 +163,7 @@ public class RogueLikeJsonSerializationTests
                               "colors": [
                                 {
                                   "id": "color-1",
-                                  "foregroundColor": "#FF010203",
-                                  "backgroundColor": "#FF0A0B0C"
+                                  "color": "#FF010203"
                                 }
                               ]
                             }
@@ -179,7 +177,7 @@ public class RogueLikeJsonSerializationTests
         Assert.That(definition.Id, Is.EqualTo("schema"));
         Assert.That(definition.Colors.Count, Is.EqualTo(1));
         Assert.That(
-            definition.Colors[0].ForegroundColor,
+            definition.Colors[0].Color,
             Is.EqualTo(new LyColor(0xFF, 0x01, 0x02, 0x03))
         );
     }
@@ -190,8 +188,7 @@ public class RogueLikeJsonSerializationTests
         const string json = """
                             {
                               "id": "color-1",
-                              "foregroundColor": "#FF112233",
-                              "backgroundColor": "#CC445566"
+                              "color": "#FF112233"
                             }
                             """;
 
@@ -201,8 +198,7 @@ public class RogueLikeJsonSerializationTests
         );
 
         Assert.That(schema.Id, Is.EqualTo("color-1"));
-        Assert.That(schema.ForegroundColor, Is.EqualTo(new LyColor(0xFF, 0x11, 0x22, 0x33)));
-        Assert.That(schema.BackgroundColor, Is.EqualTo(new LyColor(0xCC, 0x44, 0x55, 0x66)));
+        Assert.That(schema.Color, Is.EqualTo(new LyColor(0xFF, 0x11, 0x22, 0x33)));
     }
 
     [Test]
