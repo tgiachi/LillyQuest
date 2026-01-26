@@ -61,4 +61,55 @@ public class TileSetServiceTests
         Assert.That(tile.FgColor, Is.EqualTo(new LyColor(0xFF, 0x01, 0x02, 0x03)));
         Assert.That(tile.BgColor, Is.EqualTo(new LyColor(0xFF, 0x10, 0x20, 0x30)));
     }
+
+    [Test]
+    public async Task TryGetTile_ReturnsFalse_WhenTilesetMissing()
+    {
+        var tileSetService = new TileSetService(new ColorService()) { DefaultTileset = "missing" };
+
+        var success = tileSetService.TryGetTile("t1", out _);
+
+        Assert.That(success, Is.False);
+    }
+
+    [Test]
+    public async Task TryGetTile_ReturnsFalse_WhenTileMissing()
+    {
+        var tileSetService = new TileSetService(new ColorService()) { DefaultTileset = "main" };
+        await tileSetService.LoadDataAsync(new List<BaseJsonEntity>
+        {
+            new TilesetDefinitionJson { Name = "main", Tiles = new List<TileDefinition>() }
+        });
+
+        var success = tileSetService.TryGetTile("missing", out _);
+
+        Assert.That(success, Is.False);
+    }
+
+    [Test]
+    public async Task TryGetTile_ReturnsFalse_WhenColorUnresolved()
+    {
+        var colorService = new ColorService { DefaultColorSet = "schema" };
+        await colorService.LoadDataAsync(new List<BaseJsonEntity>
+        {
+            new ColorSchemaDefintionJson { Id = "schema", Colors = new List<ColorSchemaJson>() }
+        });
+
+        var tileSetService = new TileSetService(colorService) { DefaultTileset = "main" };
+        await tileSetService.LoadDataAsync(new List<BaseJsonEntity>
+        {
+            new TilesetDefinitionJson
+            {
+                Name = "main",
+                Tiles = new List<TileDefinition>
+                {
+                    new TileDefinition { Id = "t1", Symbol = ".", FgColor = "fg", BgColor = "bg" }
+                }
+            }
+        });
+
+        var success = tileSetService.TryGetTile("t1", out _);
+
+        Assert.That(success, Is.False);
+    }
 }
