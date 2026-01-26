@@ -8,6 +8,7 @@ using LillyQuest.Engine.Logging;
 using LillyQuest.Game.Scenes;
 using LillyQuest.RogueLike;
 using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 
 var logDispatcher = new LogEventDispatcher();
 
@@ -15,7 +16,7 @@ Log.Logger = new LoggerConfiguration()
              .MinimumLevel
              .Debug()
              .WriteTo
-             .Console()
+             .Console(theme: AnsiConsoleTheme.Sixteen)
              .WriteTo
              .Sink(new LogEventBufferSink(logDispatcher))
              .CreateLogger();

@@ -89,8 +89,11 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         }
 
         _logger.Information("Loading RogueLike data");
+
         await dataLoader.LoadDataAsync();
+
         _logger.Information("RogueLike data loaded");
+
         await dataLoader.DispatchDataToReceiversAsync();
 
         // var renderContext = container.Resolve<EngineRenderContext>();

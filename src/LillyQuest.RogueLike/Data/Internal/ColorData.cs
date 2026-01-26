@@ -2,7 +2,7 @@ using LillyQuest.Core.Primitives;
 
 namespace LillyQuest.RogueLike.Data.Internal;
 
-public struct ColorData
+public class ColorData
 {
     public ColorData(string name, LyColor color)
     {

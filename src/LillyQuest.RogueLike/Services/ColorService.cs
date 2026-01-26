@@ -1,3 +1,4 @@
+using LillyQuest.Core.Primitives;
 using LillyQuest.RogueLike.Data.Internal;
 using LillyQuest.RogueLike.Interfaces;
 using LillyQuest.RogueLike.Interfaces.Services;
@@ -14,6 +15,8 @@ public class ColorService : IDataLoaderReceiver
     private readonly Dictionary<string, ColorData> _colorSets = new();
 
     private readonly IDataLoaderService _dataLoader;
+
+    public string DefaultColorSet { get; set; }
 
     public ColorService(IDataLoaderService dataLoader)
     {
@@ -45,5 +48,26 @@ public class ColorService : IDataLoaderReceiver
     public void ClearData()
     {
         _colorSets.Clear();
+    }
+
+    public LyColor? GetColorById(string colorId, string? colorSet = null)
+    {
+        string effectiveColorSet = colorSet ?? DefaultColorSet;
+
+        if (string.IsNullOrEmpty(effectiveColorSet))
+        {
+            _logger.Warning("No color set specified and no default color set defined");
+
+            return null;
+        }
+
+        if (_colorSets.TryGetValue(colorId, out ColorData? colorData))
+        {
+            return colorData.Color;
+        }
+
+        _logger.Warning("Color with ID {ColorId} not found", colorId);
+
+        return null;
     }
 }
