@@ -1,3 +1,4 @@
+using System.Numerics;
 using LillyQuest.Core.Primitives;
 using Silk.NET.Input;
 using Silk.NET.OpenGL;
@@ -11,6 +12,23 @@ public class EngineRenderContext
     public IWindow Window { get; set; }
     public IInputContext InputContext { get; set; }
     public GL Gl { get; set; }
+
+    /// <summary>
+    /// DPI scaling factor for high-DPI displays (e.g., 2.0 for Retina displays).
+    /// All rendering coordinates are scaled by this factor to maintain consistent visual size.
+    /// </summary>
+    public float DpiScale { get; set; } = 1.0f;
+
+    /// <summary>
+    /// Physical window size in pixels (actual framebuffer size).
+    /// </summary>
+    public Vector2 PhysicalWindowSize { get; set; }
+
+    /// <summary>
+    /// Logical window size in density-independent pixels.
+    /// Calculated as PhysicalWindowSize / DpiScale.
+    /// </summary>
+    public Vector2 LogicalWindowSize => PhysicalWindowSize / DpiScale;
     /// <summary>
     /// Handler used to dispatch fire-and-forget work on the main thread.
     /// </summary>
