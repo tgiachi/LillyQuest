@@ -96,6 +96,12 @@ public class TilesetSurfaceScreen : BaseScreen
     private Vector2 _tileViewSize = new(90, 30);
 
     /// <summary>
+    /// When true, the screen size is computed from TileViewSize.
+    /// When false, the screen size is considered externally controlled.
+    /// </summary>
+    public bool AutoSizeFromTileView { get; set; } = true;
+
+    /// <summary>
     /// Render scale for tiles (e.g., 2.0 scales 12x12 tiles to 24x24).
     /// </summary>
     public float TileRenderScale
@@ -165,11 +171,13 @@ public class TilesetSurfaceScreen : BaseScreen
 
         if (keepScreenSize)
         {
+            AutoSizeFromTileView = false;
             Size = screenSize;
             UpdateLayerRenderScaleFromTileView(screenSize, includeMargins);
             return;
         }
 
+        AutoSizeFromTileView = true;
         UpdateScreenSizeFromTileView();
     }
 
@@ -180,6 +188,7 @@ public class TilesetSurfaceScreen : BaseScreen
     /// <param name="includeMargins">Whether to subtract margins from the available size.</param>
     public void ApplyTileViewScaleToScreen(Vector2 screenSize, bool includeMargins = true)
     {
+        AutoSizeFromTileView = false;
         Size = screenSize;
         UpdateLayerRenderScaleFromTileView(screenSize, includeMargins);
     }
@@ -1356,6 +1365,11 @@ public class TilesetSurfaceScreen : BaseScreen
 
     private void UpdateScreenSizeFromTileView()
     {
+        if (!AutoSizeFromTileView)
+        {
+            return;
+        }
+
         if (_tileset == null)
         {
             return;

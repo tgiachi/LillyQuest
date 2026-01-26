@@ -1,4 +1,6 @@
 using System.Numerics;
+using System.Reflection;
+using System.Runtime.Serialization;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Engine.Screens.TilesetSurface;
@@ -86,5 +88,41 @@ public class TilesetSurfaceScreenAutoScaleTests
 
         var expected = MathF.Max(1024f / (80f * 10f), 768f / (25f * 10f));
         Assert.That(screen.GetLayerRenderScale(0), Is.EqualTo(expected).Within(0.0001f));
+    }
+
+    [Test]
+    public void TileViewSize_DoesNotOverrideSize_WhenSizeAlreadySet()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager())
+        {
+            Size = new Vector2(1604, 1350),
+            TileRenderScale = 1f,
+            AutoSizeFromTileView = false
+        };
+        SetPrivateTileset(screen, CreateTilesetStub(12, 12));
+
+        screen.TileViewSize = new Vector2(80, 30);
+
+        Assert.That(screen.Size, Is.EqualTo(new Vector2(1604, 1350)));
+    }
+
+    private static void SetPrivateTileset(TilesetSurfaceScreen screen, Tileset tileset)
+    {
+        var field = typeof(TilesetSurfaceScreen).GetField("_tileset", BindingFlags.NonPublic | BindingFlags.Instance);
+        field!.SetValue(screen, tileset);
+    }
+
+    private static Tileset CreateTilesetStub(int tileWidth, int tileHeight)
+    {
+        var tileset = (Tileset)FormatterServices.GetUninitializedObject(typeof(Tileset));
+        SetTilesetField(tileset, "<TileWidth>k__BackingField", tileWidth);
+        SetTilesetField(tileset, "<TileHeight>k__BackingField", tileHeight);
+        return tileset;
+    }
+
+    private static void SetTilesetField(Tileset tileset, string fieldName, int value)
+    {
+        var field = typeof(Tileset).GetField(fieldName, BindingFlags.NonPublic | BindingFlags.Instance);
+        field!.SetValue(tileset, value);
     }
 }
