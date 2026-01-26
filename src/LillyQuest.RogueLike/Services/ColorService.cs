@@ -1,7 +1,6 @@
 using LillyQuest.Core.Primitives;
 using LillyQuest.RogueLike.Data.Internal;
 using LillyQuest.RogueLike.Interfaces;
-using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Json.Entities.Base;
 using LillyQuest.RogueLike.Json.Entities.Colorschemas;
 using Serilog;
@@ -14,14 +13,10 @@ public class ColorService : IDataLoaderReceiver
 
     private readonly Dictionary<string, ColorData> _colorSets = new();
 
-    private readonly IDataLoaderService _dataLoader;
 
     public string DefaultColorSet { get; set; }
 
-    public ColorService(IDataLoaderService dataLoader)
-    {
-        _dataLoader = dataLoader;
-    }
+
 
     public Type[] GetLoadTypes()
         => [typeof(ColorSchemaDefintionJson)];

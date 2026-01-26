@@ -30,14 +30,13 @@ public class ColorServiceTests
     [SetUp]
     public void Setup()
     {
-        _mockDataLoader = new MockDataLoaderService();
-        _colorService = new ColorService(_mockDataLoader);
+        _colorService = new ColorService();
     }
 
     [Test]
     public void Constructor_InitializesEmptyColorSets()
     {
-        var service = new ColorService(_mockDataLoader);
+        var service = new ColorService();
 
         Assert.That(service.DefaultColorSet, Is.Null.Or.Empty);
     }
