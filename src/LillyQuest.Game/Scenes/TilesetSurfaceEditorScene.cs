@@ -70,8 +70,8 @@ public class TilesetSurfaceEditorScene : BaseScene
         };
 
         var windowSize = _renderContext.Window != null
-            ? new Vector2(_renderContext.Window.Size.X, _renderContext.Window.Size.Y)
-            : new Vector2(1280, 720);
+                             ? new Vector2(_renderContext.Window.Size.X, _renderContext.Window.Size.Y)
+                             : new Vector2(1280, 720);
 
         var availableSize = new Vector2(
             MathF.Max(0f, windowSize.X - _screen.Position.X),
@@ -79,6 +79,14 @@ public class TilesetSurfaceEditorScene : BaseScene
         );
 
         _screen.ApplyTileViewScaleToScreen(availableSize, includeMargins: true);
+
+
+        Log.Logger.Information(
+            "TilesetSurfaceScreen state: Size={Size}, TileViewSize={TileViewSize}, Layer0Scale={Scale}",
+            _screen.Size,
+            _screen.TileViewSize,
+            _screen.GetLayerRenderScale(0)
+        );
 
         _screen.TileMouseMoveAllLayers += (index, x, y, mouseX, mouseY) =>
                                           {
@@ -355,6 +363,13 @@ public class TilesetSurfaceEditorScene : BaseScene
         );
 
         _screen.ApplyTileViewScaleToScreen(availableSize, includeMargins: true);
+
+        Log.Logger.Information(
+            "TilesetSurfaceScreen state: Size={Size}, TileViewSize={TileViewSize}, Layer0Scale={Scale}",
+            _screen.Size,
+            _screen.TileViewSize,
+            _screen.GetLayerRenderScale(0)
+        );
     }
 
     public override void OnInitialize(ISceneManager sceneManager)
@@ -415,5 +430,4 @@ public class TilesetSurfaceEditorScene : BaseScene
         screen.SetLayerOpacity(0, 1.0f);
         screen.SetLayerOpacity(1, 1.0f);
     }
-
 }
