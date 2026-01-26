@@ -16,7 +16,7 @@ public class TilesetDefinitionJson : BaseJsonEntity
     /// <summary>
     /// Gets or sets the path to the texture file used by this tileset.
     /// </summary>
-    public string TexturePath { get; set;  }
+    public string TextureName { get; set;  }
 
     /// <summary>
     /// Gets or sets the collection of tile definitions that belong to this tileset.

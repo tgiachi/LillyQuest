@@ -90,7 +90,7 @@ public class RogueLikeJsonSerializationTests
         var tileset = (TilesetDefinitionJson)entity;
         Assert.That(tileset.Id, Is.EqualTo("tileset-1"));
         Assert.That(tileset.Name, Is.EqualTo("main"));
-        Assert.That(tileset.TexturePath, Is.EqualTo("tiles.png"));
+        Assert.That(tileset.TextureName, Is.EqualTo("tiles.png"));
         Assert.That(tileset.Tiles.Count, Is.EqualTo(1));
         Assert.That(tileset.Tiles[0].Id, Is.EqualTo("tile-1"));
     }
@@ -236,7 +236,7 @@ public class RogueLikeJsonSerializationTests
         );
 
         Assert.That(tileset.Name, Is.EqualTo("tileset"));
-        Assert.That(tileset.TexturePath, Is.EqualTo("tiles.png"));
+        Assert.That(tileset.TextureName, Is.EqualTo("tiles.png"));
     }
 
     [Test]
@@ -256,7 +256,7 @@ public class RogueLikeJsonSerializationTests
 
         Assert.That(tilesets.Count, Is.EqualTo(2));
         Assert.That(tilesets[0].Name, Is.EqualTo("a"));
-        Assert.That(tilesets[1].TexturePath, Is.EqualTo("b.png"));
+        Assert.That(tilesets[1].TextureName, Is.EqualTo("b.png"));
     }
 
     [Test]
@@ -367,7 +367,7 @@ public class RogueLikeJsonSerializationTests
         );
 
         Assert.That(tileset.Name, Is.EqualTo("animated-tiles"));
-        Assert.That(tileset.TexturePath, Is.EqualTo("tiles.png"));
+        Assert.That(tileset.TextureName, Is.EqualTo("tiles.png"));
         Assert.That(tileset.Tiles.Count, Is.EqualTo(2));
         Assert.That(tileset.Tiles[0].Id, Is.EqualTo("tile-1"));
         Assert.That(tileset.Tiles[1].Animation, Is.Not.Null);

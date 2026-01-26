@@ -2,7 +2,7 @@
   "type": "tileset",
   "id": "default",
   "name": "Default Tileset",
-  "texturePath": "tilesets/default.png",
+  "textureName": "tilesets/default.png",
   "tags": ["default", "roguelike"],
   "tiles": [
     {

@@ -13,7 +13,6 @@ public class ColorService : IDataLoaderReceiver
 
     private readonly Dictionary<string, ColorData> _colorSets = new();
 
-
     public string DefaultColorSet { get; set; }
 
 
