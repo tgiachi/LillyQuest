@@ -21,7 +21,7 @@ public class DataLoaderService : IDataLoaderService
 
     public async Task LoadDataAsync()
     {
-        var dataFiles = _config.PluginDirectory.SearchFiles("Data", "*.json");
+        var dataFiles = _config.PluginDirectory.SearchFiles("data", ".json");
 
         foreach (var dataFile in dataFiles)
         {

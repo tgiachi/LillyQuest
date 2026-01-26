@@ -33,6 +33,12 @@ public interface ILillyQuestPlugin
     void RegisterServices(IContainer container);
 
     /// <summary>
+    ///  Returns a list of directories the plugin needs created.
+    /// </summary>
+    /// <returns></returns>
+    string[]? DirectoriesToCreate();
+
+    /// <summary>
     /// Provides directory configurations for global and plugin-specific roots.
     /// </summary>
     /// <param name="global">The global directories configuration.</param>

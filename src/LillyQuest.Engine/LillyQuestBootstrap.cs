@@ -231,9 +231,13 @@ public class LillyQuestBootstrap
         _pluginRegistry.RegisterPlugin(plugin);
         _logger.Information("Calling RegisterServices for plugin {PluginId}", plugin.PluginInfo.Id);
         plugin.RegisterServices(_container);
-        var pluginRoot = Path.Combine(_engineConfig.RootDirectory, "Plugins", plugin.PluginInfo.Id);
+        var pluginRoot = Path.Combine(_engineConfig.RootDirectory, "Plugins", plugin.PluginInfo.Id).ResolvePathAndEnvs();
         Directory.CreateDirectory(pluginRoot);
-        var pluginDirectories = new DirectoriesConfig(pluginRoot, "Scripts");
+
+        var dirsToCreate = plugin.DirectoriesToCreate() ?? [];
+
+        var pluginDirectories = new DirectoriesConfig(pluginRoot, dirsToCreate);
+
         plugin.OnDirectories(_directoriesConfig, pluginDirectories);
         var pluginScriptsDir = Path.Combine(pluginRoot, "Scripts").ResolvePathAndEnvs();
         Directory.CreateDirectory(pluginScriptsDir);

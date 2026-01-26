@@ -41,6 +41,9 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         container.Register<IDataLoaderService, DataLoaderService>();
     }
 
+    public string[] DirectoriesToCreate()
+        => ["data"];
+
     public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin)
     {
         _container.RegisterInstance(
@@ -62,25 +65,30 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         Log.Information("Loading RogueLike plugin...");
         await Task.Delay(1000);
 
-        var renderContext = container.Resolve<EngineRenderContext>();
+        var dataLoader = container.Resolve<IDataLoaderService>();
+        _logger.Information("Loading RogueLike data");
+        await dataLoader.LoadDataAsync();
+        _logger.Information("RogueLike data loaded");
 
-        for (var progress = 0; progress <= 100; progress += Random.Shared.Next(0, 4))
-        {
-            Log.Information("\rRogueLike loading {Progress}%", progress);
-            await Task.Delay(100);
-        }
-
-        renderContext.PostOnMainThread(
-            () =>
-            {
-                renderContext.Window.Title = "LillyQuest RogueLike";
-            }
-        );
-
-        Log.Information("RogueLike plugin loaded");
-
-        await Task.Delay(1000);
-        Log.Information("\n");
-        await Task.Delay(1000);
+        // var renderContext = container.Resolve<EngineRenderContext>();
+        //
+        // for (var progress = 0; progress <= 100; progress += Random.Shared.Next(0, 4))
+        // {
+        //     Log.Information("\rRogueLike loading {Progress}%", progress);
+        //     await Task.Delay(100);
+        // }
+        //
+        // renderContext.PostOnMainThread(
+        //     () =>
+        //     {
+        //         renderContext.Window.Title = "LillyQuest RogueLike";
+        //     }
+        // );
+        //
+        // Log.Information("RogueLike plugin loaded");
+        //
+        // await Task.Delay(1000);
+        // Log.Information("\n");
+        // await Task.Delay(1000);
     }
 }
