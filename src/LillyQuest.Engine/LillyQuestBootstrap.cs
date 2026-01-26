@@ -420,6 +420,7 @@ public class LillyQuestBootstrap
 
         _container.Register<IActionService, ActionService>(Reuse.Singleton);
         _container.Register<IShortcutService, ShortcutService>(Reuse.Singleton);
+        _container.Register<IMainThreadDispatcher, MainThreadDispatcher>(Reuse.Singleton);
 
         foreach (var systemType in _renderSystems)
         {
@@ -570,6 +571,9 @@ public class LillyQuestBootstrap
         }
 
         _resourceLoadingFlow.Update();
+
+        var mainThreadDispatcher = _container.Resolve<IMainThreadDispatcher>();
+        mainThreadDispatcher.ExecutePending();
 
         // Update scene transitions
         var sceneManager = _container.Resolve<ISceneManager>();
