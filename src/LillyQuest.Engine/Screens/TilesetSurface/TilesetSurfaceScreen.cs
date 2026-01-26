@@ -105,6 +105,7 @@ public class TilesetSurfaceScreen : BaseScreen
         {
             _tileRenderScale = value;
             UpdateScreenSizeFromTileView();
+            UpdateLayerRenderScaleFromTileView(Size, includeMargins: true);
         }
     }
 
@@ -119,6 +120,7 @@ public class TilesetSurfaceScreen : BaseScreen
         {
             _tileViewSize = value;
             UpdateScreenSizeFromTileView();
+            UpdateLayerRenderScaleFromTileView(Size, includeMargins: true);
         }
     }
 
@@ -159,15 +161,27 @@ public class TilesetSurfaceScreen : BaseScreen
     /// <param name="includeMargins">Whether to subtract margins from the available size.</param>
     public void FitTileViewToScreen(Vector2 screenSize, bool keepScreenSize = true, bool includeMargins = true)
     {
-        _tileViewSize = ComputeTileViewSizeFromScreen(screenSize, includeMargins);
+        TileViewSize = ComputeTileViewSizeFromScreen(screenSize, includeMargins);
 
         if (keepScreenSize)
         {
             Size = screenSize;
+            UpdateLayerRenderScaleFromTileView(screenSize, includeMargins);
             return;
         }
 
         UpdateScreenSizeFromTileView();
+    }
+
+    /// <summary>
+    /// Updates the screen size and scales layers to match the current tile view size.
+    /// </summary>
+    /// <param name="screenSize">Target screen size in logical units.</param>
+    /// <param name="includeMargins">Whether to subtract margins from the available size.</param>
+    public void ApplyTileViewScaleToScreen(Vector2 screenSize, bool includeMargins = true)
+    {
+        Size = screenSize;
+        UpdateLayerRenderScaleFromTileView(screenSize, includeMargins);
     }
 
     public TilesetSurfaceScreen(ITilesetManager tilesetManager)
@@ -283,6 +297,39 @@ public class TilesetSurfaceScreen : BaseScreen
         float tileRenderScale
     )
         => tileViewSize.ToScreenSize(tileWidth, tileHeight, tileRenderScale);
+
+    public static float ComputeLayerRenderScaleForTileView(
+        Vector2 tileViewSize,
+        Vector2 screenSize,
+        int tileWidth,
+        int tileHeight,
+        float tileRenderScale,
+        Vector4 margin,
+        bool includeMargins = true
+    )
+    {
+        if (tileViewSize.X <= 0f || tileViewSize.Y <= 0f || tileWidth <= 0 || tileHeight <= 0 || tileRenderScale <= 0f)
+        {
+            return 0f;
+        }
+
+        var availableSize = includeMargins
+            ? new Vector2(
+                MathF.Max(0f, screenSize.X - margin.X - margin.Z),
+                MathF.Max(0f, screenSize.Y - margin.Y - margin.W)
+            )
+            : screenSize;
+
+        if (availableSize.X <= 0f || availableSize.Y <= 0f)
+        {
+            return 0f;
+        }
+
+        var widthScale = availableSize.X / (tileViewSize.X * tileWidth * tileRenderScale);
+        var heightScale = availableSize.Y / (tileViewSize.Y * tileHeight * tileRenderScale);
+
+        return MathF.Max(widthScale, heightScale);
+    }
 
     /// <summary>
     /// Enqueues a tile movement for the specified layer.
@@ -476,13 +523,14 @@ public class TilesetSurfaceScreen : BaseScreen
             throw new InvalidOperationException($"Default tileset '{DefaultTilesetName}' not found");
         }
 
-        UpdateScreenSizeFromTileView();
-
         // Initialize layers if they haven't been initialized yet
         if (_surface.Layers.Count == 0)
         {
             _surface.Initialize(LayerCount);
         }
+
+        UpdateScreenSizeFromTileView();
+        UpdateLayerRenderScaleFromTileView(Size, includeMargins: true);
 
         base.OnLoad();
     }
@@ -792,11 +840,8 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         _surface.Layers[layerIndex].TilesetName = tilesetName;
-
-        if (layerIndex == 0)
-        {
-            UpdateScreenSizeFromTileView();
-        }
+        UpdateScreenSizeFromTileView();
+        UpdateLayerRenderScaleFromTileView(Size, includeMargins: true);
     }
 
     /// <summary>
@@ -1323,6 +1368,39 @@ public class TilesetSurfaceScreen : BaseScreen
             masterTileset.TileHeight,
             _tileRenderScale
         );
+    }
+
+    private void UpdateLayerRenderScaleFromTileView(Vector2 screenSize, bool includeMargins)
+    {
+        if (_surface.Layers.Count == 0)
+        {
+            return;
+        }
+
+        for (var i = 0; i < _surface.Layers.Count; i++)
+        {
+            if (!TryGetLayerInputTileInfo(i, out var tileWidth, out var tileHeight, out _))
+            {
+                continue;
+            }
+
+            var scale = ComputeLayerRenderScaleForTileView(
+                _tileViewSize,
+                screenSize,
+                tileWidth,
+                tileHeight,
+                _tileRenderScale,
+                Margin,
+                includeMargins
+            );
+
+            if (scale <= 0f)
+            {
+                continue;
+            }
+
+            SetLayerRenderScale(i, scale);
+        }
     }
 
     private void UpdateViewSmoothing(GameTime gameTime)

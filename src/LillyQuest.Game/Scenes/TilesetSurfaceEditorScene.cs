@@ -78,7 +78,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             MathF.Max(0f, windowSize.Y - _screen.Position.Y)
         );
 
-        _screen.FitTileViewToScreen(availableSize, keepScreenSize: true, includeMargins: true);
+        _screen.ApplyTileViewScaleToScreen(availableSize, includeMargins: true);
 
         _screen.TileMouseMoveAllLayers += (index, x, y, mouseX, mouseY) =>
                                           {
@@ -354,7 +354,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             MathF.Max(0f, size.Y - _screen.Position.Y)
         );
 
-        _screen.FitTileViewToScreen(availableSize, keepScreenSize: true, includeMargins: true);
+        _screen.ApplyTileViewScaleToScreen(availableSize, includeMargins: true);
     }
 
     public override void OnInitialize(ISceneManager sceneManager)
