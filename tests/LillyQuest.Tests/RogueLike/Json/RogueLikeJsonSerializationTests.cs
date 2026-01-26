@@ -70,7 +70,7 @@ public class RogueLikeJsonSerializationTests
                               "type": "tileset",
                               "id": "tileset-1",
                               "name": "main",
-                              "texturePath": "tiles.png",
+                              "textureName": "tiles.png",
                               "tiles": [
                                 {
                                   "id": "tile-1",
@@ -226,7 +226,7 @@ public class RogueLikeJsonSerializationTests
         const string json = """
                             {
                               "name": "tileset",
-                              "texturePath": "tiles.png"
+                              "textureName": "tiles.png"
                             }
                             """;
 
@@ -244,8 +244,8 @@ public class RogueLikeJsonSerializationTests
     {
         const string json = """
                             [
-                              { "name": "a", "texturePath": "a.png" },
-                              { "name": "b", "texturePath": "b.png" }
+                              { "name": "a", "textureName": "a.png" },
+                              { "name": "b", "textureName": "b.png" }
                             ]
                             """;
 
@@ -333,7 +333,7 @@ public class RogueLikeJsonSerializationTests
         const string json = """
                             {
                               "name": "animated-tiles",
-                              "texturePath": "tiles.png",
+                              "textureName": "tiles.png",
                               "tiles": [
                                 {
                                   "id": "tile-1",
