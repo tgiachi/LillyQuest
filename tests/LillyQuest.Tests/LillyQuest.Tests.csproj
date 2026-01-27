@@ -7,7 +7,7 @@
         <Nullable>enable</Nullable>
         <IsPackable>false</IsPackable>
         <Authors>tom</Authors>
-        <Version>0.2.0</Version>
+        <Version>0.3.0</Version>
         <Description>LillyQuest Tests - Unit Tests for LillyQuest Engine</Description>
         <PackageProjectUrl>https://github.com/tgiachi/LillyQuest/</PackageProjectUrl>
         <RepositoryUrl>https://github.com/tgiachi/LillyQuest/</RepositoryUrl>

@@ -6,7 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Authors>tom</Authors>
-        <Version>0.2.0</Version>
+        <Version>0.3.0</Version>
         <Description>LillyQuest Game - Game Application Built with LillyQuest Engine</Description>
         <PackageProjectUrl>https://github.com/tgiachi/LillyQuest/</PackageProjectUrl>
         <RepositoryUrl>https://github.com/tgiachi/LillyQuest/</RepositoryUrl>
