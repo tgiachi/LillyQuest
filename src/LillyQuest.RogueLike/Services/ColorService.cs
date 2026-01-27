@@ -39,6 +39,7 @@ public class ColorService : IDataLoaderReceiver
             _logger.Warning("No color set specified and no default color set defined, selecting first colorset");
 
             effectiveColorSet = _colorSets.Keys.FirstOrDefault();
+            DefaultColorSet = effectiveColorSet;
 
         }
 

@@ -11,6 +11,8 @@ namespace LillyQuest.RogueLike.Json.Context;
 /// of tileset definitions, animations, and color schema entities.
 /// </summary>
 [JsonSerializable(typeof(BaseJsonEntity)),
+ JsonSerializable(typeof(List<BaseJsonEntity>)),
+ JsonSerializable(typeof(BaseJsonEntity[])),
  JsonSerializable(typeof(TilesetDefinitionJson)),
  JsonSerializable(typeof(TileDefinition)),
  JsonSerializable(typeof(List<TilesetDefinitionJson>)),
@@ -22,6 +24,7 @@ namespace LillyQuest.RogueLike.Json.Context;
  JsonSerializable(typeof(TileAnimationFrame)),
  JsonSerializable(typeof(TerrainDefinitionJson)),
  JsonSerializable(typeof(TerrainDefinitionJson[])),
+ JsonSerializable(typeof(List<TerrainDefinitionJson>)),
  JsonSerializable(typeof(List<TileAnimationFrame>))
 ]
 public partial class LillyQuestRogueLikeJsonContext : JsonSerializerContext { }
