@@ -1,4 +1,5 @@
 using GoRogue.MapGeneration;
+using LillyQuest.Core.Primitives;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Maps;
@@ -21,15 +22,15 @@ public class MapGenerator : IMapGenerator
 
     public async Task<LyQuestMap> GenerateMapAsync()
     {
-        var map = new LyQuestMap(100, 100);
-        var generator = new Generator(100, 100);
+        var map = new LyQuestMap(300, 300);
+        var generator = new Generator(300, 300);
         var floorId = "floor";
         var wallId = "wall";
 
         generator.ConfigAndGenerateSafe(
             g =>
             {
-                g.AddSteps(DefaultAlgorithms.CellularAutomataGenerationSteps());
+                g.AddSteps(DefaultAlgorithms.RectangleMapSteps());
             }
         );
 
@@ -57,6 +58,17 @@ public class MapGenerator : IMapGenerator
                 map.SetTerrain(terrainGameObject);
             }
         }
+
+        var freePosition = map.WalkabilityView
+                              .Positions()
+                              .FirstOrDefault(p => map.WalkabilityView[p]);
+
+        var player = new CreatureGameObject(freePosition)
+        {
+            Tile = new VisualTile("player", "@", LyColor.White, LyColor.Transparent)
+        };
+
+        map.AddEntity(player);
 
         return map;
     }

@@ -1,5 +1,7 @@
+using System.Runtime.CompilerServices;
 using GoRogue.GameFramework;
 using LillyQuest.Core.Data.Assets.Tiles;
+using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Types;
@@ -34,6 +36,25 @@ public class LyQuestMap : Map
                     )
                 );
             }
+
+            foreach (var entity in GetObjectsAt(position))
+            {
+                if (entity is CreatureGameObject creature)
+                {
+                    surface.AddTileToSurface(
+                        creature.Layer,
+                        position.X,
+                        position.Y,
+                        new TileRenderData(
+                            creature.Tile.Symbol[0],
+                            creature.Tile.ForegroundColor
+                        )
+                    );
+                }
+            }
         }
+        var player = Entities.GetLayer((int)MapLayer.Creatures).First();
+
+        surface.CenterViewOnTile(0, player.Position.X, player.Position.Y);
     }
 }

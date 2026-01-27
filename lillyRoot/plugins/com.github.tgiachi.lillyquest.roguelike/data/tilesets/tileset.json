@@ -20,6 +20,13 @@
       "bgColor": "black"
     },
     {
+      "id": "player",
+      "tags": ["player", "walkable"],
+      "symbol": "@",
+      "fgColor": "white",
+      "bgColor": "textureName"
+    },
+    {
       "id": "tree",
       "tags": ["tree", "solid", "nature"],
       "symbol": "T",

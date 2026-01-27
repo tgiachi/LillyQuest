@@ -38,7 +38,7 @@ public class RogueScene : BaseScene
 
         _screen = new TilesetSurfaceScreen(_tilesetManager)
         {
-            DefaultTilesetName = "roguelike",
+            DefaultTilesetName = "alloy",
             LayerCount = Enum.GetNames<MapLayer>().Length,
             Position = new Vector2(100, 30),
             TileRenderScale = 1f,
@@ -55,10 +55,15 @@ public class RogueScene : BaseScene
         _screen.ApplyTileViewScaleToScreen(availableSize, includeMargins: true);
 
         _screen.InitializeLayers(_screen.LayerCount);
-        _screen.SetLayerTileset(0, "alloy");
-        _screen.SetLayerTileset(1, "alloy");
+        // _screen.SetLayerTileset(0, "alloy");
+        // _screen.SetLayerTileset(1, "alloy");
 
         _screen.SetLayerRenderScaleSmoothing(0, true, 0.1f);
+
+        _screen.TileMouseDown += (index, x, y, buttons) =>
+                                 {
+                                     _screen.CenterViewOnTile(0, x, y);
+                                 };
 
         var map = _mapGenerator.GenerateMapAsync().GetAwaiter().GetResult();
         map.FillSurface(_screen);

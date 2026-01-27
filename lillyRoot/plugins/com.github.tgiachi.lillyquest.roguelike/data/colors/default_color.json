@@ -86,6 +86,10 @@
     {
       "id": "silver",
       "color": "#FFC0C0C0"
+    },
+    {
+      "id": "transparent",
+      "color": "#00FFFFFF"
     }
   ]
 }
