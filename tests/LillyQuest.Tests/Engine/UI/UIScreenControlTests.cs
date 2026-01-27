@@ -38,4 +38,17 @@ public class UIScreenControlTests
 
         Assert.That(child.GetWorldPosition(), Is.EqualTo(new Vector2(15, 15)));
     }
+
+    [Test]
+    public void Center_Sets_Position_And_KeepCentered_When_Parent_Present()
+    {
+        var parent = new UIScreenControl { Size = new(100, 100) };
+        var child = new UIScreenControl { Size = new(10, 10) };
+        parent.AddChild(child);
+
+        child.Center();
+
+        Assert.That(child.KeepCentered, Is.True);
+        Assert.That(child.Position, Is.EqualTo(new Vector2(45, 45)));
+    }
 }

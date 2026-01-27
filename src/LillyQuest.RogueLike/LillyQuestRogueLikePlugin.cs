@@ -5,9 +5,12 @@ using LillyQuest.Core.Data.Plugins;
 using LillyQuest.Core.Json;
 using LillyQuest.Engine.Interfaces.Plugins;
 using LillyQuest.RogueLike.Data;
+using LillyQuest.RogueLike.Data.Configs;
+using LillyQuest.RogueLike.Interfaces;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Json.Context;
 using LillyQuest.RogueLike.Services;
+using LillyQuest.RogueLike.Services.Loader;
 using Serilog;
 
 namespace LillyQuest.RogueLike;
@@ -17,6 +20,12 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
     private readonly ILogger _logger = Log.ForContext<LillyQuestRogueLikePlugin>();
 
     private IContainer _container;
+
+    private readonly List<Type> _dataReceiverTypes =
+    [
+        typeof(ColorService),
+        typeof(TileSetService)
+    ];
 
     public PluginInfo PluginInfo
         => new PluginInfo(
@@ -39,7 +48,17 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         _container = container;
 
         container.Register<IDataLoaderService, DataLoaderService>();
+
+        foreach (var receiverType in _dataReceiverTypes)
+        {
+            _logger.Debug("Registering receiver type: {ReceiverType}", receiverType);
+
+            _container.Register(receiverType, Reuse.Singleton);
+        }
     }
+
+    public string[] DirectoriesToCreate()
+        => ["data"];
 
     public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin)
     {
@@ -62,20 +81,44 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         Log.Information("Loading RogueLike plugin...");
         await Task.Delay(1000);
 
-        var renderContext = container.Resolve<EngineRenderContext>();
+        var dataLoader = container.Resolve<IDataLoaderService>();
 
-        for (var progress = 0; progress <= 100; progress += Random.Shared.Next(0, 4))
+        foreach (var receiverType in _dataReceiverTypes)
         {
-            Log.Information("\rRogueLike loading {Progress}%", progress);
-            await Task.Delay(100);
+            var receiver = (IDataLoaderReceiver)container.Resolve(receiverType);
+            dataLoader.RegisterDataReceiver(receiver);
         }
 
-        renderContext.Window.Title = "LillyQuest RogueLike";
+        _logger.Information("Loading RogueLike data");
 
-        Log.Information("RogueLike plugin loaded");
+        await dataLoader.LoadDataAsync();
 
-        await Task.Delay(1000);
-        Log.Information("\n");
-        await Task.Delay(1000);
+        _logger.Information("RogueLike data loaded");
+
+        await dataLoader.DispatchDataToReceiversAsync();
+
+        _logger.Information("Starting data verification");
+        await dataLoader.VerifyLoadedDataAsync();
+
+        // var renderContext = container.Resolve<EngineRenderContext>();
+        //
+        // for (var progress = 0; progress <= 100; progress += Random.Shared.Next(0, 4))
+        // {
+        //     Log.Information("\rRogueLike loading {Progress}%", progress);
+        //     await Task.Delay(100);
+        // }
+        //
+        // renderContext.PostOnMainThread(
+        //     () =>
+        //     {
+        //         renderContext.Window.Title = "LillyQuest RogueLike";
+        //     }
+        // );
+        //
+        // Log.Information("RogueLike plugin loaded");
+        //
+        // await Task.Delay(1000);
+        // Log.Information("\n");
+        // await Task.Delay(1000);
     }
 }

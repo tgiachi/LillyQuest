@@ -2,6 +2,7 @@ using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Primitives;
+using LillyQuest.Engine.Data.Input;
 using LillyQuest.Engine.Managers.Screens.Base;
 using Silk.NET.Input;
 
@@ -108,6 +109,15 @@ public sealed class UIRootScreen : BaseScreen
         return hit?.HandleMouseWheel(new(x, y), delta) ?? false;
     }
 
+    public override bool OnKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => Root.FocusManager.Focused?.HandleKeyPress(modifier, keys) ?? false;
+
+    public override bool OnKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => Root.FocusManager.Focused?.HandleKeyRelease(modifier, keys) ?? false;
+
+    public override bool OnKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => Root.FocusManager.Focused?.HandleKeyRepeat(modifier, keys) ?? false;
+
     public override void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
     {
         foreach (var control in Root.Children.OrderBy(c => c.ZIndex))
@@ -128,6 +138,16 @@ public sealed class UIRootScreen : BaseScreen
         foreach (var control in Root.Children)
         {
             control.Update(gameTime);
+        }
+    }
+
+    public void HandleResize(Vector2 newSize)
+    {
+        Size = newSize;
+
+        foreach (var control in Root.Children)
+        {
+            control.ApplyCentering(newSize);
         }
     }
 

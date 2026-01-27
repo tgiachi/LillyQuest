@@ -119,25 +119,35 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         _gl.Enable(EnableCap.Blend);
         _gl.BlendFunc(BlendingFactor.One, BlendingFactor.OneMinusSrcAlpha);
 
+        // Get DPI scale once for use throughout Begin()
+        var dpiScale = RenderContext.DpiScale;
+
         // Enable scissor test if configured
         if (_scissorEnabled && ScissorRect.Size.X > 0 && ScissorRect.Size.Y > 0)
         {
             _gl.Enable(EnableCap.ScissorTest);
 
+            // ScissorRect is in logical coordinates, but gl.Scissor operates in physical framebuffer pixels
+            // Convert from logical to physical coordinates
+            var physicalX = (int)(ScissorRect.Origin.X * dpiScale);
+            var physicalY = (int)(ScissorRect.Origin.Y * dpiScale);
+            var physicalWidth = (int)(ScissorRect.Size.X * dpiScale);
+            var physicalHeight = (int)(ScissorRect.Size.Y * dpiScale);
+
             // Convert from top-left coordinates to OpenGL bottom-left
-            var viewportHeight = Viewport.Size.Y;
-            var scissorY = viewportHeight - ScissorRect.Origin.Y - ScissorRect.Size.Y;
-            _gl.Scissor(
-                ScissorRect.Origin.X,
-                scissorY,
-                (uint)ScissorRect.Size.X,
-                (uint)ScissorRect.Size.Y
-            );
+            // Viewport height is in logical pixels, so scale to physical for GL coordinate system
+            var physicalViewportHeight = (int)(Viewport.Size.Y * dpiScale);
+            var scissorY = physicalViewportHeight - physicalY - physicalHeight;
+
+            _gl.Scissor(physicalX, scissorY, (uint)physicalWidth, (uint)physicalHeight);
         }
 
         ShaderProgram.Use();
         ShaderProgram.SetUniform("TextureSampler", 0);
 
+        // Viewport is already in logical coordinates (Window.Size)
+        // Silk.NET automatically handles DPI scaling via FramebufferSize vs Window.Size
+        // So we use the viewport as-is for the orthographic projection
         var transform = Matrix4x4.CreateOrthographicOffCenter(
             Viewport.Origin.X,
             Viewport.Origin.X + Viewport.Size.X,
@@ -987,14 +997,15 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     }
 
     /// <summary>
-    /// Enable scissor test with the specified rectangle.
+    /// Enable scissor test with the specified rectangle in logical coordinates.
+    /// Automatically scales to physical coordinates for DPI-aware displays.
     /// Flushes the current buffer before changing scissor state.
-    /// Coordinates: (x, y) from top-left corner.
+    /// Coordinates: (x, y) from top-left corner in logical pixels.
     /// </summary>
-    /// <param name="x">X position of the scissor rectangle.</param>
-    /// <param name="y">Y position of the scissor rectangle.</param>
-    /// <param name="width">Width of the scissor rectangle.</param>
-    /// <param name="height">Height of the scissor rectangle.</param>
+    /// <param name="x">X position of the scissor rectangle in logical pixels.</param>
+    /// <param name="y">Y position of the scissor rectangle in logical pixels.</param>
+    /// <param name="width">Width of the scissor rectangle in logical pixels.</param>
+    /// <param name="height">Height of the scissor rectangle in logical pixels.</param>
     public void SetScissor(int x, int y, int width, int height)
     {
         if (IsActive)
@@ -1003,11 +1014,19 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
 
             _gl.Enable(EnableCap.ScissorTest);
 
-            // Convert from top-left coordinates to OpenGL bottom-left
-            var viewportHeight = Viewport.Size.Y;
-            var scissorY = viewportHeight - y - height;
+            // Convert from logical coordinates to physical (DPI-scaled) coordinates
+            var dpiScale = RenderContext.DpiScale;
+            var physicalX = (int)(x * dpiScale);
+            var physicalY = (int)(y * dpiScale);
+            var physicalWidth = (int)(width * dpiScale);
+            var physicalHeight = (int)(height * dpiScale);
 
-            _gl.Scissor(x, scissorY, (uint)width, (uint)height);
+            // Convert from top-left coordinates to OpenGL bottom-left
+            // Viewport height is in logical pixels, so scale to physical for GL coordinate system
+            var physicalViewportHeight = (int)(Viewport.Size.Y * dpiScale);
+            var scissorY = physicalViewportHeight - physicalY - physicalHeight;
+
+            _gl.Scissor(physicalX, scissorY, (uint)physicalWidth, (uint)physicalHeight);
         }
 
         ScissorRect = new(x, y, width, height);

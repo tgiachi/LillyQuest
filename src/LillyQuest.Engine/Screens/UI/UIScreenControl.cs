@@ -2,6 +2,7 @@ using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Primitives;
+using LillyQuest.Engine.Data.Input;
 using Silk.NET.Input;
 using Silk.NET.Maths;
 
@@ -23,6 +24,7 @@ public class UIScreenControl
     public bool IsEnabled { get; set; } = true;
     public bool IsFocusable { get; set; }
     public int ZIndex { get; set; }
+    public bool KeepCentered { get; set; }
 
     public UIScreenControl? Parent { get; set; }
 
@@ -32,6 +34,9 @@ public class UIScreenControl
     public Func<Vector2, float, bool>? OnMouseWheel { get; set; }
     public Func<Vector2, IReadOnlyList<MouseButton>, bool>? OnMouseDownWithButtons { get; set; }
     public Func<Vector2, IReadOnlyList<MouseButton>, bool>? OnMouseUpWithButtons { get; set; }
+    public Func<KeyModifierType, IReadOnlyList<Key>, bool>? OnKeyPress { get; set; }
+    public Func<KeyModifierType, IReadOnlyList<Key>, bool>? OnKeyRelease { get; set; }
+    public Func<KeyModifierType, IReadOnlyList<Key>, bool>? OnKeyRepeat { get; set; }
 
     public void AddChild(UIScreenControl control)
     {
@@ -111,6 +116,15 @@ public class UIScreenControl
     public virtual bool HandleMouseWheel(Vector2 point, float delta)
         => OnMouseWheel?.Invoke(point, delta) ?? false;
 
+    public virtual bool HandleKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => OnKeyPress?.Invoke(modifier, keys) ?? false;
+
+    public virtual bool HandleKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => OnKeyRelease?.Invoke(modifier, keys) ?? false;
+
+    public virtual bool HandleKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => OnKeyRepeat?.Invoke(modifier, keys) ?? false;
+
     public void RemoveChild(UIScreenControl control)
     {
         if (control == null)
@@ -135,4 +149,34 @@ public class UIScreenControl
     /// Updates the control.
     /// </summary>
     public virtual void Update(GameTime gameTime) { }
+
+    public void Center()
+    {
+        KeepCentered = true;
+        var referenceSize = Parent?.Size ?? Vector2.Zero;
+        Position = GetCenteredPosition(referenceSize);
+    }
+
+    public void CenterIn(Vector2 referenceSize)
+    {
+        KeepCentered = true;
+        Position = GetCenteredPosition(referenceSize);
+    }
+
+    internal void ApplyCentering(Vector2 rootSize)
+    {
+        if (KeepCentered)
+        {
+            var referenceSize = Parent?.Size ?? rootSize;
+            Position = GetCenteredPosition(referenceSize);
+        }
+
+        foreach (var child in _children)
+        {
+            child.ApplyCentering(rootSize);
+        }
+    }
+
+    private Vector2 GetCenteredPosition(Vector2 referenceSize)
+        => new((referenceSize.X - Size.X) * 0.5f, (referenceSize.Y - Size.Y) * 0.5f);
 }

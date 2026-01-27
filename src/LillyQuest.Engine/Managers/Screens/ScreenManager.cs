@@ -116,6 +116,7 @@ public sealed class ScreenManager : IScreenManager
 
     /// <summary>
     /// Dispatches mouse down events to screen and its entities (with hit-testing).
+    /// Mouse coordinates are already in logical (DPI-independent) pixels from Silk.NET.
     /// </summary>
     public bool DispatchMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
@@ -149,6 +150,7 @@ public sealed class ScreenManager : IScreenManager
 
     /// <summary>
     /// Dispatches mouse move events to screen and its entities.
+    /// Mouse coordinates are already in logical (DPI-independent) pixels from Silk.NET.
     /// </summary>
     public bool DispatchMouseMove(int x, int y)
     {
@@ -178,6 +180,7 @@ public sealed class ScreenManager : IScreenManager
 
     /// <summary>
     /// Dispatches mouse up events to screen and its entities.
+    /// Mouse coordinates are already in logical (DPI-independent) pixels from Silk.NET.
     /// </summary>
     public bool DispatchMouseUp(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
@@ -207,6 +210,7 @@ public sealed class ScreenManager : IScreenManager
 
     /// <summary>
     /// Dispatches mouse wheel events to screen and its entities.
+    /// Mouse coordinates are already in logical (DPI-independent) pixels from Silk.NET.
     /// </summary>
     public bool DispatchMouseWheel(int x, int y, float delta)
     {
@@ -400,6 +404,7 @@ public sealed class ScreenManager : IScreenManager
             }
         }
     }
+
 
     /// <summary>
     /// Dispatches an input action to all screen entities.

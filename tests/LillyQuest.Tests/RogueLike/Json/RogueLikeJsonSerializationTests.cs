@@ -40,8 +40,7 @@ public class RogueLikeJsonSerializationTests
                               "colors": [
                                 {
                                   "id": "color-1",
-                                  "foregroundColor": "#FF010203",
-                                  "backgroundColor": "#FF0A0B0C"
+                                  "color": "#FF010203"
                                 }
                               ]
                             }
@@ -58,7 +57,7 @@ public class RogueLikeJsonSerializationTests
         Assert.That(definition.Id, Is.EqualTo("schema"));
         Assert.That(definition.Colors.Count, Is.EqualTo(1));
         Assert.That(
-            definition.Colors[0].ForegroundColor,
+            definition.Colors[0].Color,
             Is.EqualTo(new LyColor(0xFF, 0x01, 0x02, 0x03))
         );
     }
@@ -71,7 +70,7 @@ public class RogueLikeJsonSerializationTests
                               "type": "tileset",
                               "id": "tileset-1",
                               "name": "main",
-                              "texturePath": "tiles.png",
+                              "textureName": "tiles.png",
                               "tiles": [
                                 {
                                   "id": "tile-1",
@@ -91,7 +90,7 @@ public class RogueLikeJsonSerializationTests
         var tileset = (TilesetDefinitionJson)entity;
         Assert.That(tileset.Id, Is.EqualTo("tileset-1"));
         Assert.That(tileset.Name, Is.EqualTo("main"));
-        Assert.That(tileset.TexturePath, Is.EqualTo("tiles.png"));
+        Assert.That(tileset.TextureName, Is.EqualTo("tiles.png"));
         Assert.That(tileset.Tiles.Count, Is.EqualTo(1));
         Assert.That(tileset.Tiles[0].Id, Is.EqualTo("tile-1"));
     }
@@ -164,8 +163,7 @@ public class RogueLikeJsonSerializationTests
                               "colors": [
                                 {
                                   "id": "color-1",
-                                  "foregroundColor": "#FF010203",
-                                  "backgroundColor": "#FF0A0B0C"
+                                  "color": "#FF010203"
                                 }
                               ]
                             }
@@ -179,7 +177,7 @@ public class RogueLikeJsonSerializationTests
         Assert.That(definition.Id, Is.EqualTo("schema"));
         Assert.That(definition.Colors.Count, Is.EqualTo(1));
         Assert.That(
-            definition.Colors[0].ForegroundColor,
+            definition.Colors[0].Color,
             Is.EqualTo(new LyColor(0xFF, 0x01, 0x02, 0x03))
         );
     }
@@ -190,8 +188,7 @@ public class RogueLikeJsonSerializationTests
         const string json = """
                             {
                               "id": "color-1",
-                              "foregroundColor": "#FF112233",
-                              "backgroundColor": "#CC445566"
+                              "color": "#FF112233"
                             }
                             """;
 
@@ -201,8 +198,7 @@ public class RogueLikeJsonSerializationTests
         );
 
         Assert.That(schema.Id, Is.EqualTo("color-1"));
-        Assert.That(schema.ForegroundColor, Is.EqualTo(new LyColor(0xFF, 0x11, 0x22, 0x33)));
-        Assert.That(schema.BackgroundColor, Is.EqualTo(new LyColor(0xCC, 0x44, 0x55, 0x66)));
+        Assert.That(schema.Color, Is.EqualTo(new LyColor(0xFF, 0x11, 0x22, 0x33)));
     }
 
     [Test]
@@ -230,7 +226,7 @@ public class RogueLikeJsonSerializationTests
         const string json = """
                             {
                               "name": "tileset",
-                              "texturePath": "tiles.png"
+                              "textureName": "tiles.png"
                             }
                             """;
 
@@ -240,7 +236,7 @@ public class RogueLikeJsonSerializationTests
         );
 
         Assert.That(tileset.Name, Is.EqualTo("tileset"));
-        Assert.That(tileset.TexturePath, Is.EqualTo("tiles.png"));
+        Assert.That(tileset.TextureName, Is.EqualTo("tiles.png"));
     }
 
     [Test]
@@ -248,8 +244,8 @@ public class RogueLikeJsonSerializationTests
     {
         const string json = """
                             [
-                              { "name": "a", "texturePath": "a.png" },
-                              { "name": "b", "texturePath": "b.png" }
+                              { "name": "a", "textureName": "a.png" },
+                              { "name": "b", "textureName": "b.png" }
                             ]
                             """;
 
@@ -260,7 +256,7 @@ public class RogueLikeJsonSerializationTests
 
         Assert.That(tilesets.Count, Is.EqualTo(2));
         Assert.That(tilesets[0].Name, Is.EqualTo("a"));
-        Assert.That(tilesets[1].TexturePath, Is.EqualTo("b.png"));
+        Assert.That(tilesets[1].TextureName, Is.EqualTo("b.png"));
     }
 
     [Test]
@@ -337,7 +333,7 @@ public class RogueLikeJsonSerializationTests
         const string json = """
                             {
                               "name": "animated-tiles",
-                              "texturePath": "tiles.png",
+                              "textureName": "tiles.png",
                               "tiles": [
                                 {
                                   "id": "tile-1",
@@ -371,7 +367,7 @@ public class RogueLikeJsonSerializationTests
         );
 
         Assert.That(tileset.Name, Is.EqualTo("animated-tiles"));
-        Assert.That(tileset.TexturePath, Is.EqualTo("tiles.png"));
+        Assert.That(tileset.TextureName, Is.EqualTo("tiles.png"));
         Assert.That(tileset.Tiles.Count, Is.EqualTo(2));
         Assert.That(tileset.Tiles[0].Id, Is.EqualTo("tile-1"));
         Assert.That(tileset.Tiles[1].Animation, Is.Not.Null);

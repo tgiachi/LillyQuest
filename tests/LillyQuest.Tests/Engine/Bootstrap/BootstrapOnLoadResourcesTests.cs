@@ -40,6 +40,7 @@ public class BootstrapOnLoadResourcesTests
 
         public string? GetScriptOnLoadFunctionName() => null;
         public void RegisterServices(IContainer container) { }
+        public string[]? DirectoriesToCreate() => null;
         public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin) { }
         public void Shutdown() { }
 
@@ -65,7 +66,7 @@ public class BootstrapOnLoadResourcesTests
     [Test]
     public void Bootstrap_HasPublicMethodToExecuteOnLoadResources()
     {
-        var config = new LillyQuestEngineConfig { IsDebugMode = true };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
         var bootstrap = new LillyQuestBootstrap(config);
 
         // Bootstrap should expose a method to execute OnLoadResources hooks
@@ -82,7 +83,7 @@ public class BootstrapOnLoadResourcesTests
         var events = new List<string>();
         var plugin = new LoggingPlugin(events);
 
-        var config = new LillyQuestEngineConfig { IsDebugMode = true };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
         var bootstrap = new LillyQuestBootstrap(config);
 
         bootstrap.Initialize();
@@ -114,7 +115,7 @@ public class BootstrapOnLoadResourcesTests
     [Test]
     public void Bootstrap_AllHooksArePublicAndCallable()
     {
-        var config = new LillyQuestEngineConfig { IsDebugMode = true };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
         var bootstrap = new LillyQuestBootstrap(config);
 
         // Verify the bootstrap has all three hook execution methods public

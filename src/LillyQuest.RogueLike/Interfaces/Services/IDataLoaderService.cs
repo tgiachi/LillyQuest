@@ -8,5 +8,14 @@ public interface IDataLoaderService
 
     Task ReloadDataAsync();
 
+    Task DispatchDataToReceiversAsync();
+
     List<TBaseJsonEntity> GetEntities<TBaseJsonEntity>() where TBaseJsonEntity : BaseJsonEntity;
+
+    void RegisterDataReceiver(IDataLoaderReceiver receiver);
+
+
+    Task VerifyLoadedDataAsync();
+
+
 }

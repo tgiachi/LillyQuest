@@ -8,6 +8,7 @@ using LillyQuest.Engine.Logging;
 using LillyQuest.Game.Scenes;
 using LillyQuest.RogueLike;
 using Serilog;
+using Serilog.Sinks.SystemConsole.Themes;
 
 var logDispatcher = new LogEventDispatcher();
 
@@ -15,7 +16,7 @@ Log.Logger = new LoggerConfiguration()
              .MinimumLevel
              .Debug()
              .WriteTo
-             .Console()
+             .Console(theme: AnsiConsoleTheme.Sixteen)
              .WriteTo
              .Sink(new LogEventBufferSink(logDispatcher))
              .CreateLogger();
@@ -44,6 +45,9 @@ await ConsoleApp.RunAsync(
                 container.RegisterScene<TestSceneA>();
                 container.RegisterScene<TestSceneB>();
                 container.RegisterScene<TilesetSurfaceEditorScene>(true);
+                container.RegisterScene<UiWidgetsDemoScene>();
+                container.RegisterScene<UiMenuDemoScene>();
+                container.RegisterScene<UiTextBoxDemoScene>();
 
                 container.RegisterPlugin(typeof(LillyQuestRogueLikePlugin).Assembly);
 

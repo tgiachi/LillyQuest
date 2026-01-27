@@ -130,6 +130,12 @@ public class LillyQuestBootstrap
         _renderContext.ClearColor = LyColor.CornflowerBlue;
         _logger.Information("Initializing LillyQuest Engine...");
 
+        if (_engineConfig.IsHeadless)
+        {
+            RegisterInternalServices();
+            return;
+        }
+
         var options = WindowOptions.Default;
         options.Size = new(_engineConfig.Render.Width, _engineConfig.Render.Height);
         options.Title = _engineConfig.Render.Title;
@@ -155,6 +161,11 @@ public class LillyQuestBootstrap
 
     public void Run()
     {
+        if (_engineConfig.IsHeadless)
+        {
+            throw new InvalidOperationException("Cannot run the engine in headless mode.");
+        }
+
         ExecuteOnEngineReady().GetAwaiter().GetResult();
         _window.Run(); // Window triggers WindowOnLoad where OnReadyToRender is executed
     }
@@ -220,9 +231,13 @@ public class LillyQuestBootstrap
         _pluginRegistry.RegisterPlugin(plugin);
         _logger.Information("Calling RegisterServices for plugin {PluginId}", plugin.PluginInfo.Id);
         plugin.RegisterServices(_container);
-        var pluginRoot = Path.Combine(_engineConfig.RootDirectory, "Plugins", plugin.PluginInfo.Id);
+        var pluginRoot = Path.Combine(_engineConfig.RootDirectory, "Plugins", plugin.PluginInfo.Id).ResolvePathAndEnvs();
         Directory.CreateDirectory(pluginRoot);
-        var pluginDirectories = new DirectoriesConfig(pluginRoot, "Scripts");
+
+        var dirsToCreate = plugin.DirectoriesToCreate() ?? [];
+
+        var pluginDirectories = new DirectoriesConfig(pluginRoot, dirsToCreate);
+
         plugin.OnDirectories(_directoriesConfig, pluginDirectories);
         var pluginScriptsDir = Path.Combine(pluginRoot, "Scripts").ResolvePathAndEnvs();
         Directory.CreateDirectory(pluginScriptsDir);
@@ -409,10 +424,7 @@ public class LillyQuestBootstrap
 
         _container.Register<IGameEntityManager, GameEntityManager>(Reuse.Singleton);
         _container.Register<ISystemManager, SystemManager>(Reuse.Singleton);
-        _container.Register<IScreenManager, ScreenManager>(
-            Reuse.Singleton,
-            Parameters.Of.Type(typeof(SpriteBatch))
-        );
+        _container.Register<IScreenManager, ScreenManager>(Reuse.Singleton);
 
         _container.Register<ISceneManager, SceneTransitionManager>(Reuse.Singleton);
 
@@ -420,6 +432,9 @@ public class LillyQuestBootstrap
 
         _container.Register<IActionService, ActionService>(Reuse.Singleton);
         _container.Register<IShortcutService, ShortcutService>(Reuse.Singleton);
+        _container.Register<IMainThreadDispatcher, MainThreadDispatcher>(Reuse.Singleton);
+
+        BindMainThreadDispatcher();
 
         foreach (var systemType in _renderSystems)
         {
@@ -434,6 +449,14 @@ public class LillyQuestBootstrap
             )
         );
         _container.Register<IScriptEngineService, LuaScriptEngineService>(Reuse.Singleton);
+    }
+
+    private void BindMainThreadDispatcher()
+    {
+        var dispatcher = _container.Resolve<IMainThreadDispatcher>();
+        _renderContext.PostOnMainThreadHandler = action => dispatcher.Post(action);
+        _renderContext.InvokeOnMainThreadHandler = action => dispatcher.Invoke(action);
+        _renderContext.InvokeOnMainThreadFuncHandler = func => dispatcher.Invoke(() => func.DynamicInvoke());
     }
 
     private void StartInternalServices()
@@ -496,6 +519,20 @@ public class LillyQuestBootstrap
         _renderContext.Window = _window;
         _renderContext.InputContext = _window.CreateInput();
 
+        // Detect DPI scale (e.g., 2.0 for Retina displays)
+        var framebufferSize = _window.FramebufferSize;
+        var windowSize = _window.Size;
+        _renderContext.DpiScale = windowSize.X > 0 ? (float)framebufferSize.X / windowSize.X : 1.0f;
+        _renderContext.PhysicalWindowSize = new Vector2(framebufferSize.X, framebufferSize.Y);
+        _logger.Information(
+            "Display DPI Scale: {DpiScale}x (Physical: {PhysicalWidth}x{PhysicalHeight}, Logical: {LogicalWidth}x{LogicalHeight})",
+            _renderContext.DpiScale,
+            framebufferSize.X,
+            framebufferSize.Y,
+            _renderContext.LogicalWindowSize.X,
+            _renderContext.LogicalWindowSize.Y
+        );
+
         var vendor = SilkMarshal.PtrToString((nint)_gl.GetString(StringName.Vendor));
         var renderer = SilkMarshal.PtrToString((nint)_gl.GetString(StringName.Renderer));
         var glsl = SilkMarshal.PtrToString((nint)_gl.GetString(StringName.ShadingLanguageVersion));
@@ -546,8 +583,14 @@ public class LillyQuestBootstrap
     private void WindowOnResize(Vector2D<int> obj)
     {
         _logger.Information("Window Resized to {Width}x{Height}", obj.X, obj.Y);
+
+        // The resize event passes FramebufferSize (physical pixels), which is what gl.Viewport expects
         _renderContext.Gl.Viewport(0, 0, (uint)obj.X, (uint)obj.Y);
         _skipRenderFrames = 2;
+
+        // Update physical window size for DPI calculations
+        _renderContext.PhysicalWindowSize = new Vector2(obj.X, obj.Y);
+
         _pendingResizeSize = new Vector2(obj.X, obj.Y);
         _pendingResizeTimestamp = Stopwatch.GetTimestamp();
     }
@@ -570,6 +613,9 @@ public class LillyQuestBootstrap
         }
 
         _resourceLoadingFlow.Update();
+
+        var mainThreadDispatcher = _container.Resolve<IMainThreadDispatcher>();
+        mainThreadDispatcher.ExecutePending();
 
         // Update scene transitions
         var sceneManager = _container.Resolve<ISceneManager>();

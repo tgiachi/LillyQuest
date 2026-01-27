@@ -29,6 +29,7 @@ public class PluginLifecycleExecutorTests
 
         public string? GetScriptOnLoadFunctionName() => null;
         public void RegisterServices(IContainer container) { }
+        public string[]? DirectoriesToCreate() => null;
         public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin) { }
         public void Shutdown() { }
 
@@ -65,6 +66,7 @@ public class PluginLifecycleExecutorTests
 
         public string? GetScriptOnLoadFunctionName() => null;
         public void RegisterServices(IContainer container) { }
+        public string[]? DirectoriesToCreate() => null;
         public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin) { }
         public void Shutdown() { }
 
@@ -98,6 +100,7 @@ public class PluginLifecycleExecutorTests
 
         public string? GetScriptOnLoadFunctionName() => null;
         public void RegisterServices(IContainer container) { }
+        public string[]? DirectoriesToCreate() => null;
         public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin) { }
         public void Shutdown() { }
 

@@ -4,6 +4,8 @@ using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
+using LillyQuest.Core.Data.Contexts;
+using LillyQuest.Engine;
 using LillyQuest.Engine.Extensions.TilesetSurface;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Managers.Scenes.Base;
@@ -24,15 +26,20 @@ public class TilesetSurfaceEditorScene : BaseScene
     private readonly ITilesetManager _tilesetManager;
     private readonly ITextureManager _textureManager;
     private readonly INineSliceAssetManager _nineSliceManager;
+    private readonly LillyQuestBootstrap _bootstrap;
+    private readonly EngineRenderContext _renderContext;
 
     private UIRootScreen? _uiRoot;
     private TilesetSurfaceScreen? _screen;
+    private bool _subscribed;
 
     public TilesetSurfaceEditorScene(
         IScreenManager screenManager,
         ITilesetManager tilesetManager,
         ITextureManager textureManager,
-        INineSliceAssetManager nineSliceManager
+        INineSliceAssetManager nineSliceManager,
+        LillyQuestBootstrap bootstrap,
+        EngineRenderContext renderContext
     )
         : base("tileset_surface_editor")
     {
@@ -40,6 +47,8 @@ public class TilesetSurfaceEditorScene : BaseScene
         _tilesetManager = tilesetManager;
         _textureManager = textureManager;
         _nineSliceManager = nineSliceManager;
+        _bootstrap = bootstrap;
+        _renderContext = renderContext;
     }
 
     public override void OnLoad()
@@ -59,6 +68,25 @@ public class TilesetSurfaceEditorScene : BaseScene
             TileRenderScale = 1f,
             TileViewSize = new(80, 30)
         };
+
+        var windowSize = _renderContext.Window != null
+                             ? new Vector2(_renderContext.Window.Size.X, _renderContext.Window.Size.Y)
+                             : new Vector2(1280, 720);
+
+        var availableSize = new Vector2(
+            MathF.Max(0f, windowSize.X - _screen.Position.X),
+            MathF.Max(0f, windowSize.Y - _screen.Position.Y)
+        );
+
+        _screen.ApplyTileViewScaleToScreen(availableSize, includeMargins: true);
+
+
+        Log.Logger.Information(
+            "TilesetSurfaceScreen state: Size={Size}, TileViewSize={TileViewSize}, Layer0Scale={Scale}",
+            _screen.Size,
+            _screen.TileViewSize,
+            _screen.GetLayerRenderScale(0)
+        );
 
         _screen.TileMouseMoveAllLayers += (index, x, y, mouseX, mouseY) =>
                                           {
@@ -141,6 +169,12 @@ public class TilesetSurfaceEditorScene : BaseScene
 
         // Add the screen to the screen manager
         _screenManager.PushScreen(_screen);
+
+        if (!_subscribed)
+        {
+            _bootstrap.WindowResize += OnWindowResize;
+            _subscribed = true;
+        }
 
         var label = new UILabel
         {
@@ -293,6 +327,51 @@ public class TilesetSurfaceEditorScene : BaseScene
         base.OnLoad();
     }
 
+    public override void OnUnload()
+    {
+        if (_screen != null)
+        {
+            _screenManager.PopScreen(_screen);
+            _screen = null;
+        }
+
+        if (_uiRoot != null)
+        {
+            _screenManager.PopScreen(_uiRoot);
+            _uiRoot = null;
+        }
+
+        if (_subscribed)
+        {
+            _bootstrap.WindowResize -= OnWindowResize;
+            _subscribed = false;
+        }
+
+        base.OnUnload();
+    }
+
+    private void OnWindowResize(Vector2 size)
+    {
+        if (_screen == null)
+        {
+            return;
+        }
+
+        var availableSize = new Vector2(
+            MathF.Max(0f, size.X - _screen.Position.X),
+            MathF.Max(0f, size.Y - _screen.Position.Y)
+        );
+
+        _screen.ApplyTileViewScaleToScreen(availableSize, includeMargins: true);
+
+        Log.Logger.Information(
+            "TilesetSurfaceScreen state: Size={Size}, TileViewSize={TileViewSize}, Layer0Scale={Scale}",
+            _screen.Size,
+            _screen.TileViewSize,
+            _screen.GetLayerRenderScale(0)
+        );
+    }
+
     public override void OnInitialize(ISceneManager sceneManager)
     {
         base.OnInitialize(sceneManager);
@@ -350,22 +429,5 @@ public class TilesetSurfaceEditorScene : BaseScene
         // Set opacity variations for layers
         screen.SetLayerOpacity(0, 1.0f);
         screen.SetLayerOpacity(1, 1.0f);
-    }
-
-    public override void OnUnload()
-    {
-        if (_uiRoot != null)
-        {
-            _screenManager.PopScreen(_uiRoot);
-            _uiRoot = null;
-        }
-
-        if (_screen != null)
-        {
-            _screenManager.PopScreen(_screen);
-            _screen = null;
-        }
-
-        base.OnUnload();
     }
 }

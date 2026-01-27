@@ -103,6 +103,11 @@ public class BootstrapIntegrationTests
             _events.Add("RegisterServices");
         }
 
+        public string[]? DirectoriesToCreate()
+        {
+            return null;
+        }
+
         public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin)
         {
             _events.Add("OnDirectories");
@@ -132,7 +137,7 @@ public class BootstrapIntegrationTests
     [Test]
     public void Bootstrap_CanBeInstantiated()
     {
-        var config = new LillyQuestEngineConfig { IsDebugMode = true };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
         var bootstrap = new LillyQuestBootstrap(config);
 
         // Bootstrap should be instantiable
@@ -145,7 +150,7 @@ public class BootstrapIntegrationTests
         var events = new List<string>();
         var plugin = new TrackingPlugin(events);
 
-        var config = new LillyQuestEngineConfig { IsDebugMode = true };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
         var bootstrap = new LillyQuestBootstrap(config);
 
         bootstrap.Initialize();
@@ -165,7 +170,7 @@ public class BootstrapIntegrationTests
         var events = new List<string>();
         var plugin = new TrackingPlugin(events);
 
-        var config = new LillyQuestEngineConfig { IsDebugMode = true };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
         var bootstrap = new LillyQuestBootstrap(config);
 
         bootstrap.Initialize();
@@ -188,7 +193,7 @@ public class BootstrapIntegrationTests
         var scriptEngine = new RecordingScriptEngineService();
 
         var root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        var config = new LillyQuestEngineConfig { IsDebugMode = true, RootDirectory = root };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true, RootDirectory = root };
         var bootstrap = new LillyQuestBootstrap(config);
 
         bootstrap.Initialize();
@@ -223,7 +228,7 @@ public class BootstrapIntegrationTests
         var plugin = new TrackingPlugin(events);
 
         var root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        var config = new LillyQuestEngineConfig { IsDebugMode = true, RootDirectory = root };
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true, RootDirectory = root };
         var bootstrap = new LillyQuestBootstrap(config);
 
         bootstrap.Initialize();

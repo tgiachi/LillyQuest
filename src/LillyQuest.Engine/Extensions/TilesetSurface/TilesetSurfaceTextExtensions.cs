@@ -350,8 +350,10 @@ public static class TilesetSurfaceTextExtensions
             TileFlipType flip = TileFlipType.None
         )
         {
+            var layerIndex = screen.SelectedLayerIndex;
+
             if (!screen.TryGetLayerTileInfo(
-                    screen.SelectedLayerIndex,
+                    layerIndex,
                     out var tileWidth,
                     out var tileHeight,
                     out var pixelOffset
@@ -360,14 +362,16 @@ public static class TilesetSurfaceTextExtensions
                 return;
             }
 
-            screen.TryGetLayerViewOffsets(screen.SelectedLayerIndex, out var viewTileOffset, out var viewPixelOffset);
+            screen.TryGetLayerViewOffsets(layerIndex, out var viewTileOffset, out var viewPixelOffset);
+            var layerScale = screen.GetLayerRenderScale(layerIndex);
+            var renderScale = screen.TileRenderScale * layerScale;
 
             var (tileX, tileY) = ComputeTileCoordinatesFromPixel(
                 (int)(xPx - screen.Position.X),
                 (int)(yPx - screen.Position.Y),
                 tileWidth,
                 tileHeight,
-                screen.TileRenderScale,
+                renderScale,
                 pixelOffset,
                 viewTileOffset,
                 viewPixelOffset
@@ -407,13 +411,15 @@ public static class TilesetSurfaceTextExtensions
             }
 
             screen.TryGetLayerViewOffsets(layerIndex, out var viewTileOffset, out var viewPixelOffset);
+            var layerScale = screen.GetLayerRenderScale(layerIndex);
+            var renderScale = screen.TileRenderScale * layerScale;
 
             var (tileX, tileY) = ComputeTileCoordinatesFromPixel(
                 (int)(xPx - screen.Position.X),
                 (int)(yPx - screen.Position.Y),
                 tileWidth,
                 tileHeight,
-                screen.TileRenderScale,
+                renderScale,
                 pixelOffset,
                 viewTileOffset,
                 viewPixelOffset
@@ -440,8 +446,10 @@ public static class TilesetSurfaceTextExtensions
             TileFlipType flip = TileFlipType.None
         )
         {
+            var layerIndex = screen.SelectedLayerIndex;
+
             if (!screen.TryGetLayerTileInfo(
-                    screen.SelectedLayerIndex,
+                    layerIndex,
                     out var tileWidth,
                     out var tileHeight,
                     out var pixelOffset
@@ -450,14 +458,16 @@ public static class TilesetSurfaceTextExtensions
                 return;
             }
 
-            screen.TryGetLayerViewOffsets(screen.SelectedLayerIndex, out var viewTileOffset, out var viewPixelOffset);
+            screen.TryGetLayerViewOffsets(layerIndex, out var viewTileOffset, out var viewPixelOffset);
+            var layerScale = screen.GetLayerRenderScale(layerIndex);
+            var renderScale = screen.TileRenderScale * layerScale;
 
             var (tileX, tileY) = ComputeTileCoordinatesFromPixel(
                 xPx,
                 yPx,
                 tileWidth,
                 tileHeight,
-                screen.TileRenderScale,
+                renderScale,
                 pixelOffset,
                 viewTileOffset,
                 viewPixelOffset
@@ -497,13 +507,15 @@ public static class TilesetSurfaceTextExtensions
             }
 
             screen.TryGetLayerViewOffsets(layerIndex, out var viewTileOffset, out var viewPixelOffset);
+            var layerScale = screen.GetLayerRenderScale(layerIndex);
+            var renderScale = screen.TileRenderScale * layerScale;
 
             var (tileX, tileY) = ComputeTileCoordinatesFromPixel(
                 xPx,
                 yPx,
                 tileWidth,
                 tileHeight,
-                screen.TileRenderScale,
+                renderScale,
                 pixelOffset,
                 viewTileOffset,
                 viewPixelOffset
