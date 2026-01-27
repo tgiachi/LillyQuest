@@ -217,6 +217,20 @@ public class TilesetSurfaceTextExtensionsTests
     }
 
     [Test]
+    public void DrawTextPixel_UsesLayerRenderScale()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager());
+        screen.InitializeLayers(2);
+        screen.SetLayerInputTileSizeOverride(1, new Vector2(16, 16));
+        screen.SetLayerRenderScale(1, 2f);
+
+        screen.DrawTextPixel(1, "A", 32, 32, LyColor.White, LyColor.Black);
+
+        Assert.That(screen.GetTile(1, 1, 1).TileIndex, Is.EqualTo(65));
+        Assert.That(screen.GetTile(1, 2, 2).TileIndex, Is.EqualTo(-1));
+    }
+
+    [Test]
     public void DrawTextPixelLocal_UsesLocalCoordinates()
     {
         var screen = new TilesetSurfaceScreen(new StubTilesetManager())
