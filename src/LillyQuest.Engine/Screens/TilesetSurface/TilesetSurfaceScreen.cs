@@ -71,6 +71,8 @@ public class TilesetSurfaceScreen : BaseScreen
     private readonly TilesetSurface _surface;
 
     private Tileset _tileset;
+    private readonly Dictionary<int, int> _viewLockMasterByFollower = new();
+    private readonly Dictionary<int, HashSet<int>> _viewLockFollowersByMaster = new();
 
     /// <summary>
     /// Number of layers to create on initialization.
@@ -487,6 +489,36 @@ public class TilesetSurfaceScreen : BaseScreen
                : Vector2.Zero;
 
     /// <summary>
+    /// Gets the target view offset for a specific layer in tile coordinates.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <returns>Target view offset in tile coordinates.</returns>
+    public Vector2 GetLayerViewTileTarget(int layerIndex)
+    {
+        if (!IsValidLayerIndex(layerIndex))
+        {
+            return Vector2.Zero;
+        }
+
+        return _surface.Layers[layerIndex].ViewTileOffsetTarget;
+    }
+
+    /// <summary>
+    /// Gets the target view offset for a specific layer in pixels.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <returns>Target view offset in pixels.</returns>
+    public Vector2 GetLayerViewPixelTarget(int layerIndex)
+    {
+        if (!IsValidLayerIndex(layerIndex))
+        {
+            return Vector2.Zero;
+        }
+
+        return _surface.Layers[layerIndex].ViewPixelOffsetTarget;
+    }
+
+    /// <summary>
     /// Gets the view tile offset for a specific layer.
     /// </summary>
     /// <param name="layerIndex">Layer index.</param>
@@ -868,6 +900,7 @@ public class TilesetSurfaceScreen : BaseScreen
         var layer = _surface.Layers[layerIndex];
         layer.ViewPixelOffset = pixelOffset;
         layer.ViewPixelOffsetTarget = pixelOffset;
+        PropagateViewTargets(layerIndex);
     }
 
     /// <summary>
@@ -883,6 +916,7 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         _surface.Layers[layerIndex].ViewPixelOffsetTarget = pixelOffset;
+        PropagateViewTargets(layerIndex);
     }
 
     /// <summary>
@@ -918,6 +952,7 @@ public class TilesetSurfaceScreen : BaseScreen
         var layer = _surface.Layers[layerIndex];
         layer.ViewTileOffset = tileOffset;
         layer.ViewTileOffsetTarget = tileOffset;
+        PropagateViewTargets(layerIndex);
     }
 
     /// <summary>
@@ -933,6 +968,101 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         _surface.Layers[layerIndex].ViewTileOffsetTarget = tileOffset;
+        PropagateViewTargets(layerIndex);
+    }
+
+    /// <summary>
+    /// Locks a follower layer's view targets to a master layer.
+    /// </summary>
+    public void SetLayerViewLock(int masterIndex, int followerIndex)
+    {
+        if (masterIndex == followerIndex)
+        {
+            return;
+        }
+
+        if (!IsValidLayerIndex(masterIndex) || !IsValidLayerIndex(followerIndex))
+        {
+            return;
+        }
+
+        if (_viewLockMasterByFollower.ContainsKey(masterIndex))
+        {
+            return;
+        }
+
+        if (_viewLockFollowersByMaster.TryGetValue(followerIndex, out var existingFollowers) &&
+            existingFollowers.Count > 0)
+        {
+            return;
+        }
+
+        if (_viewLockMasterByFollower.TryGetValue(followerIndex, out var oldMaster))
+        {
+            if (_viewLockFollowersByMaster.TryGetValue(oldMaster, out var oldFollowers))
+            {
+                oldFollowers.Remove(followerIndex);
+
+                if (oldFollowers.Count == 0)
+                {
+                    _viewLockFollowersByMaster.Remove(oldMaster);
+                }
+            }
+        }
+
+        _viewLockMasterByFollower[followerIndex] = masterIndex;
+
+        if (!_viewLockFollowersByMaster.TryGetValue(masterIndex, out var followers))
+        {
+            followers = new HashSet<int>();
+            _viewLockFollowersByMaster[masterIndex] = followers;
+        }
+
+        followers.Add(followerIndex);
+        SyncViewTargetsFromMaster(masterIndex, followerIndex);
+    }
+
+    /// <summary>
+    /// Clears a follower layer's view lock.
+    /// </summary>
+    public void ClearLayerViewLock(int followerIndex)
+    {
+        if (!IsValidLayerIndex(followerIndex))
+        {
+            return;
+        }
+
+        if (!_viewLockMasterByFollower.TryGetValue(followerIndex, out var masterIndex))
+        {
+            return;
+        }
+
+        _viewLockMasterByFollower.Remove(followerIndex);
+
+        if (_viewLockFollowersByMaster.TryGetValue(masterIndex, out var followers))
+        {
+            followers.Remove(followerIndex);
+
+            if (followers.Count == 0)
+            {
+                _viewLockFollowersByMaster.Remove(masterIndex);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Gets the master layer index for a follower, or null if not locked.
+    /// </summary>
+    public int? GetLayerViewLockMaster(int followerIndex)
+    {
+        if (!IsValidLayerIndex(followerIndex))
+        {
+            return null;
+        }
+
+        return _viewLockMasterByFollower.TryGetValue(followerIndex, out var masterIndex)
+                   ? masterIndex
+                   : null;
     }
 
     /// <summary>
@@ -1473,4 +1603,38 @@ public class TilesetSurfaceScreen : BaseScreen
             layer.ViewPixelOffset = nextPixelOffset;
         }
     }
+
+    private void PropagateViewTargets(int masterIndex)
+    {
+        if (!_viewLockFollowersByMaster.TryGetValue(masterIndex, out var followers))
+        {
+            return;
+        }
+
+        foreach (var followerIndex in followers)
+        {
+            if (!IsValidLayerIndex(followerIndex))
+            {
+                continue;
+            }
+
+            SyncViewTargetsFromMaster(masterIndex, followerIndex);
+        }
+    }
+
+    private void SyncViewTargetsFromMaster(int masterIndex, int followerIndex)
+    {
+        if (!IsValidLayerIndex(masterIndex) || !IsValidLayerIndex(followerIndex))
+        {
+            return;
+        }
+
+        var master = _surface.Layers[masterIndex];
+        var follower = _surface.Layers[followerIndex];
+        follower.ViewTileOffsetTarget = master.ViewTileOffsetTarget;
+        follower.ViewPixelOffsetTarget = master.ViewPixelOffsetTarget;
+    }
+
+    private bool IsValidLayerIndex(int layerIndex)
+        => layerIndex >= 0 && layerIndex < _surface.Layers.Count;
 }
