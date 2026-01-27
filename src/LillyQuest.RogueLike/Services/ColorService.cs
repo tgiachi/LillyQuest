@@ -15,7 +15,41 @@ public class ColorService : IDataLoaderReceiver
 
     public string DefaultColorSet { get; set; }
 
+    public void ClearData()
+    {
+        _colorSets.Clear();
+    }
 
+    public bool VerifyLoadedData()
+    {
+        return true;
+    }
+
+    public LyColor? GetColorById(string colorId, string? colorSet = null)
+    {
+        if (colorId.StartsWith('#'))
+        {
+            return LyColor.FromHex(colorId);
+        }
+
+        var effectiveColorSet = colorSet ?? DefaultColorSet;
+
+        if (string.IsNullOrEmpty(effectiveColorSet))
+        {
+            _logger.Warning("No color set specified and no default color set defined");
+
+            return null;
+        }
+
+        if (_colorSets.TryGetValue(colorId, out var colorData))
+        {
+            return colorData.Color;
+        }
+
+        _logger.Warning("Color with ID {ColorId} not found", colorId);
+
+        return null;
+    }
 
     public Type[] GetLoadTypes()
         => [typeof(ColorSchemaDefintionJson)];
@@ -28,7 +62,7 @@ public class ColorService : IDataLoaderReceiver
         {
             foreach (var color in colorSchema.Colors)
             {
-                _colorSets[color.Id] = new ColorData(color.Id, color.Color);
+                _colorSets[color.Id] = new(color.Id, color.Color);
             }
 
             _logger.Information(
@@ -37,31 +71,5 @@ public class ColorService : IDataLoaderReceiver
                 colorSchema.Colors.Count
             );
         }
-    }
-
-    public void ClearData()
-    {
-        _colorSets.Clear();
-    }
-
-    public LyColor? GetColorById(string colorId, string? colorSet = null)
-    {
-        string effectiveColorSet = colorSet ?? DefaultColorSet;
-
-        if (string.IsNullOrEmpty(effectiveColorSet))
-        {
-            _logger.Warning("No color set specified and no default color set defined");
-
-            return null;
-        }
-
-        if (_colorSets.TryGetValue(colorId, out ColorData? colorData))
-        {
-            return colorData.Color;
-        }
-
-        _logger.Warning("Color with ID {ColorId} not found", colorId);
-
-        return null;
     }
 }

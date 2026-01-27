@@ -97,6 +97,9 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
 
         await dataLoader.DispatchDataToReceiversAsync();
 
+        _logger.Information("Starting data verification");
+        await dataLoader.VerifyLoadedDataAsync();
+
         // var renderContext = container.Resolve<EngineRenderContext>();
         //
         // for (var progress = 0; progress <= 100; progress += Random.Shared.Next(0, 4))

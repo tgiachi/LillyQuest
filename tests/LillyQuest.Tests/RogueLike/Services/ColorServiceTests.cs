@@ -22,6 +22,8 @@ public class ColorServiceTests
             => new();
 
         public void RegisterDataReceiver(IDataLoaderReceiver receiver) { }
+        public Task VerifyLoadedDataAsync()
+            => Task.CompletedTask;
     }
 
     private ColorService _colorService = null!;

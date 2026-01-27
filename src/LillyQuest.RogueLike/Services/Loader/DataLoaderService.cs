@@ -40,6 +40,19 @@ public class DataLoaderService : IDataLoaderService
         return LoadDataAsync();
     }
 
+    public async Task VerifyLoadedDataAsync()
+    {
+        foreach (var receiverEntry in _loadedReceivers)
+        {
+            var receivers = receiverEntry.Value;
+
+            foreach (var receiver in receivers)
+            {
+                _logger.Information("Verifying loaded data for receiver: {Receiver}", receiver.GetType().Name);
+                receiver.VerifyLoadedData();
+            }
+        }
+    }
     public async Task DispatchDataToReceiversAsync()
     {
         foreach (var receiverEntry in _loadedReceivers)

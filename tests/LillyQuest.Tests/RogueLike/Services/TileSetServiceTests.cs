@@ -112,4 +112,23 @@ public class TileSetServiceTests
 
         Assert.That(success, Is.False);
     }
+
+    [Test]
+    public async Task VerifyLoadedData_ThrowsInvalidOperation_WhenColorsMissing()
+    {
+        var tileSetService = new TileSetService(new ColorService());
+        await tileSetService.LoadDataAsync(new List<BaseJsonEntity>
+        {
+            new TilesetDefinitionJson
+            {
+                Name = "main",
+                Tiles = new List<TileDefinition>
+                {
+                    new TileDefinition { Id = "t1", Symbol = ".", FgColor = "", BgColor = "" }
+                }
+            }
+        });
+
+        Assert.Throws<InvalidOperationException>(() => tileSetService.VerifyLoadedData());
+    }
 }

@@ -9,4 +9,6 @@ public interface IDataLoaderReceiver
     Task LoadDataAsync(List<BaseJsonEntity> entities);
 
     void ClearData();
+
+    bool VerifyLoadedData();
 }

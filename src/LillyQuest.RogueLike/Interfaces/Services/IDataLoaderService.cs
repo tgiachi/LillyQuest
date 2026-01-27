@@ -15,4 +15,7 @@ public interface IDataLoaderService
     void RegisterDataReceiver(IDataLoaderReceiver receiver);
 
 
+    Task VerifyLoadedDataAsync();
+
+
 }
