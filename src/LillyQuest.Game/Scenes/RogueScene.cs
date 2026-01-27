@@ -170,6 +170,7 @@ public class RogueScene : BaseScene
                 {
                     player.Item.Position += Direction.Up;
                     _fovService.UpdateFOV(player.Position);
+                    FillSurface(_screen!);
                 }
             }
         );
@@ -183,6 +184,7 @@ public class RogueScene : BaseScene
                 {
                     player.Item.Position += Direction.Down;
                     _fovService.UpdateFOV(player.Position);
+                    FillSurface(_screen!);
                 }
             }
         );
@@ -196,6 +198,7 @@ public class RogueScene : BaseScene
                 {
                     player.Item.Position += Direction.Left;
                     _fovService.UpdateFOV(player.Position);
+                    FillSurface(_screen!);
                 }
             }
         );
@@ -209,6 +212,7 @@ public class RogueScene : BaseScene
                 {
                     player.Item.Position += Direction.Right;
                     _fovService.UpdateFOV(player.Position);
+                    FillSurface(_screen!);
                 }
             }
         );
