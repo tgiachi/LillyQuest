@@ -1,0 +1,38 @@
+[
+  {
+    "type": "terrain",
+    "id": "floor",
+    "tags": ["floor", "walkable"],
+    "name": "Floor",
+    "description": "Stone floor",
+    "flags": ["walkable"],
+    "movementCost": 1
+  },
+  {
+    "type": "terrain",
+    "id": "wall",
+    "tags": ["wall", "solid"],
+    "name": "Wall",
+    "description": "Solid stone wall",
+    "flags": ["solid"],
+    "movementCost": 999
+  },
+  {
+    "type": "terrain",
+    "id": "tree",
+    "tags": ["tree", "solid", "nature"],
+    "name": "Tree",
+    "description": "Tall tree",
+    "flags": ["solid", "nature"],
+    "movementCost": 999
+  },
+  {
+    "type": "terrain",
+    "id": "water",
+    "tags": ["water", "hazard"],
+    "name": "Water",
+    "description": "Deep water",
+    "flags": ["hazard"],
+    "movementCost": 999
+  }
+]
