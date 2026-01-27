@@ -29,7 +29,7 @@ public class MapGenerator : IMapGenerator
         generator.ConfigAndGenerateSafe(
             g =>
             {
-                g.AddSteps(DefaultAlgorithms.RectangleMapSteps());
+                g.AddSteps(DefaultAlgorithms.CellularAutomataGenerationSteps());
             }
         );
 

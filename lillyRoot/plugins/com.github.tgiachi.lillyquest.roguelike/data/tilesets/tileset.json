@@ -8,7 +8,7 @@
     {
       "id": "floor",
       "tags": ["floor", "walkable"],
-      "symbol": ".",
+      "symbol": "`",
       "fgColor": "gray",
       "bgColor": "black"
     },
