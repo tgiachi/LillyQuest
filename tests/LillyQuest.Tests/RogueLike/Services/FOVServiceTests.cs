@@ -43,7 +43,8 @@ public class FOVServiceTests
     {
         // Arrange
         var map = CreateTestMap();
-        var service = new FOVService(map);
+        var service = new FOVService();
+        service.Initialize(map);
         var playerPos = new Point(25, 25);
 
         // Act
@@ -59,7 +60,8 @@ public class FOVServiceTests
     {
         // Arrange
         var map = CreateTestMap(50, 50);
-        var service = new FOVService(map);
+        var service = new FOVService();
+        service.Initialize(map);
         var invalidPos = new Point(100, 100); // Outside bounds
 
         // Act & Assert
@@ -71,7 +73,8 @@ public class FOVServiceTests
     {
         // Arrange
         var map = CreateTestMap();
-        var service = new FOVService(map);
+        var service = new FOVService();
+        service.Initialize(map);
         var playerPos = new Point(25, 25);
         service.UpdateFOV(playerPos);
 
@@ -87,7 +90,8 @@ public class FOVServiceTests
     {
         // Arrange
         var map = CreateTestMap();
-        var service = new FOVService(map);
+        var service = new FOVService();
+        service.Initialize(map);
         var playerPos = new Point(25, 25);
 
         // Act
@@ -105,7 +109,8 @@ public class FOVServiceTests
     {
         // Arrange
         var map = CreateTestMap();
-        var service = new FOVService(map);
+        var service = new FOVService();
+        service.Initialize(map);
         var playerPos = new Point(25, 25);
 
         // Act
@@ -124,7 +129,8 @@ public class FOVServiceTests
     {
         // Arrange
         var map = CreateTestMap();
-        var service = new FOVService(map);
+        var service = new FOVService();
+        service.Initialize(map);
         var pos = new Point(10, 10);
         var memory = new TileMemory('@', SadRogue.Primitives.Color.White, SadRogue.Primitives.Color.Black);
 

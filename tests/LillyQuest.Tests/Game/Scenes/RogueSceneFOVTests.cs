@@ -1,4 +1,5 @@
 using System.Linq;
+using NUnit.Framework;
 using SadRogue.Primitives;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Maps;
@@ -30,7 +31,8 @@ public class RogueSceneFOVTests
     {
         // Arrange
         var map = CreateTestMap(100, 100);
-        var fovService = new FOVService(map);
+        var fovService = new FOVService();
+        fovService.Initialize(map);
         var startPos = new Point(10, 10);
         var endPos = new Point(60, 60);
 
@@ -53,7 +55,8 @@ public class RogueSceneFOVTests
     {
         // Arrange
         var map = CreateTestMap(50, 50);
-        var fovService = new FOVService(map);
+        var fovService = new FOVService();
+        fovService.Initialize(map);
         var pos1 = new Point(10, 10);
         var pos2 = new Point(40, 40);
 

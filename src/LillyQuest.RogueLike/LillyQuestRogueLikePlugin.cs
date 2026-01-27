@@ -52,11 +52,7 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         container.Register<IDataLoaderService, DataLoaderService>();
         container.Register<IMapGenerator, MapGenerator>();
 
-        // Register FOV service with factory
-        container.Register<IFOVService>(
-            made: Made.Of(
-                () => new FOVService(Arg.Of<LyQuestMap>())),
-            reuse: Reuse.Singleton);
+
 
         foreach (var receiverType in _dataReceiverTypes)
         {

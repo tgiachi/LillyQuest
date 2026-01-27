@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using LillyQuest.RogueLike.Maps;
 using SadRogue.Primitives;
 
 namespace LillyQuest.RogueLike.Interfaces.Services;
@@ -38,6 +39,8 @@ public interface IFOVService
     /// Get the memorized tile data for an explored position.
     /// </summary>
     TileMemory? GetMemorizedTile(Point position);
+
+    void Initialize(LyQuestMap map);
 }
 
 /// <summary>

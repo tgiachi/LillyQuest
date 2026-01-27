@@ -1,5 +1,4 @@
 using System.Numerics;
-using GoRogue.GameFramework;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
@@ -12,7 +11,7 @@ using LillyQuest.Engine.Screens.UI;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Maps;
-using LillyQuest.RogueLike.Maps.Tiles;
+using LillyQuest.RogueLike.Services;
 using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
 using SadRogue.Primitives.GridViews;
@@ -40,8 +39,7 @@ public class RogueScene : BaseScene
         IMapGenerator mapGenerator,
         ITilesetManager tilesetManager,
         IShortcutService shortcutService,
-        IActionService actionService,
-        IFOVService fovService
+        IActionService actionService
     ) : base("RogueScene")
     {
         _screenManager = screenManager;
@@ -49,7 +47,7 @@ public class RogueScene : BaseScene
         _tilesetManager = tilesetManager;
         _shortcutService = shortcutService;
         _actionService = actionService;
-        _fovService = fovService ?? throw new ArgumentNullException(nameof(fovService));
+        _fovService = new FOVService();
     }
 
     private TileRenderData DarkenTile(TileRenderData tile)
@@ -60,7 +58,8 @@ public class RogueScene : BaseScene
                 tile.ForegroundColor.A,
                 (byte)(tile.ForegroundColor.R * 0.5f),
                 (byte)(tile.ForegroundColor.G * 0.5f),
-                (byte)(tile.ForegroundColor.B * 0.5f)),
+                (byte)(tile.ForegroundColor.B * 0.5f)
+            ),
             tile.BackgroundColor,
             tile.Flip
         );
@@ -99,6 +98,7 @@ public class RogueScene : BaseScene
 
             // Layer 2: Creatures (only visible or if player)
             var objects = _map.GetObjectsAt(position);
+
             foreach (var obj in objects)
             {
                 if (isVisible || obj == _player)
@@ -227,6 +227,7 @@ public class RogueScene : BaseScene
                                  };
 
         _map = _mapGenerator.GenerateMapAsync().GetAwaiter().GetResult();
+        _fovService.Initialize(_map);
         _player = _map.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
 
         if (_player != null)

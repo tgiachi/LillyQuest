@@ -14,8 +14,8 @@ public class FOVService : IFOVService
 {
     private const int FOV_RADIUS = 10;
 
-    private readonly LyQuestMap _map;
-    private readonly RecursiveShadowcastingFOV _fov;
+    private LyQuestMap _map;
+    private RecursiveShadowcastingFOV _fov;
     private HashSet<Point> _currentVisibleTiles = new();
     private HashSet<Point> _exploredTiles = new();
     private Dictionary<Point, TileMemory> _tileMemory = new();
@@ -24,15 +24,21 @@ public class FOVService : IFOVService
     public IReadOnlySet<Point> CurrentVisibleTiles => _currentVisibleTiles;
     public IReadOnlySet<Point> ExploredTiles => _exploredTiles;
 
-    public FOVService(LyQuestMap map)
+    public FOVService()
     {
-        ArgumentNullException.ThrowIfNull(map);
 
+
+    }
+
+    public void Initialize(LyQuestMap map)
+    {
         _map = map;
 
         // Initialize FOV with map's transparency grid
         _fov = new RecursiveShadowcastingFOV(map.TransparencyView);
         _lastPlayerPosition = new Point(-1, -1);
+
+
     }
 
     public void UpdateFOV(Point playerPosition)
@@ -48,8 +54,8 @@ public class FOVService : IFOVService
         if (_lastPlayerPosition == playerPosition)
             return;
 
-        // Calculate FOV from player position
-        _fov.Calculate(playerPosition, FOV_RADIUS);
+        // Calculate FOV from player position using circular radius
+        _fov.Calculate(playerPosition, FOV_RADIUS, Distance.Euclidean);
 
         // Update current visible tiles
         _currentVisibleTiles = new HashSet<Point>(_fov.CurrentFOV);
