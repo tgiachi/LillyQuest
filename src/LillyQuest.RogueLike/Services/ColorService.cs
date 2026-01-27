@@ -36,9 +36,10 @@ public class ColorService : IDataLoaderReceiver
 
         if (string.IsNullOrEmpty(effectiveColorSet))
         {
-            _logger.Warning("No color set specified and no default color set defined");
+            _logger.Warning("No color set specified and no default color set defined, selecting first colorset");
 
-            return null;
+            effectiveColorSet = _colorSets.Keys.FirstOrDefault();
+
         }
 
         if (_colorSets.TryGetValue(colorId, out var colorData))
