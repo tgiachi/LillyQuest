@@ -9,64 +9,64 @@
       "id": "floor",
       "tags": ["floor", "walkable"],
       "symbol": ".",
-      "fgColor": "#FF808080",
-      "bgColor": "#FF000000"
+      "fgColor": "gray",
+      "bgColor": "black"
     },
     {
       "id": "wall",
       "tags": ["wall", "solid"],
       "symbol": "#",
-      "fgColor": "#FF8B4513",
-      "bgColor": "#FF000000"
+      "fgColor": "brown",
+      "bgColor": "black"
     },
     {
       "id": "tree",
       "tags": ["tree", "solid", "nature"],
       "symbol": "T",
-      "fgColor": "#FF008000",
-      "bgColor": "#FF000000"
+      "fgColor": "dark_green",
+      "bgColor": "black"
     },
     {
       "id": "water",
       "tags": ["water", "hazard"],
       "symbol": "~",
-      "fgColor": "#FF0000FF",
-      "bgColor": "#FF000000"
+      "fgColor": "blue",
+      "bgColor": "black"
     },
     {
       "id": "player",
       "tags": ["player", "character"],
       "symbol": "@",
-      "fgColor": "#FFFFFFFF",
-      "bgColor": "#FF000000"
+      "fgColor": "white",
+      "bgColor": "black"
     },
     {
       "id": "monster",
       "tags": ["monster", "enemy"],
       "symbol": "M",
-      "fgColor": "#FFFF0000",
-      "bgColor": "#FF000000"
+      "fgColor": "red",
+      "bgColor": "black"
     },
     {
       "id": "door",
       "tags": ["door", "solid"],
       "symbol": "+",
-      "fgColor": "#FFFFA500",
-      "bgColor": "#FF000000"
+      "fgColor": "orange",
+      "bgColor": "black"
     },
     {
       "id": "chest",
       "tags": ["chest", "solid"],
       "symbol": "C",
-      "fgColor": "#FFFFD700",
-      "bgColor": "#FF000000"
+      "fgColor": "gold",
+      "bgColor": "black"
     },
     {
       "id": "torch",
       "tags": ["torch", "light", "decoration"],
       "symbol": "*",
-      "fgColor": "#FFFFA500",
-      "bgColor": "#FF000000"
+      "fgColor": "orange",
+      "bgColor": "black"
     }
   ]
 }
