@@ -1,5 +1,8 @@
 using System.Numerics;
+using GoRogue.GameFramework;
+using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
+using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Services;
@@ -9,8 +12,10 @@ using LillyQuest.Engine.Screens.UI;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Maps;
+using LillyQuest.RogueLike.Maps.Tiles;
 using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
+using SadRogue.Primitives.GridViews;
 
 namespace LillyQuest.Game.Scenes;
 
@@ -23,17 +28,20 @@ public class RogueScene : BaseScene
     private readonly IShortcutService _shortcutService;
 
     private readonly IActionService _actionService;
+    private readonly IFOVService _fovService;
 
     private LyQuestMap _map = null!;
     private UIRootScreen? _uiRoot;
     private TilesetSurfaceScreen? _screen;
+    private CreatureGameObject? _player;
 
     public RogueScene(
         IScreenManager screenManager,
         IMapGenerator mapGenerator,
         ITilesetManager tilesetManager,
         IShortcutService shortcutService,
-        IActionService actionService
+        IActionService actionService,
+        IFOVService fovService
     ) : base("RogueScene")
     {
         _screenManager = screenManager;
@@ -41,6 +49,72 @@ public class RogueScene : BaseScene
         _tilesetManager = tilesetManager;
         _shortcutService = shortcutService;
         _actionService = actionService;
+        _fovService = fovService ?? throw new ArgumentNullException(nameof(fovService));
+    }
+
+    private TileRenderData DarkenTile(TileRenderData tile)
+    {
+        return new TileRenderData(
+            tile.TileIndex,
+            new LyColor(
+                tile.ForegroundColor.A,
+                (byte)(tile.ForegroundColor.R * 0.5f),
+                (byte)(tile.ForegroundColor.G * 0.5f),
+                (byte)(tile.ForegroundColor.B * 0.5f)),
+            tile.BackgroundColor,
+            tile.Flip
+        );
+    }
+
+    private void FillSurface(TilesetSurfaceScreen screen)
+    {
+        foreach (var position in _map.Positions())
+        {
+            bool isVisible = _fovService.IsVisible(position);
+            bool isExplored = _fovService.IsExplored(position);
+
+            // Layer 0: Terrain
+            if (_map.GetTerrainAt(position) is TerrainGameObject terrain)
+            {
+                var visualTile = terrain.Tile;
+                var tile = new TileRenderData(
+                    visualTile.Symbol[0],
+                    visualTile.ForegroundColor,
+                    visualTile.BackgroundColor
+                );
+
+                if (!isVisible && isExplored)
+                {
+                    // Explored but out of range - darken
+                    tile = DarkenTile(tile);
+                }
+                else if (!isExplored)
+                {
+                    // Never explored - don't render
+                    tile = new TileRenderData(-1, LyColor.White);
+                }
+
+                screen.AddTileToSurface(0, position.X, position.Y, tile);
+            }
+
+            // Layer 2: Creatures (only visible or if player)
+            var objects = _map.GetObjectsAt(position);
+            foreach (var obj in objects)
+            {
+                if (isVisible || obj == _player)
+                {
+                    if (obj is CreatureGameObject creature)
+                    {
+                        var creatureTile = new TileRenderData(
+                            creature.Tile.Symbol[0],
+                            creature.Tile.ForegroundColor,
+                            creature.Tile.BackgroundColor
+                        );
+                        screen.AddTileToSurface(2, position.X, position.Y, creatureTile);
+                    }
+                }
+            }
+        }
     }
 
     public override void OnLoad()
@@ -95,6 +169,7 @@ public class RogueScene : BaseScene
                 if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Up))
                 {
                     player.Item.Position += Direction.Up;
+                    _fovService.UpdateFOV(player.Position);
                 }
             }
         );
@@ -107,6 +182,7 @@ public class RogueScene : BaseScene
                 if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Down))
                 {
                     player.Item.Position += Direction.Down;
+                    _fovService.UpdateFOV(player.Position);
                 }
             }
         );
@@ -119,6 +195,7 @@ public class RogueScene : BaseScene
                 if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Left))
                 {
                     player.Item.Position += Direction.Left;
+                    _fovService.UpdateFOV(player.Position);
                 }
             }
         );
@@ -131,6 +208,7 @@ public class RogueScene : BaseScene
                 if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Right))
                 {
                     player.Item.Position += Direction.Right;
+                    _fovService.UpdateFOV(player.Position);
                 }
             }
         );
@@ -145,7 +223,14 @@ public class RogueScene : BaseScene
                                  };
 
         _map = _mapGenerator.GenerateMapAsync().GetAwaiter().GetResult();
-        _map.FillSurface(_screen);
+        _player = _map.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
+
+        if (_player != null)
+        {
+            _fovService.UpdateFOV(_player.Position);
+        }
+
+        FillSurface(_screen);
 
         _map.ObjectMoved += (sender, args) =>
                             {
