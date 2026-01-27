@@ -9,6 +9,7 @@ using LillyQuest.RogueLike.Data.Configs;
 using LillyQuest.RogueLike.Interfaces;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Json.Context;
+using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Services;
 using LillyQuest.RogueLike.Services.Loader;
 using Serilog;
@@ -50,6 +51,12 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
 
         container.Register<IDataLoaderService, DataLoaderService>();
         container.Register<IMapGenerator, MapGenerator>();
+
+        // Register FOV service with factory
+        container.Register<IFOVService>(
+            made: Made.Of(
+                () => new FOVService(Arg.Of<LyQuestMap>())),
+            reuse: Reuse.Singleton);
 
         foreach (var receiverType in _dataReceiverTypes)
         {
