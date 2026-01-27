@@ -1,5 +1,6 @@
 using System.Numerics;
 using Humanizer;
+using ImGuiNET;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Managers.Scenes.Base;
@@ -52,17 +53,26 @@ public class RogueScene : BaseScene
             MathF.Max(0f, windowSize.Y - _screen.Position.Y)
         );
 
+        _screen.InitializeLayers(_screen.LayerCount);
+
+        _screen.SetLayerViewLock(0, 1);
+        _screen.SetLayerViewLock(0, 2);
+        _screen.SetLayerViewLock(0, 3);
         _screen.ApplyTileViewScaleToScreen(availableSize, includeMargins: true);
 
-        _screen.InitializeLayers(_screen.LayerCount);
         // _screen.SetLayerTileset(0, "alloy");
         // _screen.SetLayerTileset(1, "alloy");
 
         _screen.SetLayerRenderScaleSmoothing(0, true, 0.1f);
+        _screen.SetLayerRenderScaleSmoothing(1, true, 0.1f);
+        _screen.SetLayerRenderScaleSmoothing(2, true, 0.1f);
 
         _screen.TileMouseDown += (index, x, y, buttons) =>
                                  {
                                      _screen.CenterViewOnTile(0, x, y);
+                                     // _screen.CenterViewOnTile(1, x, y);
+                                     //
+                                     // _screen.CenterViewOnTile(2, x, y);
                                  };
 
         var map = _mapGenerator.GenerateMapAsync().GetAwaiter().GetResult();

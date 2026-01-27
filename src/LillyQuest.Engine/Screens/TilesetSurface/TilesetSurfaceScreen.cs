@@ -146,11 +146,11 @@ public class TilesetSurfaceScreen : BaseScreen
 
         var masterTileset = GetMasterTileset();
         var availableSize = includeMargins
-            ? new Vector2(
-                MathF.Max(0f, screenSize.X - Margin.X - Margin.Z),
-                MathF.Max(0f, screenSize.Y - Margin.Y - Margin.W)
-            )
-            : screenSize;
+                                ? new Vector2(
+                                    MathF.Max(0f, screenSize.X - Margin.X - Margin.Z),
+                                    MathF.Max(0f, screenSize.Y - Margin.Y - Margin.W)
+                                )
+                                : screenSize;
 
         var tileWidth = masterTileset.TileWidth * TileRenderScale;
         var tileHeight = masterTileset.TileHeight * TileRenderScale;
@@ -176,6 +176,7 @@ public class TilesetSurfaceScreen : BaseScreen
             AutoSizeFromTileView = false;
             Size = screenSize;
             UpdateLayerRenderScaleFromTileView(screenSize, includeMargins);
+
             return;
         }
 
@@ -268,8 +269,8 @@ public class TilesetSurfaceScreen : BaseScreen
 
         if (layer.SmoothViewEnabled)
         {
-            layer.ViewTileOffsetTarget = viewOffset;
-            layer.ViewPixelOffsetTarget = Vector2.Zero;
+            SetLayerViewTileTarget(layerIndex, viewOffset);
+            SetLayerViewPixelTarget(layerIndex, Vector2.Zero);
         }
         else
         {
@@ -325,11 +326,11 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         var availableSize = includeMargins
-            ? new Vector2(
-                MathF.Max(0f, screenSize.X - margin.X - margin.Z),
-                MathF.Max(0f, screenSize.Y - margin.Y - margin.W)
-            )
-            : screenSize;
+                                ? new Vector2(
+                                    MathF.Max(0f, screenSize.X - margin.X - margin.Z),
+                                    MathF.Max(0f, screenSize.Y - margin.Y - margin.W)
+                                )
+                                : screenSize;
 
         if (availableSize.X <= 0f || availableSize.Y <= 0f)
         {
@@ -1019,7 +1020,7 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         followers.Add(followerIndex);
-        SyncViewTargetsFromMaster(masterIndex, followerIndex);
+        SyncViewFromMaster(masterIndex, followerIndex);
     }
 
     /// <summary>
@@ -1558,6 +1559,11 @@ public class TilesetSurfaceScreen : BaseScreen
 
         for (var i = 0; i < _surface.Layers.Count; i++)
         {
+            if (_viewLockMasterByFollower.ContainsKey(i))
+            {
+                continue;
+            }
+
             var layer = _surface.Layers[i];
 
             if (!layer.SmoothViewEnabled)
@@ -1601,6 +1607,11 @@ public class TilesetSurfaceScreen : BaseScreen
 
             layer.ViewTileOffset = nextTileOffset;
             layer.ViewPixelOffset = nextPixelOffset;
+
+            if (_viewLockFollowersByMaster.ContainsKey(i))
+            {
+                PropagateViewTargets(i);
+            }
         }
     }
 
@@ -1618,11 +1629,11 @@ public class TilesetSurfaceScreen : BaseScreen
                 continue;
             }
 
-            SyncViewTargetsFromMaster(masterIndex, followerIndex);
+            SyncViewFromMaster(masterIndex, followerIndex);
         }
     }
 
-    private void SyncViewTargetsFromMaster(int masterIndex, int followerIndex)
+    private void SyncViewFromMaster(int masterIndex, int followerIndex)
     {
         if (!IsValidLayerIndex(masterIndex) || !IsValidLayerIndex(followerIndex))
         {
@@ -1631,6 +1642,8 @@ public class TilesetSurfaceScreen : BaseScreen
 
         var master = _surface.Layers[masterIndex];
         var follower = _surface.Layers[followerIndex];
+        follower.ViewTileOffset = master.ViewTileOffset;
+        follower.ViewPixelOffset = master.ViewPixelOffset;
         follower.ViewTileOffsetTarget = master.ViewTileOffsetTarget;
         follower.ViewPixelOffsetTarget = master.ViewPixelOffsetTarget;
     }
