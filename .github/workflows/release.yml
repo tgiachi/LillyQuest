@@ -21,7 +21,7 @@ jobs:
         with:
           dotnet-version: '10.0.x'
 
-      - name: Check for release in PR title
+      - name: Check for release label
         id: release_check
         uses: actions/github-script@v7
         with:
@@ -38,11 +38,12 @@ jobs:
               return;
             }
             const pr = prs.data[0];
-            core.setOutput('should_release', pr.title.includes('[release]') ? 'true' : 'false');
+            const hasReleaseLabel = pr.labels.some(label => label.name === 'release');
+            core.setOutput('should_release', hasReleaseLabel ? 'true' : 'false');
 
-      - name: Exit if no [release] in PR title
+      - name: Exit if no release label
         if: steps.release_check.outputs.should_release != 'true'
-        run: echo "No [release] found in PR title, skipping release."
+        run: echo "No 'release' label found, skipping release."
 
       - name: Install versionize
         if: steps.release_check.outputs.should_release == 'true'
