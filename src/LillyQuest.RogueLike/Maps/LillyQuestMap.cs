@@ -11,5 +11,7 @@ public class LillyQuestMap : Map
         height,
         Enum.GetValues<MapLayer>().Length,
         Distance.Manhattan
-    ) { }
+    )
+    {
+    }
 }
