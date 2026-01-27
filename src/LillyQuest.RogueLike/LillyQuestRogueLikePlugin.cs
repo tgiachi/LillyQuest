@@ -49,6 +49,7 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         _container = container;
 
         container.Register<IDataLoaderService, DataLoaderService>();
+        container.Register<IMapGenerator, MapGenerator>();
 
         foreach (var receiverType in _dataReceiverTypes)
         {
@@ -100,6 +101,10 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
 
         _logger.Information("Starting data verification");
         await dataLoader.VerifyLoadedDataAsync();
+
+
+        var mapGenerator = container.Resolve<IMapGenerator>();
+        await mapGenerator.GenerateMapAsync();
 
         // var renderContext = container.Resolve<EngineRenderContext>();
         //

@@ -4,9 +4,9 @@ using SadRogue.Primitives;
 
 namespace LillyQuest.RogueLike.Maps;
 
-public class LillyQuestMap : Map
+public class LyQuestMap : Map
 {
-    public LillyQuestMap(int width, int height) : base(
+    public LyQuestMap(int width, int height) : base(
         width,
         height,
         Enum.GetValues<MapLayer>().Length,

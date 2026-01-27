@@ -374,11 +374,6 @@ public class TilesetSurfaceEditorScene : BaseScene
         // );
     }
 
-    public override void OnInitialize(ISceneManager sceneManager)
-    {
-        base.OnInitialize(sceneManager);
-    }
-
     /// <summary>
     /// Populates the tileset surface with random tiles and colors.
     /// </summary>
