@@ -1,13 +1,16 @@
 using System.Numerics;
-using Humanizer;
-using ImGuiNET;
 using LillyQuest.Core.Interfaces.Assets;
+using LillyQuest.Core.Types;
 using LillyQuest.Engine.Interfaces.Managers;
+using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Managers.Scenes.Base;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.Engine.Screens.UI;
+using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
+using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Types;
+using SadRogue.Primitives;
 
 namespace LillyQuest.Game.Scenes;
 
@@ -17,16 +20,27 @@ public class RogueScene : BaseScene
     private readonly IMapGenerator _mapGenerator;
     private readonly ITilesetManager _tilesetManager;
 
+    private readonly IShortcutService _shortcutService;
+
+    private readonly IActionService _actionService;
+
+    private LyQuestMap _map = null!;
     private UIRootScreen? _uiRoot;
     private TilesetSurfaceScreen? _screen;
 
-    public RogueScene(IScreenManager screenManager, IMapGenerator mapGenerator, ITilesetManager tilesetManager) : base(
-        "RogueScene"
-    )
+    public RogueScene(
+        IScreenManager screenManager,
+        IMapGenerator mapGenerator,
+        ITilesetManager tilesetManager,
+        IShortcutService shortcutService,
+        IActionService actionService
+    ) : base("RogueScene")
     {
         _screenManager = screenManager;
         _mapGenerator = mapGenerator;
         _tilesetManager = tilesetManager;
+        _shortcutService = shortcutService;
+        _actionService = actionService;
     }
 
     public override void OnLoad()
@@ -67,16 +81,86 @@ public class RogueScene : BaseScene
         _screen.SetLayerRenderScaleSmoothing(1, true, 0.1f);
         _screen.SetLayerRenderScaleSmoothing(2, true, 0.1f);
 
+        _shortcutService.RegisterShortcut("up", InputContextType.Global, "w", ShortcutTriggerType.Release);
+        _shortcutService.RegisterShortcut("down", InputContextType.Global, "s", ShortcutTriggerType.Release);
+        _shortcutService.RegisterShortcut("left", InputContextType.Global, "a", ShortcutTriggerType.Release);
+        _shortcutService.RegisterShortcut("right", InputContextType.Global, "d", ShortcutTriggerType.Release);
+
+        _actionService.RegisterAction(
+            "up",
+            () =>
+            {
+                var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
+
+                if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Up))
+                {
+                    player.Item.Position += Direction.Up;
+                }
+            }
+        );
+        _actionService.RegisterAction(
+            "down",
+            () =>
+            {
+                var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
+
+                if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Down))
+                {
+                    player.Item.Position += Direction.Down;
+                }
+            }
+        );
+        _actionService.RegisterAction(
+            "left",
+            () =>
+            {
+                var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
+
+                if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Left))
+                {
+                    player.Item.Position += Direction.Left;
+                }
+            }
+        );
+        _actionService.RegisterAction(
+            "right",
+            () =>
+            {
+                var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
+
+                if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Right))
+                {
+                    player.Item.Position += Direction.Right;
+                }
+            }
+        );
+
         _screen.TileMouseDown += (index, x, y, buttons) =>
                                  {
                                      _screen.CenterViewOnTile(0, x, y);
+
                                      // _screen.CenterViewOnTile(1, x, y);
                                      //
                                      // _screen.CenterViewOnTile(2, x, y);
                                  };
 
-        var map = _mapGenerator.GenerateMapAsync().GetAwaiter().GetResult();
-        map.FillSurface(_screen);
+        _map = _mapGenerator.GenerateMapAsync().GetAwaiter().GetResult();
+        _map.FillSurface(_screen);
+
+        _map.ObjectMoved += (sender, args) =>
+                            {
+                                if (args.Item is CreatureGameObject creature)
+                                {
+                                    _screen.EnqueueMove(
+                                        creature.Layer,
+                                        new Vector2(args.OldPosition.X, args.OldPosition.Y),
+                                        new Vector2(args.NewPosition.X, args.NewPosition.Y),
+                                        0.1f
+                                    );
+
+                                    _screen.CenterViewOnTile(0, args.NewPosition.X, args.NewPosition.Y);
+                                }
+                            };
 
         _screen.SetLayerViewSmoothing(0, true);
 

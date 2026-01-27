@@ -1,6 +1,7 @@
 using LillyQuest.Core.Types;
 using LillyQuest.Engine.Data.Input;
 using Silk.NET.Input;
+using System;
 
 namespace LillyQuest.Engine.Interfaces.Services;
 
@@ -47,6 +48,17 @@ public interface IShortcutService
     /// </summary>
     /// <param name="context">Context to push.</param>
     void PushContext(InputContextType context);
+
+    /// <summary>
+    /// Registers a shortcut for an action.
+    /// </summary>
+    /// <param name="actionName">Action name.</param>
+    /// <param name="action">Action callback.</param>
+    /// <param name="context">Context scope.</param>
+    /// <param name="shortcut">Shortcut string.</param>
+    /// <param name="trigger">Trigger type.</param>
+    /// <returns>True when registered.</returns>
+    bool RegisterShortcut(string actionName, Action action, InputContextType context, string shortcut, ShortcutTriggerType trigger);
 
     /// <summary>
     /// Registers a shortcut for an action.
