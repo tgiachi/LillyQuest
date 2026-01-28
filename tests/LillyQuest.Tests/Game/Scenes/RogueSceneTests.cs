@@ -39,6 +39,22 @@ public class RogueSceneTests
         Assert.That(mapRenderSystem.HasMap(map), Is.True);
     }
 
+    [Test]
+    public void RogueScene_RegistersViewportUpdateSystem()
+    {
+        var screenManager = new FakeScreenManager();
+        var map = BuildTestMap();
+        var mapGenerator = new FakeMapGenerator(map);
+        var tilesetManager = new FakeTilesetManager();
+        var shortcutService = new FakeShortcutService();
+        var actionService = new FakeActionService();
+        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService);
+
+        scene.OnLoad();
+
+        Assert.That(scene.GetSceneGameObjects().OfType<ViewportUpdateSystem>().Any(), Is.True);
+    }
+
     private static LyQuestMap BuildTestMap()
     {
         var map = new LyQuestMap(10, 10);

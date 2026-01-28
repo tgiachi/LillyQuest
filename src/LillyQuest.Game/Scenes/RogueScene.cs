@@ -36,6 +36,7 @@ public class RogueScene : BaseScene
     private TilesetSurfaceScreen? _screen;
     private CreatureGameObject? _player;
     private MapRenderSystem? _mapRenderSystem;
+    private ViewportUpdateSystem? _viewportUpdateSystem;
 
     public RogueScene(
         IScreenManager screenManager,
@@ -217,6 +218,10 @@ public class RogueScene : BaseScene
         _mapRenderSystem.RegisterMap(_map, _screen, _fovService);
         AddEntity(_mapRenderSystem);
         MarkFovDirty(Array.Empty<Point>());
+
+        _viewportUpdateSystem = new ViewportUpdateSystem(layerIndex: 0);
+        _viewportUpdateSystem.RegisterMap(_map, _screen, _mapRenderSystem);
+        AddEntity(_viewportUpdateSystem);
 
         _map.ObjectMoved += (sender, args) =>
                             {
