@@ -4,6 +4,7 @@ using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Maps.Tiles;
+using SadRogue.Primitives;
 using SadRogue.Primitives.GridViews;
 using Serilog;
 
@@ -68,7 +69,13 @@ public class MapGenerator : IMapGenerator
             Tile = new VisualTile("player", "@", LyColor.Transparent, LyColor.White)
         };
 
+        var simpleTorch = new ItemGameObject(new Point(10, 10))
+        {
+            Tile = new VisualTile("torch", "t", LyColor.Transparent, LyColor.Yellow)
+        };
+
         map.AddEntity(player);
+        map.AddEntity(simpleTorch);
 
         return map;
     }

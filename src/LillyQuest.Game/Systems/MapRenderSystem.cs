@@ -192,6 +192,35 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
         return !isVisible && isExplored ? DarkenTile(tile) : tile;
     }
 
+    private static TileRenderData BuildItemTile(
+        LyQuestMap map,
+        IFOVService? fovService,
+        Point position
+    )
+    {
+        var renderItem = fovService == null || fovService.IsVisible(position);
+        var empty = new TileRenderData(-1, LyColor.White);
+
+        if (!renderItem)
+        {
+            return empty;
+        }
+
+        foreach (var obj in map.GetObjectsAt(position))
+        {
+            if (obj is ItemGameObject item)
+            {
+                return new(
+                    item.Tile.Symbol[0],
+                    item.Tile.ForegroundColor,
+                    item.Tile.BackgroundColor
+                );
+            }
+        }
+
+        return empty;
+    }
+
     private static TileRenderData DarkenTile(TileRenderData tile)
     {
         return new(
@@ -230,6 +259,9 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
 
                 var creatureTile = BuildCreatureTile(map, fovService, position);
                 surface.AddTileToSurface((int)MapLayer.Creatures, x, y, creatureTile);
+
+                var itemTile = BuildItemTile(map, fovService, position);
+                surface.AddTileToSurface((int)MapLayer.Items, x, y, itemTile);
             }
         }
     }

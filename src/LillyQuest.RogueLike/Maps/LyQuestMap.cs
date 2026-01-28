@@ -48,7 +48,23 @@ public class LyQuestMap : Map
                         )
                     );
                 }
+
+                if (entity is ItemGameObject item)
+                {
+                    surface.AddTileToSurface(
+                        item.Layer,
+                        position.X,
+                        position.Y,
+                        new(
+                            item.Tile.Symbol[0],
+                            item.Tile.ForegroundColor,
+                            item.Tile.BackgroundColor
+                        )
+                    );
+                }
             }
+
+
         }
         var player = Entities.GetLayer((int)MapLayer.Creatures).First();
 

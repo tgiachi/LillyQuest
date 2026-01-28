@@ -128,6 +128,28 @@ public class MapRenderSystemTests
         Assert.That(system.GetDirtyChunks(map), Is.Empty);
     }
 
+    [Test]
+    public void Update_RendersItemLayerTile()
+    {
+        var system = new MapRenderSystem(chunkSize: 4);
+        var map = BuildSmallTestMap();
+        var surface = BuildTestSurface();
+        var item = new ItemGameObject(new Point(1, 1))
+        {
+            Tile = new VisualTile("torch", "t", LyColor.Black, LyColor.Yellow)
+        };
+
+        map.AddEntity(item);
+        system.RegisterMap(map, surface, fovService: null);
+
+        surface.AddTileToSurface((int)MapLayer.Items, 1, 1, new TileRenderData(-1, LyColor.White));
+        system.MarkDirtyForTile(map, 1, 1);
+
+        system.Update(new GameTime());
+
+        Assert.That(surface.GetTile((int)MapLayer.Items, 1, 1).TileIndex, Is.EqualTo('t'));
+    }
+
     private static LyQuestMap BuildSmallTestMap()
     {
         var map = new LyQuestMap(4, 4);
