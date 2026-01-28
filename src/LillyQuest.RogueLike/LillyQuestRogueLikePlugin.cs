@@ -65,7 +65,7 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
     public string[] DirectoriesToCreate()
         => ["data"];
 
-    public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin)
+    public void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin)
     {
         _container.RegisterInstance(
             new DataLoaderConfig

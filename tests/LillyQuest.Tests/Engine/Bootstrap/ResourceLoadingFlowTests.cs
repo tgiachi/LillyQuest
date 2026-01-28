@@ -5,6 +5,8 @@ namespace LillyQuest.Tests.Engine.Bootstrap;
 
 public class ResourceLoadingFlowTests
 {
+    private static readonly string[] ExpectedLuaOnly = ["lua"];
+    private static readonly string[] ExpectedLuaReadyLoad = ["lua", "ready", "load"];
     private sealed class FakeLoader : IAsyncResourceLoader
     {
         public bool IsLoading { get; private set; }
@@ -101,11 +103,11 @@ public class ResourceLoadingFlowTests
             () => { }
         );
 
-        Assert.That(calls, Is.EqualTo(new[] { "lua" }));
+        Assert.That(calls, Is.EqualTo(ExpectedLuaOnly));
 
         luaGate.SetResult();
         flow.Update();
 
-        Assert.That(calls, Is.EqualTo(new[] { "lua", "ready", "load" }));
+        Assert.That(calls, Is.EqualTo(ExpectedLuaReadyLoad));
     }
 }

@@ -1,6 +1,7 @@
 using GoRogue.FOV;
 using LillyQuest.Engine.Entities;
 using LillyQuest.RogueLike.Data.Tiles;
+using LillyQuest.RogueLike.Events;
 using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
 using SadRogue.Primitives;
@@ -16,6 +17,11 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem
 
     private readonly int _fovRadius;
     private readonly Dictionary<LyQuestMap, FovState> _states = new();
+
+    /// <summary>
+    /// Raised when the field of view has been updated.
+    /// </summary>
+    public event EventHandler<FovUpdatedEventArgs>? FovUpdated;
 
     public FovSystem(int fovRadius = DefaultFovRadius)
     {
@@ -114,6 +120,9 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem
             return;
         }
 
+        // Capture previous visible tiles before update
+        var previousVisibleTiles = new HashSet<Point>(state.CurrentVisibleTiles);
+
         // Calculate FOV from viewer position using circular radius
         state.Fov.Calculate(viewerPosition, _fovRadius, Distance.Euclidean);
 
@@ -131,6 +140,9 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem
         }
 
         state.LastViewerPosition = viewerPosition;
+
+        // Raise event to notify listeners
+        FovUpdated?.Invoke(this, new FovUpdatedEventArgs(map, previousVisibleTiles, state.CurrentVisibleTiles));
     }
 
     private sealed class FovState

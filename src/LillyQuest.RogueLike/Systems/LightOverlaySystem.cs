@@ -4,6 +4,7 @@ using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.RogueLike.Components;
+using LillyQuest.RogueLike.Events;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
@@ -43,12 +44,57 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
 
         _states[map] = new MapState(map, surface, new DirtyChunkTracker(_chunkSize));
         _fovSystems[map] = fovSystem;
+
+        // Subscribe to FOV updates to mark light sources dirty when visibility changes
+        if (fovSystem != null)
+        {
+            fovSystem.FovUpdated += OnFovUpdated;
+        }
     }
 
     public void UnregisterMap(LyQuestMap map)
     {
+        // Unsubscribe from FOV updates
+        if (_fovSystems.TryGetValue(map, out var fovSystem) && fovSystem != null)
+        {
+            fovSystem.FovUpdated -= OnFovUpdated;
+        }
+
         _states.Remove(map);
         _fovSystems.Remove(map);
+    }
+
+    private void OnFovUpdated(object? sender, FovUpdatedEventArgs e)
+    {
+        if (!_states.TryGetValue(e.Map, out _))
+        {
+            return;
+        }
+
+        // Mark all light sources as dirty when FOV changes
+        MarkAllLightSourcesDirty(e.Map);
+    }
+
+    private void MarkAllLightSourcesDirty(LyQuestMap map)
+    {
+        foreach (var layer in map.Entities.Layers)
+        {
+            foreach (var entity in layer.Items)
+            {
+                if (entity is not ItemGameObject item)
+                {
+                    continue;
+                }
+
+                var light = item.GoRogueComponents.GetFirstOrDefault<LightSourceComponent>();
+                if (light == null)
+                {
+                    continue;
+                }
+
+                MarkDirtyForRadius(map, item.Position, light.Radius);
+            }
+        }
     }
 
     public void MarkDirtyForRadius(LyQuestMap map, Point center, int radius)

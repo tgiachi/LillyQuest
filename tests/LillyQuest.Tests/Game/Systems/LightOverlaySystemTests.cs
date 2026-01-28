@@ -88,7 +88,9 @@ public class LightOverlaySystemTests
         system.MarkDirtyForRadius(map, center: torch.Position, radius: 3);
         system.Update(new GameTime());
 
-        Assert.That(surface.GetTile((int)MapLayer.Effects, 2, 2).BackgroundColor, Is.EqualTo(LyColor.Orange));
+        // Alpha is capped at MaxBackgroundAlpha (128) by LightOverlaySystem
+        var expectedColor = LyColor.Orange.WithAlpha(128);
+        Assert.That(surface.GetTile((int)MapLayer.Effects, 2, 2).BackgroundColor, Is.EqualTo(expectedColor));
     }
 
     [Test]

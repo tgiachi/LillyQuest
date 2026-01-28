@@ -3,6 +3,7 @@ using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Screens.TilesetSurface;
+using LillyQuest.RogueLike.Events;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.GameObjects.Base;
 using LillyQuest.RogueLike.Interfaces.Systems;
@@ -95,6 +96,12 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
                                  }
                              };
 
+        // Subscribe to FOV updates
+        if (fovSystem != null)
+        {
+            fovSystem.FovUpdated += OnFovUpdated;
+        }
+
         SubscribeToExistingEntities(map, state);
         SubscribeToExistingTerrain(map, state);
     }
@@ -103,12 +110,38 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
     {
         if (_states.Remove(map, out var state))
         {
+            // Unsubscribe from FOV updates
+            if (state.FovSystem != null)
+            {
+                state.FovSystem.FovUpdated -= OnFovUpdated;
+            }
+
             foreach (var handler in state.TileChangedHandlers)
             {
                 handler.Key.VisualTileChanged -= handler.Value;
             }
 
             state.TileChangedHandlers.Clear();
+        }
+    }
+
+    private void OnFovUpdated(object? sender, FovUpdatedEventArgs e)
+    {
+        if (!_states.TryGetValue(e.Map, out var state))
+        {
+            return;
+        }
+
+        // Mark previously visible tiles as dirty (they may need to be dimmed)
+        foreach (var position in e.PreviousVisibleTiles)
+        {
+            state.DirtyTracker.MarkDirtyForTile(position.X, position.Y);
+        }
+
+        // Mark currently visible tiles as dirty (they need to be rendered)
+        foreach (var position in e.CurrentVisibleTiles)
+        {
+            state.DirtyTracker.MarkDirtyForTile(position.X, position.Y);
         }
     }
 

@@ -8,6 +8,21 @@ namespace LillyQuest.Tests.Engine.Bootstrap;
 
 public class PluginLifecycleExecutorTests
 {
+    private static readonly string[] ExpectedOnEngineReady =
+    [
+        "tracking:OnEngineReady",
+        "tracking:OnEngineReady"
+    ];
+    private static readonly string[] ExpectedOnReadyToRender =
+    [
+        "tracking:OnReadyToRender",
+        "tracking:OnReadyToRender"
+    ];
+    private static readonly string[] ExpectedOnLoadResources =
+    [
+        "tracking:OnLoadResources",
+        "tracking:OnLoadResources"
+    ];
     private sealed class TrackingPlugin : ILillyQuestPlugin
     {
         private readonly List<string> _events;
@@ -30,7 +45,7 @@ public class PluginLifecycleExecutorTests
         public string? GetScriptOnLoadFunctionName() => null;
         public void RegisterServices(IContainer container) { }
         public string[]? DirectoriesToCreate() => null;
-        public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin) { }
+        public void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin) { }
         public void Shutdown() { }
 
         public async Task OnEngineReady(IContainer container)
@@ -67,7 +82,7 @@ public class PluginLifecycleExecutorTests
         public string? GetScriptOnLoadFunctionName() => null;
         public void RegisterServices(IContainer container) { }
         public string[]? DirectoriesToCreate() => null;
-        public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin) { }
+        public void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin) { }
         public void Shutdown() { }
 
         public async Task OnEngineReady(IContainer container)
@@ -101,7 +116,7 @@ public class PluginLifecycleExecutorTests
         public string? GetScriptOnLoadFunctionName() => null;
         public void RegisterServices(IContainer container) { }
         public string[]? DirectoriesToCreate() => null;
-        public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin) { }
+        public void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin) { }
         public void Shutdown() { }
 
         public async Task OnEngineReady(IContainer container)
@@ -135,7 +150,7 @@ public class PluginLifecycleExecutorTests
 
         await executor.ExecuteOnEngineReady(container);
 
-        Assert.That(events, Is.EqualTo(new[] { "tracking:OnEngineReady", "tracking:OnEngineReady" }));
+        Assert.That(events, Is.EqualTo(ExpectedOnEngineReady));
     }
 
     [Test]
@@ -153,7 +168,7 @@ public class PluginLifecycleExecutorTests
 
         await executor.ExecuteOnReadyToRender(container);
 
-        Assert.That(events, Is.EqualTo(new[] { "tracking:OnReadyToRender", "tracking:OnReadyToRender" }));
+        Assert.That(events, Is.EqualTo(ExpectedOnReadyToRender));
     }
 
     [Test]
@@ -171,7 +186,7 @@ public class PluginLifecycleExecutorTests
 
         await executor.ExecuteOnLoadResources(container);
 
-        Assert.That(events, Is.EqualTo(new[] { "tracking:OnLoadResources", "tracking:OnLoadResources" }));
+        Assert.That(events, Is.EqualTo(ExpectedOnLoadResources));
     }
 
     [Test]

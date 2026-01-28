@@ -25,8 +25,17 @@ public class BootstrapIntegrationTests
     {
         public readonly List<string> AddedDirectories = new();
 
-        public event IScriptEngineService.LuaFileChangedHandler? FileChanged;
-        public event EventHandler<ScriptErrorInfo>? OnScriptError;
+        public event IScriptEngineService.LuaFileChangedHandler? FileChanged
+        {
+            add { }
+            remove { }
+        }
+
+        public event EventHandler<ScriptErrorInfo>? OnScriptError
+        {
+            add { }
+            remove { }
+        }
 
         public void AddCallback(string name, Action<object[]> callback) => throw new NotImplementedException();
 
@@ -108,7 +117,7 @@ public class BootstrapIntegrationTests
             return null;
         }
 
-        public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin)
+        public void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin)
         {
             _events.Add("OnDirectories");
         }

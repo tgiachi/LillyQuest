@@ -1,6 +1,6 @@
 using System.Numerics;
 using System.Reflection;
-using System.Runtime.Serialization;
+using System.Runtime.CompilerServices;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Engine.Screens.TilesetSurface;
@@ -114,7 +114,7 @@ public class TilesetSurfaceScreenAutoScaleTests
 
     private static Tileset CreateTilesetStub(int tileWidth, int tileHeight)
     {
-        var tileset = (Tileset)FormatterServices.GetUninitializedObject(typeof(Tileset));
+        var tileset = (Tileset)RuntimeHelpers.GetUninitializedObject(typeof(Tileset));
         SetTilesetField(tileset, "<TileWidth>k__BackingField", tileWidth);
         SetTilesetField(tileset, "<TileHeight>k__BackingField", tileHeight);
         return tileset;

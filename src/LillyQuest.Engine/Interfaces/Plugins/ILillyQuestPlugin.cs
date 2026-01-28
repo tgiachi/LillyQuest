@@ -43,7 +43,7 @@ public interface ILillyQuestPlugin
     /// </summary>
     /// <param name="global">The global directories configuration.</param>
     /// <param name="plugin">The plugin-specific directories configuration.</param>
-    void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin);
+    void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin);
 
     /// <summary>
     /// Called when the engine is shutting down.

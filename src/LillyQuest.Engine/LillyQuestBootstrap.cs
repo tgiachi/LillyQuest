@@ -42,7 +42,7 @@ using Silk.NET.Windowing;
 
 namespace LillyQuest.Engine;
 
-public class LillyQuestBootstrap
+public class LillyQuestBootstrap : IDisposable
 {
     private readonly Type[] _renderSystems =
     [
@@ -635,5 +635,10 @@ public class LillyQuestBootstrap
             _fixedGameTime.Update(_engineConfig.FixedTimestep);
             FixedUpdate?.Invoke(_fixedGameTime);
         }
+    }
+
+    public void Dispose()
+    {
+        _container.Dispose();
     }
 }
