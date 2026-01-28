@@ -1,6 +1,6 @@
 using LillyQuest.Core.Primitives;
 
-namespace LillyQuest.RogueLike.GameObjects;
+namespace LillyQuest.RogueLike.Interfaces.GameObjects;
 
 public interface IViewportUpdateable
 {

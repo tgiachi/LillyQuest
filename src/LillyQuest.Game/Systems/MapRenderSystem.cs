@@ -68,6 +68,8 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
         _states[map] = state;
 
         map.ObjectMoved += (_, args) => HandleObjectMoved(map, args.OldPosition, args.NewPosition);
+        map.ObjectAdded += (_, args) => HandleObjectMoved(map, args.Item.Position, args.Item.Position);
+        map.ObjectRemoved += (_, args) => HandleObjectMoved(map, args.Item.Position, args.Item.Position);
     }
 
     public void UnregisterMap(LyQuestMap map)
@@ -155,6 +157,13 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
 
     private static TileRenderData DarkenTile(TileRenderData tile)
     {
+        return new(
+            tile.TileIndex,
+            DarkenColor(tile.ForegroundColor, 0.5f),
+            DarkenColor(tile.BackgroundColor, 0.5f),
+            tile.Flip
+        );
+
         static LyColor DarkenColor(LyColor color, float factor)
             => new(
                 color.A,
@@ -162,13 +171,6 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
                 (byte)(color.G * factor),
                 (byte)(color.B * factor)
             );
-
-        return new(
-            tile.TileIndex,
-            DarkenColor(tile.ForegroundColor, 0.5f),
-            DarkenColor(tile.BackgroundColor, 0.5f),
-            tile.Flip
-        );
     }
 
     private void RebuildChunk(MapRenderState state, ChunkCoord chunk)

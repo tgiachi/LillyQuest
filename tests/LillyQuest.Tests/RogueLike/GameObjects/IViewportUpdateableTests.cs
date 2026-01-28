@@ -1,5 +1,6 @@
 using LillyQuest.Core.Primitives;
 using LillyQuest.RogueLike.GameObjects;
+using LillyQuest.RogueLike.Interfaces.GameObjects;
 using NUnit.Framework;
 using SadRogue.Primitives;
 

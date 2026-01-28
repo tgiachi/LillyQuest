@@ -5,6 +5,7 @@ using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.Game.Rendering;
 using LillyQuest.Game.Systems;
 using LillyQuest.RogueLike.GameObjects;
+using LillyQuest.RogueLike.Interfaces.GameObjects;
 using LillyQuest.RogueLike.Maps;
 using NUnit.Framework;
 using SadRogue.Primitives;
