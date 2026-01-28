@@ -13,87 +13,89 @@ namespace LillyQuest.Core.Interfaces.Assets;
 public static class AssetManagerExtensions
 {
     /// <param name="manager">The font manager instance</param>
-    extension(IFontManager manager)
+    /// <summary>
+    /// Loads a bitmap font from an embedded resource.
+    /// </summary>
+    /// <param name="manager">The font manager instance</param>
+    /// <param name="assetName">Unique name for the font asset</param>
+    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Fonts/default.png")</param>
+    /// <param name="tileWidth">Width of each character tile in pixels</param>
+    /// <param name="tileHeight">Height of each character tile in pixels</param>
+    /// <param name="spacing">Space between tiles in pixels</param>
+    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
+    public static void LoadBmpFontFromEmbeddedResource(
+        this IFontManager manager,
+        string assetName,
+        string resourcePath,
+        int tileWidth,
+        int tileHeight,
+        int spacing = 0,
+        Assembly? assembly = null
+    )
     {
-        /// <summary>
-        /// Loads a bitmap font from an embedded resource.
-        /// </summary>
-        /// <param name="assetName">Unique name for the font asset</param>
-        /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Fonts/default.png")</param>
-        /// <param name="tileWidth">Width of each character tile in pixels</param>
-        /// <param name="tileHeight">Height of each character tile in pixels</param>
-        /// <param name="spacing">Space between tiles in pixels</param>
-        /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
-        public void LoadBmpFontFromEmbeddedResource(
-            string assetName,
-            string resourcePath,
-            int tileWidth,
-            int tileHeight,
-            int spacing = 0,
-            Assembly? assembly = null
-        )
-        {
-            assembly ??= Assembly.GetCallingAssembly();
-            var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
-            manager.LoadBmpFont(assetName, data, tileWidth, tileHeight, spacing);
-        }
+        assembly ??= Assembly.GetCallingAssembly();
+        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
+        manager.LoadBmpFont(assetName, data, tileWidth, tileHeight, spacing);
+    }
 
-        /// <summary>
-        /// Loads a font from an embedded resource.
-        /// </summary>
-        /// <param name="assetName">Unique name for the font asset</param>
-        /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Fonts/arial.ttf")</param>
-        /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
-        public void LoadFontFromEmbeddedResource(
-            string assetName,
-            string resourcePath,
-            Assembly? assembly = null
-        )
-        {
-            assembly ??= Assembly.GetCallingAssembly();
-            var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
-            manager.LoadFont(assetName, data);
-        }
+    /// <summary>
+    /// Loads a font from an embedded resource.
+    /// </summary>
+    /// <param name="manager">The font manager instance</param>
+    /// <param name="assetName">Unique name for the font asset</param>
+    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Fonts/arial.ttf")</param>
+    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
+    public static void LoadFontFromEmbeddedResource(
+        this IFontManager manager,
+        string assetName,
+        string resourcePath,
+        Assembly? assembly = null
+    )
+    {
+        assembly ??= Assembly.GetCallingAssembly();
+        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
+        manager.LoadFont(assetName, data);
     }
 
     /// <param name="manager">The texture manager instance</param>
-    extension(ITextureManager manager)
+    /// <summary>
+    /// Loads a texture from an embedded resource.
+    /// </summary>
+    /// <param name="manager">The texture manager instance</param>
+    /// <param name="assetName">Unique name for the texture asset</param>
+    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Textures/player.png")</param>
+    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
+    public static void LoadTextureFromEmbeddedResource(
+        this ITextureManager manager,
+        string assetName,
+        string resourcePath,
+        Assembly? assembly = null
+    )
     {
-        /// <summary>
-        /// Loads a texture from an embedded resource.
-        /// </summary>
-        /// <param name="assetName">Unique name for the texture asset</param>
-        /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Textures/player.png")</param>
-        /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
-        public void LoadTextureFromEmbeddedResource(
-            string assetName,
-            string resourcePath,
-            Assembly? assembly = null
-        )
-        {
-            assembly ??= Assembly.GetCallingAssembly();
-            var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
-            manager.LoadTextureFromPng(assetName, data);
-        }
+        assembly ??= Assembly.GetCallingAssembly();
+        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
+        manager.LoadTextureFromPng(assetName, data);
+    }
 
-        /// <summary>
-        /// Loads a texture from an embedded resource with chroma key support.
-        /// </summary>
-        /// <param name="assetName">Unique name for the texture asset</param>
-        /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Textures/sprite.png")</param>
-        /// <param name="tolerance">Color tolerance for magenta detection (0-255)</param>
-        /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
-        public void LoadTextureFromEmbeddedResourceWithChromaKey(
-            string assetName,
-            string resourcePath,
-            byte tolerance = 0,
-            Assembly? assembly = null
-        )
-        {
-            assembly ??= Assembly.GetCallingAssembly();
-            var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
-            manager.LoadTextureFromPngWithChromaKey(assetName, data, tolerance);
-        }
+    /// <summary>
+    /// Loads a texture from an embedded resource with chroma key support.
+    /// </summary>
+    /// <param name="manager">The texture manager instance</param>
+    /// <param name="assetName">Unique name for the texture asset</param>
+    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Textures/sprite.png")</param>
+    /// <param name="tolerance">Color tolerance for magenta detection (0-255)</param>
+    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
+    public static void LoadTextureFromEmbeddedResourceWithChromaKey(
+        this ITextureManager manager,
+        string assetName,
+        string resourcePath,
+        byte tolerance = 0,
+        Assembly? assembly = null
+    )
+    {
+        assembly ??= Assembly.GetCallingAssembly();
+        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
+        manager.LoadTextureFromPngWithChromaKey(assetName, data, tolerance);
     }
 
     /// <summary>

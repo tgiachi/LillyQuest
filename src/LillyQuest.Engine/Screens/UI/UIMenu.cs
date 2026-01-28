@@ -8,8 +8,6 @@ using Silk.NET.Input;
 
 namespace LillyQuest.Engine.Screens.UI;
 
-public sealed record MenuItem(string Text, Action OnSelect, bool IsEnabled = true);
-
 public sealed class UIMenu : UIScreenControl
 {
     private readonly List<MenuItem> _items = [];

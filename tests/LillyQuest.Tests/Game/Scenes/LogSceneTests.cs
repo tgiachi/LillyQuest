@@ -11,6 +11,9 @@ using LillyQuest.Engine.Logging;
 using LillyQuest.Engine.Managers.Screens;
 using LillyQuest.Engine.Scenes;
 using LillyQuest.Engine.Screens.Logging;
+using NSubstitute;
+using Silk.NET.Maths;
+using Silk.NET.Windowing;
 
 namespace LillyQuest.Tests.Game.Scenes;
 
@@ -87,7 +90,7 @@ public class LogSceneTests
         var screenManager = new ScreenManager();
         var dispatcher = new LogEventDispatcher();
         var fontManager = new FakeFontManager();
-        var scene = new LogScene(screenManager, dispatcher, fontManager, CreateBootstrap());
+        var scene = new LogScene(screenManager, dispatcher, fontManager, CreateBootstrap(), CreateEngineRenderContext());
 
         scene.OnLoad();
 
@@ -100,9 +103,16 @@ public class LogSceneTests
     }
 
     private static LogScene CreateScene()
-        => new(new ScreenManager(), new LogEventDispatcher(), new FakeFontManager(), CreateBootstrap());
+        => new(new ScreenManager(), new LogEventDispatcher(), new FakeFontManager(), CreateBootstrap(), CreateEngineRenderContext());
 
     private static LillyQuestBootstrap CreateBootstrap()
         => new(new LillyQuestEngineConfig());
+
+    private static EngineRenderContext CreateEngineRenderContext()
+    {
+        var window = Substitute.For<IWindow>();
+        window.Size.Returns(new Vector2D<int>(800, 600));
+        return new EngineRenderContext { Window = window };
+    }
 
 }

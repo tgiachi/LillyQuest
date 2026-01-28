@@ -16,6 +16,7 @@ public static class JsonUtils
     private static readonly ConcurrentBag<IJsonTypeInfoResolver> JsonSerializerContexts = new();
     private static readonly ConcurrentBag<JsonConverter> JsonConverters = new();
     private static readonly Lock _lockObject = new();
+    private static readonly ConcurrentDictionary<Type, JsonSerializerOptions> ContextOptionsCache = new();
 
     private static volatile JsonSerializerOptions? _jsonSerializerOptions;
 
@@ -95,16 +96,9 @@ public static class JsonUtils
 
         try
         {
-            var baseOptions = GetJsonSerializerOptions();
-            var options = new JsonSerializerOptions(baseOptions)
-            {
-                TypeInfoResolver = JsonTypeInfoResolver.Combine(context, baseOptions.TypeInfoResolver)
-            };
-            var result = JsonSerializer.Deserialize(json, typeof(T), options);
-
-            return result is T typedResult
-                       ? typedResult
-                       : throw new JsonException($"Deserialization returned null for type {typeof(T).Name}");
+            var options = GetJsonSerializerOptions(context);
+            return JsonSerializer.Deserialize<T>(json, options) ??
+                   throw new JsonException($"Deserialization returned null for type {typeof(T).Name}");
         }
         catch (JsonException ex)
         {
@@ -176,9 +170,7 @@ public static class JsonUtils
         try
         {
             var json = File.ReadAllText(normalizedPath);
-            var result = JsonSerializer.Deserialize(json, context.GetTypeInfo(typeof(T)));
-
-            return result is T typedResult
+            return JsonSerializer.Deserialize(json, context.GetTypeInfo(typeof(T))) is T typedResult
                        ? typedResult
                        : throw new JsonException($"Deserialization returned null for type {typeof(T).Name}");
         }
@@ -333,6 +325,26 @@ public static class JsonUtils
     /// </summary>
     public static JsonSerializerOptions GetJsonSerializerOptions()
         => _jsonSerializerOptions ?? throw new InvalidOperationException("JsonSerializerOptions not initialized");
+
+    /// <summary>
+    /// Gets cached JSON serializer options combined with a context resolver. Thread-safe.
+    /// </summary>
+    public static JsonSerializerOptions GetJsonSerializerOptions(JsonSerializerContext context)
+    {
+        ArgumentNullException.ThrowIfNull(context);
+
+        return ContextOptionsCache.GetOrAdd(
+            context.GetType(),
+            _ =>
+            {
+                var baseOptions = GetJsonSerializerOptions();
+                return new JsonSerializerOptions(baseOptions)
+                {
+                    TypeInfoResolver = JsonTypeInfoResolver.Combine(context, baseOptions.TypeInfoResolver)
+                };
+            }
+        );
+    }
 
     /// <summary>
     /// Generates a schema file name for the given type using snake_case convention.

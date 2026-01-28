@@ -44,10 +44,11 @@ await ConsoleApp.RunAsync(
                 container.RegisterInstance<ILogEventDispatcher>(logDispatcher);
                 container.RegisterScene<TestSceneA>();
                 container.RegisterScene<TestSceneB>();
-                container.RegisterScene<TilesetSurfaceEditorScene>(true);
+                container.RegisterScene<TilesetSurfaceEditorScene>();
                 container.RegisterScene<UiWidgetsDemoScene>();
                 container.RegisterScene<UiMenuDemoScene>();
                 container.RegisterScene<UiTextBoxDemoScene>();
+                container.RegisterScene<RogueScene>(true);
 
                 container.RegisterPlugin(typeof(LillyQuestRogueLikePlugin).Assembly);
 

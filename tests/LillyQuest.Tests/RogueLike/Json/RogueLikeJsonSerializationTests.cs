@@ -11,6 +11,13 @@ namespace LillyQuest.Tests.RogueLike.Json;
 
 public class RogueLikeJsonSerializationTests
 {
+    private static readonly string[] ExpectedTagsAB = ["a", "b"];
+    private static readonly string[] ExpectedTagsWalkable = ["walkable"];
+    private static readonly string[] ExpectedFlagsOutdoorGround = ["outdoor", "ground"];
+    private static readonly string[] ExpectedTagsRough = ["rough"];
+    private static readonly string[] ExpectedFlagsGround = ["ground"];
+    private static readonly string[] ExpectedTagsFloor = ["floor"];
+    private static readonly string[] ExpectedTagsAnimated = ["animated"];
     [Test]
     public void Deserialize_BaseJsonEntity_UsesContext()
     {
@@ -27,7 +34,7 @@ public class RogueLikeJsonSerializationTests
         );
 
         Assert.That(entity.Id, Is.EqualTo("base"));
-        Assert.That(entity.Tags, Is.EquivalentTo(new[] { "a", "b" }));
+        Assert.That(entity.Tags, Is.EquivalentTo(ExpectedTagsAB));
     }
 
     [Test]
@@ -117,10 +124,10 @@ public class RogueLikeJsonSerializationTests
 
         var terrain = (TerrainDefinitionJson)entity;
         Assert.That(terrain.Id, Is.EqualTo("terrain-1"));
-        Assert.That(terrain.Tags, Is.EquivalentTo(new[] { "walkable" }));
+        Assert.That(terrain.Tags, Is.EquivalentTo(ExpectedTagsWalkable));
         Assert.That(terrain.Name, Is.EqualTo("Grass"));
         Assert.That(terrain.Description, Is.EqualTo("Soft grass"));
-        Assert.That(terrain.Flags, Is.EquivalentTo(new[] { "outdoor", "ground" }));
+        Assert.That(terrain.Flags, Is.EquivalentTo(ExpectedFlagsOutdoorGround));
         Assert.That(terrain.MovementCost, Is.EqualTo(2));
         Assert.That(terrain.Comment, Is.EqualTo("designer note"));
     }
@@ -146,10 +153,10 @@ public class RogueLikeJsonSerializationTests
         );
 
         Assert.That(terrain.Id, Is.EqualTo("terrain-2"));
-        Assert.That(terrain.Tags, Is.EquivalentTo(new[] { "rough" }));
+        Assert.That(terrain.Tags, Is.EquivalentTo(ExpectedTagsRough));
         Assert.That(terrain.Name, Is.EqualTo("Mud"));
         Assert.That(terrain.Description, Is.EqualTo("Sticky mud"));
-        Assert.That(terrain.Flags, Is.EquivalentTo(new[] { "ground" }));
+        Assert.That(terrain.Flags, Is.EquivalentTo(ExpectedFlagsGround));
         Assert.That(terrain.MovementCost, Is.EqualTo(3));
         Assert.That(terrain.Comment, Is.EqualTo("slow"));
     }
@@ -217,7 +224,7 @@ public class RogueLikeJsonSerializationTests
         );
 
         Assert.That(tile.Id, Is.EqualTo("tile-1"));
-        Assert.That(tile.Tags, Is.EquivalentTo(new[] { "floor" }));
+        Assert.That(tile.Tags, Is.EquivalentTo(ExpectedTagsFloor));
     }
 
     [Test]
@@ -315,7 +322,7 @@ public class RogueLikeJsonSerializationTests
         );
 
         Assert.That(tile.Id, Is.EqualTo("tile-animated"));
-        Assert.That(tile.Tags, Is.EquivalentTo(new[] { "animated" }));
+        Assert.That(tile.Tags, Is.EquivalentTo(ExpectedTagsAnimated));
         Assert.That(tile.Symbol, Is.EqualTo("@"));
         Assert.That(tile.FgColor, Is.EqualTo("#FFFFFFFF"));
         Assert.That(tile.BgColor, Is.EqualTo("#FF000000"));

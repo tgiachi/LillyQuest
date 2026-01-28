@@ -586,3 +586,6 @@ definitions.lua
 
 # Git worktrees (isolated development workspaces)
 .worktrees/
+
+# Docs
+docs/

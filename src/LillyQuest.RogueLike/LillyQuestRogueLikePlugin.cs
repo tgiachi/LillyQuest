@@ -9,6 +9,7 @@ using LillyQuest.RogueLike.Data.Configs;
 using LillyQuest.RogueLike.Interfaces;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Json.Context;
+using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Services;
 using LillyQuest.RogueLike.Services.Loader;
 using Serilog;
@@ -24,7 +25,8 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
     private readonly List<Type> _dataReceiverTypes =
     [
         typeof(ColorService),
-        typeof(TileSetService)
+        typeof(TileSetService),
+        typeof(TerrainService)
     ];
 
     public PluginInfo PluginInfo
@@ -48,6 +50,9 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         _container = container;
 
         container.Register<IDataLoaderService, DataLoaderService>();
+        container.Register<IMapGenerator, MapGenerator>();
+
+
 
         foreach (var receiverType in _dataReceiverTypes)
         {
@@ -60,7 +65,7 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
     public string[] DirectoriesToCreate()
         => ["data"];
 
-    public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin)
+    public void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin)
     {
         _container.RegisterInstance(
             new DataLoaderConfig
@@ -99,6 +104,10 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
 
         _logger.Information("Starting data verification");
         await dataLoader.VerifyLoadedDataAsync();
+
+
+        var mapGenerator = container.Resolve<IMapGenerator>();
+        await mapGenerator.GenerateMapAsync();
 
         // var renderContext = container.Resolve<EngineRenderContext>();
         //

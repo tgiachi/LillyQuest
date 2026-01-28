@@ -9,6 +9,7 @@ namespace LillyQuest.Tests.Engine.Scenes;
 
 public class SceneRegistrationNameResolverTests
 {
+    private static readonly string[] ExpectedNames = ["scene_a", "scene_b"];
     private sealed class SceneA : IScene
     {
         public string Name => "scene_a";
@@ -56,6 +57,6 @@ public class SceneRegistrationNameResolverTests
 
         var names = SceneRegistrationNameResolver.ResolveRegisteredSceneNames(registrations, container);
 
-        Assert.That(names, Is.EquivalentTo(new[] { "scene_a", "scene_b" }));
+        Assert.That(names, Is.EquivalentTo(ExpectedNames));
     }
 }

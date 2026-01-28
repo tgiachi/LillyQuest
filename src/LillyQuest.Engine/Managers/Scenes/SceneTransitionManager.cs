@@ -18,7 +18,7 @@ namespace LillyQuest.Engine.Managers.Scenes;
 /// Manages scene transitions with fade animations and entity lifecycle.
 /// Handles loading, unloading, and rendering of scenes with smooth fade transitions.
 /// </summary>
-public sealed class SceneTransitionManager : ISceneManager
+public sealed class SceneTransitionManager : ISceneManager, IDisposable
 {
     private readonly IGameEntityManager _entityManager;
     private readonly List<SceneRegistrationObject> _sceneRegistrations;
@@ -72,6 +72,11 @@ public sealed class SceneTransitionManager : ISceneManager
         );
 
         _logger.Information("SceneTransitionManager initialized");
+    }
+
+    public void Dispose()
+    {
+        _spriteBatch.Dispose();
     }
 
     /// <summary>

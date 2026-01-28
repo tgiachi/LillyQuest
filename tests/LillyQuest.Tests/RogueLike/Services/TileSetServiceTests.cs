@@ -114,6 +114,25 @@ public class TileSetServiceTests
     }
 
     [Test]
+    public async Task TryGetAnyTilesetName_ReturnsFirstLoadedTileset()
+    {
+        var tileSetService = new TileSetService(new ColorService());
+        await tileSetService.LoadDataAsync(new List<BaseJsonEntity>
+        {
+            new TilesetDefinitionJson
+            {
+                Name = "main",
+                Tiles = new List<TileDefinition>()
+            }
+        });
+
+        var success = tileSetService.TryGetAnyTilesetName(out var name);
+
+        Assert.That(success, Is.True);
+        Assert.That(name, Is.EqualTo("main"));
+    }
+
+    [Test]
     public async Task VerifyLoadedData_ThrowsInvalidOperation_WhenColorsMissing()
     {
         var tileSetService = new TileSetService(new ColorService());

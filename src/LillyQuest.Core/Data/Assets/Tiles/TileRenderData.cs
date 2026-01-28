@@ -66,4 +66,16 @@ public struct TileRenderData
 
     public override string ToString()
         => $"Tile {TileIndex}: BG={BackgroundColor} FG={ForegroundColor} Flip={Flip}";
+
+    /// <summary>
+    /// Returns a darkened version of this tile by the specified factor.
+    /// </summary>
+    /// <param name="factor">Factor between 0.0 (black) and 1.0 (unchanged).</param>
+    public TileRenderData Darken(float factor)
+        => new(
+            TileIndex,
+            ForegroundColor.Darken(factor),
+            BackgroundColor.Darken(factor),
+            Flip
+        );
 }

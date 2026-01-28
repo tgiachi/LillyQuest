@@ -117,6 +117,33 @@ public sealed class ShortcutService : IShortcutService
     /// Registers a shortcut for an action.
     /// </summary>
     /// <param name="actionName">Action name.</param>
+    /// <param name="action">Action callback.</param>
+    /// <param name="context">Context scope.</param>
+    /// <param name="shortcut">Shortcut string.</param>
+    /// <param name="trigger">Trigger type.</param>
+    /// <returns>True when registered.</returns>
+    public bool RegisterShortcut(
+        string actionName,
+        Action action,
+        InputContextType context,
+        string shortcut,
+        ShortcutTriggerType trigger
+    )
+    {
+        if (string.IsNullOrWhiteSpace(actionName) || action is null)
+        {
+            return false;
+        }
+
+        _actionService.RegisterAction(actionName, action);
+
+        return RegisterShortcut(actionName, context, shortcut, trigger);
+    }
+
+    /// <summary>
+    /// Registers a shortcut for an action.
+    /// </summary>
+    /// <param name="actionName">Action name.</param>
     /// <param name="context">Context scope.</param>
     /// <param name="shortcut">Shortcut string.</param>
     /// <param name="trigger">Trigger type.</param>

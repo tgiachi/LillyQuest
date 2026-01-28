@@ -8,13 +8,13 @@ using LillyQuest.Engine.Types;
 
 namespace LillyQuest.Engine.Systems;
 
-public class ScreenSystem : ISystem
+public class ScreenSystem : ISystem, IDisposable
 {
     public uint Order => 160;
     public string Name => "Screen system";
     public SystemQueryType QueryType => SystemQueryType.Renderable;
 
-    private SpriteBatch _spriteBatch;
+    private SpriteBatch? _spriteBatch;
 
     private readonly IScreenManager _screenManager;
     private readonly EngineRenderContext _renderContext;
@@ -44,10 +44,17 @@ public class ScreenSystem : ISystem
 
     public void ProcessEntities(GameTime gameTime, IGameEntityManager entityManager)
     {
-        _spriteBatch.Begin();
+        var spriteBatch = _spriteBatch ?? throw new InvalidOperationException("ScreenSystem not initialized.");
+        spriteBatch.Begin();
 
-        _screenManager.Render(_spriteBatch, _renderContext);
+        _screenManager.Render(spriteBatch, _renderContext);
 
-        _spriteBatch.End();
+        spriteBatch.End();
+    }
+
+    public void Dispose()
+    {
+        _spriteBatch?.Dispose();
+        _spriteBatch = null;
     }
 }

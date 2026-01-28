@@ -53,6 +53,7 @@ public class DataLoaderService : IDataLoaderService
             }
         }
     }
+
     public async Task DispatchDataToReceiversAsync()
     {
         foreach (var receiverEntry in _loadedReceivers)
@@ -79,7 +80,6 @@ public class DataLoaderService : IDataLoaderService
                 _logger.Warning("No entities of type {EntityType} found to dispatch to receivers", type.Name);
             }
         }
-
     }
 
     public List<TBaseJsonEntity> GetEntities<TBaseJsonEntity>() where TBaseJsonEntity : BaseJsonEntity

@@ -3,19 +3,6 @@ using LillyQuest.Core.Primitives;
 
 namespace LillyQuest.Engine.Screens.UI;
 
-public enum UIStackOrientation
-{
-    Vertical,
-    Horizontal
-}
-
-public enum UICrossAlignment
-{
-    Left,
-    Center,
-    Right
-}
-
 public sealed class UIStackPanel : UIScreenControl
 {
     private readonly List<UIScreenControl> _children = [];

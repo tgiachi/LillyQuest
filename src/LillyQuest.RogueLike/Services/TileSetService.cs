@@ -55,6 +55,20 @@ public class TileSetService : IDataLoaderReceiver
         return true;
     }
 
+    public bool TryGetAnyTilesetName(out string tilesetName)
+    {
+        tilesetName = string.Empty;
+
+        if (_tilesets.Count == 0)
+        {
+            return false;
+        }
+
+        tilesetName = _tilesets.Keys.First();
+
+        return true;
+    }
+
     public Type[] GetLoadTypes()
         => [typeof(TilesetDefinitionJson)];
 

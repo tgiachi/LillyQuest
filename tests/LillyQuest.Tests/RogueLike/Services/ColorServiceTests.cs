@@ -1,7 +1,4 @@
 using LillyQuest.Core.Primitives;
-using LillyQuest.RogueLike.Data.Internal;
-using LillyQuest.RogueLike.Interfaces;
-using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Json.Entities.Base;
 using LillyQuest.RogueLike.Json.Entities.Colorschemas;
 using LillyQuest.RogueLike.Services;
@@ -10,24 +7,7 @@ namespace LillyQuest.Tests.RogueLike.Services;
 
 public class ColorServiceTests
 {
-    private sealed class MockDataLoaderService : IDataLoaderService
-    {
-        public Task LoadDataAsync() => Task.CompletedTask;
-
-        public Task ReloadDataAsync() => Task.CompletedTask;
-
-        public Task DispatchDataToReceiversAsync() => Task.CompletedTask;
-
-        public List<TBaseJsonEntity> GetEntities<TBaseJsonEntity>() where TBaseJsonEntity : BaseJsonEntity
-            => new();
-
-        public void RegisterDataReceiver(IDataLoaderReceiver receiver) { }
-        public Task VerifyLoadedDataAsync()
-            => Task.CompletedTask;
-    }
-
     private ColorService _colorService = null!;
-    private MockDataLoaderService _mockDataLoader = null!;
 
     [SetUp]
     public void Setup()

@@ -245,6 +245,31 @@ public readonly struct LyColor : IEquatable<LyColor>
     public LyColor WithAlpha(byte a)
         => new(a, R, G, B);
 
+    /// <summary>
+    /// Returns a darkened version of this color by the specified factor.
+    /// </summary>
+    /// <param name="factor">Factor between 0.0 (black) and 1.0 (unchanged).</param>
+    public LyColor Darken(float factor)
+        => new(
+            A,
+            (byte)(R * factor),
+            (byte)(G * factor),
+            (byte)(B * factor)
+        );
+
+    /// <summary>
+    /// Linearly interpolates between this color and another color.
+    /// </summary>
+    /// <param name="other">The target color.</param>
+    /// <param name="t">Interpolation factor between 0.0 (this color) and 1.0 (other color).</param>
+    public LyColor Lerp(LyColor other, float t)
+        => new(
+            (byte)(A + (other.A - A) * t),
+            (byte)(R + (other.R - R) * t),
+            (byte)(G + (other.G - G) * t),
+            (byte)(B + (other.B - B) * t)
+        );
+
     private static byte ToByte(int value, string paramName)
     {
         if (value < 0 || value > 255)

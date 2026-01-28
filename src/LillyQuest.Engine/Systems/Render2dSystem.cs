@@ -9,14 +9,14 @@ using LillyQuest.Engine.Types;
 
 namespace LillyQuest.Engine.Systems;
 
-public class Render2dSystem : BaseSystem<IRenderableEntity>
+public class Render2dSystem : BaseSystem<IRenderableEntity>, IDisposable
 {
     private readonly ITextureManager _textureManager;
     private readonly IShaderManager _shaderManager;
     private readonly EngineRenderContext _renderContext;
     private readonly IFontManager _fontManager;
 
-    private SpriteBatch _spriteBatch;
+    private SpriteBatch? _spriteBatch;
 
     public Render2dSystem(
         ITextureManager textureManager,
@@ -43,13 +43,20 @@ public class Render2dSystem : BaseSystem<IRenderableEntity>
         IReadOnlyList<IRenderableEntity> typedEntities
     )
     {
-        _spriteBatch.Begin();
+        var spriteBatch = _spriteBatch ?? throw new InvalidOperationException("Render2dSystem not initialized.");
+        spriteBatch.Begin();
 
         foreach (var entity in typedEntities)
         {
-            entity.Render(_spriteBatch, _renderContext);
+            entity.Render(spriteBatch, _renderContext);
         }
 
-        _spriteBatch.End();
+        spriteBatch.End();
+    }
+
+    public void Dispose()
+    {
+        _spriteBatch?.Dispose();
+        _spriteBatch = null;
     }
 }

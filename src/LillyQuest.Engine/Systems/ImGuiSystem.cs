@@ -15,10 +15,10 @@ namespace LillyQuest.Engine.Systems;
 /// System for rendering ImGui UI elements.
 /// Applies the Dark Fantasy theme (gold, purple, mystical colors) by default on initialization.
 /// </summary>
-public class ImGuiSystem : BaseSystem<IIMGuiEntity>
+public class ImGuiSystem : BaseSystem<IIMGuiEntity>, IDisposable
 {
     private readonly EngineRenderContext _renderContext;
-    private ImGuiController _imguiController;
+    private ImGuiController? _imguiController;
 
     public ImGuiSystem(EngineRenderContext renderContext) : base(
         130,
@@ -47,7 +47,8 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>
         IReadOnlyList<IIMGuiEntity> typedEntities
     )
     {
-        _imguiController.Update((float)gameTime.Elapsed.TotalSeconds);
+        var imguiController = _imguiController ?? throw new InvalidOperationException("ImGuiSystem not initialized.");
+        imguiController.Update((float)gameTime.Elapsed.TotalSeconds);
 
         foreach (var entity in typedEntities)
         {
@@ -63,6 +64,12 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>
             ImGui.End();
         }
 
-        _imguiController.Render();
+        imguiController.Render();
+    }
+
+    public void Dispose()
+    {
+        _imguiController?.Dispose();
+        _imguiController = null;
     }
 }

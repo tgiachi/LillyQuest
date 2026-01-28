@@ -10,12 +10,6 @@ using Silk.NET.Maths;
 
 namespace LillyQuest.Engine.Screens.UI;
 
-public enum ProgressOrientation
-{
-    Horizontal,
-    Vertical
-}
-
 public sealed class UIProgressBar : UIScreenControl
 {
     private readonly INineSliceAssetManager _nineSliceManager;

@@ -7,6 +7,15 @@ namespace LillyQuest.Tests.Engine.Bootstrap;
 
 public class PluginLifecycleTests
 {
+    private static readonly string[] ExpectedOnEngineReady = ["OnEngineReady", "OnEngineReady"];
+    private static readonly string[] ExpectedOnReadyToRender = ["OnReadyToRender", "OnReadyToRender"];
+    private static readonly string[] ExpectedOnLoadResources = ["OnLoadResources", "OnLoadResources"];
+    private static readonly string[] ExpectedSequential =
+    [
+        "OnEngineReady",
+        "OnReadyToRender",
+        "OnLoadResources"
+    ];
     private sealed class TestPlugin : ILillyQuestPlugin
     {
         private readonly List<string> _executedHooks;
@@ -32,7 +41,7 @@ public class PluginLifecycleTests
 
         public string[]? DirectoriesToCreate() => null;
 
-        public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin) { }
+        public void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin) { }
 
         public void Shutdown() { }
 
@@ -80,7 +89,7 @@ public class PluginLifecycleTests
 
         public string[]? DirectoriesToCreate() => null;
 
-        public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin) { }
+        public void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin) { }
 
         public void Shutdown() { }
 
@@ -122,7 +131,7 @@ public class PluginLifecycleTests
             await plugin.OnEngineReady(container);
         }
 
-        Assert.That(executedHooks, Is.EqualTo(new[] { "OnEngineReady", "OnEngineReady" }));
+        Assert.That(executedHooks, Is.EqualTo(ExpectedOnEngineReady));
     }
 
     [Test]
@@ -141,7 +150,7 @@ public class PluginLifecycleTests
             await plugin.OnReadyToRender(container);
         }
 
-        Assert.That(executedHooks, Is.EqualTo(new[] { "OnReadyToRender", "OnReadyToRender" }));
+        Assert.That(executedHooks, Is.EqualTo(ExpectedOnReadyToRender));
     }
 
     [Test]
@@ -160,7 +169,7 @@ public class PluginLifecycleTests
             await plugin.OnLoadResources(container);
         }
 
-        Assert.That(executedHooks, Is.EqualTo(new[] { "OnLoadResources", "OnLoadResources" }));
+        Assert.That(executedHooks, Is.EqualTo(ExpectedOnLoadResources));
     }
 
     [Test]
@@ -184,12 +193,7 @@ public class PluginLifecycleTests
         foreach (var p in plugins)
             await p.OnLoadResources(container);
 
-        Assert.That(executedHooks, Is.EqualTo(new[]
-        {
-            "OnEngineReady",
-            "OnReadyToRender",
-            "OnLoadResources"
-        }));
+        Assert.That(executedHooks, Is.EqualTo(ExpectedSequential));
     }
 
     [Test]

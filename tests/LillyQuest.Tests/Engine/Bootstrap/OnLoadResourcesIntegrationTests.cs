@@ -37,7 +37,7 @@ public class OnLoadResourcesIntegrationTests
         public string? GetScriptOnLoadFunctionName() => null;
         public void RegisterServices(IContainer container) { }
         public string[]? DirectoriesToCreate() => null;
-        public void OnDirectories(DirectoriesConfig global, DirectoriesConfig plugin) { }
+        public void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin) { }
         public void Shutdown() { }
 
         public async Task OnEngineReady(IContainer container)
