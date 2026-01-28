@@ -1,8 +1,13 @@
 using System.Numerics;
 using LillyQuest.Core.Interfaces.Assets;
+using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Screens.TilesetSurface;
+using LillyQuest.Game.Rendering;
 using LillyQuest.Game.Systems;
+using LillyQuest.RogueLike.GameObjects;
+using LillyQuest.RogueLike.Maps;
 using NUnit.Framework;
+using SadRogue.Primitives;
 
 namespace LillyQuest.Tests.Game.Systems;
 
@@ -23,6 +28,35 @@ public class ViewportUpdateSystemTests
         Assert.That(bounds.MaxY, Is.EqualTo(9));  // 4 + 6 - 1
     }
 
+    [Test]
+    public void Update_OnlyUpdatesObjectsInsideViewport_AndMarksDirty()
+    {
+        var map = BuildTestMap();
+        var screen = BuildTestSurface();
+        screen.TileViewSize = new Vector2(4, 4);
+        screen.SetLayerViewTileOffset(0, new Vector2(0, 0));
+
+        var renderSystem = new MapRenderSystem(chunkSize: 4);
+        renderSystem.RegisterMap(map, screen, fovService: null);
+
+        var system = new ViewportUpdateSystem(layerIndex: 0);
+        system.RegisterMap(map, screen, renderSystem);
+
+        var inside = new TestViewportObject(new Point(1, 1));
+        var outside = new TestViewportObject(new Point(10, 10));
+        map.AddEntity(inside);
+        map.AddEntity(outside);
+
+        system.Update(new GameTime());
+
+        Assert.That(inside.UpdateCount, Is.EqualTo(1));
+        Assert.That(outside.UpdateCount, Is.EqualTo(0));
+        Assert.That(renderSystem.GetDirtyChunks(map), Does.Contain(new ChunkCoord(0, 0)));
+    }
+
+    private static LyQuestMap BuildTestMap()
+        => new(20, 20);
+
     private static TilesetSurfaceScreen BuildTestSurface()
     {
         var surface = new TilesetSurfaceScreen(new FakeTilesetManager())
@@ -33,6 +67,16 @@ public class ViewportUpdateSystemTests
         surface.InitializeLayers(surface.LayerCount);
 
         return surface;
+    }
+
+    private sealed class TestViewportObject : CreatureGameObject, IViewportUpdateable
+    {
+        public int UpdateCount { get; private set; }
+
+        public TestViewportObject(Point position) : base(position) { }
+
+        public void Update(GameTime gameTime)
+            => UpdateCount++;
     }
 
     private sealed class FakeTilesetManager : ITilesetManager
