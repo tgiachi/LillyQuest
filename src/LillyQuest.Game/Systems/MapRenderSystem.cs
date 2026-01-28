@@ -5,10 +5,12 @@ using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.Game.Rendering;
 using LillyQuest.RogueLike.GameObjects;
+using LillyQuest.RogueLike.GameObjects.Base;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
+using SadRogue.Primitives.GridViews;
 
 namespace LillyQuest.Game.Systems;
 
@@ -29,7 +31,8 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
         LyQuestMap Map,
         TilesetSurfaceScreen Surface,
         IFOVService? FovService,
-        DirtyChunkTracker DirtyTracker
+        DirtyChunkTracker DirtyTracker,
+        Dictionary<BaseGameObject, Action<BaseGameObject>> TileChangedHandlers
     );
 
     public IReadOnlyCollection<ChunkCoord> GetDirtyChunks(LyQuestMap map)
@@ -64,16 +67,50 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
             return;
         }
 
-        var state = new MapRenderState(map, surface, fovService, new(_chunkSize));
+        var state = new MapRenderState(
+            map,
+            surface,
+            fovService,
+            new(_chunkSize),
+            new Dictionary<BaseGameObject, Action<BaseGameObject>>()
+        );
         _states[map] = state;
 
         map.ObjectMoved += (_, args) => HandleObjectMoved(map, args.OldPosition, args.NewPosition);
         map.ObjectAdded += (_, args) => HandleObjectMoved(map, args.Item.Position, args.Item.Position);
         map.ObjectRemoved += (_, args) => HandleObjectMoved(map, args.Item.Position, args.Item.Position);
+
+        map.ObjectAdded += (_, args) =>
+                           {
+                               if (args.Item is BaseGameObject baseGameObject)
+                               {
+                                   SubscribeToTileChanges(state, baseGameObject);
+                               }
+                           };
+        map.ObjectRemoved += (_, args) =>
+                             {
+                                 if (args.Item is BaseGameObject baseGameObject)
+                                 {
+                                     UnsubscribeFromTileChanges(state, baseGameObject);
+                                 }
+                             };
+
+        SubscribeToExistingEntities(map, state);
+        SubscribeToExistingTerrain(map, state);
     }
 
     public void UnregisterMap(LyQuestMap map)
-        => _states.Remove(map);
+    {
+        if (_states.Remove(map, out var state))
+        {
+            foreach (var handler in state.TileChangedHandlers)
+            {
+                handler.Key.VisualTileChanged -= handler.Value;
+            }
+
+            state.TileChangedHandlers.Clear();
+        }
+    }
 
     public void Update(GameTime gameTime)
     {
@@ -194,6 +231,53 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
                 var creatureTile = BuildCreatureTile(map, fovService, position);
                 surface.AddTileToSurface((int)MapLayer.Creatures, x, y, creatureTile);
             }
+        }
+    }
+
+    private void SubscribeToExistingEntities(LyQuestMap map, MapRenderState state)
+    {
+        foreach (var layer in map.Entities.Layers)
+        {
+            foreach (var entity in layer.Items)
+            {
+                if (entity is BaseGameObject baseGameObject)
+                {
+                    SubscribeToTileChanges(state, baseGameObject);
+                }
+            }
+        }
+    }
+
+    private void SubscribeToExistingTerrain(LyQuestMap map, MapRenderState state)
+    {
+        foreach (var position in map.Positions())
+        {
+            if (map.GetTerrainAt(position) is BaseGameObject terrain)
+            {
+                SubscribeToTileChanges(state, terrain);
+            }
+        }
+    }
+
+    private void SubscribeToTileChanges(MapRenderState state, BaseGameObject baseGameObject)
+    {
+        if (state.TileChangedHandlers.ContainsKey(baseGameObject))
+        {
+            return;
+        }
+
+        void Handler(BaseGameObject obj)
+            => state.DirtyTracker.MarkDirtyForTile(obj.Position.X, obj.Position.Y);
+
+        state.TileChangedHandlers[baseGameObject] = Handler;
+        baseGameObject.VisualTileChanged += Handler;
+    }
+
+    private void UnsubscribeFromTileChanges(MapRenderState state, BaseGameObject baseGameObject)
+    {
+        if (state.TileChangedHandlers.Remove(baseGameObject, out var handler))
+        {
+            baseGameObject.VisualTileChanged -= handler;
         }
     }
 }

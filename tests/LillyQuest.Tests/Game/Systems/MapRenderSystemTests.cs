@@ -62,6 +62,72 @@ public class MapRenderSystemTests
         Assert.That(surface.GetTile(0, 0, 0).TileIndex, Is.Not.EqualTo(-1));
     }
 
+    [Test]
+    public void ChangingEntityTile_MarksChunkDirty()
+    {
+        var system = new MapRenderSystem(chunkSize: 4);
+        var map = new LyQuestMap(8, 8);
+        var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
+        var creature = new CreatureGameObject(new Point(1, 1))
+        {
+            Tile = new VisualTile("creature", "@", LyColor.Black, LyColor.White)
+        };
+
+        map.AddEntity(creature);
+        system.RegisterMap(map, surface, fovService: null);
+
+        Assert.That(system.GetDirtyChunks(map), Is.Empty);
+
+        creature.Tile = new VisualTile("creature_alt", "&", LyColor.Black, LyColor.White);
+
+        var dirty = system.GetDirtyChunks(map);
+        Assert.That(dirty, Does.Contain(new ChunkCoord(0, 0)));
+    }
+
+    [Test]
+    public void ChangingTerrainTile_MarksChunkDirty()
+    {
+        var system = new MapRenderSystem(chunkSize: 4);
+        var map = new LyQuestMap(8, 8);
+        var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
+        var terrain = new TerrainGameObject(new Point(2, 2))
+        {
+            Tile = new VisualTile("floor", ".", LyColor.Black, LyColor.White)
+        };
+
+        map.SetTerrain(terrain);
+        system.RegisterMap(map, surface, fovService: null);
+
+        Assert.That(system.GetDirtyChunks(map), Is.Empty);
+
+        terrain.Tile = new VisualTile("floor_alt", ",", LyColor.Black, LyColor.White);
+
+        var dirty = system.GetDirtyChunks(map);
+        Assert.That(dirty, Does.Contain(new ChunkCoord(0, 0)));
+    }
+
+    [Test]
+    public void ReassigningSameTerrainTileReference_DoesNotMarkDirty()
+    {
+        var system = new MapRenderSystem(chunkSize: 4);
+        var map = new LyQuestMap(8, 8);
+        var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
+        var tile = new VisualTile("floor", ".", LyColor.Black, LyColor.White);
+        var terrain = new TerrainGameObject(new Point(2, 2))
+        {
+            Tile = tile
+        };
+
+        map.SetTerrain(terrain);
+        system.RegisterMap(map, surface, fovService: null);
+
+        Assert.That(system.GetDirtyChunks(map), Is.Empty);
+
+        terrain.Tile = tile;
+
+        Assert.That(system.GetDirtyChunks(map), Is.Empty);
+    }
+
     private static LyQuestMap BuildSmallTestMap()
     {
         var map = new LyQuestMap(4, 4);
