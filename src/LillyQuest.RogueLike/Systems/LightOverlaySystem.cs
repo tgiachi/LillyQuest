@@ -3,17 +3,18 @@ using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Screens.TilesetSurface;
-using LillyQuest.Game.Rendering;
 using LillyQuest.RogueLike.Components;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
+using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
+using LillyQuest.RogueLike.Rendering;
 using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
 
-namespace LillyQuest.Game.Systems;
+namespace LillyQuest.RogueLike.Systems;
 
-public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity
+public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwareSystem
 {
     private const byte MaxBackgroundAlpha = 128;
     private readonly int _chunkSize;
@@ -146,12 +147,12 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity
                 }
 
                 var t = (float)(distance / light.Radius);
-                var color = Lerp(light.StartColor, light.EndColor, t);
+                var color = light.StartColor.Lerp(light.EndColor, t);
                 var background = LyColor.Transparent;
                 var backgroundComponent = item.GoRogueComponents.GetFirstOrDefault<LightBackgroundComponent>();
                 if (backgroundComponent != null)
                 {
-                    var baseBackground = Lerp(backgroundComponent.StartBackground, backgroundComponent.EndBackground, t);
+                    var baseBackground = backgroundComponent.StartBackground.Lerp(backgroundComponent.EndBackground, t);
                     var targetAlpha = (byte)Math.Clamp((int)(MaxBackgroundAlpha * (1f - t)), 0, MaxBackgroundAlpha);
                     var finalAlpha = baseBackground.A < targetAlpha ? baseBackground.A : targetAlpha;
                     background = baseBackground.WithAlpha(finalAlpha);
@@ -173,12 +174,4 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity
 
         return 0;
     }
-
-    private static LyColor Lerp(LyColor start, LyColor end, float t)
-        => new(
-            (byte)(start.A + (end.A - start.A) * t),
-            (byte)(start.R + (end.R - start.R) * t),
-            (byte)(start.G + (end.G - start.G) * t),
-            (byte)(start.B + (end.B - start.B) * t)
-        );
 }

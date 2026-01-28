@@ -1,4 +1,4 @@
-using LillyQuest.Game.Rendering;
+using LillyQuest.RogueLike.Rendering;
 using NUnit.Framework;
 
 namespace LillyQuest.Tests.Game.Rendering;

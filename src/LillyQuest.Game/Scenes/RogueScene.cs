@@ -9,12 +9,13 @@ using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Managers.Scenes.Base;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.Engine.Screens.UI;
-using LillyQuest.Game.Systems;
 using LillyQuest.RogueLike.Components;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
+using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Services;
+using LillyQuest.RogueLike.Systems;
 using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
 using SadRogue.Primitives.GridViews;
@@ -39,6 +40,7 @@ public class RogueScene : BaseScene
     private MapRenderSystem? _mapRenderSystem;
     private LightOverlaySystem? _lightOverlaySystem;
     private ViewportUpdateSystem? _viewportUpdateSystem;
+    private readonly List<IMapAwareSystem> _mapAwareSystems = new();
 
     public RogueScene(
         IScreenManager screenManager,
@@ -231,16 +233,19 @@ public class RogueScene : BaseScene
         _mapRenderSystem = new MapRenderSystem(chunkSize: 16);
         _mapRenderSystem.RegisterMap(_map, _screen, _fovService);
         AddEntity(_mapRenderSystem);
+        _mapAwareSystems.Add(_mapRenderSystem);
         MarkFovDirty(Array.Empty<Point>());
 
         _lightOverlaySystem = new LightOverlaySystem(chunkSize: 16);
         _lightOverlaySystem.RegisterMap(_map, _screen, _fovService);
         AddEntity(_lightOverlaySystem);
+        _mapAwareSystems.Add(_lightOverlaySystem);
         MarkLightDirty();
 
         _viewportUpdateSystem = new ViewportUpdateSystem(layerIndex: 0);
         _viewportUpdateSystem.RegisterMap(_map, _screen, _mapRenderSystem);
         AddEntity(_viewportUpdateSystem);
+        _mapAwareSystems.Add(_viewportUpdateSystem);
 
         _map.ObjectMoved += (sender, args) =>
                             {
@@ -270,10 +275,12 @@ public class RogueScene : BaseScene
         // Unregister map from all systems to prevent memory leaks
         if (_map != null)
         {
-            _mapRenderSystem?.UnregisterMap(_map);
-            _lightOverlaySystem?.UnregisterMap(_map);
-            _viewportUpdateSystem?.UnregisterMap(_map);
+            foreach (var system in _mapAwareSystems)
+            {
+                system.UnregisterMap(_map);
+            }
         }
+        _mapAwareSystems.Clear();
 
         if (_screen != null)
         {

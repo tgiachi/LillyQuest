@@ -3,18 +3,19 @@ using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Screens.TilesetSurface;
-using LillyQuest.Game.Rendering;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.GameObjects.Base;
 using LillyQuest.RogueLike.Interfaces.Services;
+using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
+using LillyQuest.RogueLike.Rendering;
 using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
 using SadRogue.Primitives.GridViews;
 
-namespace LillyQuest.Game.Systems;
+namespace LillyQuest.RogueLike.Systems;
 
-public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
+public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSystem
 {
     private readonly int _chunkSize;
     private readonly Dictionary<LyQuestMap, MapRenderState> _states = new();

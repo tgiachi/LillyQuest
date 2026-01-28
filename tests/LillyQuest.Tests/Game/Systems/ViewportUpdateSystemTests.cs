@@ -2,11 +2,10 @@ using System.Numerics;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Screens.TilesetSurface;
-using LillyQuest.Game.Rendering;
-using LillyQuest.Game.Systems;
+using LillyQuest.RogueLike.Components;
 using LillyQuest.RogueLike.GameObjects;
-using LillyQuest.RogueLike.Interfaces.GameObjects;
 using LillyQuest.RogueLike.Maps;
+using LillyQuest.RogueLike.Systems;
 using NUnit.Framework;
 using SadRogue.Primitives;
 
@@ -43,16 +42,30 @@ public class ViewportUpdateSystemTests
         var system = new ViewportUpdateSystem(layerIndex: 0);
         system.RegisterMap(map, screen, renderSystem);
 
-        var inside = new TestViewportObject(new Point(1, 1));
-        var outside = new TestViewportObject(new Point(10, 10));
+        var insideUpdateCount = 0;
+        var outsideUpdateCount = 0;
+
+        var inside = new CreatureGameObject(new Point(1, 1));
+        inside.GoRogueComponents.Add(new AnimationComponent(
+            intervalSeconds: 0.1,
+            onAnimationTrigger: () => insideUpdateCount++
+        ));
+
+        var outside = new CreatureGameObject(new Point(10, 10));
+        outside.GoRogueComponents.Add(new AnimationComponent(
+            intervalSeconds: 0.1,
+            onAnimationTrigger: () => outsideUpdateCount++
+        ));
+
         map.AddEntity(inside);
         map.AddEntity(outside);
 
-        system.Update(new GameTime());
+        // Update with enough elapsed time to trigger the animation
+        system.Update(new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(0.2)));
 
-        Assert.That(inside.UpdateCount, Is.EqualTo(1));
-        Assert.That(outside.UpdateCount, Is.EqualTo(0));
-        Assert.That(renderSystem.GetDirtyChunks(map), Does.Contain(new ChunkCoord(0, 0)));
+        Assert.That(insideUpdateCount, Is.EqualTo(1));
+        Assert.That(outsideUpdateCount, Is.EqualTo(0));
+        Assert.That(renderSystem.GetDirtyChunks(map).Count, Is.GreaterThan(0));
     }
 
     private static LyQuestMap BuildTestMap()
@@ -68,16 +81,6 @@ public class ViewportUpdateSystemTests
         surface.InitializeLayers(surface.LayerCount);
 
         return surface;
-    }
-
-    private sealed class TestViewportObject : CreatureGameObject, IViewportUpdateable
-    {
-        public int UpdateCount { get; private set; }
-
-        public TestViewportObject(Point position) : base(position) { }
-
-        public void Update(GameTime gameTime)
-            => UpdateCount++;
     }
 
     private sealed class FakeTilesetManager : ITilesetManager

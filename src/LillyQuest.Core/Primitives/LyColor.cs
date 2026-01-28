@@ -257,6 +257,19 @@ public readonly struct LyColor : IEquatable<LyColor>
             (byte)(B * factor)
         );
 
+    /// <summary>
+    /// Linearly interpolates between this color and another color.
+    /// </summary>
+    /// <param name="other">The target color.</param>
+    /// <param name="t">Interpolation factor between 0.0 (this color) and 1.0 (other color).</param>
+    public LyColor Lerp(LyColor other, float t)
+        => new(
+            (byte)(A + (other.A - A) * t),
+            (byte)(R + (other.R - R) * t),
+            (byte)(G + (other.G - G) * t),
+            (byte)(B + (other.B - B) * t)
+        );
+
     private static byte ToByte(int value, string paramName)
     {
         if (value < 0 || value > 255)

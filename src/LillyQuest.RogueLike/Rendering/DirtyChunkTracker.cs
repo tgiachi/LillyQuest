@@ -1,4 +1,4 @@
-namespace LillyQuest.Game.Rendering;
+namespace LillyQuest.RogueLike.Rendering;
 
 public readonly record struct ChunkCoord(int X, int Y);
 
@@ -8,10 +8,7 @@ public class DirtyChunkTracker
 
     public DirtyChunkTracker(int chunkSize)
     {
-        if (chunkSize <= 0)
-        {
-            throw new ArgumentOutOfRangeException(nameof(chunkSize));
-        }
+        ArgumentOutOfRangeException.ThrowIfNegativeOrZero(chunkSize);
 
         _chunkSize = chunkSize;
     }

@@ -1,15 +1,11 @@
-using LillyQuest.Core.Primitives;
-using LillyQuest.Core.Types;
 using LillyQuest.RogueLike.GameObjects.Base;
-using LillyQuest.RogueLike.Interfaces.GameObjects;
 using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
 
 namespace LillyQuest.RogueLike.GameObjects;
 
-public class ItemGameObject : BaseGameObject, IViewportUpdateable
+public class ItemGameObject : BaseGameObject
 {
-    private double accomulatedTime;
     public ItemGameObject(Point position, bool isWalkable = true, bool isTransparent = false) : base(
         position,
         (int)MapLayer.Items,
@@ -17,20 +13,5 @@ public class ItemGameObject : BaseGameObject, IViewportUpdateable
         isTransparent
     )
     {
-    }
-
-    public void Update(GameTime gameTime)
-    {
-        accomulatedTime += gameTime.Elapsed.TotalSeconds;
-        if (accomulatedTime >= 1.0)
-        {
-            accomulatedTime = 0;
-
-            Tile.Symbol = Tile.Symbol == "T" ? "t" : "T";
-            Tile.Flip = TileFlipType.FlipVertical;
-
-
-        }
-
     }
 }

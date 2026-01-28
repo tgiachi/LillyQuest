@@ -1,18 +1,18 @@
+using GoRogue.GameFramework;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Screens.TilesetSurface;
-using LillyQuest.Game.Rendering;
-using LillyQuest.RogueLike.GameObjects;
-using LillyQuest.RogueLike.Interfaces.GameObjects;
+using LillyQuest.RogueLike.Components;
+using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
 using SadRogue.Primitives;
 
-namespace LillyQuest.Game.Systems;
+namespace LillyQuest.RogueLike.Systems;
 
 public readonly record struct TileViewportBounds(int MinX, int MinY, int MaxX, int MaxY);
 
-public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity
+public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity, IMapAwareSystem
 {
     private readonly int _layerIndex;
     private readonly Dictionary<LyQuestMap, ViewportUpdateState> _states = new();
@@ -66,10 +66,13 @@ public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity
                     var position = new Point(x, y);
                     foreach (var obj in state.Map.GetObjectsAt(position))
                     {
-                        if (obj is IViewportUpdateable updateable)
+                        if (obj is IGameObject gameObject)
                         {
-                            updateable.Update(gameTime);
-                            state.RenderSystem.MarkDirtyForTile(state.Map, x, y);
+                            var animationComponent = gameObject.GoRogueComponents.GetFirstOrDefault<AnimationComponent>();
+                            if (animationComponent != null && animationComponent.Update(gameTime))
+                            {
+                                state.RenderSystem.MarkDirtyForTile(state.Map, x, y);
+                            }
                         }
                     }
                 }

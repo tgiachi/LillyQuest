@@ -87,6 +87,12 @@ public class MapGenerator : IMapGenerator
                 endBackground: LyColor.Transparent
             )
         );
+        simpleTorch.GoRogueComponents.Add(
+            new AnimationComponent(
+                intervalSeconds: 1.0,
+                onAnimationTrigger: () => simpleTorch.Tile.Symbol = simpleTorch.Tile.Symbol == "T" ? "t" : "T"
+            )
+        );
 
         map.AddEntity(player);
         map.AddEntity(simpleTorch);
