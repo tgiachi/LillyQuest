@@ -1,3 +1,4 @@
+using LillyQuest.RogueLike.GameObjects.Base;
 using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
 

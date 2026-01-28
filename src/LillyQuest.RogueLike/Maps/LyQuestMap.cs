@@ -1,7 +1,4 @@
-using System.Runtime.CompilerServices;
 using GoRogue.GameFramework;
-using LillyQuest.Core.Data.Assets.Tiles;
-using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Types;
@@ -29,7 +26,7 @@ public class LyQuestMap : Map
                     0,
                     position.X,
                     position.Y,
-                    new TileRenderData(
+                    new(
                         terrain.Tile.Symbol[0],
                         terrain.Tile.ForegroundColor,
                         terrain.Tile.BackgroundColor
@@ -45,7 +42,7 @@ public class LyQuestMap : Map
                         creature.Layer,
                         position.X,
                         position.Y,
-                        new TileRenderData(
+                        new(
                             creature.Tile.Symbol[0],
                             creature.Tile.ForegroundColor
                         )

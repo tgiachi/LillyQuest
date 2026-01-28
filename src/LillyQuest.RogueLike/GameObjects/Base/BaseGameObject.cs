@@ -1,10 +1,9 @@
 using GoRogue.Components;
 using GoRogue.GameFramework;
-using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Maps.Tiles;
 using SadRogue.Primitives;
 
-namespace LillyQuest.RogueLike.GameObjects;
+namespace LillyQuest.RogueLike.GameObjects.Base;
 
 public class BaseGameObject : GameObject
 {
