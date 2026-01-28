@@ -77,7 +77,7 @@ public sealed class GameEntityCollection
         {
             if (_queryCache.TryGetValue(type, out var cached))
             {
-                return ((List<TInterface>)cached).ToList();
+                return (List<TInterface>)cached;
             }
 
             var results = new List<TInterface>();
@@ -92,7 +92,7 @@ public sealed class GameEntityCollection
 
             _queryCache[type] = results;
 
-            return results.ToList();
+            return results;
         }
     }
 
