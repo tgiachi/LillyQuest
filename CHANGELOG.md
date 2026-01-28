@@ -3,6 +3,56 @@
 
 All notable changes to this project will be documented in this file. See [versionize](https://github.com/versionize/versionize) for commit guidelines.
 
+<a name="0.4.0"></a>
+## [0.4.0](https://www.github.com/tgiachi/LillyQuest/releases/tag/v0.4.0) (2026-01-28)
+
+### Features
+
+* add map render system skeleton ([fb53af7](https://www.github.com/tgiachi/LillyQuest/commit/fb53af753af607f86708a5959e290e433fafb44e))
+* add viewport bounds helper ([6b4a35e](https://www.github.com/tgiachi/LillyQuest/commit/6b4a35eb150c2cb14ffd71d9250f1c348911be31))
+* add viewport update system to rogue scene ([a0c549e](https://www.github.com/tgiachi/LillyQuest/commit/a0c549e31ce2c2e42ad5459fcd66ebce32c1c90a))
+* add viewport updateable interface ([33dcef7](https://www.github.com/tgiachi/LillyQuest/commit/33dcef74dc561ec2ba08a5a6ff63c25599d61a1d))
+* mark dirty chunks on movement ([8757df1](https://www.github.com/tgiachi/LillyQuest/commit/8757df12b5c36b4652df84a7a626c30a5a5bdcdf))
+* rebuild dirty chunks during update ([65cb1c0](https://www.github.com/tgiachi/LillyQuest/commit/65cb1c0f0718cda4e0fbe29377a753e8fe89d6b4))
+* track dirty chunks ([f8dc4cd](https://www.github.com/tgiachi/LillyQuest/commit/f8dc4cdaf4a8641804035ea6e12b093c9c6c7343))
+* update visible objects and mark dirty tiles ([dbf2f05](https://www.github.com/tgiachi/LillyQuest/commit/dbf2f055916f6ce4358530da3b1685130213c404))
+* wire map render system into rogue scene ([dc071ee](https://www.github.com/tgiachi/LillyQuest/commit/dc071eeb97e3c4d67477f729ee129aa70975ce38))
+* **engine:** add tileset layer view lock ([8b57cfe](https://www.github.com/tgiachi/LillyQuest/commit/8b57cfe872fb0c48d5c975de1aedb6f61d0c1a5d))
+* **engine:** extract TilesetSurfaceAnimator from TilesetSurfaceScreen ([70389bd](https://www.github.com/tgiachi/LillyQuest/commit/70389bd6103c0486ee5c6e3bb304174847422836))
+* **engine:** extract TilesetSurfaceInputHandler from TilesetSurfaceScreen ([efb6057](https://www.github.com/tgiachi/LillyQuest/commit/efb60577e6c06232fee4751005bd852735e56d74))
+* **engine:** extract TilesetSurfaceRenderer from TilesetSurfaceScreen ([63db7e7](https://www.github.com/tgiachi/LillyQuest/commit/63db7e7ebc83d8586a350ba0e4da919dc0b128cc))
+* **engine:** improve view lock propagation and synchronization ([3928103](https://www.github.com/tgiachi/LillyQuest/commit/39281032c631497dd8095aa7af00745a01ae643e))
+* **fov:** add IFOVService interface ([0bd686e](https://www.github.com/tgiachi/LillyQuest/commit/0bd686ecf5053317ef895c4237add8c754fed7d6))
+* **fov:** implement fog of war with proper tile darkening ([4e84ab1](https://www.github.com/tgiachi/LillyQuest/commit/4e84ab1a8f0a42fd45b89430de457f226d9ff31b))
+* **fov:** implement FOVService with shadowcasting ([3be4906](https://www.github.com/tgiachi/LillyQuest/commit/3be4906f06de01045e0dde8bd58034c07997c0b2))
+* **fov:** integrate FOVService into RogueScene rendering ([f3fccbc](https://www.github.com/tgiachi/LillyQuest/commit/f3fccbc731582947a2a574df5da1c13fa2bb43b8))
+* **game:** add torch light overlay system ([b3aa569](https://www.github.com/tgiachi/LillyQuest/commit/b3aa569b8d42b1c732c6136c3e9869d668c5c49d))
+* **game:** implement player movement with keyboard shortcuts ([47aadd7](https://www.github.com/tgiachi/LillyQuest/commit/47aadd7ab8dab7bab5f32d18d547d169fcb11061))
+* **game:** implement RogueScene with map rendering ([c4f8293](https://www.github.com/tgiachi/LillyQuest/commit/c4f8293db1115420e7c7daaa9b0fad8a3bb12841))
+* **rendering:** add light background overlay system ([f9acf90](https://www.github.com/tgiachi/LillyQuest/commit/f9acf904f188f90d639600058ad64017a3c38963))
+* **rendering:** enhance MapRenderSystem with improved logic and tests ([e74d873](https://www.github.com/tgiachi/LillyQuest/commit/e74d8739ff2a64b8958712e5b0d117bd27ff9af4))
+* **roguelike:** add collection serialization support and improve color service ([f9a1528](https://www.github.com/tgiachi/LillyQuest/commit/f9a15286b46c0d096ab714a82e67a4282b43d4f6))
+* **roguelike:** add light source component ([dba1088](https://www.github.com/tgiachi/LillyQuest/commit/dba10880b2f3d44cbc7beaf3f8e4212f1334738b))
+* **roguelike:** add map generation system ([825d529](https://www.github.com/tgiachi/LillyQuest/commit/825d5296c6d488a3e750a8598090ac2d34bf044f))
+* **roguelike:** add resolved terrain data ([db13553](https://www.github.com/tgiachi/LillyQuest/commit/db13553c31705e73540aa77dede16c94d8aa23b5))
+* **roguelike:** add terrain data ([88e443c](https://www.github.com/tgiachi/LillyQuest/commit/88e443cbc722c3037b70f583ed90f90e9c81918c))
+* **roguelike:** add TerrainService ([630a6a4](https://www.github.com/tgiachi/LillyQuest/commit/630a6a4ad432ec3268f2e64c36972565e3e27301))
+* **roguelike:** add tick system and event-driven FOV updates ([8491544](https://www.github.com/tgiachi/LillyQuest/commit/8491544917c0aa451f48a76c61dc59692ca29874))
+* **roguelike:** add torch light component ([b273083](https://www.github.com/tgiachi/LillyQuest/commit/b273083bc921d2b3c9ac99bd95295cd1ec7f2422))
+* **roguelike:** enhance map and item systems with additional functionality ([449a265](https://www.github.com/tgiachi/LillyQuest/commit/449a2659d2f466ea27c7ac520142b4d657c5e4ea))
+* **roguelike:** expose tileset fallback ([772e005](https://www.github.com/tgiachi/LillyQuest/commit/772e0051ff1b4fcae22f1c2eb7f4601a65ef7867))
+* **roguelike:** implement base game objects hierarchy ([e05453e](https://www.github.com/tgiachi/LillyQuest/commit/e05453e038a299420af1b9699aade657e47ca3ee))
+* **roguelike:** implement complete tick system with action queue ([7580872](https://www.github.com/tgiachi/LillyQuest/commit/7580872f3cd9b44178a612910a7b57a466fee62a))
+* **roguelike:** implement map system with GoRogue integration ([d3fd87b](https://www.github.com/tgiachi/LillyQuest/commit/d3fd87bd4b95efe76b0e5a17ed69e2dc2c667679))
+* **roguelike:** implement player spawning and map rendering improvements ([e03341a](https://www.github.com/tgiachi/LillyQuest/commit/e03341a3f56b229b8e430d09b31adbccffe84eef))
+* **roguelike:** update FOV display after player movement ([511598e](https://www.github.com/tgiachi/LillyQuest/commit/511598e613443a7fb679c0b34a3f836d0b52fce9))
+* **roguelike:** update map generation algorithm to cellular automata ([832513c](https://www.github.com/tgiachi/LillyQuest/commit/832513cf34115ee812124ed72ce4656945e64675))
+
+### Bug Fixes
+
+* **fov:** add Distance.Euclidean to FOV calculation and update tests ([ff44b7f](https://www.github.com/tgiachi/LillyQuest/commit/ff44b7f0ad62872426d663379c25530538653711))
+* **roguelike:** fallback to first colorset when none specified ([eaed8a7](https://www.github.com/tgiachi/LillyQuest/commit/eaed8a7e63dea21db93597fa57d5259931dd1e64))
+
 <a name="0.3.0"></a>
 ## [0.3.0](https://www.github.com/tgiachi/LillyQuest/releases/tag/v0.3.0) (2026-01-27)
 

@@ -6,7 +6,7 @@
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <Authors>tom</Authors>
-        <Version>0.3.0</Version>
+        <Version>0.4.0</Version>
         <Description>LillyQuest Core - 2D Game Engine Foundation</Description>
         <PackageProjectUrl>https://github.com/tgiachi/LillyQuest/</PackageProjectUrl>
         <RepositoryUrl>https://github.com/tgiachi/LillyQuest/</RepositoryUrl>
