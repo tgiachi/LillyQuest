@@ -10,7 +10,7 @@
         <Nullable>enable</Nullable>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <Authors>tom</Authors>
-        <Version>0.2.0</Version>
+        <Version>0.4.0</Version>
         <Description>LillyQuest Engine - 2D Game Engine with ECS Architecture</Description>
         <PackageProjectUrl>https://github.com/tgiachi/LillyQuest/</PackageProjectUrl>
         <RepositoryUrl>https://github.com/tgiachi/LillyQuest/</RepositoryUrl>
