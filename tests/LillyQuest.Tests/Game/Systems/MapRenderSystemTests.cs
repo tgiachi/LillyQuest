@@ -1,10 +1,12 @@
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
+using LillyQuest.Engine.Screens.TilesetSurface;
+using LillyQuest.Game.Rendering;
 using LillyQuest.Game.Systems;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Services;
-using LillyQuest.Engine.Screens.TilesetSurface;
 using NUnit.Framework;
+using SadRogue.Primitives;
 
 namespace LillyQuest.Tests.Game.Systems;
 
@@ -21,6 +23,22 @@ public class MapRenderSystemTests
         system.RegisterMap(map, surface, fovService);
 
         Assert.That(system.HasMap(map), Is.True);
+    }
+
+    [Test]
+    public void OnObjectMoved_MarksOldAndNewChunksDirty()
+    {
+        var system = new MapRenderSystem(chunkSize: 16);
+        var map = new LyQuestMap(32, 32);
+        var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
+
+        system.RegisterMap(map, surface, fovService: null);
+
+        system.HandleObjectMoved(map, new Point(1, 1), new Point(17, 1));
+
+        var dirty = system.GetDirtyChunks(map);
+        Assert.That(dirty, Does.Contain(new ChunkCoord(0, 0)));
+        Assert.That(dirty, Does.Contain(new ChunkCoord(1, 0)));
     }
 
     private sealed class FakeTilesetManager : ITilesetManager

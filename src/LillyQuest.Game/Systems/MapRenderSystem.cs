@@ -5,6 +5,7 @@ using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.Game.Rendering;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Maps;
+using SadRogue.Primitives;
 
 namespace LillyQuest.Game.Systems;
 
@@ -31,7 +32,10 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
             return;
         }
 
-        _states[map] = new MapRenderState(map, surface, fovService, new DirtyChunkTracker(_chunkSize));
+        var state = new MapRenderState(map, surface, fovService, new DirtyChunkTracker(_chunkSize));
+        _states[map] = state;
+
+        map.ObjectMoved += (_, args) => HandleObjectMoved(map, args.OldPosition, args.NewPosition);
     }
 
     public void UnregisterMap(LyQuestMap map)
@@ -39,6 +43,28 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
 
     public bool HasMap(LyQuestMap map)
         => _states.ContainsKey(map);
+
+    public IReadOnlyCollection<ChunkCoord> GetDirtyChunks(LyQuestMap map)
+        => _states.TryGetValue(map, out var state)
+            ? state.DirtyTracker.DirtyChunks
+            : Array.Empty<ChunkCoord>();
+
+    public void MarkDirtyForTile(LyQuestMap map, int x, int y)
+    {
+        if (_states.TryGetValue(map, out var state))
+        {
+            state.DirtyTracker.MarkDirtyForTile(x, y);
+        }
+    }
+
+    public void HandleObjectMoved(LyQuestMap map, Point oldPosition, Point newPosition)
+    {
+        if (_states.TryGetValue(map, out var state))
+        {
+            state.DirtyTracker.MarkDirtyForTile(oldPosition.X, oldPosition.Y);
+            state.DirtyTracker.MarkDirtyForTile(newPosition.X, newPosition.Y);
+        }
+    }
 
     public void Update(GameTime gameTime)
     {
