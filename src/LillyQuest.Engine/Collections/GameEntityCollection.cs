@@ -2,24 +2,105 @@ using LillyQuest.Engine.Interfaces.Entities;
 
 namespace LillyQuest.Engine.Collections;
 
+/// <summary>
+/// Collection that manages game entities in a hierarchical structure with ordering.
+/// Thread-safe for concurrent reads, but mutations should be synchronized externally
+/// or performed on the main thread only.
+/// </summary>
 public sealed class GameEntityCollection
 {
     private readonly List<IGameEntity> _roots = new();
     private readonly List<IGameEntity> _ordered = new();
     private readonly Dictionary<IGameEntity, long> _insertionIndices = new();
     private readonly Dictionary<Type, object> _queryCache = new();
+    private readonly object _lock = new();
     private long _nextInsertionIndex;
 
-    public IReadOnlyList<IGameEntity> OrderedEntities => _ordered;
+    public IReadOnlyList<IGameEntity> OrderedEntities
+    {
+        get
+        {
+            lock (_lock)
+            {
+                return _ordered.ToList();
+            }
+        }
+    }
 
     public void Add(IGameEntity entity, IGameEntity? parent = null)
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        EnsureChildrenList(entity);
-        AssignInsertionIndices(entity);
+        lock (_lock)
+        {
+            EnsureChildrenList(entity);
+            AssignInsertionIndices(entity);
 
-        if (parent is null)
+            if (parent is null)
+            {
+                if (entity.Parent is not null)
+                {
+                    entity.Parent.Children.Remove(entity);
+                    entity.Parent = null;
+                }
+
+                AddRoot(entity);
+            }
+            else
+            {
+                EnsureChildrenList(parent);
+
+                if (entity.Parent is not null && !ReferenceEquals(entity.Parent, parent))
+                {
+                    entity.Parent.Children.Remove(entity);
+                }
+
+                if (!parent.Children.Contains(entity))
+                {
+                    parent.Children.Add(entity);
+                }
+
+                entity.Parent = parent;
+                _roots.Remove(entity);
+            }
+
+            RebuildOrderedEntities();
+            _queryCache.Clear();
+        }
+    }
+
+    public IReadOnlyList<TInterface> GetQueryOf<TInterface>() where TInterface : class
+    {
+        var type = typeof(TInterface);
+
+        lock (_lock)
+        {
+            if (_queryCache.TryGetValue(type, out var cached))
+            {
+                return ((List<TInterface>)cached).ToList();
+            }
+
+            var results = new List<TInterface>();
+
+            foreach (var entity in _ordered)
+            {
+                if (entity is TInterface match)
+                {
+                    results.Add(match);
+                }
+            }
+
+            _queryCache[type] = results;
+
+            return results.ToList();
+        }
+    }
+
+    public void Remove(IGameEntity entity)
+    {
+        ArgumentNullException.ThrowIfNull(entity);
+
+        lock (_lock)
         {
             if (entity.Parent is not null)
             {
@@ -27,67 +108,10 @@ public sealed class GameEntityCollection
                 entity.Parent = null;
             }
 
-            AddRoot(entity);
-        }
-        else
-        {
-            EnsureChildrenList(parent);
-
-            if (entity.Parent is not null && !ReferenceEquals(entity.Parent, parent))
-            {
-                entity.Parent.Children.Remove(entity);
-            }
-
-            if (!parent.Children.Contains(entity))
-            {
-                parent.Children.Add(entity);
-            }
-
-            entity.Parent = parent;
             _roots.Remove(entity);
+            RebuildOrderedEntities();
+            _queryCache.Clear();
         }
-
-        RebuildOrderedEntities();
-        _queryCache.Clear();
-    }
-
-    public IReadOnlyList<TInterface> GetQueryOf<TInterface>() where TInterface : class
-    {
-        var type = typeof(TInterface);
-
-        if (_queryCache.TryGetValue(type, out var cached))
-        {
-            return (IReadOnlyList<TInterface>)cached;
-        }
-
-        var results = new List<TInterface>();
-
-        foreach (var entity in _ordered)
-        {
-            if (entity is TInterface match)
-            {
-                results.Add(match);
-            }
-        }
-
-        _queryCache[type] = results;
-
-        return results;
-    }
-
-    public void Remove(IGameEntity entity)
-    {
-        ArgumentNullException.ThrowIfNull(entity);
-
-        if (entity.Parent is not null)
-        {
-            entity.Parent.Children.Remove(entity);
-            entity.Parent = null;
-        }
-
-        _roots.Remove(entity);
-        RebuildOrderedEntities();
-        _queryCache.Clear();
     }
 
     private void AddEntityDepthFirst(IGameEntity entity)

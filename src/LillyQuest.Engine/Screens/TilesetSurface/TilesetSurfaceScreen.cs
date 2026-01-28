@@ -540,6 +540,18 @@ public class TilesetSurfaceScreen : BaseScreen
         base.OnLoad();
     }
 
+    /// <summary>
+    /// Clears event handlers to prevent memory leaks when the screen is unloaded.
+    /// </summary>
+    public override void OnUnload()
+    {
+        TileMouseMove = null;
+        TileMouseMoveAllLayers = null;
+        TileMouseDown = null;
+        TileMouseWheel = null;
+        base.OnUnload();
+    }
+
     public override bool OnMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
         if (!HitTest(x, y))

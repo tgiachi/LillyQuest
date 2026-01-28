@@ -258,30 +258,28 @@ public sealed class SceneTransitionManager : ISceneManager, IDisposable
             return cachedScene;
         }
 
-        var registration = _sceneRegistrations.FirstOrDefault(
-            r =>
-            {
-                // Try matching by scene instance's Name property
-                var scene = (IScene)_container.Resolve(r.SceneType);
-
-                return scene.Name == sceneName;
-            }
-        );
-
-        if (registration == null)
+        // Find the registration that matches the scene name
+        // We resolve each scene only once and cache it immediately to avoid double instantiation
+        foreach (var registration in _sceneRegistrations)
         {
-            _logger.Error("Scene '{SceneName}' not registered in container", sceneName);
+            var scene = (IScene)_container.Resolve(registration.SceneType);
 
-            throw new InvalidOperationException($"Scene '{sceneName}' not registered.");
+            // Cache immediately to avoid resolving again
+            if (!_initializedScenes.ContainsKey(scene.Name))
+            {
+                _initializedScenes[scene.Name] = scene;
+            }
+
+            if (scene.Name == sceneName)
+            {
+                scene.OnInitialize(this);
+                _logger.Debug("Initialized scene '{SceneName}'", scene.Name);
+                return scene;
+            }
         }
 
-        var newScene = (IScene)_container.Resolve(registration.SceneType);
-        newScene.OnInitialize(this);
-
-        _logger.Debug("Initialized scene '{SceneName}'", newScene.Name);
-        _initializedScenes[sceneName] = newScene;
-
-        return newScene;
+        _logger.Error("Scene '{SceneName}' not registered in container", sceneName);
+        throw new InvalidOperationException($"Scene '{sceneName}' not registered.");
     }
 
     /// <summary>

@@ -10,12 +10,14 @@ namespace LillyQuest.Engine.Services;
 
 /// <summary>
 /// Provides shortcut registration and dispatch to actions.
+/// Thread-safe implementation using locks.
 /// </summary>
 public sealed class ShortcutService : IShortcutService
 {
     private readonly IActionService _actionService;
     private readonly Dictionary<ShortcutLookup, List<ShortcutBinding>> _bindingsByKey = new();
     private readonly Stack<InputContextType> _contextStack = new();
+    private readonly object _lock = new();
 
     /// <summary>
     /// Initializes a new shortcut service.
@@ -34,7 +36,12 @@ public sealed class ShortcutService : IShortcutService
     /// </summary>
     /// <returns>Top-most context.</returns>
     public InputContextType GetCurrentContext()
-        => _contextStack.Count == 0 ? InputContextType.Gameplay : _contextStack.Peek();
+    {
+        lock (_lock)
+        {
+            return _contextStack.Count == 0 ? InputContextType.Gameplay : _contextStack.Peek();
+        }
+    }
 
     /// <summary>
     /// Handles key press events.
@@ -60,17 +67,24 @@ public sealed class ShortcutService : IShortcutService
         {
             var pressLookup = new ShortcutLookup(key, modifier, ShortcutTriggerType.Press);
 
-            if (_bindingsByKey.TryGetValue(pressLookup, out var pressBindings))
+            List<ShortcutBinding>? pressBindingsSnapshot;
+            lock (_lock)
             {
-                foreach (var binding in pressBindings)
+                if (!_bindingsByKey.TryGetValue(pressLookup, out var pressBindings))
                 {
-                    if (binding.Context != InputContextType.Global && binding.Context != currentContext)
-                    {
-                        continue;
-                    }
-
-                    _actionService.MarkActionReleased(binding.ActionName);
+                    continue;
                 }
+                pressBindingsSnapshot = pressBindings.ToList();
+            }
+
+            foreach (var binding in pressBindingsSnapshot)
+            {
+                if (binding.Context != InputContextType.Global && binding.Context != currentContext)
+                {
+                    continue;
+                }
+
+                _actionService.MarkActionReleased(binding.ActionName);
             }
         }
 
@@ -94,14 +108,17 @@ public sealed class ShortcutService : IShortcutService
     /// <returns>True when a context was popped.</returns>
     public bool PopContext()
     {
-        if (_contextStack.Count <= 1)
+        lock (_lock)
         {
-            return false;
+            if (_contextStack.Count <= 1)
+            {
+                return false;
+            }
+
+            _contextStack.Pop();
+
+            return true;
         }
-
-        _contextStack.Pop();
-
-        return true;
     }
 
     /// <summary>
@@ -110,7 +127,10 @@ public sealed class ShortcutService : IShortcutService
     /// <param name="context">Context to push.</param>
     public void PushContext(InputContextType context)
     {
-        _contextStack.Push(context);
+        lock (_lock)
+        {
+            _contextStack.Push(context);
+        }
     }
 
     /// <summary>
@@ -164,22 +184,25 @@ public sealed class ShortcutService : IShortcutService
         var binding = new ShortcutBinding(normalizedName, context, modifier, key, trigger);
         var lookup = new ShortcutLookup(key, modifier, trigger);
 
-        if (!_bindingsByKey.TryGetValue(lookup, out var bindings))
+        lock (_lock)
         {
-            bindings = new();
-            _bindingsByKey[lookup] = bindings;
-        }
-
-        foreach (var existing in bindings)
-        {
-            if (existing.ActionName.Equals(normalizedName, StringComparison.OrdinalIgnoreCase) &&
-                existing.Context == context)
+            if (!_bindingsByKey.TryGetValue(lookup, out var bindings))
             {
-                return false;
+                bindings = new();
+                _bindingsByKey[lookup] = bindings;
             }
-        }
 
-        bindings.Add(binding);
+            foreach (var existing in bindings)
+            {
+                if (existing.ActionName.Equals(normalizedName, StringComparison.OrdinalIgnoreCase) &&
+                    existing.Context == context)
+                {
+                    return false;
+                }
+            }
+
+            bindings.Add(binding);
+        }
 
         return true;
     }
@@ -190,8 +213,11 @@ public sealed class ShortcutService : IShortcutService
     /// <param name="context">Context to set.</param>
     public void SetContext(InputContextType context)
     {
-        _contextStack.Clear();
-        _contextStack.Push(context);
+        lock (_lock)
+        {
+            _contextStack.Clear();
+            _contextStack.Push(context);
+        }
     }
 
     /// <summary>
@@ -217,33 +243,36 @@ public sealed class ShortcutService : IShortcutService
         var normalizedName = NormalizeActionName(actionName);
         var lookup = new ShortcutLookup(key, modifier, trigger);
 
-        if (!_bindingsByKey.TryGetValue(lookup, out var bindings))
+        lock (_lock)
         {
-            return false;
-        }
-
-        for (var i = bindings.Count - 1; i >= 0; i--)
-        {
-            var existing = bindings[i];
-
-            if (!existing.ActionName.Equals(normalizedName, StringComparison.OrdinalIgnoreCase))
+            if (!_bindingsByKey.TryGetValue(lookup, out var bindings))
             {
-                continue;
+                return false;
             }
 
-            if (existing.Context != context)
+            for (var i = bindings.Count - 1; i >= 0; i--)
             {
-                continue;
+                var existing = bindings[i];
+
+                if (!existing.ActionName.Equals(normalizedName, StringComparison.OrdinalIgnoreCase))
+                {
+                    continue;
+                }
+
+                if (existing.Context != context)
+                {
+                    continue;
+                }
+
+                bindings.RemoveAt(i);
+
+                if (bindings.Count == 0)
+                {
+                    _bindingsByKey.Remove(lookup);
+                }
+
+                return true;
             }
-
-            bindings.RemoveAt(i);
-
-            if (bindings.Count == 0)
-            {
-                _bindingsByKey.Remove(lookup);
-            }
-
-            return true;
         }
 
         return false;
@@ -257,12 +286,17 @@ public sealed class ShortcutService : IShortcutService
         {
             var lookup = new ShortcutLookup(key, modifier, trigger);
 
-            if (!_bindingsByKey.TryGetValue(lookup, out var bindings))
+            List<ShortcutBinding>? bindingsSnapshot;
+            lock (_lock)
             {
-                continue;
+                if (!_bindingsByKey.TryGetValue(lookup, out var bindings))
+                {
+                    continue;
+                }
+                bindingsSnapshot = bindings.ToList();
             }
 
-            foreach (var binding in bindings)
+            foreach (var binding in bindingsSnapshot)
             {
                 if (binding.Context != InputContextType.Global && binding.Context != currentContext)
                 {
