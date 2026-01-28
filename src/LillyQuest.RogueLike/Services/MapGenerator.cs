@@ -65,7 +65,7 @@ public class MapGenerator : IMapGenerator
 
         var player = new CreatureGameObject(freePosition)
         {
-            Tile = new VisualTile("player", "@", LyColor.White, LyColor.Transparent)
+            Tile = new VisualTile("player", "@", LyColor.Transparent, LyColor.White)
         };
 
         map.AddEntity(player);

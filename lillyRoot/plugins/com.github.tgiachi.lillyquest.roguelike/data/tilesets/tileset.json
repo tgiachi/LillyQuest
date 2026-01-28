@@ -24,7 +24,7 @@
       "tags": ["player", "walkable"],
       "symbol": "@",
       "fgColor": "white",
-      "bgColor": "textureName"
+      "bgColor": "transparent"
     },
     {
       "id": "tree",
@@ -38,13 +38,6 @@
       "tags": ["water", "hazard"],
       "symbol": "~",
       "fgColor": "blue",
-      "bgColor": "black"
-    },
-    {
-      "id": "player",
-      "tags": ["player", "character"],
-      "symbol": "@",
-      "fgColor": "white",
       "bgColor": "black"
     },
     {

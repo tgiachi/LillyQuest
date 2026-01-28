@@ -52,25 +52,38 @@ public class RogueScene : BaseScene
 
     private TileRenderData DarkenTile(TileRenderData tile)
     {
+        static LyColor DarkenColor(LyColor color, float factor)
+        {
+            return new LyColor(
+                color.A,
+                (byte)(color.R * factor),
+                (byte)(color.G * factor),
+                (byte)(color.B * factor)
+            );
+        }
+
         return new TileRenderData(
             tile.TileIndex,
-            new LyColor(
-                tile.ForegroundColor.A,
-                (byte)(tile.ForegroundColor.R * 0.5f),
-                (byte)(tile.ForegroundColor.G * 0.5f),
-                (byte)(tile.ForegroundColor.B * 0.5f)
-            ),
-            tile.BackgroundColor,
+            DarkenColor(tile.ForegroundColor, 0.5f),
+            DarkenColor(tile.BackgroundColor, 0.5f),
             tile.Flip
         );
     }
 
     private void FillSurface(TilesetSurfaceScreen screen)
     {
+        int visibleCount = 0;
+        int exploredCount = 0;
+        int neverSeenCount = 0;
+
         foreach (var position in _map.Positions())
         {
             bool isVisible = _fovService.IsVisible(position);
             bool isExplored = _fovService.IsExplored(position);
+
+            if (isVisible) visibleCount++;
+            if (isExplored && !isVisible) exploredCount++;
+            if (!isExplored) neverSeenCount++;
 
             // Layer 0: Terrain
             if (_map.GetTerrainAt(position) is TerrainGameObject terrain)
@@ -115,6 +128,7 @@ public class RogueScene : BaseScene
                 }
             }
         }
+
     }
 
     public override void OnLoad()
