@@ -1,5 +1,6 @@
 using GoRogue.MapGeneration;
 using LillyQuest.Core.Primitives;
+using LillyQuest.RogueLike.Components;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Maps;
@@ -73,6 +74,11 @@ public class MapGenerator : IMapGenerator
         {
             Tile = new VisualTile("torch", "t", LyColor.Transparent, LyColor.Yellow)
         };
+        simpleTorch.GoRogueComponents.Add(new LightSourceComponent(
+            radius: 4,
+            startColor: LyColor.Yellow,
+            endColor: LyColor.Black
+        ));
 
         map.AddEntity(player);
         map.AddEntity(simpleTorch);
