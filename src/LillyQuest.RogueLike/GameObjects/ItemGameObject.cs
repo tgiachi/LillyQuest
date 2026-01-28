@@ -1,4 +1,5 @@
 using LillyQuest.Core.Primitives;
+using LillyQuest.Core.Types;
 using LillyQuest.RogueLike.GameObjects.Base;
 using LillyQuest.RogueLike.Interfaces.GameObjects;
 using LillyQuest.RogueLike.Types;
@@ -25,7 +26,10 @@ public class ItemGameObject : BaseGameObject, IViewportUpdateable
         {
             accomulatedTime = 0;
 
-            Tile.Symbol = Tile.Symbol == "*" ? "o" : "*";
+            Tile.Symbol = Tile.Symbol == "T" ? "t" : "T";
+            Tile.Flip = TileFlipType.FlipVertical;
+
+
         }
 
     }

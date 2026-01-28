@@ -152,6 +152,8 @@ public class RogueScene : BaseScene
         _screen.SetLayerViewLock(0, 1);
         _screen.SetLayerViewLock(0, 2);
         _screen.SetLayerViewLock(0, 3);
+        _screen.SetLayerViewLock(0, 4);
+
         _screen.ApplyTileViewScaleToScreen(availableSize, includeMargins: true);
 
         // _screen.SetLayerTileset(0, "alloy");
@@ -160,6 +162,7 @@ public class RogueScene : BaseScene
         _screen.SetLayerRenderScaleSmoothing(0, true, 0.1f);
         _screen.SetLayerRenderScaleSmoothing(1, true, 0.1f);
         _screen.SetLayerRenderScaleSmoothing(2, true, 0.1f);
+        _screen.SetLayerRenderScaleSmoothing(3, true, 0.1f);
 
         _shortcutService.RegisterShortcut("up", InputContextType.Global, "w", ShortcutTriggerType.Release);
         _shortcutService.RegisterShortcut("down", InputContextType.Global, "s", ShortcutTriggerType.Release);

@@ -29,6 +29,12 @@ public class LightOverlaySystemTests
         var fov = new FOVService();
         fov.Initialize(map);
 
+        var terrain = new TerrainGameObject(new Point(2, 2))
+        {
+            Tile = new VisualTile("floor", ".", LyColor.White, LyColor.Black)
+        };
+        map.SetTerrain(terrain);
+
         var torch = new ItemGameObject(new Point(2, 2))
         {
             Tile = new VisualTile("torch", "t", LyColor.Transparent, LyColor.Yellow)
@@ -44,8 +50,85 @@ public class LightOverlaySystemTests
         system.MarkDirtyForRadius(map, center: torch.Position, radius: 3);
         system.Update(new GameTime());
 
-        Assert.That(surface.GetTile((int)MapLayer.Effects, 2, 2).TileIndex, Is.EqualTo(0));
+        Assert.That(surface.GetTile((int)MapLayer.Effects, 2, 2).TileIndex, Is.EqualTo('.'));
         Assert.That(surface.GetTile((int)MapLayer.Effects, 2, 2).ForegroundColor, Is.EqualTo(LyColor.Yellow));
+    }
+
+    [Test]
+    public void Update_RendersLightBackgroundToEffectsLayer_WhenVisible()
+    {
+        var map = new LyQuestMap(8, 8);
+        var surface = new TilesetSurfaceScreen(new FakeTilesetManager())
+        {
+            LayerCount = Enum.GetNames<MapLayer>().Length
+        };
+        surface.InitializeLayers(surface.LayerCount);
+
+        var fov = new FOVService();
+        fov.Initialize(map);
+
+        var terrain = new TerrainGameObject(new Point(2, 2))
+        {
+            Tile = new VisualTile("floor", ".", LyColor.White, LyColor.Black)
+        };
+        map.SetTerrain(terrain);
+
+        var torch = new ItemGameObject(new Point(2, 2))
+        {
+            Tile = new VisualTile("torch", "t", LyColor.Transparent, LyColor.Yellow)
+        };
+        torch.GoRogueComponents.Add(new LightSourceComponent(radius: 3, startColor: LyColor.Yellow, endColor: LyColor.Black));
+        torch.GoRogueComponents.Add(new LightBackgroundComponent(startBackground: LyColor.Orange, endBackground: LyColor.Transparent));
+        map.AddEntity(torch);
+
+        fov.UpdateFOV(torch.Position);
+
+        var system = new LightOverlaySystem(chunkSize: 4);
+        system.RegisterMap(map, surface, fov);
+
+        system.MarkDirtyForRadius(map, center: torch.Position, radius: 3);
+        system.Update(new GameTime());
+
+        Assert.That(surface.GetTile((int)MapLayer.Effects, 2, 2).BackgroundColor, Is.EqualTo(LyColor.Orange));
+    }
+
+    [Test]
+    public void Update_RendersLightBackgroundWithDistanceAlphaFalloff()
+    {
+        var map = new LyQuestMap(8, 8);
+        var surface = new TilesetSurfaceScreen(new FakeTilesetManager())
+        {
+            LayerCount = Enum.GetNames<MapLayer>().Length
+        };
+        surface.InitializeLayers(surface.LayerCount);
+
+        var fov = new FOVService();
+        fov.Initialize(map);
+
+        var terrain = new TerrainGameObject(new Point(2, 2))
+        {
+            Tile = new VisualTile("floor", ".", LyColor.White, LyColor.Black)
+        };
+        map.SetTerrain(terrain);
+
+        var torch = new ItemGameObject(new Point(2, 2))
+        {
+            Tile = new VisualTile("torch", "t", LyColor.Transparent, LyColor.Yellow)
+        };
+        torch.GoRogueComponents.Add(new LightSourceComponent(radius: 3, startColor: LyColor.Yellow, endColor: LyColor.Black));
+        torch.GoRogueComponents.Add(new LightBackgroundComponent(startBackground: LyColor.Orange, endBackground: LyColor.Transparent));
+        map.AddEntity(torch);
+
+        fov.UpdateFOV(torch.Position);
+
+        var system = new LightOverlaySystem(chunkSize: 4);
+        system.RegisterMap(map, surface, fov);
+
+        system.MarkDirtyForRadius(map, center: torch.Position, radius: 3);
+        system.Update(new GameTime());
+
+        var background = surface.GetTile((int)MapLayer.Effects, 2, 2).BackgroundColor;
+        Assert.That(background.A, Is.EqualTo(128));
     }
 
     private sealed class FakeTilesetManager : ITilesetManager

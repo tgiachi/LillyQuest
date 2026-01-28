@@ -151,7 +151,8 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
                 return new(
                     creature.Tile.Symbol[0],
                     creature.Tile.ForegroundColor,
-                    creature.Tile.BackgroundColor
+                    creature.Tile.BackgroundColor,
+                    creature.Tile.Flip
                 );
             }
         }
@@ -172,7 +173,8 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
             tile = new(
                 terrain.Tile.Symbol[0],
                 terrain.Tile.ForegroundColor,
-                terrain.Tile.BackgroundColor
+                terrain.Tile.BackgroundColor,
+                terrain.Tile.Flip
             );
         }
 
@@ -213,7 +215,8 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
                 return new(
                     item.Tile.Symbol[0],
                     item.Tile.ForegroundColor,
-                    item.Tile.BackgroundColor
+                    item.Tile.BackgroundColor,
+                    item.Tile.Flip
                 );
             }
         }

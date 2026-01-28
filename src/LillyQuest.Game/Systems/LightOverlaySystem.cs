@@ -15,6 +15,7 @@ namespace LillyQuest.Game.Systems;
 
 public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity
 {
+    private const byte MaxBackgroundAlpha = 128;
     private readonly int _chunkSize;
     private readonly Dictionary<LyQuestMap, MapState> _states = new();
     private readonly Dictionary<LyQuestMap, IFOVService?> _fovServices = new();
@@ -115,6 +116,8 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity
             return new TileRenderData(-1, LyColor.Transparent);
         }
 
+        var overlayTileIndex = ResolveOverlayTileIndex(map, position);
+
         foreach (var layer in map.Entities.Layers)
         {
             foreach (var entity in layer.Items)
@@ -138,11 +141,31 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity
 
                 var t = (float)(distance / light.Radius);
                 var color = Lerp(light.StartColor, light.EndColor, t);
-                return new TileRenderData(0, color);
+                var background = LyColor.Transparent;
+                var backgroundComponent = item.GoRogueComponents.GetFirstOrDefault<LightBackgroundComponent>();
+                if (backgroundComponent != null)
+                {
+                    var baseBackground = Lerp(backgroundComponent.StartBackground, backgroundComponent.EndBackground, t);
+                    var targetAlpha = (byte)Math.Clamp((int)(MaxBackgroundAlpha * (1f - t)), 0, MaxBackgroundAlpha);
+                    var finalAlpha = baseBackground.A < targetAlpha ? baseBackground.A : targetAlpha;
+                    background = baseBackground.WithAlpha(finalAlpha);
+                }
+
+                return new TileRenderData(overlayTileIndex, color, background);
             }
         }
 
         return new TileRenderData(-1, LyColor.Transparent);
+    }
+
+    private static int ResolveOverlayTileIndex(LyQuestMap map, Point position)
+    {
+        if (map.GetTerrainAt(position) is TerrainGameObject terrain && !string.IsNullOrEmpty(terrain.Tile.Symbol))
+        {
+            return terrain.Tile.Symbol[0];
+        }
+
+        return 0;
     }
 
     private static LyColor Lerp(LyColor start, LyColor end, float t)

@@ -67,18 +67,26 @@ public class MapGenerator : IMapGenerator
 
         var player = new CreatureGameObject(freePosition)
         {
-            Tile = new VisualTile("player", "@", LyColor.Transparent, LyColor.White)
+            Tile = new VisualTile("player", "@", LyColor.White, LyColor.Transparent)
         };
 
         var simpleTorch = new ItemGameObject(new Point(10, 10))
         {
-            Tile = new VisualTile("torch", "t", LyColor.Transparent, LyColor.Yellow)
+            Tile = new VisualTile("torch", "t", LyColor.Yellow, LyColor.Transparent)
         };
-        simpleTorch.GoRogueComponents.Add(new LightSourceComponent(
-            radius: 4,
-            startColor: LyColor.Yellow,
-            endColor: LyColor.Black
-        ));
+        simpleTorch.GoRogueComponents.Add(
+            new LightSourceComponent(
+                radius: 4,
+                startColor: LyColor.Yellow,
+                endColor: LyColor.Black
+            )
+        );
+        simpleTorch.GoRogueComponents.Add(
+            new LightBackgroundComponent(
+                startBackground: LyColor.Orange,
+                endBackground: LyColor.Transparent
+            )
+        );
 
         map.AddEntity(player);
         map.AddEntity(simpleTorch);
