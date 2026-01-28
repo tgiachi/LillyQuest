@@ -83,4 +83,12 @@ public interface ISchedulerService
     /// Clears all entities from the scheduler.
     /// </summary>
     void Clear();
+
+
+    /// <summary>
+    /// Processes a single turn: finds the next entity that can act and executes their action.
+    /// Call this from your game loop - it handles both AI and player turns.
+    /// </summary>
+    /// <returns>Result indicating what happened and if player input is needed.</returns>
+    TurnResult ProcessNextTurn();
 }

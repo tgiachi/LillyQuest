@@ -115,6 +115,81 @@ public sealed class Scheduler
     }
 
     /// <summary>
+    /// Processes a single turn: finds the next entity that can act and executes their action.
+    /// Call this from your game loop - it handles both AI and player turns.
+    /// </summary>
+    /// <returns>Result indicating what happened and if player input is needed.</returns>
+    public TurnResult ProcessNextTurn()
+    {
+        _currentCycleActions.Clear();
+        _removedThisCycle.Clear();
+
+        // Remove inactive entities
+        CleanupInactiveEntities();
+
+        if (_entities.Count == 0)
+        {
+            return CreateResult(SchedulerState.Empty);
+        }
+
+        // Distribute energy until someone can act
+        var readyEntity = GetNextReadyEntity();
+
+        while (readyEntity == null)
+        {
+            var hasPlayer = _entities.Any(e => e.IsPlayer);
+
+            if (!hasPlayer)
+            {
+                // No player and no one ready - nothing to do
+                return CreateResult(SchedulerState.Empty);
+            }
+
+            DistributeEnergy();
+            readyEntity = GetNextReadyEntity();
+        }
+
+        // Player's turn
+        if (readyEntity.IsPlayer)
+        {
+            if (_pendingPlayerAction == null)
+            {
+                return CreateResult(SchedulerState.WaitingForPlayerInput, readyEntity);
+            }
+
+            var playerResult = ExecuteAction(readyEntity, _pendingPlayerAction);
+            _pendingPlayerAction = null;
+
+            if (playerResult.Result == ActionResult.Blocked)
+            {
+                return CreateResult(SchedulerState.PlayerActionBlocked, readyEntity);
+            }
+
+            if (playerResult.Result == ActionResult.Cancelled)
+            {
+                return CreateResult(SchedulerState.PlayerActionCancelled, readyEntity);
+            }
+
+            return CreateResult(SchedulerState.Processing, readyEntity);
+        }
+
+        // AI entity's turn
+        var aiAction = readyEntity.GetNextAction();
+
+        if (aiAction == null)
+        {
+            readyEntity.Energy -= StandardActionCost;
+            _logger.Debug("Entity {EntityId} skipped turn (no action)", readyEntity.Id);
+        }
+        else
+        {
+            ExecuteAction(readyEntity, aiAction);
+        }
+
+        return CreateResult(SchedulerState.Processing, readyEntity);
+    }
+
+    /// <summary>
     /// Gets all entities ordered by current energy (highest first).
     /// </summary>
     public IReadOnlyList<ISchedulerEntity> GetEntitiesByEnergy()

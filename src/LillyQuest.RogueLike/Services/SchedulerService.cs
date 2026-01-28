@@ -1,6 +1,7 @@
 using LillyQuest.RogueLike.Data.Scheduler;
 using LillyQuest.RogueLike.Interfaces.Scheduler;
 using LillyQuest.RogueLike.Interfaces.Services;
+using LillyQuest.RogueLike.Types.Scheduler;
 
 namespace LillyQuest.RogueLike.Services;
 
@@ -37,6 +38,9 @@ public sealed class SchedulerService : ISchedulerService
 
     public void Clear()
         => _scheduler.Clear();
+
+    public TurnResult ProcessNextTurn()
+        => _scheduler.ProcessNextTurn();
 
     public void ClearPendingPlayerAction()
         => _scheduler.ClearPendingPlayerAction();
