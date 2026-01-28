@@ -10,6 +10,7 @@ using LillyQuest.Engine.Managers.Scenes.Base;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.Engine.Screens.UI;
 using LillyQuest.Game.Systems;
+using LillyQuest.RogueLike.Components;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Maps;
@@ -36,6 +37,7 @@ public class RogueScene : BaseScene
     private TilesetSurfaceScreen? _screen;
     private CreatureGameObject? _player;
     private MapRenderSystem? _mapRenderSystem;
+    private LightOverlaySystem? _lightOverlaySystem;
     private ViewportUpdateSystem? _viewportUpdateSystem;
 
     public RogueScene(
@@ -89,6 +91,35 @@ public class RogueScene : BaseScene
         foreach (var position in _fovService.CurrentVisibleTiles)
         {
             _mapRenderSystem.MarkDirtyForTile(_map, position.X, position.Y);
+        }
+
+        MarkLightDirty();
+    }
+
+    private void MarkLightDirty()
+    {
+        if (_lightOverlaySystem == null)
+        {
+            return;
+        }
+
+        foreach (var layer in _map.Entities.Layers)
+        {
+            foreach (var entity in layer.Items)
+            {
+                if (entity is not ItemGameObject item)
+                {
+                    continue;
+                }
+
+                var light = item.GoRogueComponents.GetFirstOrDefault<LightSourceComponent>();
+                if (light == null)
+                {
+                    continue;
+                }
+
+                _lightOverlaySystem.MarkDirtyForRadius(_map, item.Position, light.Radius);
+            }
         }
     }
 
@@ -218,6 +249,11 @@ public class RogueScene : BaseScene
         _mapRenderSystem.RegisterMap(_map, _screen, _fovService);
         AddEntity(_mapRenderSystem);
         MarkFovDirty(Array.Empty<Point>());
+
+        _lightOverlaySystem = new LightOverlaySystem(chunkSize: 16);
+        _lightOverlaySystem.RegisterMap(_map, _screen, _fovService);
+        AddEntity(_lightOverlaySystem);
+        MarkLightDirty();
 
         _viewportUpdateSystem = new ViewportUpdateSystem(layerIndex: 0);
         _viewportUpdateSystem.RegisterMap(_map, _screen, _mapRenderSystem);
