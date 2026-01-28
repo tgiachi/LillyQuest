@@ -70,6 +70,12 @@ public class TilesetSurfaceScreen : BaseScreen
     private readonly ITilesetManager _tilesetManager;
     private readonly TilesetSurface _surface;
 
+    private TilesetSurfaceAnimator? _animator;
+    private TilesetSurfaceInputHandler? _inputHandler;
+    private TilesetSurfaceRenderer? _renderer;
+    private readonly TilesetSurfaceInputContext _inputContext = new();
+    private readonly TilesetSurfaceRenderContext _renderContext = new();
+
     private Tileset _tileset;
     private readonly Dictionary<int, int> _viewLockMasterByFollower = new();
     private readonly Dictionary<int, HashSet<int>> _viewLockFollowersByMaster = new();
@@ -207,6 +213,15 @@ public class TilesetSurfaceScreen : BaseScreen
 
         // Initialize surface early so it can be populated before OnLoad
         _surface = new(300, 300);
+
+        // Initialize input handler early so input works before OnLoad
+        _inputContext.TileRenderScale = TileRenderScale;
+        _inputContext.ScreenPosition = Position;
+        _inputContext.Margin = Margin;
+        _inputHandler = new TilesetSurfaceInputHandler(_inputContext);
+
+        // Initialize animator early so movements work before OnLoad
+        _animator = new TilesetSurfaceAnimator(_surface);
     }
 
     /// <summary>
@@ -353,74 +368,19 @@ public class TilesetSurfaceScreen : BaseScreen
         float durationSeconds,
         bool bounce = false
     )
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return false;
-        }
-
-        var sourceX = (int)source.X;
-        var sourceY = (int)source.Y;
-
-        if (sourceX < 0 || sourceX >= _surface.Width || sourceY < 0 || sourceY >= _surface.Height)
-        {
-            return false;
-        }
-
-        var destinationX = (int)destination.X;
-        var destinationY = (int)destination.Y;
-
-        if (destinationX < 0 || destinationX >= _surface.Width || destinationY < 0 || destinationY >= _surface.Height)
-        {
-            return false;
-        }
-
-        var tile = _surface.GetTile(layerIndex, sourceX, sourceY);
-
-        if (tile.TileIndex < 0)
-        {
-            return false;
-        }
-
-        var movement = new TileMovement(
-            layerIndex,
-            new(sourceX, sourceY),
-            new(destinationX, destinationY),
-            bounce,
-            durationSeconds,
-            tile
-        );
-
-        _surface.Layers[layerIndex].Movements.Pending.Enqueue(movement);
-
-        return true;
-    }
+        => _animator?.EnqueueMove(layerIndex, source, destination, durationSeconds, bounce) ?? false;
 
     /// <summary>
     /// Gets the active movements for a specific layer.
     /// </summary>
     public IReadOnlyList<TileMovement> GetActiveMovements(int layerIndex)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return Array.Empty<TileMovement>();
-        }
-
-        return _surface.Layers[layerIndex].Movements.Active;
-    }
+        => _animator?.GetActiveMovements(layerIndex) ?? Array.Empty<TileMovement>();
 
     /// <summary>
     /// Gets the movement queue for a specific layer.
     /// </summary>
     public TileMovementQueue? GetLayerMovementQueue(int layerIndex)
-    {
-        if (layerIndex < 0 || layerIndex >= _surface.Layers.Count)
-        {
-            return null;
-        }
-
-        return _surface.Layers[layerIndex].Movements;
-    }
+        => _animator?.GetLayerMovementQueue(layerIndex);
 
     /// <summary>
     /// Gets the opacity of a specific layer.
@@ -533,17 +493,7 @@ public class TilesetSurfaceScreen : BaseScreen
     /// Gets the interpolated tile position for a movement based on its elapsed time.
     /// </summary>
     public Vector2 GetMovementTilePosition(TileMovement movement)
-    {
-        var duration = movement.DurationSeconds <= 0f ? 0.0001f : movement.DurationSeconds;
-        var progress = Math.Clamp(movement.ElapsedSeconds / duration, 0f, 1f);
-
-        if (movement.Bounce && movement.State == TileMovementState.Returning)
-        {
-            return Vector2.Lerp(movement.DestinationTile, movement.SourceTile, progress);
-        }
-
-        return Vector2.Lerp(movement.SourceTile, movement.DestinationTile, progress);
-    }
+        => TilesetSurfaceAnimator.GetMovementTilePosition(movement);
 
     public TileRenderData GetTile(int layerIndex, int x, int y)
         => _surface.GetTile(layerIndex, x, y);
@@ -573,6 +523,19 @@ public class TilesetSurfaceScreen : BaseScreen
 
         UpdateScreenSizeFromTileView();
         UpdateLayerRenderScaleFromTileView(Size, includeMargins: true);
+
+        // Update contexts with current values after tileset is loaded
+        _inputContext.TileRenderScale = TileRenderScale;
+        _inputContext.ScreenPosition = Position;
+        _inputContext.Margin = Margin;
+
+        _renderContext.TileRenderScale = TileRenderScale;
+        _renderContext.ScreenPosition = Position;
+        _renderContext.ScreenSize = Size;
+        _renderContext.Margin = Margin;
+
+        // Initialize renderer (requires tileset to be loaded)
+        _renderer = new TilesetSurfaceRenderer(_surface, _renderContext, GetLayerTileset);
 
         base.OnLoad();
     }
@@ -655,121 +618,16 @@ public class TilesetSurfaceScreen : BaseScreen
     /// Advances active tile movements and places tiles when complete.
     /// </summary>
     public void ProcessMovements(GameTime gameTime)
+        => _animator?.ProcessMovements(gameTime);
+
+    public override void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
     {
-        if (gameTime.Elapsed.TotalSeconds <= 0)
+        if (_renderer == null || _animator == null)
         {
             return;
         }
 
-        var dt = (float)gameTime.Elapsed.TotalSeconds;
-
-        for (var layerIndex = 0; layerIndex < _surface.Layers.Count; layerIndex++)
-        {
-            var layer = _surface.Layers[layerIndex];
-            var active = layer.Movements.Active;
-            var pending = layer.Movements.Pending;
-
-            while (pending.Count > 0)
-            {
-                var movement = pending.Dequeue();
-                var sourceX = (int)movement.SourceTile.X;
-                var sourceY = (int)movement.SourceTile.Y;
-                var destinationX = (int)movement.DestinationTile.X;
-                var destinationY = (int)movement.DestinationTile.Y;
-
-                var sourceTile = _surface.GetTile(layerIndex, sourceX, sourceY);
-
-                if (sourceTile.TileIndex < 0)
-                {
-                    continue;
-                }
-
-                movement.DestinationTileData = _surface.GetTile(layerIndex, destinationX, destinationY);
-                _surface.SetTile(layerIndex, destinationX, destinationY, new(-1, LyColor.White));
-                _surface.SetTile(layerIndex, sourceX, sourceY, new(-1, LyColor.White));
-                movement.State = TileMovementState.Active;
-                active.Add(movement);
-            }
-
-            for (var i = active.Count - 1; i >= 0; i--)
-            {
-                var movement = active[i];
-                movement.ElapsedSeconds += dt;
-
-                var duration = movement.DurationSeconds <= 0f ? 0.0001f : movement.DurationSeconds;
-
-                if (movement.ElapsedSeconds < duration)
-                {
-                    continue;
-                }
-
-                if (movement.Bounce)
-                {
-                    if (movement.State == TileMovementState.Active)
-                    {
-                        movement.State = TileMovementState.Returning;
-                        movement.ElapsedSeconds = 0f;
-
-                        continue;
-                    }
-
-                    var sourceX = (int)movement.SourceTile.X;
-                    var sourceY = (int)movement.SourceTile.Y;
-                    _surface.SetTile(layerIndex, sourceX, sourceY, movement.TileData);
-                    _surface.SetTile(
-                        layerIndex,
-                        (int)movement.DestinationTile.X,
-                        (int)movement.DestinationTile.Y,
-                        movement.DestinationTileData
-                    );
-                    movement.State = TileMovementState.Completed;
-                    active.RemoveAt(i);
-
-                    continue;
-                }
-
-                var destinationX = (int)movement.DestinationTile.X;
-                var destinationY = (int)movement.DestinationTile.Y;
-                _surface.SetTile(layerIndex, destinationX, destinationY, movement.TileData);
-                movement.State = TileMovementState.Completed;
-                active.RemoveAt(i);
-            }
-        }
-    }
-
-    public override void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
-    {
-        // Draw black background
-        spriteBatch.DrawRectangle(Position, Size, LyColor.Black);
-
-        // Calculate scissor region with margins applied
-        var scissorX = (int)(Position.X + Margin.X);
-        var scissorY = (int)(Position.Y + Margin.Y);
-        var scissorWidth = (int)(Size.X - Margin.X - Margin.Z);
-        var scissorHeight = (int)(Size.Y - Margin.Y - Margin.W);
-
-        // Ensure scissor dimensions are not negative
-        scissorWidth = Math.Max(0, scissorWidth);
-        scissorHeight = Math.Max(0, scissorHeight);
-
-        spriteBatch.SetScissor(scissorX, scissorY, scissorWidth, scissorHeight);
-        spriteBatch.PushTranslation(Position);
-
-        // Render layers from bottom (0) to top (N-1)
-        for (var layerIndex = 0; layerIndex < _surface.Layers.Count; layerIndex++)
-        {
-            var layer = _surface.Layers[layerIndex];
-
-            if (!layer.IsVisible)
-            {
-                continue;
-            }
-
-            RenderLayer(spriteBatch, layer, layerIndex);
-        }
-
-        spriteBatch.PopTranslation();
-        spriteBatch.DisableScissor();
+        _renderer.Render(spriteBatch, _animator);
     }
 
     /// <summary>
@@ -1174,6 +1032,15 @@ public class TilesetSurfaceScreen : BaseScreen
     {
         base.Update(gameTime);
 
+        _inputContext.TileRenderScale = TileRenderScale;
+        _inputContext.ScreenPosition = Position;
+        _inputContext.Margin = Margin;
+
+        _renderContext.TileRenderScale = TileRenderScale;
+        _renderContext.ScreenPosition = Position;
+        _renderContext.ScreenSize = Size;
+        _renderContext.Margin = Margin;
+
         UpdateViewSmoothing(gameTime);
         UpdateRenderScaleSmoothing(gameTime);
         ProcessMovements(gameTime);
@@ -1205,31 +1072,24 @@ public class TilesetSurfaceScreen : BaseScreen
     /// </summary>
     private (int x, int y) GetInputTileCoordinates(int layerIndex, int mouseX, int mouseY)
     {
-        if (!TryGetLayerInputTileInfo(layerIndex, out var tileWidth, out var tileHeight, out var layerOffset))
+        if (_inputHandler == null || !TryGetLayerInputTileInfo(layerIndex, out var tileWidth, out var tileHeight, out var layerOffset))
         {
             return (0, 0);
         }
 
         var layerScale = _surface.Layers[layerIndex].RenderScale;
-        var scaledTileWidth = tileWidth * TileRenderScale * layerScale;
-        var scaledTileHeight = tileHeight * TileRenderScale * layerScale;
-
-        // Adjust mouse position relative to screen position
         TryGetLayerViewOffsets(layerIndex, out var viewTileOffset, out var viewPixelOffset);
-        var viewOffsetPx = new Vector2(
-                               viewTileOffset.X * scaledTileWidth,
-                               viewTileOffset.Y * scaledTileHeight
-                           ) +
-                           viewPixelOffset;
 
-        var relativeX = mouseX - Position.X - layerOffset.X + viewOffsetPx.X;
-        var relativeY = mouseY - Position.Y - layerOffset.Y + viewOffsetPx.Y;
-
-        // Calculate tile coordinates using scaled tile dimensions
-        var tileX = (int)MathF.Floor(relativeX / scaledTileWidth);
-        var tileY = (int)MathF.Floor(relativeY / scaledTileHeight);
-
-        return (tileX, tileY);
+        return _inputHandler.GetInputTileCoordinates(
+            layerScale,
+            tileWidth,
+            tileHeight,
+            layerOffset,
+            viewTileOffset,
+            viewPixelOffset,
+            mouseX,
+            mouseY
+        );
     }
 
     /// <summary>
@@ -1311,165 +1171,6 @@ public class TilesetSurfaceScreen : BaseScreen
     //         }
     //     }
     // }
-
-    /// <summary>
-    /// Renders a single layer to the sprite batch with frustum culling.
-    /// Only renders tiles that are visible within the screen bounds.
-    /// </summary>
-    private void RenderLayer(SpriteBatch spriteBatch, TileLayer layer, int layerIndex)
-    {
-        // Get the tileset for this layer (with fallback to default)
-        var tileset = GetLayerTileset(layerIndex);
-
-        if (tileset == null)
-        {
-            return;
-        }
-
-        // Calculate scaled tile dimensions
-        var layerScale = layer.RenderScale;
-        var scaledTileWidth = tileset.TileWidth * TileRenderScale * layerScale;
-        var scaledTileHeight = tileset.TileHeight * TileRenderScale * layerScale;
-        var layerOffset = layer.PixelOffset;
-        var viewOffsetPx = new Vector2(
-                               layer.ViewTileOffset.X * scaledTileWidth,
-                               layer.ViewTileOffset.Y * scaledTileHeight
-                           ) +
-                           layer.ViewPixelOffset;
-
-        // Calculate visible region accounting for margins (scissor area)
-        // Note: Tiles are already in coordinates relative to Position (due to PushTranslation)
-        var visibleX = Margin.X - layerOffset.X + viewOffsetPx.X;
-        var visibleY = Margin.Y - layerOffset.Y + viewOffsetPx.Y;
-        var visibleWidth = Size.X - Margin.X - Margin.Z;
-        var visibleHeight = Size.Y - Margin.Y - Margin.W;
-
-        // Calculate which tiles are visible based on scissor bounds (using scaled dimensions)
-        var minTileX = Math.Max(0, (int)MathF.Floor(visibleX / scaledTileWidth));
-        var minTileY = Math.Max(0, (int)MathF.Floor(visibleY / scaledTileHeight));
-        var maxTileX = Math.Min(_surface.Width, (int)MathF.Floor((visibleX + visibleWidth) / scaledTileWidth) + 1);
-        var maxTileY = Math.Min(_surface.Height, (int)MathF.Floor((visibleY + visibleHeight) / scaledTileHeight) + 1);
-
-        if (minTileX >= maxTileX || minTileY >= maxTileY)
-        {
-            return;
-        }
-
-        var maxTileXInclusive = maxTileX - 1;
-        var maxTileYInclusive = maxTileY - 1;
-
-        foreach (var (chunkX, chunkY, chunk) in layer.EnumerateChunksInRange(
-                     minTileX,
-                     minTileY,
-                     maxTileXInclusive,
-                     maxTileYInclusive
-                 ))
-        {
-            var chunkBaseX = chunkX * TileChunk.Size;
-            var chunkBaseY = chunkY * TileChunk.Size;
-            var startX = Math.Max(minTileX, chunkBaseX);
-            var startY = Math.Max(minTileY, chunkBaseY);
-            var endX = Math.Min(maxTileX, chunkBaseX + TileChunk.Size);
-            var endY = Math.Min(maxTileY, chunkBaseY + TileChunk.Size);
-
-            for (var x = startX; x < endX; x++)
-            {
-                for (var y = startY; y < endY; y++)
-                {
-                    var tileData = chunk.GetTile(x - chunkBaseX, y - chunkBaseY);
-
-                    if (tileData.BackgroundColor.A == 0)
-                    {
-                        continue;
-                    }
-
-                    var position = new Vector2(x * scaledTileWidth, y * scaledTileHeight) - viewOffsetPx + layerOffset;
-                    spriteBatch.DrawRectangle(position, new(scaledTileWidth, scaledTileHeight), tileData.BackgroundColor);
-                }
-            }
-
-            for (var x = startX; x < endX; x++)
-            {
-                for (var y = startY; y < endY; y++)
-                {
-                    var tileData = chunk.GetTile(x - chunkBaseX, y - chunkBaseY);
-
-                    if (tileData.TileIndex < 0 || tileData.TileIndex >= tileset.TileCount)
-                    {
-                        continue;
-                    }
-
-                    var tile = tileset.GetTile(tileData.TileIndex);
-
-                    var uvX = (float)tile.SourceRect.Origin.X / tileset.Texture.Width;
-                    var uvY = (float)tile.SourceRect.Origin.Y / tileset.Texture.Height;
-                    var uvWidth = (float)tile.SourceRect.Size.X / tileset.Texture.Width;
-                    var uvHeight = (float)tile.SourceRect.Size.Y / tileset.Texture.Height;
-
-                    var sourceRect = new Rectangle<float>(uvX, uvY, uvWidth, uvHeight);
-                    sourceRect = TileRenderData.ApplyFlip(sourceRect, tileData.Flip);
-
-                    var color = tileData.ForegroundColor.WithAlpha((byte)(tileData.ForegroundColor.A * layer.Opacity));
-
-                    var tilePosition = new Vector2(x * scaledTileWidth, y * scaledTileHeight) - viewOffsetPx + layerOffset;
-                    spriteBatch.Draw(
-                        tileset.Texture,
-                        tilePosition,
-                        new(scaledTileWidth, scaledTileHeight),
-                        color,
-                        0f,
-                        Vector2.Zero,
-                        sourceRect,
-                        0f
-                    );
-                }
-            }
-        }
-
-        var activeMovements = layer.Movements.Active;
-
-        for (var i = 0; i < activeMovements.Count; i++)
-        {
-            var movement = activeMovements[i];
-            var tileData = movement.TileData;
-
-            if (tileData.TileIndex < 0 || tileData.TileIndex >= tileset.TileCount)
-            {
-                continue;
-            }
-
-            var tile = tileset.GetTile(tileData.TileIndex);
-
-            var uvX = (float)tile.SourceRect.Origin.X / tileset.Texture.Width;
-            var uvY = (float)tile.SourceRect.Origin.Y / tileset.Texture.Height;
-            var uvWidth = (float)tile.SourceRect.Size.X / tileset.Texture.Width;
-            var uvHeight = (float)tile.SourceRect.Size.Y / tileset.Texture.Height;
-
-            var sourceRect = new Rectangle<float>(uvX, uvY, uvWidth, uvHeight);
-            sourceRect = TileRenderData.ApplyFlip(sourceRect, tileData.Flip);
-
-            var color = tileData.ForegroundColor.WithAlpha((byte)(tileData.ForegroundColor.A * layer.Opacity));
-
-            var tilePosition = GetMovementTilePosition(movement);
-            var pixelPosition = new Vector2(
-                                    tilePosition.X * scaledTileWidth,
-                                    tilePosition.Y * scaledTileHeight
-                                ) -
-                                viewOffsetPx +
-                                layerOffset;
-
-            spriteBatch.Draw(
-                tileset.Texture,
-                pixelPosition,
-                new(scaledTileWidth, scaledTileHeight),
-                color,
-                0f,
-                Vector2.Zero,
-                sourceRect,
-                0f
-            );
-        }
-    }
 
     private void UpdateRenderScaleSmoothing(GameTime gameTime)
     {
