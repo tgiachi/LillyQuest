@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Interfaces.Assets;
@@ -8,6 +9,7 @@ using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Managers.Scenes.Base;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.Engine.Screens.UI;
+using LillyQuest.Game.Systems;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Maps;
@@ -33,6 +35,7 @@ public class RogueScene : BaseScene
     private UIRootScreen? _uiRoot;
     private TilesetSurfaceScreen? _screen;
     private CreatureGameObject? _player;
+    private MapRenderSystem? _mapRenderSystem;
 
     public RogueScene(
         IScreenManager screenManager,
@@ -70,65 +73,22 @@ public class RogueScene : BaseScene
         );
     }
 
-    private void FillSurface(TilesetSurfaceScreen screen)
+    private void MarkFovDirty(IReadOnlyCollection<Point> previousVisibleTiles)
     {
-        int visibleCount = 0;
-        int exploredCount = 0;
-        int neverSeenCount = 0;
-
-        foreach (var position in _map.Positions())
+        if (_mapRenderSystem == null)
         {
-            bool isVisible = _fovService.IsVisible(position);
-            bool isExplored = _fovService.IsExplored(position);
-
-            if (isVisible) visibleCount++;
-            if (isExplored && !isVisible) exploredCount++;
-            if (!isExplored) neverSeenCount++;
-
-            // Layer 0: Terrain
-            if (_map.GetTerrainAt(position) is TerrainGameObject terrain)
-            {
-                var visualTile = terrain.Tile;
-                var tile = new TileRenderData(
-                    visualTile.Symbol[0],
-                    visualTile.ForegroundColor,
-                    visualTile.BackgroundColor
-                );
-
-                if (!isVisible && isExplored)
-                {
-                    // Explored but out of range - darken
-                    tile = DarkenTile(tile);
-                }
-                else if (!isExplored)
-                {
-                    // Never explored - don't render
-                    tile = new TileRenderData(-1, LyColor.White);
-                }
-
-                screen.AddTileToSurface(0, position.X, position.Y, tile);
-            }
-
-            // Layer 2: Creatures (only visible or if player)
-            var objects = _map.GetObjectsAt(position);
-
-            foreach (var obj in objects)
-            {
-                if (isVisible || obj == _player)
-                {
-                    if (obj is CreatureGameObject creature)
-                    {
-                        var creatureTile = new TileRenderData(
-                            creature.Tile.Symbol[0],
-                            creature.Tile.ForegroundColor,
-                            creature.Tile.BackgroundColor
-                        );
-                        screen.AddTileToSurface(2, position.X, position.Y, creatureTile);
-                    }
-                }
-            }
+            return;
         }
 
+        foreach (var position in previousVisibleTiles)
+        {
+            _mapRenderSystem.MarkDirtyForTile(_map, position.X, position.Y);
+        }
+
+        foreach (var position in _fovService.CurrentVisibleTiles)
+        {
+            _mapRenderSystem.MarkDirtyForTile(_map, position.X, position.Y);
+        }
     }
 
     public override void OnLoad()
@@ -179,12 +139,13 @@ public class RogueScene : BaseScene
             () =>
             {
                 var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
+                var previousVisible = _fovService.CurrentVisibleTiles.ToArray();
 
                 if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Up))
                 {
                     player.Item.Position += Direction.Up;
                     _fovService.UpdateFOV(player.Position);
-                    FillSurface(_screen!);
+                    MarkFovDirty(previousVisible);
                 }
             }
         );
@@ -193,12 +154,13 @@ public class RogueScene : BaseScene
             () =>
             {
                 var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
+                var previousVisible = _fovService.CurrentVisibleTiles.ToArray();
 
                 if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Down))
                 {
                     player.Item.Position += Direction.Down;
                     _fovService.UpdateFOV(player.Position);
-                    FillSurface(_screen!);
+                    MarkFovDirty(previousVisible);
                 }
             }
         );
@@ -207,12 +169,13 @@ public class RogueScene : BaseScene
             () =>
             {
                 var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
+                var previousVisible = _fovService.CurrentVisibleTiles.ToArray();
 
                 if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Left))
                 {
                     player.Item.Position += Direction.Left;
                     _fovService.UpdateFOV(player.Position);
-                    FillSurface(_screen!);
+                    MarkFovDirty(previousVisible);
                 }
             }
         );
@@ -221,12 +184,13 @@ public class RogueScene : BaseScene
             () =>
             {
                 var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
+                var previousVisible = _fovService.CurrentVisibleTiles.ToArray();
 
                 if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Right))
                 {
                     player.Item.Position += Direction.Right;
                     _fovService.UpdateFOV(player.Position);
-                    FillSurface(_screen!);
+                    MarkFovDirty(previousVisible);
                 }
             }
         );
@@ -249,7 +213,10 @@ public class RogueScene : BaseScene
             _fovService.UpdateFOV(_player.Position);
         }
 
-        FillSurface(_screen);
+        _mapRenderSystem = new MapRenderSystem(chunkSize: 16);
+        _mapRenderSystem.RegisterMap(_map, _screen, _fovService);
+        AddEntity(_mapRenderSystem);
+        MarkFovDirty(Array.Empty<Point>());
 
         _map.ObjectMoved += (sender, args) =>
                             {
