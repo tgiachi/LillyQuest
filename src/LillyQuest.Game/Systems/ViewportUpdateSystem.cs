@@ -33,6 +33,11 @@ public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity
         _states[map] = new(map, screen, renderSystem);
     }
 
+    public void UnregisterMap(LyQuestMap map)
+    {
+        _states.Remove(map);
+    }
+
     public static TileViewportBounds GetViewportBounds(TilesetSurfaceScreen screen, int layerIndex)
     {
         var offset = screen.GetLayerViewTileOffset(layerIndex);

@@ -45,6 +45,12 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity
         _fovServices[map] = fovService;
     }
 
+    public void UnregisterMap(LyQuestMap map)
+    {
+        _states.Remove(map);
+        _fovServices.Remove(map);
+    }
+
     public void MarkDirtyForRadius(LyQuestMap map, Point center, int radius)
     {
         if (!_states.TryGetValue(map, out var state))

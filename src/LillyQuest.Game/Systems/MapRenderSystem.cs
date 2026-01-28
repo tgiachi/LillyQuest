@@ -191,7 +191,7 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
             return new(-1, LyColor.White);
         }
 
-        return !isVisible && isExplored ? DarkenTile(tile) : tile;
+        return !isVisible && isExplored ? tile.Darken(0.5f) : tile;
     }
 
     private static TileRenderData BuildItemTile(
@@ -222,24 +222,6 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity
         }
 
         return empty;
-    }
-
-    private static TileRenderData DarkenTile(TileRenderData tile)
-    {
-        return new(
-            tile.TileIndex,
-            DarkenColor(tile.ForegroundColor, 0.5f),
-            DarkenColor(tile.BackgroundColor, 0.5f),
-            tile.Flip
-        );
-
-        static LyColor DarkenColor(LyColor color, float factor)
-            => new(
-                color.A,
-                (byte)(color.R * factor),
-                (byte)(color.G * factor),
-                (byte)(color.B * factor)
-            );
     }
 
     private void RebuildChunk(MapRenderState state, ChunkCoord chunk)

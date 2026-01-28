@@ -56,26 +56,6 @@ public class RogueScene : BaseScene
         _fovService = new FOVService();
     }
 
-    private TileRenderData DarkenTile(TileRenderData tile)
-    {
-        static LyColor DarkenColor(LyColor color, float factor)
-        {
-            return new LyColor(
-                color.A,
-                (byte)(color.R * factor),
-                (byte)(color.G * factor),
-                (byte)(color.B * factor)
-            );
-        }
-
-        return new TileRenderData(
-            tile.TileIndex,
-            DarkenColor(tile.ForegroundColor, 0.5f),
-            DarkenColor(tile.BackgroundColor, 0.5f),
-            tile.Flip
-        );
-    }
-
     private void MarkFovDirty(IReadOnlyCollection<Point> previousVisibleTiles)
     {
         if (_mapRenderSystem == null)
@@ -287,6 +267,14 @@ public class RogueScene : BaseScene
 
     public override void OnUnload()
     {
+        // Unregister map from all systems to prevent memory leaks
+        if (_map != null)
+        {
+            _mapRenderSystem?.UnregisterMap(_map);
+            _lightOverlaySystem?.UnregisterMap(_map);
+            _viewportUpdateSystem?.UnregisterMap(_map);
+        }
+
         if (_screen != null)
         {
             _screenManager.PopScreen(_screen);
