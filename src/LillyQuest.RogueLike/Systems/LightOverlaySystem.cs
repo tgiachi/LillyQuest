@@ -5,7 +5,6 @@ using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.RogueLike.Components;
 using LillyQuest.RogueLike.GameObjects;
-using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Rendering;
@@ -19,7 +18,7 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
     private const byte MaxBackgroundAlpha = 128;
     private readonly int _chunkSize;
     private readonly Dictionary<LyQuestMap, MapState> _states = new();
-    private readonly Dictionary<LyQuestMap, IFOVService?> _fovServices = new();
+    private readonly Dictionary<LyQuestMap, FovSystem?> _fovSystems = new();
 
     private sealed record MapState(
         LyQuestMap Map,
@@ -35,7 +34,7 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
         Name = nameof(LightOverlaySystem);
     }
 
-    public void RegisterMap(LyQuestMap map, TilesetSurfaceScreen surface, IFOVService? fovService)
+    public void RegisterMap(LyQuestMap map, TilesetSurfaceScreen surface, FovSystem? fovSystem)
     {
         if (_states.ContainsKey(map))
         {
@@ -43,13 +42,13 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
         }
 
         _states[map] = new MapState(map, surface, new DirtyChunkTracker(_chunkSize));
-        _fovServices[map] = fovService;
+        _fovSystems[map] = fovSystem;
     }
 
     public void UnregisterMap(LyQuestMap map)
     {
         _states.Remove(map);
-        _fovServices.Remove(map);
+        _fovSystems.Remove(map);
     }
 
     public void MarkDirtyForRadius(LyQuestMap map, Point center, int radius)
@@ -95,7 +94,7 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
     {
         var map = state.Map;
         var surface = state.Surface;
-        var fovService = _fovServices[map];
+        var fovSystem = _fovSystems[map];
         var startX = chunk.X * _chunkSize;
         var startY = chunk.Y * _chunkSize;
         var endX = Math.Min(startX + _chunkSize, map.Width);
@@ -106,7 +105,7 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
             for (var x = startX; x < endX; x++)
             {
                 var position = new Point(x, y);
-                var lightTile = BuildLightTile(map, fovService, position);
+                var lightTile = BuildLightTile(map, fovSystem, position);
                 surface.AddTileToSurface((int)MapLayer.Effects, x, y, lightTile);
             }
         }
@@ -114,11 +113,11 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
 
     private static TileRenderData BuildLightTile(
         LyQuestMap map,
-        IFOVService? fovService,
+        FovSystem? fovSystem,
         Point position
     )
     {
-        if (fovService != null && !fovService.IsVisible(position))
+        if (fovSystem != null && !fovSystem.IsVisible(map, position))
         {
             return new TileRenderData(-1, LyColor.Transparent);
         }

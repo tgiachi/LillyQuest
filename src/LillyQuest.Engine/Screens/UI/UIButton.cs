@@ -10,13 +10,6 @@ using Silk.NET.Maths;
 
 namespace LillyQuest.Engine.Screens.UI;
 
-public enum UIButtonState
-{
-    Idle,
-    Hovered,
-    Pressed
-}
-
 public sealed class UIButton : UIScreenControl
 {
     private readonly INineSliceAssetManager _nineSliceManager;

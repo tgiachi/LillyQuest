@@ -6,7 +6,6 @@ using LillyQuest.RogueLike.Components;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Maps.Tiles;
-using LillyQuest.RogueLike.Services;
 using LillyQuest.RogueLike.Systems;
 using LillyQuest.RogueLike.Types;
 using NUnit.Framework;
@@ -26,8 +25,8 @@ public class LightOverlaySystemTests
         };
         surface.InitializeLayers(surface.LayerCount);
 
-        var fov = new FOVService();
-        fov.Initialize(map);
+        var fovSystem = new FovSystem();
+        fovSystem.RegisterMap(map);
 
         var terrain = new TerrainGameObject(new Point(2, 2))
         {
@@ -42,10 +41,10 @@ public class LightOverlaySystemTests
         torch.GoRogueComponents.Add(new LightSourceComponent(radius: 3, startColor: LyColor.Yellow, endColor: LyColor.Black));
         map.AddEntity(torch);
 
-        fov.UpdateFOV(torch.Position);
+        fovSystem.UpdateFov(map, torch.Position);
 
         var system = new LightOverlaySystem(chunkSize: 4);
-        system.RegisterMap(map, surface, fov);
+        system.RegisterMap(map, surface, fovSystem);
 
         system.MarkDirtyForRadius(map, center: torch.Position, radius: 3);
         system.Update(new GameTime());
@@ -64,8 +63,8 @@ public class LightOverlaySystemTests
         };
         surface.InitializeLayers(surface.LayerCount);
 
-        var fov = new FOVService();
-        fov.Initialize(map);
+        var fovSystem = new FovSystem();
+        fovSystem.RegisterMap(map);
 
         var terrain = new TerrainGameObject(new Point(2, 2))
         {
@@ -81,10 +80,10 @@ public class LightOverlaySystemTests
         torch.GoRogueComponents.Add(new LightBackgroundComponent(startBackground: LyColor.Orange, endBackground: LyColor.Transparent));
         map.AddEntity(torch);
 
-        fov.UpdateFOV(torch.Position);
+        fovSystem.UpdateFov(map, torch.Position);
 
         var system = new LightOverlaySystem(chunkSize: 4);
-        system.RegisterMap(map, surface, fov);
+        system.RegisterMap(map, surface, fovSystem);
 
         system.MarkDirtyForRadius(map, center: torch.Position, radius: 3);
         system.Update(new GameTime());
@@ -102,8 +101,8 @@ public class LightOverlaySystemTests
         };
         surface.InitializeLayers(surface.LayerCount);
 
-        var fov = new FOVService();
-        fov.Initialize(map);
+        var fovSystem = new FovSystem();
+        fovSystem.RegisterMap(map);
 
         var terrain = new TerrainGameObject(new Point(2, 2))
         {
@@ -119,10 +118,10 @@ public class LightOverlaySystemTests
         torch.GoRogueComponents.Add(new LightBackgroundComponent(startBackground: LyColor.Orange, endBackground: LyColor.Transparent));
         map.AddEntity(torch);
 
-        fov.UpdateFOV(torch.Position);
+        fovSystem.UpdateFov(map, torch.Position);
 
         var system = new LightOverlaySystem(chunkSize: 4);
-        system.RegisterMap(map, surface, fov);
+        system.RegisterMap(map, surface, fovSystem);
 
         system.MarkDirtyForRadius(map, center: torch.Position, radius: 3);
         system.Update(new GameTime());

@@ -14,7 +14,6 @@ using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
-using LillyQuest.RogueLike.Services;
 using LillyQuest.RogueLike.Systems;
 using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
@@ -29,9 +28,9 @@ public class RogueScene : BaseScene
     private readonly ITilesetManager _tilesetManager;
 
     private readonly IShortcutService _shortcutService;
-
     private readonly IActionService _actionService;
-    private readonly IFOVService _fovService;
+
+    private FovSystem? _fovSystem;
 
     private LyQuestMap _map = null!;
     private UIRootScreen? _uiRoot;
@@ -55,7 +54,6 @@ public class RogueScene : BaseScene
         _tilesetManager = tilesetManager;
         _shortcutService = shortcutService;
         _actionService = actionService;
-        _fovService = new FOVService();
     }
 
     private void MarkFovDirty(IReadOnlyCollection<Point> previousVisibleTiles)
@@ -70,9 +68,12 @@ public class RogueScene : BaseScene
             _mapRenderSystem.MarkDirtyForTile(_map, position.X, position.Y);
         }
 
-        foreach (var position in _fovService.CurrentVisibleTiles)
+        if (_fovSystem != null)
         {
-            _mapRenderSystem.MarkDirtyForTile(_map, position.X, position.Y);
+            foreach (var position in _fovSystem.GetCurrentVisibleTiles(_map))
+            {
+                _mapRenderSystem.MarkDirtyForTile(_map, position.X, position.Y);
+            }
         }
 
         MarkLightDirty();
@@ -156,12 +157,12 @@ public class RogueScene : BaseScene
             () =>
             {
                 var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
-                var previousVisible = _fovService.CurrentVisibleTiles.ToArray();
+                var previousVisible = _fovSystem?.GetCurrentVisibleTiles(_map).ToArray() ?? [];
 
                 if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Up))
                 {
                     player.Item.Position += Direction.Up;
-                    _fovService.UpdateFOV(player.Position);
+                    _fovSystem?.UpdateFov(_map, player.Position);
                     MarkFovDirty(previousVisible);
                 }
             }
@@ -171,12 +172,12 @@ public class RogueScene : BaseScene
             () =>
             {
                 var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
-                var previousVisible = _fovService.CurrentVisibleTiles.ToArray();
+                var previousVisible = _fovSystem?.GetCurrentVisibleTiles(_map).ToArray() ?? [];
 
                 if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Down))
                 {
                     player.Item.Position += Direction.Down;
-                    _fovService.UpdateFOV(player.Position);
+                    _fovSystem?.UpdateFov(_map, player.Position);
                     MarkFovDirty(previousVisible);
                 }
             }
@@ -186,12 +187,12 @@ public class RogueScene : BaseScene
             () =>
             {
                 var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
-                var previousVisible = _fovService.CurrentVisibleTiles.ToArray();
+                var previousVisible = _fovSystem?.GetCurrentVisibleTiles(_map).ToArray() ?? [];
 
                 if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Left))
                 {
                     player.Item.Position += Direction.Left;
-                    _fovService.UpdateFOV(player.Position);
+                    _fovSystem?.UpdateFov(_map, player.Position);
                     MarkFovDirty(previousVisible);
                 }
             }
@@ -201,12 +202,12 @@ public class RogueScene : BaseScene
             () =>
             {
                 var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
-                var previousVisible = _fovService.CurrentVisibleTiles.ToArray();
+                var previousVisible = _fovSystem?.GetCurrentVisibleTiles(_map).ToArray() ?? [];
 
                 if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Right))
                 {
                     player.Item.Position += Direction.Right;
-                    _fovService.UpdateFOV(player.Position);
+                    _fovSystem?.UpdateFov(_map, player.Position);
                     MarkFovDirty(previousVisible);
                 }
             }
@@ -222,22 +223,27 @@ public class RogueScene : BaseScene
                                  };
 
         _map = _mapGenerator.GenerateMapAsync().GetAwaiter().GetResult();
-        _fovService.Initialize(_map);
+
+        _fovSystem = new FovSystem();
+        _fovSystem.RegisterMap(_map);
+        AddEntity(_fovSystem);
+        _mapAwareSystems.Add(_fovSystem);
+
         _player = _map.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
 
         if (_player != null)
         {
-            _fovService.UpdateFOV(_player.Position);
+            _fovSystem.UpdateFov(_map, _player.Position);
         }
 
         _mapRenderSystem = new MapRenderSystem(chunkSize: 16);
-        _mapRenderSystem.RegisterMap(_map, _screen, _fovService);
+        _mapRenderSystem.RegisterMap(_map, _screen, _fovSystem);
         AddEntity(_mapRenderSystem);
         _mapAwareSystems.Add(_mapRenderSystem);
         MarkFovDirty(Array.Empty<Point>());
 
         _lightOverlaySystem = new LightOverlaySystem(chunkSize: 16);
-        _lightOverlaySystem.RegisterMap(_map, _screen, _fovService);
+        _lightOverlaySystem.RegisterMap(_map, _screen, _fovSystem);
         AddEntity(_lightOverlaySystem);
         _mapAwareSystems.Add(_lightOverlaySystem);
         MarkLightDirty();

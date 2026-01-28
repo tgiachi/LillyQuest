@@ -5,7 +5,6 @@ using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.GameObjects.Base;
-using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Rendering;
@@ -31,7 +30,7 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
     private sealed record MapRenderState(
         LyQuestMap Map,
         TilesetSurfaceScreen Surface,
-        IFOVService? FovService,
+        FovSystem? FovSystem,
         DirtyChunkTracker DirtyTracker,
         Dictionary<BaseGameObject, Action<BaseGameObject>> TileChangedHandlers
     );
@@ -61,7 +60,7 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
         }
     }
 
-    public void RegisterMap(LyQuestMap map, TilesetSurfaceScreen surface, IFOVService? fovService)
+    public void RegisterMap(LyQuestMap map, TilesetSurfaceScreen surface, FovSystem? fovSystem)
     {
         if (_states.ContainsKey(map))
         {
@@ -71,7 +70,7 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
         var state = new MapRenderState(
             map,
             surface,
-            fovService,
+            fovSystem,
             new(_chunkSize),
             new Dictionary<BaseGameObject, Action<BaseGameObject>>()
         );
@@ -133,11 +132,11 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
 
     private static TileRenderData BuildCreatureTile(
         LyQuestMap map,
-        IFOVService? fovService,
+        FovSystem? fovSystem,
         Point position
     )
     {
-        var renderCreature = fovService == null || fovService.IsVisible(position);
+        var renderCreature = fovSystem == null || fovSystem.IsVisible(map, position);
         var empty = new TileRenderData(-1, LyColor.White);
 
         if (!renderCreature)
@@ -163,7 +162,7 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
 
     private static TileRenderData BuildTerrainTile(
         LyQuestMap map,
-        IFOVService? fovService,
+        FovSystem? fovSystem,
         Point position
     )
     {
@@ -179,13 +178,13 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
             );
         }
 
-        if (fovService == null)
+        if (fovSystem == null)
         {
             return tile;
         }
 
-        var isVisible = fovService.IsVisible(position);
-        var isExplored = fovService.IsExplored(position);
+        var isVisible = fovSystem.IsVisible(map, position);
+        var isExplored = fovSystem.IsExplored(map, position);
 
         if (!isExplored)
         {
@@ -197,11 +196,11 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
 
     private static TileRenderData BuildItemTile(
         LyQuestMap map,
-        IFOVService? fovService,
+        FovSystem? fovSystem,
         Point position
     )
     {
-        var renderItem = fovService == null || fovService.IsVisible(position);
+        var renderItem = fovSystem == null || fovSystem.IsVisible(map, position);
         var empty = new TileRenderData(-1, LyColor.White);
 
         if (!renderItem)
@@ -229,7 +228,7 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
     {
         var map = state.Map;
         var surface = state.Surface;
-        var fovService = state.FovService;
+        var fovSystem = state.FovSystem;
         var startX = chunk.X * _chunkSize;
         var startY = chunk.Y * _chunkSize;
         var endX = Math.Min(startX + _chunkSize, map.Width);
@@ -240,13 +239,13 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
             for (var x = startX; x < endX; x++)
             {
                 var position = new Point(x, y);
-                var tile = BuildTerrainTile(map, fovService, position);
+                var tile = BuildTerrainTile(map, fovSystem, position);
                 surface.AddTileToSurface((int)MapLayer.Terrain, x, y, tile);
 
-                var creatureTile = BuildCreatureTile(map, fovService, position);
+                var creatureTile = BuildCreatureTile(map, fovSystem, position);
                 surface.AddTileToSurface((int)MapLayer.Creatures, x, y, creatureTile);
 
-                var itemTile = BuildItemTile(map, fovService, position);
+                var itemTile = BuildItemTile(map, fovSystem, position);
                 surface.AddTileToSurface((int)MapLayer.Items, x, y, itemTile);
             }
         }

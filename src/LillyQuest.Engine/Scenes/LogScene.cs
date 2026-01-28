@@ -16,6 +16,7 @@ public class LogScene : BaseScene
     private readonly ILogEventDispatcher _logDispatcher;
     private readonly IFontManager _fontManager;
     private readonly LillyQuestBootstrap _bootstrap;
+    private readonly EngineRenderContext _engineRenderContext;
     private bool _subscribed;
 
     private LogScreen? _logScreen;
@@ -24,7 +25,8 @@ public class LogScene : BaseScene
         IScreenManager screenManager,
         ILogEventDispatcher logDispatcher,
         IFontManager fontManager,
-        LillyQuestBootstrap bootstrap
+        LillyQuestBootstrap bootstrap,
+        EngineRenderContext engineRenderContext
     )
         : base("log_scene")
     {
@@ -32,6 +34,7 @@ public class LogScene : BaseScene
         _logDispatcher = logDispatcher;
         _fontManager = fontManager;
         _bootstrap = bootstrap;
+        _engineRenderContext = engineRenderContext;
         Subscribe();
     }
 
@@ -40,7 +43,7 @@ public class LogScene : BaseScene
         _logScreen = new LogScreen(_logDispatcher, _fontManager)
         {
             Position = Vector2.Zero,
-            Size = new Vector2(800, 600),
+            Size = new Vector2(_engineRenderContext.Window.Size.X, _engineRenderContext.Window.Size.Y),
             Margin = new(10, 10, 10, 10),
             BackgroundColor = LyColor.Black,
             BackgroundAlpha = 0.9f
