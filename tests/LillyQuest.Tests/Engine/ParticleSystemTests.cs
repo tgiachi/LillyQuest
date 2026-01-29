@@ -49,6 +49,114 @@ public class ParticleSystemTests
     }
 
     [Test]
+    public void EmitProjectile_WithColors_AssignsForegroundAndBackground()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        var foreground = LyColor.Orange;
+        var background = LyColor.Firebrick;
+
+        // Act
+        system.EmitProjectile(
+            from: Vector2.Zero,
+            direction: Vector2.UnitX,
+            speed: 1f,
+            tileId: 1,
+            lifetime: 1f,
+            foregroundColor: foreground,
+            backgroundColor: background,
+            scale: 6f
+        );
+
+        // Assert
+        var particle = system.GetParticle(0);
+        Assert.That(particle.ForegroundColor, Is.EqualTo(foreground));
+        Assert.That(particle.BackgroundColor, Is.EqualTo(background));
+    }
+
+    [Test]
+    public void EmitProjectile_WithScale_AssignsScale()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        const float scale = 9f;
+
+        // Act
+        system.EmitProjectile(
+            from: Vector2.Zero,
+            direction: Vector2.UnitX,
+            speed: 1f,
+            tileId: 1,
+            lifetime: 1f,
+            foregroundColor: LyColor.Orange,
+            backgroundColor: LyColor.Firebrick,
+            scale: scale
+        );
+
+        // Assert
+        var particle = system.GetParticle(0);
+        Assert.That(particle.Scale, Is.EqualTo(scale));
+    }
+
+    [Test]
+    public void EmitExplosion_WithColors_AssignsForegroundAndBackground()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        var foreground = LyColor.Yellow;
+        var background = LyColor.OrangeRed;
+
+        // Act
+        system.EmitExplosion(
+            center: Vector2.Zero,
+            tileId: 2,
+            particleCount: 1,
+            speed: 1f,
+            lifetime: 1f,
+            foregroundColor: foreground,
+            backgroundColor: background,
+            scale: 6f
+        );
+
+        // Assert
+        var particle = system.GetParticle(0);
+        Assert.That(particle.ForegroundColor, Is.EqualTo(foreground));
+        Assert.That(particle.BackgroundColor, Is.EqualTo(background));
+    }
+
+    [Test]
+    public void EmitExplosion_WithScale_AssignsScale()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        const float scale = 7f;
+
+        // Act
+        system.EmitExplosion(
+            center: Vector2.Zero,
+            tileId: 2,
+            particleCount: 1,
+            speed: 1f,
+            lifetime: 1f,
+            foregroundColor: LyColor.Yellow,
+            backgroundColor: LyColor.OrangeRed,
+            scale: scale
+        );
+
+        // Assert
+        var particle = system.GetParticle(0);
+        Assert.That(particle.Scale, Is.EqualTo(scale));
+    }
+
+    [Test]
     public void Update_ReducesParticleLifetime()
     {
         // Arrange
@@ -212,6 +320,33 @@ public class ParticleSystemTests
         var pos = system.GetParticlePosition(0);
         Assert.That(pos.X, Is.EqualTo(10f).Within(0.001f)); // Didn't move
         Assert.That(pos.Y, Is.EqualTo(20f).Within(0.001f));
+    }
+
+    [Test]
+    public void Update_ParticleWithDieFlag_DoesNotDieWhenStayingInSameTile()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        collisionProvider.SetBlocked(10, 10, isBlocked: true);
+
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+
+        var particle = new Particle
+        {
+            Position = new Vector2(10, 10),
+            Velocity = new Vector2(0.1f, 0f),
+            Lifetime = 1f,
+            Flags = ParticleFlags.Die
+        };
+
+        system.Emit(particle);
+
+        // Act - movement stays within same tile
+        system.Update(0.1);
+
+        // Assert - particle should still exist
+        Assert.That(system.ParticleCount, Is.EqualTo(1));
     }
 
     [Test]

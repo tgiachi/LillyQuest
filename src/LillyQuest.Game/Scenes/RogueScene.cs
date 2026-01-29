@@ -1,5 +1,6 @@
 using System.Numerics;
 using LillyQuest.Core.Interfaces.Assets;
+using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Particles;
@@ -159,8 +160,12 @@ public class RogueScene : BaseScene
                     _particleSystem.EmitProjectile(
                         from: new Vector2(_player.Position.X, _player.Position.Y),
                         direction: new Vector2(1, 0),
-                        speed: 100f,
-                        tileId: 'F' // Fire tile
+                        speed: 6f,
+                        tileId: 0,
+                        lifetime: 1.5f,
+                        foregroundColor: LyColor.Orange,
+                        backgroundColor: LyColor.Firebrick,
+                        scale: 6f
                     );
                 }
             }
@@ -176,8 +181,13 @@ public class RogueScene : BaseScene
                 {
                     _particleSystem.EmitExplosion(
                         center: new Vector2(_player.Position.X + 2, _player.Position.Y),
-                        tileId: 'E',
-                        particleCount: 20
+                        tileId: 1,
+                        particleCount: 70,
+                        speed: 6f,
+                        lifetime: 4.2f,
+                        foregroundColor: LyColor.Yellow,
+                        backgroundColor: LyColor.OrangeRed,
+                        scale: 6f
                     );
                 }
             }
@@ -243,8 +253,11 @@ public class RogueScene : BaseScene
                                          from: new Vector2(x,y),
                                          direction: new Vector2(1, 0),
                                          speed: 200f,            // pixels/secondo
-                                         tileId: 'C', // ID del tile da renderizzare
-                                         lifetime: 5f            // secondi
+                                         tileId: 0, // ID del tile da renderizzare
+                                         lifetime: 5f,            // secondi
+                                         foregroundColor: LyColor.Orange,
+                                         backgroundColor: LyColor.Firebrick,
+                                         scale: 6f
                                      );
 
                                      // _screen.CenterViewOnTile(1, x, y);

@@ -443,6 +443,12 @@ public class TilesetSurfaceScreen : BaseScreen
         return string.IsNullOrEmpty(layer.TilesetName) ? DefaultTilesetName : layer.TilesetName;
     }
 
+    public bool TryGetLayerTileset(int layerIndex, out Tileset tileset)
+    {
+        tileset = GetLayerTileset(layerIndex);
+        return tileset != null;
+    }
+
     /// <summary>
     /// Gets the view pixel offset for a specific layer.
     /// </summary>

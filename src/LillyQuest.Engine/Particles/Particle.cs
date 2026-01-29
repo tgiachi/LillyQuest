@@ -46,6 +46,16 @@ public struct Particle
     public LyColor Color;
 
     /// <summary>
+    /// Foreground color for glyph rendering.
+    /// </summary>
+    public LyColor ForegroundColor;
+
+    /// <summary>
+    /// Background color for glyph rendering.
+    /// </summary>
+    public LyColor BackgroundColor;
+
+    /// <summary>
     /// Scale factor (1.0 = normal tile size).
     /// </summary>
     public float Scale;

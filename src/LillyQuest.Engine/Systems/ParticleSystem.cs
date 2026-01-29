@@ -13,6 +13,10 @@ namespace LillyQuest.Engine.Systems;
 /// </summary>
 public sealed class ParticleSystem : ISystem
 {
+    private static readonly LyColor DefaultForeground = LyColor.White;
+    private static readonly LyColor DefaultBackground = LyColor.Transparent;
+    private const float DefaultScale = 6f;
+
     private readonly List<Particle> _particles = new(1024);
     private readonly IParticleCollisionProvider _collisionProvider;
     private readonly IParticleFOVProvider _fovProvider;
@@ -40,6 +44,17 @@ public sealed class ParticleSystem : ISystem
     /// Emits ambient particles (fire, smoke, etc.) with random variance.
     /// </summary>
     public void EmitAmbient(Vector2 position, int tileId, int count = 5, float lifetime = 2f)
+        => EmitAmbient(position, tileId, count, lifetime, DefaultForeground, DefaultBackground, DefaultScale);
+
+    public void EmitAmbient(
+        Vector2 position,
+        int tileId,
+        int count,
+        float lifetime,
+        LyColor foregroundColor,
+        LyColor backgroundColor,
+        float scale
+    )
     {
         var random = new Random();
 
@@ -61,8 +76,10 @@ public sealed class ParticleSystem : ISystem
                 Behavior = ParticleBehavior.Ambient,
                 TileId = tileId,
                 Flags = ParticleFlags.FadeOut,
-                Scale = 1f,
-                Color = default
+                Scale = scale,
+                Color = default,
+                ForegroundColor = foregroundColor,
+                BackgroundColor = backgroundColor
             };
 
             Emit(particle);
@@ -72,7 +89,25 @@ public sealed class ParticleSystem : ISystem
     /// <summary>
     /// Emits an explosion effect with particles radiating from a center point.
     /// </summary>
-    public void EmitExplosion(Vector2 center, int tileId, int particleCount = 20, float speed = 100f, float lifetime = 0.5f)
+    public void EmitExplosion(
+        Vector2 center,
+        int tileId,
+        int particleCount = 20,
+        float speed = 100f,
+        float lifetime = 0.5f
+    )
+        => EmitExplosion(center, tileId, particleCount, speed, lifetime, DefaultForeground, DefaultBackground, DefaultScale);
+
+    public void EmitExplosion(
+        Vector2 center,
+        int tileId,
+        int particleCount,
+        float speed,
+        float lifetime,
+        LyColor foregroundColor,
+        LyColor backgroundColor,
+        float scale
+    )
     {
         for (var i = 0; i < particleCount; i++)
         {
@@ -87,8 +122,10 @@ public sealed class ParticleSystem : ISystem
                 Behavior = ParticleBehavior.Explosion,
                 TileId = tileId,
                 Flags = ParticleFlags.FadeOut | ParticleFlags.Die,
-                Scale = 1f,
-                Color = default
+                Scale = scale,
+                Color = default,
+                ForegroundColor = foregroundColor,
+                BackgroundColor = backgroundColor
             };
 
             Emit(particle);
@@ -99,6 +136,18 @@ public sealed class ParticleSystem : ISystem
     /// Emits a projectile particle that moves in a straight line.
     /// </summary>
     public void EmitProjectile(Vector2 from, Vector2 direction, float speed, int tileId, float lifetime = 5f)
+        => EmitProjectile(from, direction, speed, tileId, lifetime, DefaultForeground, DefaultBackground, DefaultScale);
+
+    public void EmitProjectile(
+        Vector2 from,
+        Vector2 direction,
+        float speed,
+        int tileId,
+        float lifetime,
+        LyColor foregroundColor,
+        LyColor backgroundColor,
+        float scale
+    )
     {
         var normalizedDir = Vector2.Normalize(direction);
 
@@ -110,8 +159,10 @@ public sealed class ParticleSystem : ISystem
             Behavior = ParticleBehavior.Projectile,
             TileId = tileId,
             Flags = ParticleFlags.Die,
-            Scale = 1f,
-            Color = default
+            Scale = scale,
+            Color = default,
+            ForegroundColor = foregroundColor,
+            BackgroundColor = backgroundColor
         };
 
         Emit(particle);
@@ -174,11 +225,13 @@ public sealed class ParticleSystem : ISystem
 
             // Calculate new position
             var newPosition = particle.Position + particle.Velocity * (float)deltaTime;
+            var oldTileX = (int)particle.Position.X;
+            var oldTileY = (int)particle.Position.Y;
             var newTileX = (int)newPosition.X;
             var newTileY = (int)newPosition.Y;
 
-            // Check collision
-            if (_collisionProvider.IsBlocked(newTileX, newTileY))
+            // Check collision only when crossing into a new tile
+            if ((newTileX != oldTileX || newTileY != oldTileY) && _collisionProvider.IsBlocked(newTileX, newTileY))
             {
                 // Handle collision based on flags
                 if (particle.Flags.HasFlag(ParticleFlags.Die))
