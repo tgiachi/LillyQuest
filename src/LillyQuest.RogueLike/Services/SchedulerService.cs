@@ -6,63 +6,63 @@ using LillyQuest.RogueLike.Types.Scheduler;
 namespace LillyQuest.RogueLike.Services;
 
 /// <summary>
-/// Service wrapper for Scheduler for DI registration.
+/// Service wrapper for TurnScheduler for DI registration.
 /// </summary>
 public sealed class SchedulerService : ISchedulerService
 {
-    private readonly Scheduler _scheduler = new();
+    private readonly TurnScheduler _turnScheduler = new();
 
-    public int CurrentTick => _scheduler.CurrentTick;
-    public int EntityCount => _scheduler.EntityCount;
+    public int CurrentTick => _turnScheduler.CurrentTick;
+    public int EntityCount => _turnScheduler.EntityCount;
 
     public event Action<ISchedulerEntity>? EntityActing
     {
-        add => _scheduler.EntityActing += value;
-        remove => _scheduler.EntityActing -= value;
+        add => _turnScheduler.EntityActing += value;
+        remove => _turnScheduler.EntityActing -= value;
     }
 
     public event Action<ActionExecutionRecord>? ActionExecuted
     {
-        add => _scheduler.ActionExecuted += value;
-        remove => _scheduler.ActionExecuted -= value;
+        add => _turnScheduler.ActionExecuted += value;
+        remove => _turnScheduler.ActionExecuted -= value;
     }
 
     public event Action<ISchedulerEntity>? EntityRemoved
     {
-        add => _scheduler.EntityRemoved += value;
-        remove => _scheduler.EntityRemoved -= value;
+        add => _turnScheduler.EntityRemoved += value;
+        remove => _turnScheduler.EntityRemoved -= value;
     }
 
     public void AddEntity(ISchedulerEntity entity)
-        => _scheduler.AddEntity(entity);
+        => _turnScheduler.AddEntity(entity);
 
     public void Clear()
-        => _scheduler.Clear();
+        => _turnScheduler.Clear();
 
     public TurnResult ProcessNextTurn()
-        => _scheduler.ProcessNextTurn();
+        => _turnScheduler.ProcessNextTurn();
 
     public void ClearPendingPlayerAction()
-        => _scheduler.ClearPendingPlayerAction();
+        => _turnScheduler.ClearPendingPlayerAction();
 
     public void EnqueuePlayerAction(ISchedulerAction action)
-        => _scheduler.EnqueuePlayerAction(action);
+        => _turnScheduler.EnqueuePlayerAction(action);
 
     public IReadOnlyList<ISchedulerEntity> GetEntitiesByEnergy()
-        => _scheduler.GetEntitiesByEnergy();
+        => _turnScheduler.GetEntitiesByEnergy();
 
     public ISchedulerEntity? GetPlayer()
-        => _scheduler.GetPlayer();
+        => _turnScheduler.GetPlayer();
 
     public TurnResult ProcessUntilPlayerInput(int maxIterations = 10000)
-        => _scheduler.ProcessUntilPlayerInput(maxIterations);
+        => _turnScheduler.ProcessUntilPlayerInput(maxIterations);
 
     public void RemoveEntity(ISchedulerEntity entity)
-        => _scheduler.RemoveEntity(entity);
+        => _turnScheduler.RemoveEntity(entity);
 
     public void RemoveEntity(Guid entityId)
-        => _scheduler.RemoveEntity(entityId);
+        => _turnScheduler.RemoveEntity(entityId);
 
     public void Reset()
-        => _scheduler.Reset();
+        => _turnScheduler.Reset();
 }

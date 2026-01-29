@@ -9,7 +9,7 @@ namespace LillyQuest.RogueLike.Data.Scheduler;
 /// Entities accumulate energy based on speed and act when they reach the threshold.
 /// Properly interleaves player and AI turns based on relative speeds.
 /// </summary>
-public sealed class Scheduler
+public sealed class TurnScheduler
 {
     /// <summary>
     /// Energy threshold required to take an action.
@@ -21,7 +21,7 @@ public sealed class Scheduler
     /// </summary>
     public const int StandardActionCost = 100;
 
-    private readonly ILogger _logger = Log.ForContext<Scheduler>();
+    private readonly ILogger _logger = Log.ForContext<TurnScheduler>();
     private readonly List<ISchedulerEntity> _entities = [];
     private readonly List<ActionExecutionRecord> _currentCycleActions = [];
     private readonly List<ISchedulerEntity> _removedThisCycle = [];

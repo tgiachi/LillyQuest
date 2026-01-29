@@ -13,7 +13,7 @@ public interface ISchedulerEntity
     Guid Id { get; }
 
     /// <summary>
-    /// Current energy. When >= Scheduler.EnergyThreshold (100), entity can act.
+    /// Current energy. When >= TurnScheduler.EnergyThreshold (100), entity can act.
     /// </summary>
     int Energy { get; set; }
 

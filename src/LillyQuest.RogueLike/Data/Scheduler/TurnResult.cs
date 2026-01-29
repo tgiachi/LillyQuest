@@ -33,15 +33,3 @@ public sealed class TurnResult
     /// </summary>
     public IReadOnlyList<ISchedulerEntity> RemovedEntities { get; init; } = [];
 }
-
-/// <summary>
-/// Record of a single action execution.
-/// </summary>
-public sealed class ActionExecutionRecord
-{
-    public required ISchedulerAction Action { get; init; }
-    public required ISchedulerEntity Actor { get; init; }
-    public required ActionResult Result { get; init; }
-    public required int EnergyCostPaid { get; init; }
-    public required int ActorEnergyAfter { get; init; }
-}

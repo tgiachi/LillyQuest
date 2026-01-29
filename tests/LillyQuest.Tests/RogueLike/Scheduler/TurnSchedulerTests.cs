@@ -1,12 +1,11 @@
 using LillyQuest.RogueLike.Data.Scheduler;
 using LillyQuest.RogueLike.Interfaces.Scheduler;
 using LillyQuest.RogueLike.Types.Scheduler;
-using TurnScheduler = LillyQuest.RogueLike.Data.Scheduler.Scheduler;
 
 namespace LillyQuest.Tests.RogueLike.Scheduler;
 
 [TestFixture]
-public class SchedulerTests
+public class TurnSchedulerTests
 {
     #region Test Helpers
 
