@@ -11,7 +11,7 @@ public class MapPrefabServiceTests
         var colorService = new ColorService();
         var tileSetService = new TileSetService(colorService);
         var terrainService = new TerrainService(tileSetService);
-        var lootTableService = new LootTableService(null);
+        var lootTableService = new LootTableService((Lazy<ItemService>?)null);
         var itemService = new ItemService(lootTableService);
         var creatureService = new CreatureService();
         return new MapPrefabService(terrainService, itemService, creatureService);

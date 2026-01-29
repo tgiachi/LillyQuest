@@ -8,9 +8,9 @@ public class LootTableServiceTests
 {
     private static LootTableService CreateService()
     {
-        var lootTableService = new LootTableService(null!);
+        var lootTableService = new LootTableService(null);
         var itemService = new ItemService(lootTableService);
-        return new LootTableService(itemService);
+        return new LootTableService(new Lazy<ItemService>(() => itemService));
     }
 
     [Test]

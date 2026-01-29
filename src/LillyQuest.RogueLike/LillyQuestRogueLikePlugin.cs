@@ -27,8 +27,6 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         typeof(TerrainService),
         typeof(NameService),
         typeof(CreatureService),
-        typeof(ItemService),
-        typeof(LootTableService)
     ];
 
     public PluginInfo PluginInfo
@@ -54,7 +52,9 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         container.Register<IDataLoaderService, DataLoaderService>();
         container.Register<IMapGenerator, MapGenerator>();
 
-
+        // Register services with circular dependency using Lazy<T>
+        container.Register<ItemService>(Reuse.Singleton);
+        container.Register<LootTableService>(Reuse.Singleton);
 
         foreach (var receiverType in _dataReceiverTypes)
         {
@@ -96,6 +96,10 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
             dataLoader.RegisterDataReceiver(receiver);
         }
 
+        dataLoader.RegisterDataReceiver(_container.Resolve<LootTableService>());
+
+        dataLoader.RegisterDataReceiver(_container.Resolve<ItemService>());
+
         _logger.Information("Loading RogueLike data");
 
         await dataLoader.LoadDataAsync();
@@ -106,7 +110,6 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
 
         _logger.Information("Starting data verification");
         await dataLoader.VerifyLoadedDataAsync();
-
 
         var mapGenerator = container.Resolve<IMapGenerator>();
         await mapGenerator.GenerateMapAsync();

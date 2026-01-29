@@ -9,10 +9,10 @@ namespace LillyQuest.RogueLike.Services.Loaders;
 /// </summary>
 public class LootTableService : IDataLoaderReceiver
 {
-    private readonly ItemService? _itemService;
+    private readonly Lazy<ItemService>? _itemService;
     private readonly Dictionary<string, LootTableDefinitionJson> _lootTablesById = new();
 
-    public LootTableService(ItemService? itemService)
+    public LootTableService(Lazy<ItemService>? itemService)
     {
         _itemService = itemService;
     }
@@ -95,7 +95,7 @@ public class LootTableService : IDataLoaderReceiver
                 // Validate references
                 if (hasItem && _itemService != null)
                 {
-                    if (!_itemService.TryGetItem(entry.ItemId!, out _))
+                    if (!_itemService.Value.TryGetItem(entry.ItemId!, out _))
                     {
                         throw new InvalidOperationException(
                             $"LootTable {table.Id} references missing item '{entry.ItemId}'"

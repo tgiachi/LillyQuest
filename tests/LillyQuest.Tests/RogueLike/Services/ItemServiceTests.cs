@@ -9,7 +9,7 @@ public class ItemServiceTests
 {
     private static ItemService CreateService()
     {
-        var lootTableService = new LootTableService(null);
+        var lootTableService = new LootTableService((Lazy<ItemService>?)null);
         return new ItemService(lootTableService);
     }
 
