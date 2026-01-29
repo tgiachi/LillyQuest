@@ -10,6 +10,11 @@ namespace LillyQuest.RogueLike.Maps;
 /// </summary>
 public class LyQuestMap : Map
 {
+
+    public string Name { get; set; }
+
+    public int Level { get; set; }
+
     public LyQuestMap(int width, int height) : base(
         width,
         height,

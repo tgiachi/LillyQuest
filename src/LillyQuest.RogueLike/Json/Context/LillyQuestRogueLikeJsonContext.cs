@@ -5,6 +5,7 @@ using LillyQuest.RogueLike.Json.Entities.Creatures;
 using LillyQuest.RogueLike.Json.Entities.Items;
 using LillyQuest.RogueLike.Json.Entities.LootTables;
 using LillyQuest.RogueLike.Json.Entities.Names;
+using LillyQuest.RogueLike.Json.Entities.Prefabs;
 using LillyQuest.RogueLike.Json.Entities.Terrain;
 using LillyQuest.RogueLike.Json.Entities.Tiles;
 
@@ -43,6 +44,10 @@ namespace LillyQuest.RogueLike.Json.Context;
  JsonSerializable(typeof(LootTableDefinitionJson[])),
  JsonSerializable(typeof(List<LootTableDefinitionJson>)),
  JsonSerializable(typeof(LootEntryJson)),
- JsonSerializable(typeof(List<LootEntryJson>))
+ JsonSerializable(typeof(List<LootEntryJson>)),
+ JsonSerializable(typeof(MapPaletteEntry)),
+ JsonSerializable(typeof(List<MapPaletteEntry>)),
+ JsonSerializable(typeof(MapPrefabDefinitionJson)),
+ JsonSerializable(typeof(List<MapPrefabDefinitionJson>)),
 ]
 public partial class LillyQuestRogueLikeJsonContext : JsonSerializerContext { }

@@ -9,7 +9,13 @@ namespace LillyQuest.RogueLike.Services.Loaders;
 /// </summary>
 public class LootTableService : IDataLoaderReceiver
 {
+    private readonly ItemService? _itemService;
     private readonly Dictionary<string, LootTableDefinitionJson> _lootTablesById = new();
+
+    public LootTableService(ItemService? itemService)
+    {
+        _itemService = itemService;
+    }
 
     public void ClearData()
     {
@@ -84,6 +90,27 @@ public class LootTableService : IDataLoaderReceiver
                 if (entry.Chance > 100f)
                 {
                     throw new InvalidOperationException($"LootTable {table.Id} has entry with Chance > 100: {entry.Chance}");
+                }
+
+                // Validate references
+                if (hasItem && _itemService != null)
+                {
+                    if (!_itemService.TryGetItem(entry.ItemId!, out _))
+                    {
+                        throw new InvalidOperationException(
+                            $"LootTable {table.Id} references missing item '{entry.ItemId}'"
+                        );
+                    }
+                }
+
+                if (hasTable)
+                {
+                    if (!_lootTablesById.ContainsKey(entry.LootTableId!))
+                    {
+                        throw new InvalidOperationException(
+                            $"LootTable {table.Id} references missing nested loot table '{entry.LootTableId}'"
+                        );
+                    }
                 }
             }
         }
