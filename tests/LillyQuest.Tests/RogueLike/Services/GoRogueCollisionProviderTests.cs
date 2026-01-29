@@ -17,7 +17,8 @@ public class GoRogueCollisionProviderTests
         var wall = new TerrainGameObject(new Point(5, 5), isWalkable: false, isTransparent: false);
         map.SetTerrain(wall);
         
-        var provider = new GoRogueCollisionProvider(map);
+        var provider = new GoRogueCollisionProvider();
+        provider.SetMap(map);
 
         // Act
         var result = provider.IsBlocked(5, 5);
@@ -34,7 +35,8 @@ public class GoRogueCollisionProviderTests
         var floor = new TerrainGameObject(new Point(5, 5), isWalkable: true, isTransparent: true);
         map.SetTerrain(floor);
         
-        var provider = new GoRogueCollisionProvider(map);
+        var provider = new GoRogueCollisionProvider();
+        provider.SetMap(map);
 
         // Act
         var result = provider.IsBlocked(5, 5);
@@ -51,7 +53,8 @@ public class GoRogueCollisionProviderTests
         var wall = new TerrainGameObject(new Point(10, 15), isWalkable: false, isTransparent: false);
         map.SetTerrain(wall);
         
-        var provider = new GoRogueCollisionProvider(map);
+        var provider = new GoRogueCollisionProvider();
+        provider.SetMap(map);
 
         // Act
         var result = provider.IsBlocked(new Vector2(10.5f, 15.3f));
@@ -65,7 +68,8 @@ public class GoRogueCollisionProviderTests
     {
         // Arrange
         var map = new LyQuestMap(20, 20);
-        var provider = new GoRogueCollisionProvider(map);
+        var provider = new GoRogueCollisionProvider();
+        provider.SetMap(map);
 
         // Act
         var result = provider.IsBlocked(5, 5);

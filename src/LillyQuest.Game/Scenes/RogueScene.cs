@@ -2,14 +2,17 @@ using System.Numerics;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Types;
 using LillyQuest.Engine.Interfaces.Managers;
+using LillyQuest.Engine.Interfaces.Particles;
 using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Managers.Scenes.Base;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.Engine.Screens.UI;
+using LillyQuest.Engine.Systems;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
+using LillyQuest.RogueLike.Services;
 using LillyQuest.RogueLike.Systems;
 using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
@@ -24,6 +27,8 @@ public class RogueScene : BaseScene
 
     private readonly IShortcutService _shortcutService;
     private readonly IActionService _actionService;
+    private readonly IParticleCollisionProvider _particleCollisionProvider;
+    private readonly IParticleFOVProvider _particleFOVProvider;
 
     private FovSystem? _fovSystem;
 
@@ -36,12 +41,17 @@ public class RogueScene : BaseScene
     private ViewportUpdateSystem? _viewportUpdateSystem;
     private readonly List<IMapAwareSystem> _mapAwareSystems = new();
 
+    private readonly ParticleSystem _particleSystem;
+
     public RogueScene(
         IScreenManager screenManager,
         IMapGenerator mapGenerator,
         ITilesetManager tilesetManager,
         IShortcutService shortcutService,
-        IActionService actionService
+        IActionService actionService,
+        ParticleSystem particleSystem,
+        IParticleCollisionProvider particleCollisionProvider,
+        IParticleFOVProvider particleFOVProvider
     ) : base("RogueScene")
     {
         _screenManager = screenManager;
@@ -49,6 +59,9 @@ public class RogueScene : BaseScene
         _tilesetManager = tilesetManager;
         _shortcutService = shortcutService;
         _actionService = actionService;
+        _particleSystem = particleSystem;
+        _particleCollisionProvider = particleCollisionProvider;
+        _particleFOVProvider = particleFOVProvider;
     }
 
     public override void OnLoad()
@@ -177,6 +190,13 @@ public class RogueScene : BaseScene
         _screen.TileMouseDown += (index, x, y, buttons) =>
                                  {
                                      _screen.CenterViewOnTile(0, x, y);
+                                     _particleSystem.EmitProjectile(
+                                         from: new Vector2(x,y),
+                                         direction: new Vector2(1, 0),
+                                         speed: 200f,            // pixels/secondo
+                                         tileId: 'C', // ID del tile da renderizzare
+                                         lifetime: 5f            // secondi
+                                     );
 
                                      // _screen.CenterViewOnTile(1, x, y);
                                      //
@@ -189,6 +209,10 @@ public class RogueScene : BaseScene
         _fovSystem.RegisterMap(_map);
         AddEntity(_fovSystem);
         _mapAwareSystems.Add(_fovSystem);
+
+        // Initialize particle system providers with map
+        (_particleCollisionProvider as GoRogueCollisionProvider)?.SetMap(_map);
+        (_particleFOVProvider as GoRogueFOVProvider)?.SetMap(_map);
 
         _player = _map.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
 

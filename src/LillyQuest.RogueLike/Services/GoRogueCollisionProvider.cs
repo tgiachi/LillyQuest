@@ -11,15 +11,24 @@ namespace LillyQuest.RogueLike.Services;
 /// </summary>
 public sealed class GoRogueCollisionProvider : IParticleCollisionProvider
 {
-    private readonly LyQuestMap _map;
+    private LyQuestMap? _map;
 
-    public GoRogueCollisionProvider(LyQuestMap map)
+    public GoRogueCollisionProvider()
+    {
+    }
+
+    public void SetMap(LyQuestMap map)
     {
         _map = map;
     }
 
     public bool IsBlocked(int x, int y)
     {
+        if (_map == null)
+        {
+            return true; // No map = treat as blocked
+        }
+        
         var point = new Point(x, y);
         
         // Check if position is out of bounds

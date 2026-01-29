@@ -4,6 +4,7 @@ using LillyQuest.Core.Data.Plugins;
 using LillyQuest.Core.Json;
 using LillyQuest.Engine.Interfaces.Particles;
 using LillyQuest.Engine.Interfaces.Plugins;
+using LillyQuest.Engine.Systems;
 using LillyQuest.RogueLike.Data.Configs;
 using LillyQuest.RogueLike.Interfaces;
 using LillyQuest.RogueLike.Interfaces.Services;
@@ -57,9 +58,11 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         container.Register<ItemService>(Reuse.Singleton);
         container.Register<LootTableService>(Reuse.Singleton);
 
-        // Register particle system providers
+        // Register particle system and providers
+        // Note: Providers require SetMap() to be called after map creation in scene
         container.Register<IParticleCollisionProvider, GoRogueCollisionProvider>(Reuse.Singleton);
         container.Register<IParticleFOVProvider, GoRogueFOVProvider>(Reuse.Singleton);
+        container.Register<ParticleSystem>(Reuse.Singleton);
 
         foreach (var receiverType in _dataReceiverTypes)
         {

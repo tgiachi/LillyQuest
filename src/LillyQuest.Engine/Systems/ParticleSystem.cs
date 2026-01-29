@@ -20,12 +20,13 @@ public sealed class ParticleSystem : ISystem
     public uint Order => 145;
     public string Name => "ParticleSystem";
     public SystemQueryType QueryType => SystemQueryType.Updateable | SystemQueryType.Renderable;
-    
+
     public int ParticleCount => _particles.Count;
 
     public ParticleSystem(
         IParticleCollisionProvider collisionProvider,
-        IParticleFOVProvider fovProvider)
+        IParticleFOVProvider fovProvider
+    )
     {
         _collisionProvider = collisionProvider;
         _fovProvider = fovProvider;
@@ -36,107 +37,37 @@ public sealed class ParticleSystem : ISystem
         _particles.Add(particle);
     }
 
-    public void Update(double deltaTime)
-    {
-        for (int i = _particles.Count - 1; i >= 0; i--)
-        {
-            var particle = _particles[i];
-            particle.Lifetime -= (float)deltaTime;
-            
-            if (particle.Lifetime <= 0)
-            {
-                _particles.RemoveAt(i);
-                continue;
-            }
-            
-            // Apply behavior modifications to velocity
-            ApplyBehavior(ref particle, deltaTime);
-            
-            // Calculate new position
-            var newPosition = particle.Position + particle.Velocity * (float)deltaTime;
-            var newTileX = (int)newPosition.X;
-            var newTileY = (int)newPosition.Y;
-            
-            // Check collision
-            if (_collisionProvider.IsBlocked(newTileX, newTileY))
-            {
-                // Handle collision based on flags
-                if (particle.Flags.HasFlag(ParticleFlags.Die))
-                {
-                    _particles.RemoveAt(i);
-                    continue;
-                }
-                
-                if (particle.Flags.HasFlag(ParticleFlags.Bounce))
-                {
-                    // Reverse velocity with damping
-                    particle.Velocity = -particle.Velocity * 0.5f;
-                }
-                // Don't update position if collided
-            }
-            else
-            {
-                // No collision, update position
-                particle.Position = newPosition;
-            }
-            
-            _particles[i] = particle;
-        }
-    }
-
-    public float GetParticleLifetime(int index)
-    {
-        return _particles[index].Lifetime;
-    }
-
-    public Vector2 GetParticlePosition(int index)
-    {
-        return _particles[index].Position;
-    }
-
-    public Vector2 GetParticleVelocity(int index)
-    {
-        return _particles[index].Velocity;
-    }
-
-    public List<Particle> GetVisibleParticles()
-    {
-        var visibleParticles = new List<Particle>();
-        
-        foreach (var particle in _particles)
-        {
-            var tileX = (int)particle.Position.X;
-            var tileY = (int)particle.Position.Y;
-            
-            if (_fovProvider.IsVisible(tileX, tileY))
-            {
-                visibleParticles.Add(particle);
-            }
-        }
-        
-        return visibleParticles;
-    }
-
     /// <summary>
-    /// Emits a projectile particle that moves in a straight line.
+    /// Emits ambient particles (fire, smoke, etc.) with random variance.
     /// </summary>
-    public void EmitProjectile(Vector2 from, Vector2 direction, float speed, int tileId, float lifetime = 5f)
+    public void EmitAmbient(Vector2 position, int tileId, int count = 5, float lifetime = 2f)
     {
-        var normalizedDir = Vector2.Normalize(direction);
-        
-        var particle = new Particle
+        var random = new Random();
+
+        for (var i = 0; i < count; i++)
         {
-            Position = from,
-            Velocity = normalizedDir * speed,
-            Lifetime = lifetime,
-            Behavior = ParticleBehavior.Projectile,
-            TileId = tileId,
-            Flags = ParticleFlags.Die,
-            Scale = 1f,
-            Color = default
-        };
-        
-        Emit(particle);
+            var particle = new Particle
+            {
+                Position = position +
+                           new Vector2(
+                               (float)(random.NextDouble() - 0.5) * 8f,
+                               (float)(random.NextDouble() - 0.5) * 8f
+                           ),
+                Velocity = new Vector2(0, -20) +
+                           new Vector2(
+                               (float)(random.NextDouble() - 0.5) * 10f,
+                               (float)(random.NextDouble() - 0.5) * 10f
+                           ),
+                Lifetime = lifetime,
+                Behavior = ParticleBehavior.Ambient,
+                TileId = tileId,
+                Flags = ParticleFlags.FadeOut,
+                Scale = 1f,
+                Color = default
+            };
+
+            Emit(particle);
+        }
     }
 
     /// <summary>
@@ -144,11 +75,11 @@ public sealed class ParticleSystem : ISystem
     /// </summary>
     public void EmitExplosion(Vector2 center, int tileId, int particleCount = 20, float speed = 100f, float lifetime = 0.5f)
     {
-        for (int i = 0; i < particleCount; i++)
+        for (var i = 0; i < particleCount; i++)
         {
             var angle = (float)(i * 2 * Math.PI / particleCount);
             var direction = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
-            
+
             var particle = new Particle
             {
                 Position = center,
@@ -160,45 +91,119 @@ public sealed class ParticleSystem : ISystem
                 Scale = 1f,
                 Color = default
             };
-            
+
             Emit(particle);
         }
     }
 
     /// <summary>
-    /// Emits ambient particles (fire, smoke, etc.) with random variance.
+    /// Emits a projectile particle that moves in a straight line.
     /// </summary>
-    public void EmitAmbient(Vector2 position, int tileId, int count = 5, float lifetime = 2f)
+    public void EmitProjectile(Vector2 from, Vector2 direction, float speed, int tileId, float lifetime = 5f)
     {
-        var random = new Random();
-        
-        for (int i = 0; i < count; i++)
+        var normalizedDir = Vector2.Normalize(direction);
+
+        var particle = new Particle
         {
-            var particle = new Particle
-            {
-                Position = position + new Vector2(
-                    (float)(random.NextDouble() - 0.5) * 8f,
-                    (float)(random.NextDouble() - 0.5) * 8f
-                ),
-                Velocity = new Vector2(0, -20) + new Vector2(
-                    (float)(random.NextDouble() - 0.5) * 10f,
-                    (float)(random.NextDouble() - 0.5) * 10f
-                ),
-                Lifetime = lifetime,
-                Behavior = ParticleBehavior.Ambient,
-                TileId = tileId,
-                Flags = ParticleFlags.FadeOut,
-                Scale = 1f,
-                Color = default
-            };
-            
-            Emit(particle);
-        }
+            Position = from,
+            Velocity = normalizedDir * speed,
+            Lifetime = lifetime,
+            Behavior = ParticleBehavior.Projectile,
+            TileId = tileId,
+            Flags = ParticleFlags.Die,
+            Scale = 1f,
+            Color = default
+        };
+
+        Emit(particle);
     }
 
     public Particle GetParticle(int index)
+        => _particles[index];
+
+    public float GetParticleLifetime(int index)
+        => _particles[index].Lifetime;
+
+    public Vector2 GetParticlePosition(int index)
+        => _particles[index].Position;
+
+    public Vector2 GetParticleVelocity(int index)
+        => _particles[index].Velocity;
+
+    public List<Particle> GetVisibleParticles()
     {
-        return _particles[index];
+        var visibleParticles = new List<Particle>();
+
+        foreach (var particle in _particles)
+        {
+            var tileX = (int)particle.Position.X;
+            var tileY = (int)particle.Position.Y;
+
+            if (_fovProvider.IsVisible(tileX, tileY))
+            {
+                visibleParticles.Add(particle);
+            }
+        }
+
+        return visibleParticles;
+    }
+
+    public void Initialize() { }
+
+    public void ProcessEntities(GameTime gameTime, IGameEntityManager entityManager)
+    {
+        Update(gameTime.Elapsed.TotalSeconds);
+    }
+
+    public void Update(double deltaTime)
+    {
+        for (var i = _particles.Count - 1; i >= 0; i--)
+        {
+            var particle = _particles[i];
+            particle.Lifetime -= (float)deltaTime;
+
+            if (particle.Lifetime <= 0)
+            {
+                _particles.RemoveAt(i);
+
+                continue;
+            }
+
+            // Apply behavior modifications to velocity
+            ApplyBehavior(ref particle, deltaTime);
+
+            // Calculate new position
+            var newPosition = particle.Position + particle.Velocity * (float)deltaTime;
+            var newTileX = (int)newPosition.X;
+            var newTileY = (int)newPosition.Y;
+
+            // Check collision
+            if (_collisionProvider.IsBlocked(newTileX, newTileY))
+            {
+                // Handle collision based on flags
+                if (particle.Flags.HasFlag(ParticleFlags.Die))
+                {
+                    _particles.RemoveAt(i);
+
+                    continue;
+                }
+
+                if (particle.Flags.HasFlag(ParticleFlags.Bounce))
+                {
+                    // Reverse velocity with damping
+                    particle.Velocity = -particle.Velocity * 0.5f;
+                }
+
+                // Don't update position if collided
+            }
+            else
+            {
+                // No collision, update position
+                particle.Position = newPosition;
+            }
+
+            _particles[i] = particle;
+        }
     }
 
     private void ApplyBehavior(ref Particle particle, double deltaTime)
@@ -208,29 +213,22 @@ public sealed class ParticleSystem : ISystem
             case ParticleBehavior.Gravity:
                 // Apply gravity acceleration (positive Y is down)
                 particle.Velocity += new Vector2(0, 98f * (float)deltaTime);
+
                 break;
-                
+
             case ParticleBehavior.Ambient:
                 // TODO: Random walk
                 break;
-                
+
             case ParticleBehavior.Explosion:
                 // Slow down over time (radial decay)
-                particle.Velocity *= (1f - (float)deltaTime * 2f);
+                particle.Velocity *= 1f - (float)deltaTime * 2f;
+
                 break;
-                
+
             case ParticleBehavior.Projectile:
                 // No modification - constant velocity
                 break;
         }
-    }
-
-    public void Initialize()
-    {
-    }
-
-    public void ProcessEntities(GameTime gameTime, IGameEntityManager entityManager)
-    {
-        Update(gameTime.Elapsed.TotalSeconds);
     }
 }
