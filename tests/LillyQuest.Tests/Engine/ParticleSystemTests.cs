@@ -173,6 +173,66 @@ public class ParticleSystemTests
         Assert.That(pos.Y, Is.EqualTo(20f).Within(0.001f));
     }
 
+    [Test]
+    public void Update_ParticleWithBounceFlag_ReflectsVelocityOnCollision()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        collisionProvider.SetBlocked(11, 20, isBlocked: true);
+        
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        
+        var particle = new Particle
+        {
+            Position = new Vector2(10, 20),
+            Velocity = new Vector2(10, 0), // Moving right
+            Lifetime = 10f,
+            Flags = ParticleFlags.Bounce
+        };
+        
+        system.Emit(particle);
+
+        // Act
+        system.Update(0.1);
+
+        // Assert - particle should bounce back (velocity reversed with damping)
+        Assert.That(system.ParticleCount, Is.EqualTo(1));
+        var velocity = system.GetParticleVelocity(0);
+        Assert.That(velocity.X, Is.LessThan(0)); // Reversed direction
+        Assert.That(MathF.Abs(velocity.X), Is.LessThan(10f)); // Damped (less than original)
+    }
+
+    [Test]
+    public void Update_GravityBehavior_AcceleratesDownward()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        
+        var particle = new Particle
+        {
+            Position = new Vector2(10, 10),
+            Velocity = new Vector2(0, 0), // Starting stationary
+            Lifetime = 10f,
+            Behavior = ParticleBehavior.Gravity
+        };
+        
+        system.Emit(particle);
+
+        // Act - update twice to see acceleration
+        system.Update(0.1);
+        var velocityAfterFirst = system.GetParticleVelocity(0);
+        
+        system.Update(0.1);
+        var velocityAfterSecond = system.GetParticleVelocity(0);
+
+        // Assert - velocity.Y should increase (falling down, positive Y)
+        Assert.That(velocityAfterFirst.Y, Is.GreaterThan(0));
+        Assert.That(velocityAfterSecond.Y, Is.GreaterThan(velocityAfterFirst.Y));
+    }
+
     private sealed class FakeCollisionProvider : IParticleCollisionProvider
     {
         private readonly Dictionary<(int X, int Y), bool> _blockedTiles = new();

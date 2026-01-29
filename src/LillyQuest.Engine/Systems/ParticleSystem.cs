@@ -49,6 +49,9 @@ public sealed class ParticleSystem : ISystem
                 continue;
             }
             
+            // Apply behavior modifications to velocity
+            ApplyBehavior(ref particle, deltaTime);
+            
             // Calculate new position
             var newPosition = particle.Position + particle.Velocity * (float)deltaTime;
             var newTileX = (int)newPosition.X;
@@ -63,7 +66,13 @@ public sealed class ParticleSystem : ISystem
                     _particles.RemoveAt(i);
                     continue;
                 }
-                // Don't update position if collided and no Die flag
+                
+                if (particle.Flags.HasFlag(ParticleFlags.Bounce))
+                {
+                    // Reverse velocity with damping
+                    particle.Velocity = -particle.Velocity * 0.5f;
+                }
+                // Don't update position if collided
             }
             else
             {
@@ -83,6 +92,34 @@ public sealed class ParticleSystem : ISystem
     public Vector2 GetParticlePosition(int index)
     {
         return _particles[index].Position;
+    }
+
+    public Vector2 GetParticleVelocity(int index)
+    {
+        return _particles[index].Velocity;
+    }
+
+    private void ApplyBehavior(ref Particle particle, double deltaTime)
+    {
+        switch (particle.Behavior)
+        {
+            case ParticleBehavior.Gravity:
+                // Apply gravity acceleration (positive Y is down)
+                particle.Velocity += new Vector2(0, 98f * (float)deltaTime);
+                break;
+                
+            case ParticleBehavior.Ambient:
+                // TODO: Random walk
+                break;
+                
+            case ParticleBehavior.Explosion:
+                // TODO: Radial decay
+                break;
+                
+            case ParticleBehavior.Projectile:
+                // No modification - constant velocity
+                break;
+        }
     }
 
     public void Initialize()
