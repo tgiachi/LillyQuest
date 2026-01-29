@@ -1,17 +1,15 @@
 using DryIoc;
-using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Data.Directories;
 using LillyQuest.Core.Data.Plugins;
 using LillyQuest.Core.Json;
 using LillyQuest.Engine.Interfaces.Plugins;
-using LillyQuest.RogueLike.Data;
 using LillyQuest.RogueLike.Data.Configs;
 using LillyQuest.RogueLike.Interfaces;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Json.Context;
-using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Services;
 using LillyQuest.RogueLike.Services.Loader;
+using LillyQuest.RogueLike.Services.Loaders;
 using Serilog;
 
 namespace LillyQuest.RogueLike;
@@ -26,7 +24,11 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
     [
         typeof(ColorService),
         typeof(TileSetService),
-        typeof(TerrainService)
+        typeof(TerrainService),
+        typeof(NameService),
+        typeof(CreatureService),
+        typeof(ItemService),
+        typeof(LootTableService)
     ];
 
     public PluginInfo PluginInfo

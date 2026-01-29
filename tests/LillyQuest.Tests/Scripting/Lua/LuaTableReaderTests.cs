@@ -6,12 +6,6 @@ namespace LillyQuest.Tests.Scripting.Lua;
 
 public class LuaTableReaderTests
 {
-    private enum DemoEnum
-    {
-        Low = 1,
-        High = 2
-    }
-
     [Test]
     public void GetInt_ReturnsDefaultWhenMissing()
     {

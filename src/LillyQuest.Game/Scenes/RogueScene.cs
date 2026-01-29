@@ -92,10 +92,34 @@ public class RogueScene : BaseScene
         _screen.SetLayerRenderScaleSmoothing(2, true, 0.1f);
         _screen.SetLayerRenderScaleSmoothing(3, true, 0.1f);
 
-        _shortcutService.RegisterShortcut("up", InputContextType.Global, "w", ShortcutTriggerType.Release);
-        _shortcutService.RegisterShortcut("down", InputContextType.Global, "s", ShortcutTriggerType.Release);
-        _shortcutService.RegisterShortcut("left", InputContextType.Global, "a", ShortcutTriggerType.Release);
-        _shortcutService.RegisterShortcut("right", InputContextType.Global, "d", ShortcutTriggerType.Release);
+        _shortcutService.RegisterShortcut(
+            "up",
+            InputContextType.Global,
+            "w",
+            ShortcutTriggerType.Press | ShortcutTriggerType.Repeat,
+            500
+        );
+        _shortcutService.RegisterShortcut(
+            "down",
+            InputContextType.Global,
+            "s",
+            ShortcutTriggerType.Press | ShortcutTriggerType.Repeat,
+            500
+        );
+        _shortcutService.RegisterShortcut(
+            "left",
+            InputContextType.Global,
+            "a",
+            ShortcutTriggerType.Press | ShortcutTriggerType.Repeat,
+            500
+        );
+        _shortcutService.RegisterShortcut(
+            "right",
+            InputContextType.Global,
+            "d",
+            ShortcutTriggerType.Press | ShortcutTriggerType.Repeat,
+            500
+        );
 
         _actionService.RegisterAction(
             "up",

@@ -10,17 +10,6 @@ public class DirectoriesConfigTests
 {
     private string _testRootDirectory;
 
-    /// <summary>
-    /// Test enum for directory types
-    /// </summary>
-    private enum DirectoryTypeEnum
-    {
-        Assets,
-        Config,
-        Data,
-        Logs
-    }
-
     [TearDown]
     public void Cleanup()
     {

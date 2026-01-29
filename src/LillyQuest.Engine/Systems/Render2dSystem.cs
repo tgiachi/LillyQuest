@@ -58,5 +58,6 @@ public class Render2dSystem : BaseSystem<IRenderableEntity>, IDisposable
     {
         _spriteBatch?.Dispose();
         _spriteBatch = null;
+        GC.SuppressFinalize(this);
     }
 }

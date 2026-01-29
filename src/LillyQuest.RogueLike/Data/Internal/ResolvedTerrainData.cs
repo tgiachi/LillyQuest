@@ -11,6 +11,8 @@ public record ResolvedTerrainData(
     int MovementCost,
     string Comment,
     List<string> Tags,
+    string Category,
+    string Subcategory,
     string TileSymbol,
     LyColor TileFgColor,
     LyColor TileBgColor,

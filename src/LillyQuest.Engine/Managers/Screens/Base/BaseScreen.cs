@@ -209,7 +209,9 @@ public abstract class BaseScreen : IScreen
 
         spriteBatch.DrawRectangle(Vector2.Zero, Size, LyColor.Black.WithAlpha(120));
 
-        foreach (var entity in _entities)
+        // Create snapshot to avoid collection modification during iteration
+        var snapshot = _entities.ToList();
+        foreach (var entity in snapshot)
         {
             if (entity is IRenderableEntity renderable && entity.IsActive)
             {
@@ -226,7 +228,9 @@ public abstract class BaseScreen : IScreen
     /// </summary>
     public virtual void Update(GameTime gameTime)
     {
-        foreach (var entity in _entities)
+        // Create snapshot to avoid collection modification during iteration
+        var snapshot = _entities.ToList();
+        foreach (var entity in snapshot)
         {
             if (entity is IUpdateableEntity updateable && entity.IsActive)
             {

@@ -71,5 +71,6 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>, IDisposable
     {
         _imguiController?.Dispose();
         _imguiController = null;
+        GC.SuppressFinalize(this);
     }
 }

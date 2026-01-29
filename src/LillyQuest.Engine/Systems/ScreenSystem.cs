@@ -56,5 +56,6 @@ public class ScreenSystem : ISystem, IDisposable
     {
         _spriteBatch?.Dispose();
         _spriteBatch = null;
+        GC.SuppressFinalize(this);
     }
 }

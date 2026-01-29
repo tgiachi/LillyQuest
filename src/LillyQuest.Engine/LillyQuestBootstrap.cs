@@ -640,5 +640,6 @@ public class LillyQuestBootstrap : IDisposable
     public void Dispose()
     {
         _container.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

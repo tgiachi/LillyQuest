@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using LillyQuest.Core.Utils;
 using LillyQuest.Engine.Interfaces.Services;
 using Serilog;
@@ -6,11 +7,12 @@ namespace LillyQuest.Engine.Services;
 
 /// <summary>
 /// Provides action registration and execution by name.
+/// Thread-safe implementation using concurrent collections.
 /// </summary>
 public sealed class ActionService : IActionService
 {
-    private readonly Dictionary<string, Action> _actions = new(StringComparer.OrdinalIgnoreCase);
-    private readonly Dictionary<string, int> _actionUseCounts = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, Action> _actions = new(StringComparer.OrdinalIgnoreCase);
+    private readonly ConcurrentDictionary<string, int> _actionUseCounts = new(StringComparer.OrdinalIgnoreCase);
 
     private readonly ILogger _logger = Log.ForContext<ActionService>();
 
@@ -102,7 +104,7 @@ public sealed class ActionService : IActionService
 
         if (count == 0)
         {
-            _actionUseCounts.Remove(normalizedName);
+            _actionUseCounts.TryRemove(normalizedName, out _);
 
             return;
         }
@@ -133,7 +135,7 @@ public sealed class ActionService : IActionService
     /// <param name="actionName">Action name.</param>
     /// <returns>True when removed.</returns>
     public bool UnregisterAction(string actionName)
-        => !string.IsNullOrWhiteSpace(actionName) && _actions.Remove(NormalizeActionName(actionName));
+        => !string.IsNullOrWhiteSpace(actionName) && _actions.TryRemove(NormalizeActionName(actionName), out _);
 
     private static string NormalizeActionName(string actionName)
         => StringUtils.ToUpperSnakeCase(actionName);

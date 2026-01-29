@@ -5,7 +5,7 @@ using LillyQuest.RogueLike.Json.Entities.Base;
 using LillyQuest.RogueLike.Json.Entities.Colorschemas;
 using Serilog;
 
-namespace LillyQuest.RogueLike.Services;
+namespace LillyQuest.RogueLike.Services.Loaders;
 
 public class ColorService : IDataLoaderReceiver
 {
@@ -18,11 +18,6 @@ public class ColorService : IDataLoaderReceiver
     public void ClearData()
     {
         _colorSets.Clear();
-    }
-
-    public bool VerifyLoadedData()
-    {
-        return true;
     }
 
     public LyColor? GetColorById(string colorId, string? colorSet = null)
@@ -40,7 +35,6 @@ public class ColorService : IDataLoaderReceiver
 
             effectiveColorSet = _colorSets.Keys.FirstOrDefault();
             DefaultColorSet = effectiveColorSet;
-
         }
 
         if (_colorSets.TryGetValue(colorId, out var colorData))
@@ -74,4 +68,7 @@ public class ColorService : IDataLoaderReceiver
             );
         }
     }
+
+    public bool VerifyLoadedData()
+        => true;
 }

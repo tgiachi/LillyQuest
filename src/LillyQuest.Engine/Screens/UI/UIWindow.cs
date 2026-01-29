@@ -242,7 +242,9 @@ public class UIWindow : UIScreenControl
             }
         }
 
-        foreach (var child in Children)
+        // Create snapshot to avoid collection modification during iteration
+        var snapshot = Children.ToList();
+        foreach (var child in snapshot)
         {
             child.Update(gameTime);
         }
