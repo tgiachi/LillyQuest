@@ -15,7 +15,8 @@ namespace LillyQuest.Engine.Services;
 public sealed class ShortcutService : IShortcutService
 {
     private readonly IActionService _actionService;
-    private readonly Dictionary<ShortcutLookup, List<ShortcutBinding>> _bindingsByKey = new();
+    private readonly Dictionary<KeyLookup, List<ShortcutBinding>> _bindingsByKey = new();
+    private readonly Dictionary<string, long> _lastRepeatTime = new();
     private readonly Stack<InputContextType> _contextStack = new();
     private readonly object _lock = new();
 
@@ -29,7 +30,8 @@ public sealed class ShortcutService : IShortcutService
         _contextStack.Push(InputContextType.Gameplay);
     }
 
-    private readonly record struct ShortcutLookup(Key Key, KeyModifierType Modifier, ShortcutTriggerType Trigger);
+    // Lookup by key and modifier only (not trigger type, since triggers are now flags)
+    private readonly record struct KeyLookup(Key Key, KeyModifierType Modifier);
 
     /// <summary>
     /// Gets the current context.
@@ -62,34 +64,47 @@ public sealed class ShortcutService : IShortcutService
     {
         var currentContext = GetCurrentContext();
 
-        // First, release any actions that were marked as in-use via Press trigger
         foreach (var key in keys)
         {
-            var pressLookup = new ShortcutLookup(key, modifier, ShortcutTriggerType.Press);
+            var lookup = new KeyLookup(key, modifier);
 
-            List<ShortcutBinding>? pressBindingsSnapshot;
+            List<ShortcutBinding>? bindingsSnapshot;
             lock (_lock)
             {
-                if (!_bindingsByKey.TryGetValue(pressLookup, out var pressBindings))
+                if (!_bindingsByKey.TryGetValue(lookup, out var bindings))
                 {
                     continue;
                 }
-                pressBindingsSnapshot = pressBindings.ToList();
+                bindingsSnapshot = bindings.ToList();
             }
 
-            foreach (var binding in pressBindingsSnapshot)
+            foreach (var binding in bindingsSnapshot)
             {
                 if (binding.Context != InputContextType.Global && binding.Context != currentContext)
                 {
                     continue;
                 }
 
-                _actionService.MarkActionReleased(binding.ActionName);
+                // Reset repeat throttle on release
+                var throttleKey = GetThrottleKey(binding);
+                lock (_lock)
+                {
+                    _lastRepeatTime.Remove(throttleKey);
+                }
+
+                // Mark action released if it was triggered on Press
+                if (binding.Trigger.HasFlag(ShortcutTriggerType.Press))
+                {
+                    _actionService.MarkActionReleased(binding.ActionName);
+                }
+
+                // Execute if Release trigger is set
+                if (binding.Trigger.HasFlag(ShortcutTriggerType.Release))
+                {
+                    _actionService.Execute(binding.ActionName);
+                }
             }
         }
-
-        // Then, handle any explicit Release trigger bindings
-        HandleKeys(modifier, keys, ShortcutTriggerType.Release);
     }
 
     /// <summary>
@@ -140,14 +155,16 @@ public sealed class ShortcutService : IShortcutService
     /// <param name="action">Action callback.</param>
     /// <param name="context">Context scope.</param>
     /// <param name="shortcut">Shortcut string.</param>
-    /// <param name="trigger">Trigger type.</param>
+    /// <param name="trigger">Trigger type (can be combined flags).</param>
+    /// <param name="repeatDelayMs">Minimum delay between repeat triggers in milliseconds (0 = no throttling).</param>
     /// <returns>True when registered.</returns>
     public bool RegisterShortcut(
         string actionName,
         Action action,
         InputContextType context,
         string shortcut,
-        ShortcutTriggerType trigger
+        ShortcutTriggerType trigger,
+        int repeatDelayMs = 0
     )
     {
         if (string.IsNullOrWhiteSpace(actionName) || action is null)
@@ -157,7 +174,7 @@ public sealed class ShortcutService : IShortcutService
 
         _actionService.RegisterAction(actionName, action);
 
-        return RegisterShortcut(actionName, context, shortcut, trigger);
+        return RegisterShortcut(actionName, context, shortcut, trigger, repeatDelayMs);
     }
 
     /// <summary>
@@ -166,9 +183,10 @@ public sealed class ShortcutService : IShortcutService
     /// <param name="actionName">Action name.</param>
     /// <param name="context">Context scope.</param>
     /// <param name="shortcut">Shortcut string.</param>
-    /// <param name="trigger">Trigger type.</param>
+    /// <param name="trigger">Trigger type (can be combined flags).</param>
+    /// <param name="repeatDelayMs">Minimum delay between repeat triggers in milliseconds (0 = no throttling).</param>
     /// <returns>True when registered.</returns>
-    public bool RegisterShortcut(string actionName, InputContextType context, string shortcut, ShortcutTriggerType trigger)
+    public bool RegisterShortcut(string actionName, InputContextType context, string shortcut, ShortcutTriggerType trigger, int repeatDelayMs = 0)
     {
         if (string.IsNullOrWhiteSpace(actionName))
         {
@@ -181,8 +199,8 @@ public sealed class ShortcutService : IShortcutService
         }
 
         var normalizedName = NormalizeActionName(actionName);
-        var binding = new ShortcutBinding(normalizedName, context, modifier, key, trigger);
-        var lookup = new ShortcutLookup(key, modifier, trigger);
+        var binding = new ShortcutBinding(normalizedName, context, modifier, key, trigger, repeatDelayMs);
+        var lookup = new KeyLookup(key, modifier);
 
         lock (_lock)
         {
@@ -241,7 +259,7 @@ public sealed class ShortcutService : IShortcutService
         }
 
         var normalizedName = NormalizeActionName(actionName);
-        var lookup = new ShortcutLookup(key, modifier, trigger);
+        var lookup = new KeyLookup(key, modifier);
 
         lock (_lock)
         {
@@ -281,10 +299,11 @@ public sealed class ShortcutService : IShortcutService
     private void HandleKeys(KeyModifierType modifier, IReadOnlyList<Key> keys, ShortcutTriggerType trigger)
     {
         var currentContext = GetCurrentContext();
+        var now = Environment.TickCount64;
 
         foreach (var key in keys)
         {
-            var lookup = new ShortcutLookup(key, modifier, trigger);
+            var lookup = new KeyLookup(key, modifier);
 
             List<ShortcutBinding>? bindingsSnapshot;
             lock (_lock)
@@ -303,19 +322,41 @@ public sealed class ShortcutService : IShortcutService
                     continue;
                 }
 
+                // Check if binding handles this trigger type
+                if (!binding.Trigger.HasFlag(trigger))
+                {
+                    continue;
+                }
+
+                // Apply repeat throttling
+                if (trigger == ShortcutTriggerType.Repeat && binding.RepeatDelayMs > 0)
+                {
+                    var throttleKey = GetThrottleKey(binding);
+                    lock (_lock)
+                    {
+                        if (_lastRepeatTime.TryGetValue(throttleKey, out var lastTime))
+                        {
+                            if (now - lastTime < binding.RepeatDelayMs)
+                            {
+                                continue; // Throttled
+                            }
+                        }
+                        _lastRepeatTime[throttleKey] = now;
+                    }
+                }
+
                 if (trigger == ShortcutTriggerType.Press)
                 {
                     _actionService.MarkActionInUse(binding.ActionName);
-                }
-                else if (trigger == ShortcutTriggerType.Release)
-                {
-                    _actionService.MarkActionReleased(binding.ActionName);
                 }
 
                 _actionService.Execute(binding.ActionName);
             }
         }
     }
+
+    private static string GetThrottleKey(ShortcutBinding binding)
+        => $"{binding.Key}:{binding.Modifier}:{binding.ActionName}";
 
     private static string NormalizeActionName(string actionName)
         => StringUtils.ToUpperSnakeCase(actionName);

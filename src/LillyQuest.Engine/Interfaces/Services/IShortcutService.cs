@@ -56,9 +56,10 @@ public interface IShortcutService
     /// <param name="action">Action callback.</param>
     /// <param name="context">Context scope.</param>
     /// <param name="shortcut">Shortcut string.</param>
-    /// <param name="trigger">Trigger type.</param>
+    /// <param name="trigger">Trigger type (can be combined with flags).</param>
+    /// <param name="repeatDelayMs">Minimum delay between repeat triggers in milliseconds (0 = no throttling).</param>
     /// <returns>True when registered.</returns>
-    bool RegisterShortcut(string actionName, Action action, InputContextType context, string shortcut, ShortcutTriggerType trigger);
+    bool RegisterShortcut(string actionName, Action action, InputContextType context, string shortcut, ShortcutTriggerType trigger, int repeatDelayMs = 0);
 
     /// <summary>
     /// Registers a shortcut for an action.
@@ -66,9 +67,10 @@ public interface IShortcutService
     /// <param name="actionName">Action name.</param>
     /// <param name="context">Context scope.</param>
     /// <param name="shortcut">Shortcut string.</param>
-    /// <param name="trigger">Trigger type.</param>
+    /// <param name="trigger">Trigger type (can be combined with flags).</param>
+    /// <param name="repeatDelayMs">Minimum delay between repeat triggers in milliseconds (0 = no throttling).</param>
     /// <returns>True when registered.</returns>
-    bool RegisterShortcut(string actionName, InputContextType context, string shortcut, ShortcutTriggerType trigger);
+    bool RegisterShortcut(string actionName, InputContextType context, string shortcut, ShortcutTriggerType trigger, int repeatDelayMs = 0);
 
     /// <summary>
     /// Replaces the current context stack with a single context.

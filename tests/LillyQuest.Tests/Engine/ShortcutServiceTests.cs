@@ -77,4 +77,129 @@ public class ShortcutServiceTests
 
         Assert.That(executed, Is.True);
     }
+
+    [Test]
+    public void RegisterShortcut_WithFlagsTrigger_TriggersOnBothPressAndRelease()
+    {
+        var actionService = new StubActionService();
+        var shortcutService = new ShortcutService(actionService);
+        var pressCount = 0;
+        var releaseCount = 0;
+
+        shortcutService.RegisterShortcut(
+            "move",
+            () => { if (pressCount == 0) pressCount++; else releaseCount++; },
+            InputContextType.Gameplay,
+            "w",
+            ShortcutTriggerType.Press | ShortcutTriggerType.Release
+        );
+
+        shortcutService.HandleKeyPress(KeyModifierType.None, new[] { Key.W });
+        Assert.That(pressCount, Is.EqualTo(1));
+
+        shortcutService.HandleKeyRelease(KeyModifierType.None, new[] { Key.W });
+        Assert.That(releaseCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void RegisterShortcut_WithRepeatDelay_ThrottlesRepeatEvents()
+    {
+        var actionService = new StubActionService();
+        var shortcutService = new ShortcutService(actionService);
+        var executeCount = 0;
+
+        shortcutService.RegisterShortcut(
+            "move",
+            () => executeCount++,
+            InputContextType.Gameplay,
+            "w",
+            ShortcutTriggerType.Repeat,
+            repeatDelayMs: 100
+        );
+
+        // First repeat should execute
+        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
+        Assert.That(executeCount, Is.EqualTo(1));
+
+        // Immediate repeat should be throttled
+        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
+        Assert.That(executeCount, Is.EqualTo(1)); // Still 1, throttled
+
+        // After delay, should execute again
+        Thread.Sleep(110);
+        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
+        Assert.That(executeCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void RegisterShortcut_WithZeroRepeatDelay_DoesNotThrottle()
+    {
+        var actionService = new StubActionService();
+        var shortcutService = new ShortcutService(actionService);
+        var executeCount = 0;
+
+        shortcutService.RegisterShortcut(
+            "move",
+            () => executeCount++,
+            InputContextType.Gameplay,
+            "w",
+            ShortcutTriggerType.Repeat,
+            repeatDelayMs: 0
+        );
+
+        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
+        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
+        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
+
+        Assert.That(executeCount, Is.EqualTo(3));
+    }
+
+    [Test]
+    public void RegisterShortcut_WithPressAndRepeat_BothTrigger()
+    {
+        var actionService = new StubActionService();
+        var shortcutService = new ShortcutService(actionService);
+        var executeCount = 0;
+
+        shortcutService.RegisterShortcut(
+            "move",
+            () => executeCount++,
+            InputContextType.Gameplay,
+            "w",
+            ShortcutTriggerType.Press | ShortcutTriggerType.Repeat
+        );
+
+        shortcutService.HandleKeyPress(KeyModifierType.None, new[] { Key.W });
+        Assert.That(executeCount, Is.EqualTo(1));
+
+        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
+        Assert.That(executeCount, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void HandleKeyRelease_ResetsRepeatThrottle()
+    {
+        var actionService = new StubActionService();
+        var shortcutService = new ShortcutService(actionService);
+        var executeCount = 0;
+
+        shortcutService.RegisterShortcut(
+            "move",
+            () => executeCount++,
+            InputContextType.Gameplay,
+            "w",
+            ShortcutTriggerType.Repeat,
+            repeatDelayMs: 1000  // Long delay
+        );
+
+        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
+        Assert.That(executeCount, Is.EqualTo(1));
+
+        // Release the key - should reset throttle
+        shortcutService.HandleKeyRelease(KeyModifierType.None, new[] { Key.W });
+
+        // New press+repeat should execute immediately
+        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
+        Assert.That(executeCount, Is.EqualTo(2));
+    }
 }

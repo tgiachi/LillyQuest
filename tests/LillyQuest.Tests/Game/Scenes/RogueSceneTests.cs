@@ -205,10 +205,10 @@ public class RogueSceneTests
 
         public void PushContext(InputContextType context) { }
 
-        public bool RegisterShortcut(string actionName, Action action, InputContextType context, string shortcut, ShortcutTriggerType trigger)
+        public bool RegisterShortcut(string actionName, Action action, InputContextType context, string shortcut, ShortcutTriggerType trigger, int repeatDelayMs = 0)
             => true;
 
-        public bool RegisterShortcut(string actionName, InputContextType context, string shortcut, ShortcutTriggerType trigger)
+        public bool RegisterShortcut(string actionName, InputContextType context, string shortcut, ShortcutTriggerType trigger, int repeatDelayMs = 0)
             => true;
 
         public void SetContext(InputContextType context) { }
