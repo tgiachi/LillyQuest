@@ -160,12 +160,12 @@ public class RogueScene : BaseScene
                     _particleSystem.EmitProjectile(
                         from: new Vector2(_player.Position.X, _player.Position.Y),
                         direction: new Vector2(1, 0),
-                        speed: 6f,
+                        speed: 32f,
                         tileId: 0,
                         lifetime: 1.5f,
                         foregroundColor: LyColor.Orange,
                         backgroundColor: LyColor.Firebrick,
-                        scale: 6f
+                        scale: 18f
                     );
                 }
             }
@@ -183,11 +183,11 @@ public class RogueScene : BaseScene
                         center: new Vector2(_player.Position.X + 2, _player.Position.Y),
                         tileId: 1,
                         particleCount: 70,
-                        speed: 6f,
+                        speed: 26f,
                         lifetime: 4.2f,
                         foregroundColor: LyColor.Yellow,
                         backgroundColor: LyColor.OrangeRed,
-                        scale: 6f
+                        scale: 18f
                     );
                 }
             }
