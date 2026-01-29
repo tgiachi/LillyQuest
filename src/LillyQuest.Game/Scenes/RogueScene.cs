@@ -43,6 +43,8 @@ public class RogueScene : BaseScene
 
     private readonly ParticleSystem _particleSystem;
 
+    private readonly ISystemManager _systemManager;
+
     public RogueScene(
         IScreenManager screenManager,
         IMapGenerator mapGenerator,
@@ -51,7 +53,8 @@ public class RogueScene : BaseScene
         IActionService actionService,
         ParticleSystem particleSystem,
         IParticleCollisionProvider particleCollisionProvider,
-        IParticleFOVProvider particleFOVProvider
+        IParticleFOVProvider particleFOVProvider,
+        ISystemManager systemManager
     ) : base("RogueScene")
     {
         _screenManager = screenManager;
@@ -62,6 +65,12 @@ public class RogueScene : BaseScene
         _particleSystem = particleSystem;
         _particleCollisionProvider = particleCollisionProvider;
         _particleFOVProvider = particleFOVProvider;
+        _systemManager = systemManager;
+
+        if (_systemManager != null && _particleSystem != null)
+        {
+            _systemManager.RegisterSystem(_particleSystem);
+        }
     }
 
     public override void OnLoad()
@@ -89,6 +98,9 @@ public class RogueScene : BaseScene
         );
 
         _screen.InitializeLayers(_screen.LayerCount);
+
+        // Initialize particle system with surface for rendering
+        _particleSystem?.SetSurface(_screen);
 
         _screen.SetLayerViewLock(0, 1);
         _screen.SetLayerViewLock(0, 2);
@@ -132,6 +144,40 @@ public class RogueScene : BaseScene
             "d",
             ShortcutTriggerType.Press | ShortcutTriggerType.Repeat,
             500
+        );
+
+        _shortcutService.RegisterShortcut("fireball", InputContextType.Global, "f", ShortcutTriggerType.Press);
+        _actionService.RegisterAction(
+            "fireball",
+            () =>
+            {
+                if (_player != null)
+                {
+                    _particleSystem.EmitProjectile(
+                        from: new Vector2(_player.Position.X, _player.Position.Y),
+                        direction: new Vector2(1, 0),
+                        speed: 100f,
+                        tileId: 'F' // Fire tile
+                    );
+                }
+            }
+        );
+
+        // Test Explosion - Premi E
+        _shortcutService.RegisterShortcut("explosion", InputContextType.Global, "e", ShortcutTriggerType.Press);
+        _actionService.RegisterAction(
+            "explosion",
+            () =>
+            {
+                if (_player != null)
+                {
+                    _particleSystem.EmitExplosion(
+                        center: new Vector2(_player.Position.X + 2, _player.Position.Y),
+                        tileId: 'E',
+                        particleCount: 20
+                    );
+                }
+            }
         );
 
         _actionService.RegisterAction(
@@ -212,7 +258,7 @@ public class RogueScene : BaseScene
 
         // Initialize particle system providers with map and fov system
         (_particleCollisionProvider as GoRogueCollisionProvider)?.SetMap(_map);
-        
+
         var fovProvider = _particleFOVProvider as GoRogueFOVProvider;
         if (fovProvider != null && _fovSystem != null)
         {
