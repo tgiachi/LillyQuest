@@ -68,4 +68,41 @@ public class ParticleTests
         // Assert
         Assert.That(particle.Behavior, Is.EqualTo(ParticleBehavior.Projectile));
     }
+
+    [Test]
+    public void ParticleFlags_HasExpectedValues()
+    {
+        // Assert - verify enum values exist
+        Assert.That(ParticleFlags.None, Is.EqualTo(ParticleFlags.None));
+        Assert.That(ParticleFlags.Bounce, Is.EqualTo(ParticleFlags.Bounce));
+        Assert.That(ParticleFlags.Die, Is.EqualTo(ParticleFlags.Die));
+        Assert.That(ParticleFlags.FadeOut, Is.EqualTo(ParticleFlags.FadeOut));
+        Assert.That(ParticleFlags.Gravity, Is.EqualTo(ParticleFlags.Gravity));
+    }
+
+    [Test]
+    public void ParticleFlags_CanBeCombined()
+    {
+        // Arrange & Act
+        var combined = ParticleFlags.Bounce | ParticleFlags.FadeOut;
+
+        // Assert
+        Assert.That(combined.HasFlag(ParticleFlags.Bounce), Is.True);
+        Assert.That(combined.HasFlag(ParticleFlags.FadeOut), Is.True);
+        Assert.That(combined.HasFlag(ParticleFlags.Die), Is.False);
+    }
+
+    [Test]
+    public void Particle_CanSetFlags()
+    {
+        // Arrange & Act
+        var particle = new Particle
+        {
+            Flags = ParticleFlags.Die | ParticleFlags.FadeOut
+        };
+
+        // Assert
+        Assert.That(particle.Flags.HasFlag(ParticleFlags.Die), Is.True);
+        Assert.That(particle.Flags.HasFlag(ParticleFlags.FadeOut), Is.True);
+    }
 }

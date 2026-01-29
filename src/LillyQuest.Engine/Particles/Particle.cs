@@ -31,6 +31,11 @@ public struct Particle
     public ParticleBehavior Behavior;
 
     /// <summary>
+    /// Flags that modify particle behavior.
+    /// </summary>
+    public ParticleFlags Flags;
+
+    /// <summary>
     /// Tile ID to render.
     /// </summary>
     public int TileId;
