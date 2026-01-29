@@ -2,6 +2,7 @@ using DryIoc;
 using LillyQuest.Core.Data.Directories;
 using LillyQuest.Core.Data.Plugins;
 using LillyQuest.Core.Json;
+using LillyQuest.Engine.Interfaces.Particles;
 using LillyQuest.Engine.Interfaces.Plugins;
 using LillyQuest.RogueLike.Data.Configs;
 using LillyQuest.RogueLike.Interfaces;
@@ -55,6 +56,10 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         // Register services with circular dependency using Lazy<T>
         container.Register<ItemService>(Reuse.Singleton);
         container.Register<LootTableService>(Reuse.Singleton);
+
+        // Register particle system providers
+        container.Register<IParticleCollisionProvider, GoRogueCollisionProvider>(Reuse.Singleton);
+        container.Register<IParticleFOVProvider, GoRogueFOVProvider>(Reuse.Singleton);
 
         foreach (var receiverType in _dataReceiverTypes)
         {
