@@ -165,6 +165,42 @@ public sealed class ParticleSystem : ISystem
         }
     }
 
+    /// <summary>
+    /// Emits ambient particles (fire, smoke, etc.) with random variance.
+    /// </summary>
+    public void EmitAmbient(Vector2 position, int tileId, int count = 5, float lifetime = 2f)
+    {
+        var random = new Random();
+        
+        for (int i = 0; i < count; i++)
+        {
+            var particle = new Particle
+            {
+                Position = position + new Vector2(
+                    (float)(random.NextDouble() - 0.5) * 8f,
+                    (float)(random.NextDouble() - 0.5) * 8f
+                ),
+                Velocity = new Vector2(0, -20) + new Vector2(
+                    (float)(random.NextDouble() - 0.5) * 10f,
+                    (float)(random.NextDouble() - 0.5) * 10f
+                ),
+                Lifetime = lifetime,
+                Behavior = ParticleBehavior.Ambient,
+                TileId = tileId,
+                Flags = ParticleFlags.FadeOut,
+                Scale = 1f,
+                Color = default
+            };
+            
+            Emit(particle);
+        }
+    }
+
+    public Particle GetParticle(int index)
+    {
+        return _particles[index];
+    }
+
     private void ApplyBehavior(ref Particle particle, double deltaTime)
     {
         switch (particle.Behavior)
@@ -179,7 +215,8 @@ public sealed class ParticleSystem : ISystem
                 break;
                 
             case ParticleBehavior.Explosion:
-                // TODO: Radial decay
+                // Slow down over time (radial decay)
+                particle.Velocity *= (1f - (float)deltaTime * 2f);
                 break;
                 
             case ParticleBehavior.Projectile:

@@ -315,6 +315,60 @@ public class ParticleSystemTests
         Assert.That(velocities.Distinct().Count(), Is.EqualTo(particleCount));
     }
 
+    [Test]
+    public void EmitAmbient_CreatesMultipleParticlesWithVariance()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        
+        var position = new Vector2(30, 40);
+        var tileId = 77;
+        var count = 5;
+
+        // Act
+        system.EmitAmbient(position, tileId, count);
+
+        // Assert
+        Assert.That(system.ParticleCount, Is.EqualTo(count));
+        
+        // Check that all particles have Ambient behavior
+        for (int i = 0; i < count; i++)
+        {
+            var particle = system.GetParticle(i);
+            Assert.That(particle.Behavior, Is.EqualTo(ParticleBehavior.Ambient));
+            Assert.That(particle.TileId, Is.EqualTo(tileId));
+        }
+    }
+
+    [Test]
+    public void Update_ExplosionBehavior_SlowsDownOverTime()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        
+        var particle = new Particle
+        {
+            Position = new Vector2(10, 10),
+            Velocity = new Vector2(100, 0),
+            Lifetime = 10f,
+            Behavior = ParticleBehavior.Explosion
+        };
+        
+        system.Emit(particle);
+        var initialVelocity = system.GetParticleVelocity(0);
+
+        // Act
+        system.Update(0.5);
+
+        // Assert - velocity should have decreased
+        var newVelocity = system.GetParticleVelocity(0);
+        Assert.That(MathF.Abs(newVelocity.X), Is.LessThan(MathF.Abs(initialVelocity.X)));
+    }
+
     private sealed class FakeCollisionProvider : IParticleCollisionProvider
     {
         private readonly Dictionary<(int X, int Y), bool> _blockedTiles = new();
