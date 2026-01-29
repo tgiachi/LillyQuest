@@ -1,5 +1,7 @@
 using System.Numerics;
 using LillyQuest.Core.Primitives;
+using LillyQuest.Engine.Interfaces.Entities;
+using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Particles;
 using LillyQuest.Engine.Particles;
 using LillyQuest.Engine.Systems;
@@ -114,6 +116,45 @@ public class ParticleSystemTests
         var newPos = system.GetParticlePosition(0);
         Assert.That(newPos.X, Is.EqualTo(12.5f).Within(0.001f));  // 10 + 5*0.5
         Assert.That(newPos.Y, Is.EqualTo(15.0f).Within(0.001f));  // 20 + (-10)*0.5
+    }
+
+    [Test]
+    public void ProcessEntities_DoesNotChangeParticleCount()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        system.Emit(new Particle { Lifetime = 2.0f });
+
+        // Act
+        system.ProcessEntities(
+            new GameTime(TimeSpan.Zero, TimeSpan.FromSeconds(0.5)),
+            new FakeGameEntityManager()
+        );
+
+        // Assert
+        Assert.That(system.ParticleCount, Is.EqualTo(1));
+    }
+
+    private sealed class FakeGameEntityManager : IGameEntityManager
+    {
+        public IReadOnlyList<IGameEntity> OrderedEntities { get; } = Array.Empty<IGameEntity>();
+
+        public void AddEntity(IGameEntity entity) { }
+
+        public void AddEntity(IGameEntity entity, IGameEntity parent) { }
+
+        public TEntity CreateEntity<TEntity>() where TEntity : IGameEntity
+            => throw new NotImplementedException();
+
+        public IGameEntity? GetEntityById(uint id)
+            => null;
+
+        public IReadOnlyList<TInterface> GetQueryOf<TInterface>() where TInterface : class
+            => Array.Empty<TInterface>();
+
+        public void RemoveEntity(IGameEntity entity) { }
     }
 
     [Test]

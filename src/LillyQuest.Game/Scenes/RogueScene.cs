@@ -29,6 +29,7 @@ public class RogueScene : BaseScene
     private readonly IActionService _actionService;
     private readonly IParticleCollisionProvider _particleCollisionProvider;
     private readonly IParticleFOVProvider _particleFOVProvider;
+    private readonly IParticlePixelRenderer _particlePixelRenderer;
 
     private FovSystem? _fovSystem;
 
@@ -54,6 +55,7 @@ public class RogueScene : BaseScene
         ParticleSystem particleSystem,
         IParticleCollisionProvider particleCollisionProvider,
         IParticleFOVProvider particleFOVProvider,
+        IParticlePixelRenderer particlePixelRenderer,
         ISystemManager systemManager
     ) : base("RogueScene")
     {
@@ -65,6 +67,7 @@ public class RogueScene : BaseScene
         _particleSystem = particleSystem;
         _particleCollisionProvider = particleCollisionProvider;
         _particleFOVProvider = particleFOVProvider;
+        _particlePixelRenderer = particlePixelRenderer;
         _systemManager = systemManager;
 
         if (_systemManager != null && _particleSystem != null)
@@ -99,8 +102,8 @@ public class RogueScene : BaseScene
 
         _screen.InitializeLayers(_screen.LayerCount);
 
-        // Initialize particle system with surface for rendering
-        _particleSystem?.SetSurface(_screen);
+        _screen.ParticlePixelRenderer = _particlePixelRenderer;
+        _screen.ParticleLayerIndex = (int)MapLayer.Effects;
 
         _screen.SetLayerViewLock(0, 1);
         _screen.SetLayerViewLock(0, 2);

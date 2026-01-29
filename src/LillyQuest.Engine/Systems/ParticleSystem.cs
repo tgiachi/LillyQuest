@@ -1,11 +1,9 @@
 using System.Numerics;
-using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Particles;
 using LillyQuest.Engine.Interfaces.Systems;
 using LillyQuest.Engine.Particles;
-using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.Engine.Types;
 
 namespace LillyQuest.Engine.Systems;
@@ -18,11 +16,10 @@ public sealed class ParticleSystem : ISystem
     private readonly List<Particle> _particles = new(1024);
     private readonly IParticleCollisionProvider _collisionProvider;
     private readonly IParticleFOVProvider _fovProvider;
-    private TilesetSurfaceScreen? _surface;
 
     public uint Order => 145;
     public string Name => "ParticleSystem";
-    public SystemQueryType QueryType => SystemQueryType.Updateable | SystemQueryType.Renderable;
+    public SystemQueryType QueryType => SystemQueryType.Updateable;
     
     public int ParticleCount => _particles.Count;
 
@@ -32,11 +29,6 @@ public sealed class ParticleSystem : ISystem
     {
         _collisionProvider = collisionProvider;
         _fovProvider = fovProvider;
-    }
-
-    public void SetSurface(TilesetSurfaceScreen surface)
-    {
-        _surface = surface;
     }
 
     public void Emit(Particle particle)
@@ -161,46 +153,6 @@ public sealed class ParticleSystem : ISystem
     {
         // Update particles
         Update(gameTime.Elapsed.TotalSeconds);
-        
-        // Render visible particles
-        if (_surface != null)
-        {
-            RenderParticles();
-        }
-    }
-
-    private void RenderParticles()
-    {
-        const int particleLayer = 3; // MapLayer.Effects
-        
-        foreach (var particle in GetVisibleParticles())
-        {
-            var tileX = (int)particle.Position.X;
-            var tileY = (int)particle.Position.Y;
-            
-            // Calculate alpha for fade out
-            byte alpha = 255;
-            if (particle.Flags.HasFlag(ParticleFlags.FadeOut))
-            {
-                var normalizedLife = particle.Lifetime / 2f; // Assume max lifetime ~2 sec
-                alpha = (byte)Math.Clamp(255 * normalizedLife, 0, 255);
-            }
-            
-            var color = new LyColor(
-                alpha,
-                particle.Color.R > 0 ? particle.Color.R : (byte)255,
-                particle.Color.G > 0 ? particle.Color.G : (byte)255,
-                particle.Color.B > 0 ? particle.Color.B : (byte)255
-            );
-            
-            var tileData = new TileRenderData(
-                tileIndex: particle.TileId,
-                foregroundColor: color,
-                backgroundColor: new LyColor(0, 0, 0, 0) // Transparent
-            );
-            
-            _surface!.AddTileToSurface(particleLayer, tileX, tileY, tileData);
-        }
     }
 
     public void Update(double deltaTime)
