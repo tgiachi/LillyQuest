@@ -30,7 +30,7 @@ public class RogueSceneTests
         var tilesetManager = new FakeTilesetManager();
         var shortcutService = new FakeShortcutService();
         var actionService = new FakeActionService();
-        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService);
+        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!);
 
         scene.OnLoad();
 
@@ -48,7 +48,7 @@ public class RogueSceneTests
         var tilesetManager = new FakeTilesetManager();
         var shortcutService = new FakeShortcutService();
         var actionService = new FakeActionService();
-        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService);
+        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!);
 
         scene.OnLoad();
 

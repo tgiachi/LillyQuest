@@ -1,15 +1,19 @@
 using System.Numerics;
 using LillyQuest.Core.Interfaces.Assets;
+using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
 using LillyQuest.Engine.Interfaces.Managers;
+using LillyQuest.Engine.Interfaces.Particles;
 using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Managers.Scenes.Base;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.Engine.Screens.UI;
+using LillyQuest.Engine.Systems;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
+using LillyQuest.RogueLike.Services;
 using LillyQuest.RogueLike.Systems;
 using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
@@ -24,6 +28,9 @@ public class RogueScene : BaseScene
 
     private readonly IShortcutService _shortcutService;
     private readonly IActionService _actionService;
+    private readonly IParticleCollisionProvider _particleCollisionProvider;
+    private readonly IParticleFOVProvider _particleFOVProvider;
+    private readonly IParticlePixelRenderer _particlePixelRenderer;
 
     private FovSystem? _fovSystem;
 
@@ -36,12 +43,21 @@ public class RogueScene : BaseScene
     private ViewportUpdateSystem? _viewportUpdateSystem;
     private readonly List<IMapAwareSystem> _mapAwareSystems = new();
 
+    private readonly ParticleSystem _particleSystem;
+
+    private readonly ISystemManager _systemManager;
+
     public RogueScene(
         IScreenManager screenManager,
         IMapGenerator mapGenerator,
         ITilesetManager tilesetManager,
         IShortcutService shortcutService,
-        IActionService actionService
+        IActionService actionService,
+        ParticleSystem particleSystem,
+        IParticleCollisionProvider particleCollisionProvider,
+        IParticleFOVProvider particleFOVProvider,
+        IParticlePixelRenderer particlePixelRenderer,
+        ISystemManager systemManager
     ) : base("RogueScene")
     {
         _screenManager = screenManager;
@@ -49,6 +65,16 @@ public class RogueScene : BaseScene
         _tilesetManager = tilesetManager;
         _shortcutService = shortcutService;
         _actionService = actionService;
+        _particleSystem = particleSystem;
+        _particleCollisionProvider = particleCollisionProvider;
+        _particleFOVProvider = particleFOVProvider;
+        _particlePixelRenderer = particlePixelRenderer;
+        _systemManager = systemManager;
+
+        if (_systemManager != null && _particleSystem != null)
+        {
+            _systemManager.RegisterSystem(_particleSystem);
+        }
     }
 
     public override void OnLoad()
@@ -76,6 +102,9 @@ public class RogueScene : BaseScene
         );
 
         _screen.InitializeLayers(_screen.LayerCount);
+
+        _screen.ParticlePixelRenderer = _particlePixelRenderer;
+        _screen.ParticleLayerIndex = (int)MapLayer.Effects;
 
         _screen.SetLayerViewLock(0, 1);
         _screen.SetLayerViewLock(0, 2);
@@ -119,6 +148,49 @@ public class RogueScene : BaseScene
             "d",
             ShortcutTriggerType.Press | ShortcutTriggerType.Repeat,
             500
+        );
+
+        _shortcutService.RegisterShortcut("fireball", InputContextType.Global, "f", ShortcutTriggerType.Press);
+        _actionService.RegisterAction(
+            "fireball",
+            () =>
+            {
+                if (_player != null)
+                {
+                    _particleSystem.EmitProjectile(
+                        from: new Vector2(_player.Position.X, _player.Position.Y),
+                        direction: new Vector2(1, 0),
+                        speed: 32f,
+                        tileId: 0,
+                        lifetime: 1.5f,
+                        foregroundColor: LyColor.Orange,
+                        backgroundColor: LyColor.Firebrick,
+                        scale: 18f
+                    );
+                }
+            }
+        );
+
+        // Test Explosion - Premi E
+        _shortcutService.RegisterShortcut("explosion", InputContextType.Global, "e", ShortcutTriggerType.Press);
+        _actionService.RegisterAction(
+            "explosion",
+            () =>
+            {
+                if (_player != null)
+                {
+                    _particleSystem.EmitExplosion(
+                        center: new Vector2(_player.Position.X + 2, _player.Position.Y),
+                        tileId: 1,
+                        particleCount: 70,
+                        speed: 26f,
+                        lifetime: 4.2f,
+                        foregroundColor: LyColor.Yellow,
+                        backgroundColor: LyColor.OrangeRed,
+                        scale: 18f
+                    );
+                }
+            }
         );
 
         _actionService.RegisterAction(
@@ -177,6 +249,16 @@ public class RogueScene : BaseScene
         _screen.TileMouseDown += (index, x, y, buttons) =>
                                  {
                                      _screen.CenterViewOnTile(0, x, y);
+                                     _particleSystem.EmitProjectile(
+                                         from: new Vector2(x,y),
+                                         direction: new Vector2(1, 0),
+                                         speed: 200f,            // pixels/secondo
+                                         tileId: 0, // ID del tile da renderizzare
+                                         lifetime: 5f,            // secondi
+                                         foregroundColor: LyColor.Orange,
+                                         backgroundColor: LyColor.Firebrick,
+                                         scale: 6f
+                                     );
 
                                      // _screen.CenterViewOnTile(1, x, y);
                                      //
@@ -189,6 +271,16 @@ public class RogueScene : BaseScene
         _fovSystem.RegisterMap(_map);
         AddEntity(_fovSystem);
         _mapAwareSystems.Add(_fovSystem);
+
+        // Initialize particle system providers with map and fov system
+        (_particleCollisionProvider as GoRogueCollisionProvider)?.SetMap(_map);
+
+        var fovProvider = _particleFOVProvider as GoRogueFOVProvider;
+        if (fovProvider != null && _fovSystem != null)
+        {
+            fovProvider.SetFovSystem(_fovSystem);
+            fovProvider.SetMap(_map);
+        }
 
         _player = _map.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
 

@@ -6,10 +6,17 @@ namespace LillyQuest.Tests.RogueLike.Services;
 
 public class LootTableServiceTests
 {
+    private static LootTableService CreateService()
+    {
+        var lootTableService = new LootTableService(null);
+        var itemService = new ItemService(lootTableService);
+        return new LootTableService(new Lazy<ItemService>(() => itemService));
+    }
+
     [Test]
     public async Task TryGetLootTable_ReturnsLootTableById()
     {
-        var service = new LootTableService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new LootTableDefinitionJson
@@ -32,7 +39,7 @@ public class LootTableServiceTests
     [Test]
     public async Task TryGetLootTable_ReturnsFalseWhenMissing()
     {
-        var service = new LootTableService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>());
 
         var success = service.TryGetLootTable("missing", out var lootTable);
@@ -44,7 +51,7 @@ public class LootTableServiceTests
     [Test]
     public async Task ClearData_RemovesAllLootTables()
     {
-        var service = new LootTableService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new LootTableDefinitionJson { Id = "table1", Rolls = "1" }
@@ -59,7 +66,7 @@ public class LootTableServiceTests
     [Test]
     public void GetLoadTypes_ReturnsLootTableDefinitionJson()
     {
-        var service = new LootTableService();
+        var service = CreateService();
 
         var types = service.GetLoadTypes();
 
@@ -70,7 +77,8 @@ public class LootTableServiceTests
     [Test]
     public async Task VerifyLoadedData_ReturnsTrueForValidData()
     {
-        var service = new LootTableService();
+        // Service without ItemService to skip item validation
+        var service = new LootTableService(null);
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new LootTableDefinitionJson
@@ -91,7 +99,7 @@ public class LootTableServiceTests
     [Test]
     public async Task VerifyLoadedData_ThrowsWhenEntryHasNoItemOrTable()
     {
-        var service = new LootTableService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new LootTableDefinitionJson
@@ -110,7 +118,7 @@ public class LootTableServiceTests
     [Test]
     public async Task VerifyLoadedData_ThrowsWhenEntryHasBothItemAndTable()
     {
-        var service = new LootTableService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new LootTableDefinitionJson
@@ -129,7 +137,7 @@ public class LootTableServiceTests
     [Test]
     public async Task VerifyLoadedData_ThrowsWhenChanceIsNegative()
     {
-        var service = new LootTableService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new LootTableDefinitionJson
@@ -148,7 +156,7 @@ public class LootTableServiceTests
     [Test]
     public async Task VerifyLoadedData_ThrowsWhenChanceExceeds100()
     {
-        var service = new LootTableService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new LootTableDefinitionJson
@@ -157,6 +165,44 @@ public class LootTableServiceTests
                 Rolls = "1",
                 Entries = [
                     new LootEntryJson { ItemId = "sword", Chance = 150f }
+                ]
+            }
+        });
+
+        Assert.Throws<InvalidOperationException>(() => service.VerifyLoadedData());
+    }
+
+    [Test]
+    public async Task VerifyLoadedData_ThrowsWhenItemIdNotFound()
+    {
+        var service = CreateService();
+        await service.LoadDataAsync(new List<BaseJsonEntity>
+        {
+            new LootTableDefinitionJson
+            {
+                Id = "chest_loot",
+                Rolls = "1",
+                Entries = [
+                    new LootEntryJson { ItemId = "missing_item", Chance = 50f }
+                ]
+            }
+        });
+
+        Assert.Throws<InvalidOperationException>(() => service.VerifyLoadedData());
+    }
+
+    [Test]
+    public async Task VerifyLoadedData_ThrowsWhenNestedLootTableNotFound()
+    {
+        var service = CreateService();
+        await service.LoadDataAsync(new List<BaseJsonEntity>
+        {
+            new LootTableDefinitionJson
+            {
+                Id = "chest_loot",
+                Rolls = "1",
+                Entries = [
+                    new LootEntryJson { LootTableId = "missing_table", Chance = 50f }
                 ]
             }
         });

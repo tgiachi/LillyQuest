@@ -7,10 +7,16 @@ namespace LillyQuest.Tests.RogueLike.Services;
 
 public class ItemServiceTests
 {
+    private static ItemService CreateService()
+    {
+        var lootTableService = new LootTableService((Lazy<ItemService>?)null);
+        return new ItemService(lootTableService);
+    }
+
     [Test]
     public async Task TryGetItem_ReturnsItemById()
     {
-        var service = new ItemService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new ItemDefinitionJson
@@ -31,7 +37,7 @@ public class ItemServiceTests
     [Test]
     public async Task TryGetItem_ReturnsFalseWhenMissing()
     {
-        var service = new ItemService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>());
 
         var success = service.TryGetItem("missing", out var item);
@@ -43,7 +49,7 @@ public class ItemServiceTests
     [Test]
     public async Task GetRandomItem_ByCategory_ReturnsMatch()
     {
-        var service = new ItemService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new ItemDefinitionJson
@@ -75,7 +81,7 @@ public class ItemServiceTests
     [Test]
     public async Task GetRandomItem_ByCategoryAndSubcategory_ReturnsMatch()
     {
-        var service = new ItemService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new ItemDefinitionJson
@@ -107,7 +113,7 @@ public class ItemServiceTests
     [Test]
     public async Task GetRandomItem_WithWildcard_ReturnsMatch()
     {
-        var service = new ItemService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new ItemDefinitionJson
@@ -139,7 +145,7 @@ public class ItemServiceTests
     [Test]
     public async Task GetRandomItem_NoMatches_ReturnsNull()
     {
-        var service = new ItemService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new ItemDefinitionJson
@@ -158,7 +164,7 @@ public class ItemServiceTests
     [Test]
     public async Task ClearData_RemovesAllItems()
     {
-        var service = new ItemService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new ItemDefinitionJson { Id = "item1", Category = "weapon", Subcategory = "sword" }
@@ -173,7 +179,7 @@ public class ItemServiceTests
     [Test]
     public void GetLoadTypes_ReturnsItemDefinitionJson()
     {
-        var service = new ItemService();
+        var service = CreateService();
 
         var types = service.GetLoadTypes();
 
@@ -184,7 +190,7 @@ public class ItemServiceTests
     [Test]
     public async Task VerifyLoadedData_ReturnsTrueForValidData()
     {
-        var service = new ItemService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new ItemDefinitionJson
@@ -205,7 +211,7 @@ public class ItemServiceTests
     [Test]
     public async Task VerifyLoadedData_ThrowsWhenSlotInvalid()
     {
-        var service = new ItemService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new ItemDefinitionJson
@@ -223,7 +229,7 @@ public class ItemServiceTests
     [Test]
     public async Task VerifyLoadedData_ThrowsWhenContainerHasNoCapacity()
     {
-        var service = new ItemService();
+        var service = CreateService();
         await service.LoadDataAsync(new List<BaseJsonEntity>
         {
             new ItemDefinitionJson
@@ -233,6 +239,26 @@ public class ItemServiceTests
                 Subcategory = "bag",
                 IsContainer = true,
                 Capacity = null  // Container without capacity
+            }
+        });
+
+        Assert.Throws<InvalidOperationException>(() => service.VerifyLoadedData());
+    }
+
+    [Test]
+    public async Task VerifyLoadedData_ThrowsWhenLootTableNotFound()
+    {
+        var service = CreateService();
+        await service.LoadDataAsync(new List<BaseJsonEntity>
+        {
+            new ItemDefinitionJson
+            {
+                Id = "container_with_loot",
+                Category = "container",
+                Subcategory = "bag",
+                IsContainer = true,
+                Capacity = 10f,
+                LootTable = "missing_loot_table"
             }
         });
 

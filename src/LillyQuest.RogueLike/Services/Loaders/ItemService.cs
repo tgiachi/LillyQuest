@@ -10,7 +10,13 @@ namespace LillyQuest.RogueLike.Services.Loaders;
 /// </summary>
 public class ItemService : IDataLoaderReceiver
 {
+    private readonly LootTableService _lootTableService;
     private readonly Dictionary<string, ItemDefinitionJson> _itemsById = new();
+
+    public ItemService(LootTableService lootTableService)
+    {
+        _lootTableService = lootTableService;
+    }
 
     public void ClearData()
     {
@@ -100,6 +106,14 @@ public class ItemService : IDataLoaderReceiver
             if (item.IsContainer && !item.Capacity.HasValue)
             {
                 throw new InvalidOperationException($"Item {item.Id} is a container but has no capacity defined");
+            }
+
+            if (!string.IsNullOrWhiteSpace(item.LootTable))
+            {
+                if (!_lootTableService.TryGetLootTable(item.LootTable, out _))
+                {
+                    throw new InvalidOperationException($"Item {item.Id} references missing loot table '{item.LootTable}'");
+                }
             }
         }
 

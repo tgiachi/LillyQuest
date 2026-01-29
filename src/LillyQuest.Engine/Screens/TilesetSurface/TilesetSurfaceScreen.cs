@@ -5,6 +5,7 @@ using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Extensions.TilesetSurface;
+using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Managers.Screens.Base;
 using LillyQuest.Engine.Types;
 using Silk.NET.Input;
@@ -99,6 +100,9 @@ public class TilesetSurfaceScreen : BaseScreen
     /// Default tileset name used when a layer doesn't have a specific tileset assigned.
     /// </summary>
     public string DefaultTilesetName { get; set; } = "alloy";
+
+    public IParticlePixelRenderer? ParticlePixelRenderer { get; set; }
+    public int ParticleLayerIndex { get; set; } = 3;
 
     private float _tileRenderScale = 1.0f;
     private Vector2 _tileViewSize = new(90, 30);
@@ -439,6 +443,12 @@ public class TilesetSurfaceScreen : BaseScreen
         return string.IsNullOrEmpty(layer.TilesetName) ? DefaultTilesetName : layer.TilesetName;
     }
 
+    public bool TryGetLayerTileset(int layerIndex, out Tileset tileset)
+    {
+        tileset = GetLayerTileset(layerIndex);
+        return tileset != null;
+    }
+
     /// <summary>
     /// Gets the view pixel offset for a specific layer.
     /// </summary>
@@ -639,8 +649,11 @@ public class TilesetSurfaceScreen : BaseScreen
             return;
         }
 
-        _renderer.Render(spriteBatch, _animator);
+        _renderer.Render(spriteBatch, _animator, RenderParticleOverlay);
     }
+
+    private void RenderParticleOverlay(SpriteBatch spriteBatch)
+        => ParticlePixelRenderer?.Render(spriteBatch, this, ParticleLayerIndex);
 
     /// <summary>
     /// Sets an input tile size override for the specified layer.

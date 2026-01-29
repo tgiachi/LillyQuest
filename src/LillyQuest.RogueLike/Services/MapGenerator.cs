@@ -25,7 +25,11 @@ public class MapGenerator : IMapGenerator
 
     public async Task<LyQuestMap> GenerateMapAsync()
     {
-        var map = new LyQuestMap(300, 300);
+        var map = new LyQuestMap(300, 300)
+        {
+            Name = "Test Map",
+            Level = 1
+        };
         var generator = new Generator(300, 300);
         var floorId = "floor";
         var wallId = "wall";
