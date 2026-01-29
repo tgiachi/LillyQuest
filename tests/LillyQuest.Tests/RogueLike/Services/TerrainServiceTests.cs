@@ -12,6 +12,8 @@ namespace LillyQuest.Tests.RogueLike.Services;
 
 public class TerrainServiceTests
 {
+    private static readonly string[] ExpectedGroundTerrainIds = ["floor", "dirt"];
+
     [Test]
     public void ResolvedTerrainData_StoresAllFields()
     {
@@ -164,7 +166,7 @@ public class TerrainServiceTests
         Assert.That(success, Is.True);
         Assert.That(terrain, Is.Null);
         Assert.That(taggedTerrains, Has.Count.EqualTo(2));
-        Assert.That(taggedTerrains.Select(t => t.Id), Is.EquivalentTo(new[] { "floor", "dirt" }));
+        Assert.That(taggedTerrains.Select(t => t.Id), Is.EquivalentTo(ExpectedGroundTerrainIds));
     }
 
     [Test]

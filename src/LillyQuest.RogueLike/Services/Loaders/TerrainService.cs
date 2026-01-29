@@ -2,6 +2,7 @@ using LillyQuest.RogueLike.Data.Internal;
 using LillyQuest.RogueLike.Interfaces;
 using LillyQuest.RogueLike.Json.Entities.Base;
 using LillyQuest.RogueLike.Json.Entities.Terrain;
+using LillyQuest.RogueLike.Utils;
 using Serilog;
 
 namespace LillyQuest.RogueLike.Services.Loaders;
@@ -48,11 +49,11 @@ public class TerrainService : IDataLoaderReceiver
         }
 
         var candidates = _resolvedById.Values
-                                      .Where(terrain => MatchesPattern(terrain.Category, categoryFilter));
+                                      .Where(terrain => PatternMatchUtils.Matches(terrain.Category, categoryFilter));
 
         if (!string.IsNullOrWhiteSpace(subcategoryFilter))
         {
-            candidates = candidates.Where(terrain => MatchesPattern(terrain.Subcategory, subcategoryFilter));
+            candidates = candidates.Where(terrain => PatternMatchUtils.Matches(terrain.Subcategory, subcategoryFilter));
         }
 
         var list = candidates.ToList();
@@ -226,43 +227,4 @@ public class TerrainService : IDataLoaderReceiver
         }
     }
 
-    private static bool MatchesPattern(string value, string pattern)
-    {
-        if (string.IsNullOrEmpty(value) || string.IsNullOrEmpty(pattern))
-        {
-            return false;
-        }
-
-        if (pattern == "*")
-        {
-            return true;
-        }
-
-        var startsWithWildcard = pattern.StartsWith("*", StringComparison.Ordinal);
-        var endsWithWildcard = pattern.EndsWith("*", StringComparison.Ordinal);
-
-        if (!startsWithWildcard && !endsWithWildcard)
-        {
-            return string.Equals(value, pattern, StringComparison.OrdinalIgnoreCase);
-        }
-
-        var trimmed = pattern.Trim('*');
-
-        if (string.IsNullOrEmpty(trimmed))
-        {
-            return true;
-        }
-
-        if (startsWithWildcard && endsWithWildcard)
-        {
-            return value.Contains(trimmed, StringComparison.OrdinalIgnoreCase);
-        }
-
-        if (startsWithWildcard)
-        {
-            return value.EndsWith(trimmed, StringComparison.OrdinalIgnoreCase);
-        }
-
-        return value.StartsWith(trimmed, StringComparison.OrdinalIgnoreCase);
-    }
 }
