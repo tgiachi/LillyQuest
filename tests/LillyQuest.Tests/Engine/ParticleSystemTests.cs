@@ -260,6 +260,61 @@ public class ParticleSystemTests
         Assert.That(visibleParticles.Count, Is.EqualTo(2));
     }
 
+    [Test]
+    public void EmitProjectile_CreatesParticleWithCorrectProperties()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        
+        var from = new Vector2(10, 20);
+        var direction = new Vector2(1, 0); // Right
+        var speed = 100f;
+        var tileId = 42;
+
+        // Act
+        system.EmitProjectile(from, direction, speed, tileId);
+
+        // Assert
+        Assert.That(system.ParticleCount, Is.EqualTo(1));
+        var pos = system.GetParticlePosition(0);
+        var vel = system.GetParticleVelocity(0);
+        
+        Assert.That(pos, Is.EqualTo(from));
+        Assert.That(vel.X, Is.EqualTo(100f).Within(0.001f)); // Normalized direction * speed
+        Assert.That(vel.Y, Is.EqualTo(0f).Within(0.001f));
+    }
+
+    [Test]
+    public void EmitExplosion_CreatesMultipleParticlesRadially()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        
+        var center = new Vector2(50, 50);
+        var tileId = 99;
+        var particleCount = 8;
+
+        // Act
+        system.EmitExplosion(center, tileId, particleCount);
+
+        // Assert
+        Assert.That(system.ParticleCount, Is.EqualTo(particleCount));
+        
+        // Check that particles are moving away from center in different directions
+        var velocities = new List<Vector2>();
+        for (int i = 0; i < particleCount; i++)
+        {
+            velocities.Add(system.GetParticleVelocity(i));
+        }
+        
+        // All velocities should be different (radial pattern)
+        Assert.That(velocities.Distinct().Count(), Is.EqualTo(particleCount));
+    }
+
     private sealed class FakeCollisionProvider : IParticleCollisionProvider
     {
         private readonly Dictionary<(int X, int Y), bool> _blockedTiles = new();

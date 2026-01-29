@@ -117,6 +117,54 @@ public sealed class ParticleSystem : ISystem
         return visibleParticles;
     }
 
+    /// <summary>
+    /// Emits a projectile particle that moves in a straight line.
+    /// </summary>
+    public void EmitProjectile(Vector2 from, Vector2 direction, float speed, int tileId, float lifetime = 5f)
+    {
+        var normalizedDir = Vector2.Normalize(direction);
+        
+        var particle = new Particle
+        {
+            Position = from,
+            Velocity = normalizedDir * speed,
+            Lifetime = lifetime,
+            Behavior = ParticleBehavior.Projectile,
+            TileId = tileId,
+            Flags = ParticleFlags.Die,
+            Scale = 1f,
+            Color = default
+        };
+        
+        Emit(particle);
+    }
+
+    /// <summary>
+    /// Emits an explosion effect with particles radiating from a center point.
+    /// </summary>
+    public void EmitExplosion(Vector2 center, int tileId, int particleCount = 20, float speed = 100f, float lifetime = 0.5f)
+    {
+        for (int i = 0; i < particleCount; i++)
+        {
+            var angle = (float)(i * 2 * Math.PI / particleCount);
+            var direction = new Vector2(MathF.Cos(angle), MathF.Sin(angle));
+            
+            var particle = new Particle
+            {
+                Position = center,
+                Velocity = direction * speed,
+                Lifetime = lifetime,
+                Behavior = ParticleBehavior.Explosion,
+                TileId = tileId,
+                Flags = ParticleFlags.FadeOut | ParticleFlags.Die,
+                Scale = 1f,
+                Color = default
+            };
+            
+            Emit(particle);
+        }
+    }
+
     private void ApplyBehavior(ref Particle particle, double deltaTime)
     {
         switch (particle.Behavior)
