@@ -51,7 +51,11 @@ internal sealed class TilesetSurfaceRenderer
     /// <summary>
     /// Renders all visible layers.
     /// </summary>
-    public void Render(SpriteBatch spriteBatch, TilesetSurfaceAnimator animator)
+    public void Render(
+        SpriteBatch spriteBatch,
+        TilesetSurfaceAnimator animator,
+        Action<SpriteBatch>? overlay = null
+    )
     {
         spriteBatch.DrawRectangle(_context.ScreenPosition, _context.ScreenSize, LyColor.Black);
 
@@ -74,6 +78,8 @@ internal sealed class TilesetSurfaceRenderer
 
             RenderLayer(spriteBatch, layer, layerIndex, animator);
         }
+
+        overlay?.Invoke(spriteBatch);
 
         spriteBatch.PopTranslation();
         spriteBatch.DisableScissor();
