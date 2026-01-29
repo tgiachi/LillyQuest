@@ -29,20 +29,20 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem
         Name = nameof(FovSystem);
     }
 
-    public void RegisterMap(LyQuestMap map)
+    private sealed class FovState
     {
-        if (_states.ContainsKey(map))
+        public LyQuestMap Map { get; }
+        public RecursiveShadowcastingFOV Fov { get; }
+        public HashSet<Point> CurrentVisibleTiles { get; } = new();
+        public HashSet<Point> ExploredTiles { get; } = new();
+        public Dictionary<Point, TileMemory> TileMemory { get; } = new();
+        public Point LastViewerPosition { get; set; } = new(-1, -1);
+
+        public FovState(LyQuestMap map, RecursiveShadowcastingFOV fov)
         {
-            return;
+            Map = map;
+            Fov = fov;
         }
-
-        var fov = new RecursiveShadowcastingFOV(map.TransparencyView);
-        _states[map] = new FovState(map, fov);
-    }
-
-    public void UnregisterMap(LyQuestMap map)
-    {
-        _states.Remove(map);
     }
 
     /// <summary>
@@ -50,22 +50,24 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem
     /// </summary>
     public IReadOnlySet<Point> GetCurrentVisibleTiles(LyQuestMap map)
         => _states.TryGetValue(map, out var state)
-            ? state.CurrentVisibleTiles
-            : new HashSet<Point>();
+               ? state.CurrentVisibleTiles
+               : new();
 
     /// <summary>
     /// Tiles that have been explored on the specified map.
     /// </summary>
     public IReadOnlySet<Point> GetExploredTiles(LyQuestMap map)
         => _states.TryGetValue(map, out var state)
-            ? state.ExploredTiles
-            : new HashSet<Point>();
+               ? state.ExploredTiles
+               : new();
 
     /// <summary>
-    /// Check if a position is currently visible on the specified map.
+    /// Get the memorized tile data for an explored position.
     /// </summary>
-    public bool IsVisible(LyQuestMap map, Point position)
-        => _states.TryGetValue(map, out var state) && state.CurrentVisibleTiles.Contains(position);
+    public TileMemory? GetMemorizedTile(LyQuestMap map, Point position)
+        => _states.TryGetValue(map, out var state) && state.TileMemory.TryGetValue(position, out var memory)
+               ? memory
+               : null;
 
     /// <summary>
     /// Check if a position has been explored on the specified map.
@@ -74,12 +76,10 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem
         => _states.TryGetValue(map, out var state) && state.ExploredTiles.Contains(position);
 
     /// <summary>
-    /// Get the memorized tile data for an explored position.
+    /// Check if a position is currently visible on the specified map.
     /// </summary>
-    public TileMemory? GetMemorizedTile(LyQuestMap map, Point position)
-        => _states.TryGetValue(map, out var state) && state.TileMemory.TryGetValue(position, out var memory)
-            ? memory
-            : null;
+    public bool IsVisible(LyQuestMap map, Point position)
+        => _states.TryGetValue(map, out var state) && state.CurrentVisibleTiles.Contains(position);
 
     /// <summary>
     /// Store visual information about a tile for fog of war display.
@@ -88,8 +88,24 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem
     {
         if (_states.TryGetValue(map, out var state))
         {
-            state.TileMemory[position] = new TileMemory(symbol, foreground, background);
+            state.TileMemory[position] = new(symbol, foreground, background);
         }
+    }
+
+    public void RegisterMap(LyQuestMap map)
+    {
+        if (_states.ContainsKey(map))
+        {
+            return;
+        }
+
+        var fov = new RecursiveShadowcastingFOV(map.TransparencyView);
+        _states[map] = new(map, fov);
+    }
+
+    public void UnregisterMap(LyQuestMap map)
+    {
+        _states.Remove(map);
     }
 
     /// <summary>
@@ -128,6 +144,7 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem
 
         // Update current visible tiles
         state.CurrentVisibleTiles.Clear();
+
         foreach (var pos in state.Fov.CurrentFOV)
         {
             state.CurrentVisibleTiles.Add(pos);
@@ -142,22 +159,6 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem
         state.LastViewerPosition = viewerPosition;
 
         // Raise event to notify listeners
-        FovUpdated?.Invoke(this, new FovUpdatedEventArgs(map, previousVisibleTiles, state.CurrentVisibleTiles));
-    }
-
-    private sealed class FovState
-    {
-        public LyQuestMap Map { get; }
-        public RecursiveShadowcastingFOV Fov { get; }
-        public HashSet<Point> CurrentVisibleTiles { get; } = new();
-        public HashSet<Point> ExploredTiles { get; } = new();
-        public Dictionary<Point, TileMemory> TileMemory { get; } = new();
-        public Point LastViewerPosition { get; set; } = new(-1, -1);
-
-        public FovState(LyQuestMap map, RecursiveShadowcastingFOV fov)
-        {
-            Map = map;
-            Fov = fov;
-        }
+        FovUpdated?.Invoke(this, new(map, previousVisibleTiles, state.CurrentVisibleTiles));
     }
 }

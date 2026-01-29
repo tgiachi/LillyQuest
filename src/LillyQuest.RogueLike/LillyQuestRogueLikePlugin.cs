@@ -12,6 +12,7 @@ using LillyQuest.RogueLike.Json.Context;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Services;
 using LillyQuest.RogueLike.Services.Loader;
+using LillyQuest.RogueLike.Services.Loaders;
 using Serilog;
 
 namespace LillyQuest.RogueLike;
@@ -26,7 +27,8 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
     [
         typeof(ColorService),
         typeof(TileSetService),
-        typeof(TerrainService)
+        typeof(TerrainService),
+        typeof(NameService)
     ];
 
     public PluginInfo PluginInfo

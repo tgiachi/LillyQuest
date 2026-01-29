@@ -4,7 +4,7 @@ using LillyQuest.RogueLike.Json.Entities.Base;
 using LillyQuest.RogueLike.Json.Entities.Tiles;
 using Serilog;
 
-namespace LillyQuest.RogueLike.Services;
+namespace LillyQuest.RogueLike.Services.Loaders;
 
 public class TileSetService : IDataLoaderReceiver
 {

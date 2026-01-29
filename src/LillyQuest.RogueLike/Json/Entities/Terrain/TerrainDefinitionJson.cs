@@ -7,11 +7,11 @@ public class TerrainDefinitionJson : BaseJsonEntity
 {
     public string Name { get; set; }
     public string Description { get; set; }
+    public string Category { get; set; }
+    public string Subcategory { get; set; }
 
     public List<string> Flags { get; set; } = [];
     public int MovementCost { get; set;  } = 1;
 
-    [JsonPropertyName("--")]
-    public string Comment { get; set; }
 
 }

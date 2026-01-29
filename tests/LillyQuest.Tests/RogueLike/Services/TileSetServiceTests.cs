@@ -4,6 +4,7 @@ using LillyQuest.RogueLike.Json.Entities.Base;
 using LillyQuest.RogueLike.Json.Entities.Colorschemas;
 using LillyQuest.RogueLike.Json.Entities.Tiles;
 using LillyQuest.RogueLike.Services;
+using LillyQuest.RogueLike.Services.Loaders;
 
 namespace LillyQuest.Tests.RogueLike.Services;
 

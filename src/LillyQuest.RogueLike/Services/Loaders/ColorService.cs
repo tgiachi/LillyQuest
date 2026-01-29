@@ -5,7 +5,7 @@ using LillyQuest.RogueLike.Json.Entities.Base;
 using LillyQuest.RogueLike.Json.Entities.Colorschemas;
 using Serilog;
 
-namespace LillyQuest.RogueLike.Services;
+namespace LillyQuest.RogueLike.Services.Loaders;
 
 public class ColorService : IDataLoaderReceiver
 {
