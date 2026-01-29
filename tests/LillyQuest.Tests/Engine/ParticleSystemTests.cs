@@ -233,6 +233,33 @@ public class ParticleSystemTests
         Assert.That(velocityAfterSecond.Y, Is.GreaterThan(velocityAfterFirst.Y));
     }
 
+    [Test]
+    public void GetVisibleParticles_ReturnsOnlyParticlesInFOV()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        
+        // Particle in FOV
+        system.Emit(new Particle { Position = new Vector2(5, 5), Lifetime = 1f });
+        fovProvider.SetVisible(5, 5, isVisible: true);
+        
+        // Particle outside FOV
+        system.Emit(new Particle { Position = new Vector2(10, 10), Lifetime = 1f });
+        fovProvider.SetVisible(10, 10, isVisible: false);
+        
+        // Another particle in FOV
+        system.Emit(new Particle { Position = new Vector2(6, 6), Lifetime = 1f });
+        fovProvider.SetVisible(6, 6, isVisible: true);
+
+        // Act
+        var visibleParticles = system.GetVisibleParticles();
+
+        // Assert - should return only the 2 visible particles
+        Assert.That(visibleParticles.Count, Is.EqualTo(2));
+    }
+
     private sealed class FakeCollisionProvider : IParticleCollisionProvider
     {
         private readonly Dictionary<(int X, int Y), bool> _blockedTiles = new();
@@ -257,7 +284,23 @@ public class ParticleSystemTests
 
     private sealed class FakeFOVProvider : IParticleFOVProvider
     {
-        public bool IsVisible(int x, int y) => true;
-        public bool IsVisible(Vector2 worldPosition) => true;
+        private readonly Dictionary<(int X, int Y), bool> _visibleTiles = new();
+
+        public void SetVisible(int x, int y, bool isVisible)
+        {
+            _visibleTiles[(x, y)] = isVisible;
+        }
+
+        public bool IsVisible(int x, int y)
+        {
+            return _visibleTiles.TryGetValue((x, y), out var visible) && visible;
+        }
+
+        public bool IsVisible(Vector2 worldPosition)
+        {
+            var x = (int)worldPosition.X;
+            var y = (int)worldPosition.Y;
+            return IsVisible(x, y);
+        }
     }
 }

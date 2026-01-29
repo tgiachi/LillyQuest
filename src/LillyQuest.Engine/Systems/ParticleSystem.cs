@@ -99,6 +99,24 @@ public sealed class ParticleSystem : ISystem
         return _particles[index].Velocity;
     }
 
+    public List<Particle> GetVisibleParticles()
+    {
+        var visibleParticles = new List<Particle>();
+        
+        foreach (var particle in _particles)
+        {
+            var tileX = (int)particle.Position.X;
+            var tileY = (int)particle.Position.Y;
+            
+            if (_fovProvider.IsVisible(tileX, tileY))
+            {
+                visibleParticles.Add(particle);
+            }
+        }
+        
+        return visibleParticles;
+    }
+
     private void ApplyBehavior(ref Particle particle, double deltaTime)
     {
         switch (particle.Behavior)
