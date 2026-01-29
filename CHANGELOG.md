@@ -3,6 +3,41 @@
 
 All notable changes to this project will be documented in this file. See [versionize](https://github.com/versionize/versionize) for commit guidelines.
 
+<a name="0.5.0"></a>
+## [0.5.0](https://www.github.com/tgiachi/LillyQuest/releases/tag/v0.5.0) (2026-01-29)
+
+### Features
+
+* **particles:** add Bounce flag and Gravity behavior to ParticleSystem ([8ce34c5](https://www.github.com/tgiachi/LillyQuest/commit/8ce34c565bcff18a373adb18fdaaba53dc8fc4bb))
+* **particles:** add DI registration for particle providers ([113d5aa](https://www.github.com/tgiachi/LillyQuest/commit/113d5aadf69d1180610193091e75fae0c029207b))
+* **particles:** add EmitAmbient helper and complete Explosion behavior ([09d65f8](https://www.github.com/tgiachi/LillyQuest/commit/09d65f88e7e47bc114bb7a40d6e099ed7d9c605a))
+* **particles:** add FOV filtering to ParticleSystem ([b69117b](https://www.github.com/tgiachi/LillyQuest/commit/b69117b9ae856a32e692b7485c668e46167f7734))
+* **particles:** add GoRogue integration with collision and FOV providers ([924ef6d](https://www.github.com/tgiachi/LillyQuest/commit/924ef6de5752ee55a50cfb78b6b35db533f740ca))
+* **particles:** add helper methods EmitProjectile and EmitExplosion ([cdd885f](https://www.github.com/tgiachi/LillyQuest/commit/cdd885fa1064bdc2bd80ac3e3dc0311630a3a423))
+* **particles:** add movement and collision detection to ParticleSystem ([2558ff6](https://www.github.com/tgiachi/LillyQuest/commit/2558ff6417b9815e0939a9f92f2eb1ae7ac0bb22))
+* **particles:** add Particle struct and ParticleBehavior enum with TDD ([fda1549](https://www.github.com/tgiachi/LillyQuest/commit/fda1549a76360aafae430eaaa8ecd2dbeb4fd78a))
+* **particles:** add ParticleFlags and provider interfaces with TDD ([cdef8ef](https://www.github.com/tgiachi/LillyQuest/commit/cdef8ef9131850e8e4675816877f365a528517f0))
+* **particles:** add ParticleSystem with lifecycle management ([0e222d7](https://www.github.com/tgiachi/LillyQuest/commit/0e222d7f8a9bf971f28cf3b70b3dfb517235f663))
+* **particles:** add pixel renderer service ([de816b4](https://www.github.com/tgiachi/LillyQuest/commit/de816b4da9a885e2dc1ac77f9200b2d0814b11cb))
+* **particles:** decouple particle rendering from tiles ([9b6d63f](https://www.github.com/tgiachi/LillyQuest/commit/9b6d63f12b9df97b4226b6f7a52df55c6f6a3ab2))
+* **particles:** implement rendering to TilesetSurfaceScreen on Effects layer ([3073bf2](https://www.github.com/tgiachi/LillyQuest/commit/3073bf297c2c632e824db3aef97e5ceb35b5da14))
+* **particles:** render glyphs with colors and scale ([25d0d00](https://www.github.com/tgiachi/LillyQuest/commit/25d0d001fe6af412408eb225706f6bc837772e2a))
+* **particles:** render particle overlay in tileset surface ([72aeb84](https://www.github.com/tgiachi/LillyQuest/commit/72aeb84118620c2676641e820765413dd88767b8))
+* **roguelike:** add CreatureService and extract pattern matching utilities ([ddc6570](https://www.github.com/tgiachi/LillyQuest/commit/ddc657012218f3fd0dd3e3b4e4bbf03d7a506529))
+* **roguelike:** add data loading infrastructure and factory pattern ([238c112](https://www.github.com/tgiachi/LillyQuest/commit/238c1122cee29ddc7ba5253e536f3439755b9e69))
+* **roguelike:** add item and loot table systems with complete definitions ([e8ed013](https://www.github.com/tgiachi/LillyQuest/commit/e8ed0136608d3e7df7f372f91dae885c2e310c1a))
+* **roguelike:** add item entity definition and update JSON context ([5e9cdfa](https://www.github.com/tgiachi/LillyQuest/commit/5e9cdfa7e7fe6a58c1786650948dc1d123f67be1))
+* **roguelike:** add map prefab system with palette-based building templates ([ef904d3](https://www.github.com/tgiachi/LillyQuest/commit/ef904d3a84f1f57994b7de296d138029b6ad65e1))
+* **roguelike:** add ProcessNextTurn for single-step turn processing ([ad6cefd](https://www.github.com/tgiachi/LillyQuest/commit/ad6cefdd1a3f38048ccceb799fcdfd19d0e7fdf1))
+* **roguelike:** add tile animation component with multiple animation modes ([b2e0404](https://www.github.com/tgiachi/LillyQuest/commit/b2e040477ea298edfe5b0a3f279ba3570df67bb0))
+
+### Bug Fixes
+
+* **di:** resolve circular dependency between ItemService and LootTableService using Lazy<T> ([edcdc52](https://www.github.com/tgiachi/LillyQuest/commit/edcdc5256fdf5e68a874132865892a7e827799bc))
+* **engine:** add GC.SuppressFinalize to Dispose methods ([cf8957a](https://www.github.com/tgiachi/LillyQuest/commit/cf8957adfa385d887f72acd5a935f4e67d17ee13))
+* **particles:** add SetFovSystem for lazy FOV initialization ([faa2575](https://www.github.com/tgiachi/LillyQuest/commit/faa2575c7fdc27aeeb7b94bcd290c97c148c630c))
+* **particles:** use SetMap pattern for scene-specific map initialization ([4033144](https://www.github.com/tgiachi/LillyQuest/commit/4033144bc90ec6c2779ea88aff22e1bc1423a964))
+
 <a name="0.4.0"></a>
 ## [0.4.0](https://www.github.com/tgiachi/LillyQuest/releases/tag/v0.4.0) (2026-01-28)
 
