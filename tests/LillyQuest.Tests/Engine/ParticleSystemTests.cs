@@ -90,10 +90,109 @@ public class ParticleSystemTests
         Assert.That(system.GetParticleLifetime(0), Is.EqualTo(1.0f).Within(0.001f));
     }
 
+    [Test]
+    public void Update_MovesParticlesByVelocity()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        
+        var particle = new Particle
+        {
+            Position = new Vector2(10, 20),
+            Velocity = new Vector2(5, -10), // 5 pixels/sec right, 10 pixels/sec up
+            Lifetime = 10f
+        };
+        
+        system.Emit(particle);
+
+        // Act - advance 0.5 seconds
+        system.Update(0.5);
+
+        // Assert - position should be updated by velocity * deltaTime
+        var newPos = system.GetParticlePosition(0);
+        Assert.That(newPos.X, Is.EqualTo(12.5f).Within(0.001f));  // 10 + 5*0.5
+        Assert.That(newPos.Y, Is.EqualTo(15.0f).Within(0.001f));  // 20 + (-10)*0.5
+    }
+
+    [Test]
+    public void Update_ParticleWithDieFlag_DiesOnCollision()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        collisionProvider.SetBlocked(11, 20, isBlocked: true); // Wall at destination
+        
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        
+        var particle = new Particle
+        {
+            Position = new Vector2(10, 20),
+            Velocity = new Vector2(10, 0), // Moving right, will reach x=11 in 0.1 sec
+            Lifetime = 10f,
+            Flags = ParticleFlags.Die
+        };
+        
+        system.Emit(particle);
+
+        // Act - advance time to move particle into wall
+        system.Update(0.1); // Will move to x=11 which is blocked
+
+        // Assert - particle should be removed
+        Assert.That(system.ParticleCount, Is.EqualTo(0));
+    }
+
+    [Test]
+    public void Update_ParticleWithoutDieFlag_StopsAtCollision()
+    {
+        // Arrange
+        var collisionProvider = new FakeCollisionProvider();
+        collisionProvider.SetBlocked(11, 20, isBlocked: true);
+        
+        var fovProvider = new FakeFOVProvider();
+        var system = new ParticleSystem(collisionProvider, fovProvider);
+        
+        var particle = new Particle
+        {
+            Position = new Vector2(10, 20),
+            Velocity = new Vector2(10, 0), // Moving right towards wall
+            Lifetime = 10f,
+            Flags = ParticleFlags.None
+        };
+        
+        system.Emit(particle);
+
+        // Act
+        system.Update(0.1);
+
+        // Assert - particle should still exist at original position
+        Assert.That(system.ParticleCount, Is.EqualTo(1));
+        var pos = system.GetParticlePosition(0);
+        Assert.That(pos.X, Is.EqualTo(10f).Within(0.001f)); // Didn't move
+        Assert.That(pos.Y, Is.EqualTo(20f).Within(0.001f));
+    }
+
     private sealed class FakeCollisionProvider : IParticleCollisionProvider
     {
-        public bool IsBlocked(int x, int y) => false;
-        public bool IsBlocked(Vector2 worldPosition) => false;
+        private readonly Dictionary<(int X, int Y), bool> _blockedTiles = new();
+
+        public void SetBlocked(int x, int y, bool isBlocked)
+        {
+            _blockedTiles[(x, y)] = isBlocked;
+        }
+
+        public bool IsBlocked(int x, int y)
+        {
+            return _blockedTiles.TryGetValue((x, y), out var blocked) && blocked;
+        }
+
+        public bool IsBlocked(Vector2 worldPosition)
+        {
+            var x = (int)worldPosition.X;
+            var y = (int)worldPosition.Y;
+            return IsBlocked(x, y);
+        }
     }
 
     private sealed class FakeFOVProvider : IParticleFOVProvider
