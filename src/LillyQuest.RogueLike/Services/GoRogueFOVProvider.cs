@@ -11,10 +11,14 @@ namespace LillyQuest.RogueLike.Services;
 /// </summary>
 public sealed class GoRogueFOVProvider : IParticleFOVProvider
 {
-    private readonly FovSystem _fovSystem;
+    private FovSystem? _fovSystem;
     private LyQuestMap? _map;
 
-    public GoRogueFOVProvider(FovSystem fovSystem)
+    public GoRogueFOVProvider()
+    {
+    }
+
+    public void SetFovSystem(FovSystem fovSystem)
     {
         _fovSystem = fovSystem;
     }
@@ -26,9 +30,9 @@ public sealed class GoRogueFOVProvider : IParticleFOVProvider
 
     public bool IsVisible(int x, int y)
     {
-        if (_map == null)
+        if (_map == null || _fovSystem == null)
         {
-            return true; // No map = treat all as visible
+            return true; // No map/fov system = treat all as visible
         }
         
         var point = new Point(x, y);

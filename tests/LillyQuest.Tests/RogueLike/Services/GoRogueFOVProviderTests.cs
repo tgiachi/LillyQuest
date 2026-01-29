@@ -24,7 +24,8 @@ public class GoRogueFOVProviderTests
         // Calculate FOV from position 5,5
         fovSystem.UpdateFov(map, new Point(5, 5));
         
-        var provider = new GoRogueFOVProvider(fovSystem);
+        var provider = new GoRogueFOVProvider();
+        provider.SetFovSystem(fovSystem);
         provider.SetMap(map);
 
         // Act
@@ -49,7 +50,8 @@ public class GoRogueFOVProviderTests
         // Calculate FOV from position 5,5 with radius 5 - tile at 15,15 won't be visible
         fovSystem.UpdateFov(map, new Point(5, 5));
         
-        var provider = new GoRogueFOVProvider(fovSystem);
+        var provider = new GoRogueFOVProvider();
+        provider.SetFovSystem(fovSystem);
         provider.SetMap(map);
 
         // Act
@@ -72,7 +74,8 @@ public class GoRogueFOVProviderTests
         
         fovSystem.UpdateFov(map, new Point(10, 10));
         
-        var provider = new GoRogueFOVProvider(fovSystem);
+        var provider = new GoRogueFOVProvider();
+        provider.SetFovSystem(fovSystem);
         provider.SetMap(map);
 
         // Act

@@ -210,9 +210,15 @@ public class RogueScene : BaseScene
         AddEntity(_fovSystem);
         _mapAwareSystems.Add(_fovSystem);
 
-        // Initialize particle system providers with map
+        // Initialize particle system providers with map and fov system
         (_particleCollisionProvider as GoRogueCollisionProvider)?.SetMap(_map);
-        (_particleFOVProvider as GoRogueFOVProvider)?.SetMap(_map);
+        
+        var fovProvider = _particleFOVProvider as GoRogueFOVProvider;
+        if (fovProvider != null && _fovSystem != null)
+        {
+            fovProvider.SetFovSystem(_fovSystem);
+            fovProvider.SetMap(_map);
+        }
 
         _player = _map.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
 
