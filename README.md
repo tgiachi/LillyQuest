@@ -86,6 +86,23 @@ Run (game project):
 dotnet run --project src/LillyQuest.Game/LillyQuest.Game.csproj
 ```
 
+## Development Setup
+
+### Git Hooks
+
+Install pre-commit hooks to automatically run tests before each commit:
+
+```bash
+./setup-hooks.sh
+```
+
+This will:
+- Run `dotnet test` before each commit
+- Block commits if tests fail
+- Help maintain code quality
+
+You can bypass the hook with `git commit --no-verify` (not recommended).
+
 ## Project Board
 
 - Trello: <https://trello.com/b/XvjwuWqE/lillyquest>
