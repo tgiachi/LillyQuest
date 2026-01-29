@@ -20,11 +20,6 @@ public class ColorService : IDataLoaderReceiver
         _colorSets.Clear();
     }
 
-    public bool VerifyLoadedData()
-    {
-        return true;
-    }
-
     public LyColor? GetColorById(string colorId, string? colorSet = null)
     {
         if (colorId.StartsWith('#'))
@@ -40,7 +35,6 @@ public class ColorService : IDataLoaderReceiver
 
             effectiveColorSet = _colorSets.Keys.FirstOrDefault();
             DefaultColorSet = effectiveColorSet;
-
         }
 
         if (_colorSets.TryGetValue(colorId, out var colorData))
@@ -74,4 +68,7 @@ public class ColorService : IDataLoaderReceiver
             );
         }
     }
+
+    public bool VerifyLoadedData()
+        => true;
 }

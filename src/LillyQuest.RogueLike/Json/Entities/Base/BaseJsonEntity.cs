@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 using LillyQuest.RogueLike.Json.Entities.Colorschemas;
 using LillyQuest.RogueLike.Json.Entities.Creatures;
 using LillyQuest.RogueLike.Json.Entities.Items;
+using LillyQuest.RogueLike.Json.Entities.LootTables;
 using LillyQuest.RogueLike.Json.Entities.Names;
 using LillyQuest.RogueLike.Json.Entities.Terrain;
 using LillyQuest.RogueLike.Json.Entities.Tiles;
@@ -14,7 +15,8 @@ namespace LillyQuest.RogueLike.Json.Entities.Base;
  JsonDerivedType(typeof(TerrainDefinitionJson), typeDiscriminator: "terrain"),
  JsonDerivedType(typeof(CreatureDefinitionJson), typeDiscriminator: "creature"),
  JsonDerivedType(typeof(NameDefinitionJson), typeDiscriminator: "name"),
- JsonDerivedType(typeof(ItemDefintionJson), typeDiscriminator: "item")
+ JsonDerivedType(typeof(ItemDefinitionJson), typeDiscriminator: "item"),
+ JsonDerivedType(typeof(LootTableDefinitionJson), typeDiscriminator: "loot_table")
 ]
 public class BaseJsonEntity
 {

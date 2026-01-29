@@ -9,58 +9,13 @@ public class CreatureService : IDataLoaderReceiver
 {
     private readonly Dictionary<string, CreatureDefinitionJson> _creaturesById = new();
 
-    public Type[] GetLoadTypes()
-        => [typeof(CreatureDefinitionJson)];
-
-    public Task LoadDataAsync(List<BaseJsonEntity> entities)
-    {
-        foreach (var entity in entities.Cast<CreatureDefinitionJson>())
-        {
-            if (string.IsNullOrWhiteSpace(entity.Id))
-            {
-                continue;
-            }
-
-            _creaturesById[entity.Id] = entity;
-        }
-
-        return Task.CompletedTask;
-    }
     public void ClearData()
     {
         _creaturesById.Clear();
     }
 
-    public bool VerifyLoadedData()
-    {
-        foreach (var creature in _creaturesById.Values)
-        {
-            if (string.IsNullOrWhiteSpace(creature.Id))
-            {
-                throw new InvalidOperationException("Creature with missing ID found during verification");
-            }
-
-            if (!Enum.IsDefined<CreatureGenderType>(creature.Gender))
-            {
-                throw new InvalidOperationException($"Creature {creature.Id} has invalid gender value");
-            }
-        }
-
-        return true;
-    }
-
-    public bool TryGetCreature(string creatureId, out CreatureDefinitionJson creature)
-    {
-        creature = null!;
-
-        if (_creaturesById.TryGetValue(creatureId, out var resolved))
-        {
-            creature = resolved;
-            return true;
-        }
-
-        return false;
-    }
+    public Type[] GetLoadTypes()
+        => [typeof(CreatureDefinitionJson)];
 
     public CreatureDefinitionJson? GetRandomCreature(string categoryFilter, Random? rng = null)
         => GetRandomCreature(categoryFilter, null, rng);
@@ -77,13 +32,11 @@ public class CreatureService : IDataLoaderReceiver
         }
 
         var candidates = _creaturesById.Values
-            .Where(creature => PatternMatchUtils.Matches(creature.Category, categoryFilter));
+                                       .Where(creature => PatternMatchUtils.Matches(creature.Category, categoryFilter));
 
         if (!string.IsNullOrWhiteSpace(subcategoryFilter))
         {
-            candidates = candidates.Where(
-                creature => PatternMatchUtils.Matches(creature.Subcategory, subcategoryFilter)
-            );
+            candidates = candidates.Where(creature => PatternMatchUtils.Matches(creature.Subcategory, subcategoryFilter));
         }
 
         var list = candidates.ToList();
@@ -94,6 +47,54 @@ public class CreatureService : IDataLoaderReceiver
         }
 
         rng ??= Random.Shared;
+
         return list[rng.Next(list.Count)];
+    }
+
+    public Task LoadDataAsync(List<BaseJsonEntity> entities)
+    {
+        foreach (var entity in entities.Cast<CreatureDefinitionJson>())
+        {
+            if (string.IsNullOrWhiteSpace(entity.Id))
+            {
+                continue;
+            }
+
+            _creaturesById[entity.Id] = entity;
+        }
+
+        return Task.CompletedTask;
+    }
+
+    public bool TryGetCreature(string creatureId, out CreatureDefinitionJson creature)
+    {
+        creature = null!;
+
+        if (_creaturesById.TryGetValue(creatureId, out var resolved))
+        {
+            creature = resolved;
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public bool VerifyLoadedData()
+    {
+        foreach (var creature in _creaturesById.Values)
+        {
+            if (string.IsNullOrWhiteSpace(creature.Id))
+            {
+                throw new InvalidOperationException("Creature with missing ID found during verification");
+            }
+
+            if (!Enum.IsDefined(creature.Gender))
+            {
+                throw new InvalidOperationException($"Creature {creature.Id} has invalid gender value");
+            }
+        }
+
+        return true;
     }
 }

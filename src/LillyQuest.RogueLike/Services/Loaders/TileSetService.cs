@@ -25,50 +25,6 @@ public class TileSetService : IDataLoaderReceiver
         _resolvedTilesets.Clear();
     }
 
-    public bool VerifyLoadedData()
-    {
-        foreach (var tileset in _tilesets.Values)
-        {
-            foreach (var tile in tileset)
-            {
-                if (string.IsNullOrEmpty(tile.Value.Id))
-                {
-                    throw new InvalidOperationException("Tile with missing ID found during verification");
-
-                }
-
-                if (string.IsNullOrEmpty(tile.Value.FgColor) || string.IsNullOrEmpty(tile.Value.BgColor))
-                {
-                    throw new InvalidOperationException($"Tile {tile.Value.Id} has missing color IDs during verification");
-                }
-
-                var fgColor = _colorService.GetColorById(tile.Value.FgColor);
-                var bgColor = _colorService.GetColorById(tile.Value.BgColor);
-
-                if (fgColor is null || bgColor is null)
-                {
-                    throw new InvalidOperationException($"Tile {tile.Value.Id} has unresolved colors during verification");
-                }
-            }
-        }
-
-        return true;
-    }
-
-    public bool TryGetAnyTilesetName(out string tilesetName)
-    {
-        tilesetName = string.Empty;
-
-        if (_tilesets.Count == 0)
-        {
-            return false;
-        }
-
-        tilesetName = _tilesets.Keys.First();
-
-        return true;
-    }
-
     public Type[] GetLoadTypes()
         => [typeof(TilesetDefinitionJson)];
 
@@ -144,6 +100,20 @@ public class TileSetService : IDataLoaderReceiver
         }
     }
 
+    public bool TryGetAnyTilesetName(out string tilesetName)
+    {
+        tilesetName = string.Empty;
+
+        if (_tilesets.Count == 0)
+        {
+            return false;
+        }
+
+        tilesetName = _tilesets.Keys.First();
+
+        return true;
+    }
+
     public bool TryGetTile(string tileId, out ResolvedTileData tile, string? tilesetName = null)
     {
         tile = null!;
@@ -174,5 +144,34 @@ public class TileSetService : IDataLoaderReceiver
         _logger.Warning("Tile with ID {TileId} not found in tileset {TilesetName}", tileId, effectiveTileset);
 
         return false;
+    }
+
+    public bool VerifyLoadedData()
+    {
+        foreach (var tileset in _tilesets.Values)
+        {
+            foreach (var tile in tileset)
+            {
+                if (string.IsNullOrEmpty(tile.Value.Id))
+                {
+                    throw new InvalidOperationException("Tile with missing ID found during verification");
+                }
+
+                if (string.IsNullOrEmpty(tile.Value.FgColor) || string.IsNullOrEmpty(tile.Value.BgColor))
+                {
+                    throw new InvalidOperationException($"Tile {tile.Value.Id} has missing color IDs during verification");
+                }
+
+                var fgColor = _colorService.GetColorById(tile.Value.FgColor);
+                var bgColor = _colorService.GetColorById(tile.Value.BgColor);
+
+                if (fgColor is null || bgColor is null)
+                {
+                    throw new InvalidOperationException($"Tile {tile.Value.Id} has unresolved colors during verification");
+                }
+            }
+        }
+
+        return true;
     }
 }
