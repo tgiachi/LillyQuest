@@ -1,26 +1,10 @@
 using System.Diagnostics;
-using System.Threading;
 using LillyQuest.Engine.Services;
 
 namespace LillyQuest.Tests.Engine.Services;
 
 public class MainThreadDispatcherTests
 {
-    [Test]
-    public void Post_Queues_Until_Processed()
-    {
-        var dispatcher = new MainThreadDispatcher();
-        var ran = false;
-
-        dispatcher.Post(() => ran = true);
-
-        Assert.That(ran, Is.False);
-
-        dispatcher.ExecutePending(1);
-
-        Assert.That(ran, Is.True);
-    }
-
     [Test]
     public void ExecutePending_Respects_MaxPerFrame()
     {
@@ -46,16 +30,22 @@ public class MainThreadDispatcherTests
         var mainThreadId = dispatcher.MainThreadId;
         var invokedThreadId = -1;
 
-        var task = Task.Run(() =>
-        {
-            return dispatcher.Invoke(() =>
+        var task = Task.Run(
+            () =>
             {
-                invokedThreadId = Environment.CurrentManagedThreadId;
-                return 42;
-            });
-        });
+                return dispatcher.Invoke(
+                    () =>
+                    {
+                        invokedThreadId = Environment.CurrentManagedThreadId;
+
+                        return 42;
+                    }
+                );
+            }
+        );
 
         var sw = Stopwatch.StartNew();
+
         while (!task.IsCompleted && sw.Elapsed < TimeSpan.FromSeconds(1))
         {
             dispatcher.ExecutePending(1);
@@ -73,13 +63,31 @@ public class MainThreadDispatcherTests
         var dispatcher = new MainThreadDispatcher();
         var ran = false;
 
-        var result = dispatcher.Invoke(() =>
-        {
-            ran = true;
-            return 7;
-        });
+        var result = dispatcher.Invoke(
+            () =>
+            {
+                ran = true;
+
+                return 7;
+            }
+        );
 
         Assert.That(ran, Is.True);
         Assert.That(result, Is.EqualTo(7));
+    }
+
+    [Test]
+    public void Post_Queues_Until_Processed()
+    {
+        var dispatcher = new MainThreadDispatcher();
+        var ran = false;
+
+        dispatcher.Post(() => ran = true);
+
+        Assert.That(ran, Is.False);
+
+        dispatcher.ExecutePending(1);
+
+        Assert.That(ran, Is.True);
     }
 }

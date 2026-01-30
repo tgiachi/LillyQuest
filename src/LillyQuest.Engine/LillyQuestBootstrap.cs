@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Numerics;
 using DryIoc;
-using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Data.Directories;
@@ -103,7 +102,7 @@ public class LillyQuestBootstrap : IDisposable
     public event TickEventHandler? Render;
 
     /// <summary>
-    ///  Event invoked when the window is resized.
+    /// Event invoked when the window is resized.
     /// </summary>
     public event WindowResizeEventHandler? WindowResize;
 
@@ -125,6 +124,63 @@ public class LillyQuestBootstrap : IDisposable
         _logger.Information("Root Directory: {RootDirectory}", _engineConfig.RootDirectory);
     }
 
+    /// <summary>
+    /// Gets whether plugins are currently loading resources asynchronously.
+    /// </summary>
+    public bool IsLoadingResources => _asyncResourceLoader.IsLoading;
+
+    public void Dispose()
+    {
+        _container.Dispose();
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Executes the OnEngineReady lifecycle hook for all plugins.
+    /// Called when the engine is fully initialized but before the window is visible.
+    /// </summary>
+    public async Task ExecuteOnEngineReady()
+    {
+        if (_pluginLifecycleExecutor != null)
+        {
+            await _pluginLifecycleExecutor.ExecuteOnEngineReady(_container);
+        }
+    }
+
+    /// <summary>
+    /// Executes Lua script engine loading before plugin render/resource hooks.
+    /// </summary>
+    public Task ExecuteOnLoadLuaScripts()
+    {
+        var scriptEngine = _container.Resolve<IScriptEngineService>();
+
+        return Task.Run(async () => await scriptEngine.StartAsync());
+    }
+
+    /// <summary>
+    /// Executes the OnLoadResources lifecycle hook for all plugins.
+    /// Called when loading resources with the LogScreen displayed.
+    /// </summary>
+    public async Task ExecuteOnLoadResources()
+    {
+        if (_pluginLifecycleExecutor != null)
+        {
+            await _pluginLifecycleExecutor.ExecuteOnLoadResources(_container);
+        }
+    }
+
+    /// <summary>
+    /// Executes the OnReadyToRender lifecycle hook for all plugins.
+    /// Called after the window is created and rendering is available.
+    /// </summary>
+    public async Task ExecuteOnReadyToRender()
+    {
+        if (_pluginLifecycleExecutor != null)
+        {
+            await _pluginLifecycleExecutor.ExecuteOnReadyToRender(_container);
+        }
+    }
+
     public void Initialize()
     {
         _renderContext.ClearColor = LyColor.CornflowerBlue;
@@ -133,6 +189,7 @@ public class LillyQuestBootstrap : IDisposable
         if (_engineConfig.IsHeadless)
         {
             RegisterInternalServices();
+
             return;
         }
 
@@ -168,6 +225,69 @@ public class LillyQuestBootstrap : IDisposable
 
         ExecuteOnEngineReady().GetAwaiter().GetResult();
         _window.Run(); // Window triggers WindowOnLoad where OnReadyToRender is executed
+    }
+
+    /// <summary>
+    /// Waits for all async resource loading operations to complete.
+    /// Safe to call even if no loading is in progress.
+    /// </summary>
+    public async Task WaitForResourcesLoaded()
+    {
+        await _asyncResourceLoader.WaitForLoadingComplete();
+    }
+
+    /// <summary>
+    /// Prepares the rendering context for a new frame.
+    /// Clears buffers and sets up the rendering state.
+    /// </summary>
+    private void BeginFrame()
+    {
+        _gl.ClearColor(_renderContext.ClearColor.ToSystemColor());
+        _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
+    }
+
+    private void BindMainThreadDispatcher()
+    {
+        var dispatcher = _container.Resolve<IMainThreadDispatcher>();
+        _renderContext.PostOnMainThreadHandler = action => dispatcher.Post(action);
+        _renderContext.InvokeOnMainThreadHandler = action => dispatcher.Invoke(action);
+        _renderContext.InvokeOnMainThreadFuncHandler = func => dispatcher.Invoke(() => func.DynamicInvoke());
+    }
+
+    /// <summary>
+    /// Finalizes the frame after rendering.
+    /// Can be used for post-processing, debug rendering, or cleanup.
+    /// </summary>
+    private void EndFrame() { }
+
+    private void InitDebugMode()
+    {
+        var entityManager = _container.Resolve<IGameEntityManager>();
+        entityManager.AddEntity(entityManager.CreateEntity<DebugPanelGameObject>());
+    }
+
+    private void InitializePlugin(ILillyQuestPlugin plugin)
+    {
+        _pluginRegistry.RegisterPlugin(plugin);
+        _logger.Information("Calling RegisterServices for plugin {PluginId}", plugin.PluginInfo.Id);
+        plugin.RegisterServices(_container);
+        var pluginRoot = Path.Combine(_engineConfig.RootDirectory, "Plugins", plugin.PluginInfo.Id).ResolvePathAndEnvs();
+        Directory.CreateDirectory(pluginRoot);
+
+        var dirsToCreate = plugin.DirectoriesToCreate() ?? [];
+
+        var pluginDirectories = new DirectoriesConfig(pluginRoot, dirsToCreate);
+
+        plugin.OnDirectories(_directoriesConfig, pluginDirectories);
+        var pluginScriptsDir = Path.Combine(pluginRoot, "Scripts").ResolvePathAndEnvs();
+        Directory.CreateDirectory(pluginScriptsDir);
+        var scriptEngine = _container.Resolve<IScriptEngineService>();
+        scriptEngine.AddSearchDirectory(pluginScriptsDir);
+        _logger.Information(
+            "Loaded plugin {PluginId} v{PluginVersion}",
+            plugin.PluginInfo.Id,
+            plugin.PluginInfo.Version
+        );
     }
 
     private void InitializePluginLifecycle()
@@ -223,112 +343,7 @@ public class LillyQuestBootstrap : IDisposable
             _logger.Error(ex, "Failed to resolve direct ILillyQuestPlugin registration");
         }
 
-        _pluginLifecycleExecutor = new PluginLifecycleExecutor(_pluginRegistry.GetLoadedPlugins());
-    }
-
-    private void InitializePlugin(ILillyQuestPlugin plugin)
-    {
-        _pluginRegistry.RegisterPlugin(plugin);
-        _logger.Information("Calling RegisterServices for plugin {PluginId}", plugin.PluginInfo.Id);
-        plugin.RegisterServices(_container);
-        var pluginRoot = Path.Combine(_engineConfig.RootDirectory, "Plugins", plugin.PluginInfo.Id).ResolvePathAndEnvs();
-        Directory.CreateDirectory(pluginRoot);
-
-        var dirsToCreate = plugin.DirectoriesToCreate() ?? [];
-
-        var pluginDirectories = new DirectoriesConfig(pluginRoot, dirsToCreate);
-
-        plugin.OnDirectories(_directoriesConfig, pluginDirectories);
-        var pluginScriptsDir = Path.Combine(pluginRoot, "Scripts").ResolvePathAndEnvs();
-        Directory.CreateDirectory(pluginScriptsDir);
-        var scriptEngine = _container.Resolve<IScriptEngineService>();
-        scriptEngine.AddSearchDirectory(pluginScriptsDir);
-        _logger.Information(
-            "Loaded plugin {PluginId} v{PluginVersion}",
-            plugin.PluginInfo.Id,
-            plugin.PluginInfo.Version
-        );
-    }
-
-    /// <summary>
-    /// Executes the OnEngineReady lifecycle hook for all plugins.
-    /// Called when the engine is fully initialized but before the window is visible.
-    /// </summary>
-    public async Task ExecuteOnEngineReady()
-    {
-        if (_pluginLifecycleExecutor != null)
-        {
-            await _pluginLifecycleExecutor.ExecuteOnEngineReady(_container);
-        }
-    }
-
-    /// <summary>
-    /// Executes the OnReadyToRender lifecycle hook for all plugins.
-    /// Called after the window is created and rendering is available.
-    /// </summary>
-    public async Task ExecuteOnReadyToRender()
-    {
-        if (_pluginLifecycleExecutor != null)
-        {
-            await _pluginLifecycleExecutor.ExecuteOnReadyToRender(_container);
-        }
-    }
-
-    /// <summary>
-    /// Executes the OnLoadResources lifecycle hook for all plugins.
-    /// Called when loading resources with the LogScreen displayed.
-    /// </summary>
-    public async Task ExecuteOnLoadResources()
-    {
-        if (_pluginLifecycleExecutor != null)
-        {
-            await _pluginLifecycleExecutor.ExecuteOnLoadResources(_container);
-        }
-    }
-
-    /// <summary>
-    /// Executes Lua script engine loading before plugin render/resource hooks.
-    /// </summary>
-    public Task ExecuteOnLoadLuaScripts()
-    {
-        var scriptEngine = _container.Resolve<IScriptEngineService>();
-        return Task.Run(async () => await scriptEngine.StartAsync());
-    }
-
-    /// <summary>
-    /// Gets whether plugins are currently loading resources asynchronously.
-    /// </summary>
-    public bool IsLoadingResources => _asyncResourceLoader.IsLoading;
-
-    /// <summary>
-    /// Waits for all async resource loading operations to complete.
-    /// Safe to call even if no loading is in progress.
-    /// </summary>
-    public async Task WaitForResourcesLoaded()
-    {
-        await _asyncResourceLoader.WaitForLoadingComplete();
-    }
-
-    /// <summary>
-    /// Prepares the rendering context for a new frame.
-    /// Clears buffers and sets up the rendering state.
-    /// </summary>
-    private void BeginFrame()
-    {
-        _gl.ClearColor(_renderContext.ClearColor.ToSystemColor());
-        _gl.Clear(ClearBufferMask.ColorBufferBit | ClearBufferMask.DepthBufferBit);
-    }
-
-    /// <summary>
-    /// Finalizes the frame after rendering.
-    /// Can be used for post-processing, debug rendering, or cleanup.
-    /// </summary>
-    private void EndFrame() { }
-
-    private void InitDebugMode()
-    {
-        var entityManager = _container.Resolve<IGameEntityManager>();
-        entityManager.AddEntity(entityManager.CreateEntity<DebugPanelGameObject>());
+        _pluginLifecycleExecutor = new(_pluginRegistry.GetLoadedPlugins());
     }
 
     private void LoadDefaultResources()
@@ -349,7 +364,6 @@ public class LillyQuestBootstrap : IDisposable
             "Assets/Fonts/default_font.ttf",
             typeof(SpriteBatch).Assembly
         );
-
 
         assetManager.FontManager.LoadFontFromEmbeddedResource(
             "default_font_topaz",
@@ -388,10 +402,10 @@ public class LillyQuestBootstrap : IDisposable
         assetManager.NineSliceManager.RegisterTexturePatches(
             "n9_ui_simple_ui",
             [
-                new TexturePatchDefinition("scroll.v.track", new(16, 0, 16, 16)),
-                new TexturePatchDefinition("scroll.v.thumb", new(32, 0, 16, 16)),
-                new TexturePatchDefinition("scroll.h.track", new(16, 16, 16, 16)),
-                new TexturePatchDefinition("scroll.h.thumb", new(32, 16, 16, 16))
+                new("scroll.v.track", new(16, 0, 16, 16)),
+                new("scroll.v.thumb", new(32, 0, 16, 16)),
+                new("scroll.h.track", new(16, 16, 16, 16)),
+                new("scroll.h.thumb", new(32, 16, 16, 16))
             ]
         );
 
@@ -432,6 +446,8 @@ public class LillyQuestBootstrap : IDisposable
 
         _container.Register<IActionService, ActionService>(Reuse.Singleton);
         _container.Register<IShortcutService, ShortcutService>(Reuse.Singleton);
+        _container.Register<IJobScheduler, JobScheduler>(Reuse.Singleton);
+
         _container.Register<IMainThreadDispatcher, MainThreadDispatcher>(Reuse.Singleton);
 
         BindMainThreadDispatcher();
@@ -451,12 +467,10 @@ public class LillyQuestBootstrap : IDisposable
         _container.Register<IScriptEngineService, LuaScriptEngineService>(Reuse.Singleton);
     }
 
-    private void BindMainThreadDispatcher()
+    private void ShowLogScene()
     {
-        var dispatcher = _container.Resolve<IMainThreadDispatcher>();
-        _renderContext.PostOnMainThreadHandler = action => dispatcher.Post(action);
-        _renderContext.InvokeOnMainThreadHandler = action => dispatcher.Invoke(action);
-        _renderContext.InvokeOnMainThreadFuncHandler = func => dispatcher.Invoke(() => func.DynamicInvoke());
+        var sceneManager = _container.Resolve<ISceneManager>();
+        sceneManager.SwitchScene("log_scene", 0.1f);
     }
 
     private void StartInternalServices()
@@ -471,6 +485,7 @@ public class LillyQuestBootstrap : IDisposable
             systemManager.RegisterSystem(system);
         }
 
+        _container.Resolve<IJobScheduler>().Start(5);
         systemManager.InitializeAllSystems();
 
         _container.RegisterLuaUserData<Vector2>();
@@ -501,12 +516,6 @@ public class LillyQuestBootstrap : IDisposable
         }
     }
 
-    private void ShowLogScene()
-    {
-        var sceneManager = _container.Resolve<ISceneManager>();
-        sceneManager.SwitchScene("log_scene", 0.1f);
-    }
-
     private void WindowOnClosing()
     {
         _logger.Information("Shutting down LillyQuest Engine...");
@@ -523,7 +532,7 @@ public class LillyQuestBootstrap : IDisposable
         var framebufferSize = _window.FramebufferSize;
         var windowSize = _window.Size;
         _renderContext.DpiScale = windowSize.X > 0 ? (float)framebufferSize.X / windowSize.X : 1.0f;
-        _renderContext.PhysicalWindowSize = new Vector2(framebufferSize.X, framebufferSize.Y);
+        _renderContext.PhysicalWindowSize = new(framebufferSize.X, framebufferSize.Y);
         _logger.Information(
             "Display DPI Scale: {DpiScale}x (Physical: {PhysicalWidth}x{PhysicalHeight}, Logical: {LogicalWidth}x{LogicalHeight})",
             _renderContext.DpiScale,
@@ -570,6 +579,7 @@ public class LillyQuestBootstrap : IDisposable
         if (_skipRenderFrames > 0)
         {
             _skipRenderFrames--;
+
             return;
         }
 
@@ -589,7 +599,7 @@ public class LillyQuestBootstrap : IDisposable
         _skipRenderFrames = 2;
 
         // Update physical window size for DPI calculations
-        _renderContext.PhysicalWindowSize = new Vector2(obj.X, obj.Y);
+        _renderContext.PhysicalWindowSize = new(obj.X, obj.Y);
 
         _pendingResizeSize = new Vector2(obj.X, obj.Y);
         _pendingResizeTimestamp = Stopwatch.GetTimestamp();
@@ -635,11 +645,5 @@ public class LillyQuestBootstrap : IDisposable
             _fixedGameTime.Update(_engineConfig.FixedTimestep);
             FixedUpdate?.Invoke(_fixedGameTime);
         }
-    }
-
-    public void Dispose()
-    {
-        _container.Dispose();
-        GC.SuppressFinalize(this);
     }
 }

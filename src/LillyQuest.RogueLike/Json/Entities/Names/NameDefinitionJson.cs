@@ -8,5 +8,4 @@ public class NameDefinitionJson : BaseJsonEntity
     public CreatureGenderType Gender { get; set; }
     public List<string> FirstNames { get; set; } = [];
     public List<string> LastNames { get; set; } = [];
-
 }

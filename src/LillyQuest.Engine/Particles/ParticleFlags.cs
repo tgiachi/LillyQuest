@@ -29,5 +29,5 @@ public enum ParticleFlags
     /// <summary>
     /// Apply gravity to velocity.
     /// </summary>
-    Gravity = 1 << 3,
+    Gravity = 1 << 3
 }

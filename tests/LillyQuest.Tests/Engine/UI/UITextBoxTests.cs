@@ -1,4 +1,3 @@
-using System.Numerics;
 using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Graphics.OpenGL.Resources;
 using LillyQuest.Core.Graphics.Text;
@@ -13,77 +12,6 @@ namespace LillyQuest.Tests.Engine.UI;
 
 public class UITextBoxTests
 {
-    [Test]
-    public void TextBox_Defaults_To_NineSliceScale_2()
-    {
-        var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager());
-        Assert.That(box.NineSliceScale, Is.EqualTo(2f));
-    }
-
-    [Test]
-    public void TextBox_Defaults_CenterTint_To_White()
-    {
-        var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager());
-        Assert.That(box.CenterTint, Is.EqualTo(LyColor.White));
-    }
-
-    [Test]
-    public void TextBox_Defaults_CursorColor_To_White()
-    {
-        var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager());
-        Assert.That(box.CursorColor, Is.EqualTo(LyColor.White));
-    }
-
-    [Test]
-    public void TextBox_Computes_Smaller_NineSlice_Scale_When_Height_Is_Tight()
-    {
-        var scale = UITextBox.ComputeNineSliceAxisScale(2f, 10f, 4f, 4f);
-        Assert.That(scale, Is.EqualTo(1.25f));
-    }
-
-    [Test]
-    public void TextBox_AutoHeight_Uses_Font_Measure()
-    {
-        var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager())
-        {
-            Font = new("default_font", 14, FontKind.TrueType),
-            AutoHeightEnabled = true,
-            VerticalPadding = 1f
-        };
-
-        box.ApplyAutoHeight(new Vector2(10, 18));
-        Assert.That(box.Size.Y, Is.EqualTo(20));
-    }
-
-    [Test]
-    public void TextBox_Inserts_Characters_And_Backspace_Works()
-    {
-        var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager());
-
-        box.HandleTextInput('a');
-        box.HandleTextInput('b');
-        Assert.That(box.Text, Is.EqualTo("ab"));
-
-        box.HandleBackspace();
-        Assert.That(box.Text, Is.EqualTo("a"));
-    }
-
-    [Test]
-    public void TextBox_ArrowKeys_Move_Cursor()
-    {
-        var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager())
-        {
-            Text = "abc",
-            CursorIndex = 3
-        };
-
-        box.HandleKeyPress(KeyModifierType.None, new List<Key> { Key.Left });
-        Assert.That(box.CursorIndex, Is.EqualTo(2));
-
-        box.HandleKeyPress(KeyModifierType.None, new List<Key> { Key.Right });
-        Assert.That(box.CursorIndex, Is.EqualTo(3));
-    }
-
     private sealed class FakeNineSliceManager : INineSliceAssetManager
     {
         public NineSliceDefinition GetNineSlice(string key)
@@ -182,5 +110,76 @@ public class UITextBoxTests
 
         public void UnloadTexture(string assetName)
             => throw new NotSupportedException();
+    }
+
+    [Test]
+    public void TextBox_ArrowKeys_Move_Cursor()
+    {
+        var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager())
+        {
+            Text = "abc",
+            CursorIndex = 3
+        };
+
+        box.HandleKeyPress(KeyModifierType.None, new List<Key> { Key.Left });
+        Assert.That(box.CursorIndex, Is.EqualTo(2));
+
+        box.HandleKeyPress(KeyModifierType.None, new List<Key> { Key.Right });
+        Assert.That(box.CursorIndex, Is.EqualTo(3));
+    }
+
+    [Test]
+    public void TextBox_AutoHeight_Uses_Font_Measure()
+    {
+        var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager())
+        {
+            Font = new("default_font", 14, FontKind.TrueType),
+            AutoHeightEnabled = true,
+            VerticalPadding = 1f
+        };
+
+        box.ApplyAutoHeight(new(10, 18));
+        Assert.That(box.Size.Y, Is.EqualTo(20));
+    }
+
+    [Test]
+    public void TextBox_Computes_Smaller_NineSlice_Scale_When_Height_Is_Tight()
+    {
+        var scale = UITextBox.ComputeNineSliceAxisScale(2f, 10f, 4f, 4f);
+        Assert.That(scale, Is.EqualTo(1.25f));
+    }
+
+    [Test]
+    public void TextBox_Defaults_CenterTint_To_White()
+    {
+        var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager());
+        Assert.That(box.CenterTint, Is.EqualTo(LyColor.White));
+    }
+
+    [Test]
+    public void TextBox_Defaults_CursorColor_To_White()
+    {
+        var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager());
+        Assert.That(box.CursorColor, Is.EqualTo(LyColor.White));
+    }
+
+    [Test]
+    public void TextBox_Defaults_To_NineSliceScale_2()
+    {
+        var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager());
+        Assert.That(box.NineSliceScale, Is.EqualTo(2f));
+    }
+
+    [Test]
+    public void TextBox_Inserts_Characters_And_Backspace_Works()
+    {
+        var box = new UITextBox(new FakeNineSliceManager(), new FakeTextureManager());
+
+        box.HandleTextInput('a');
+        box.HandleTextInput('b');
+        Assert.That(box.Text, Is.EqualTo("ab"));
+
+        box.HandleBackspace();
+        Assert.That(box.Text, Is.EqualTo("a"));
     }
 }

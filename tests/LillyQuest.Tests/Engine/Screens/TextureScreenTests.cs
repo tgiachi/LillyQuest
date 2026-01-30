@@ -1,7 +1,6 @@
 using System.Numerics;
 using LillyQuest.Core.Graphics.OpenGL.Resources;
 using LillyQuest.Core.Interfaces.Assets;
-using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Screens.Textures;
 
 namespace LillyQuest.Tests.Engine.Screens;
@@ -58,11 +57,11 @@ public class TextureScreenTests
             : base(textureManager)
             => _textureSize = textureSize;
 
-        protected override Vector2 GetTextureSize()
-            => _textureSize;
-
         public (Vector2 position, Vector2 size) GetPlacement()
             => ComputeTexturePlacement(_textureSize);
+
+        protected override Vector2 GetTextureSize()
+            => _textureSize;
     }
 
     [Test]

@@ -48,6 +48,6 @@ namespace LillyQuest.RogueLike.Json.Context;
  JsonSerializable(typeof(MapPaletteEntry)),
  JsonSerializable(typeof(List<MapPaletteEntry>)),
  JsonSerializable(typeof(MapPrefabDefinitionJson)),
- JsonSerializable(typeof(List<MapPrefabDefinitionJson>)),
+ JsonSerializable(typeof(List<MapPrefabDefinitionJson>))
 ]
 public partial class LillyQuestRogueLikeJsonContext : JsonSerializerContext { }

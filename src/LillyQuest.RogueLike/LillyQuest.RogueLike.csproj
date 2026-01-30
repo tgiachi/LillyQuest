@@ -7,16 +7,16 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\LillyQuest.Core\LillyQuest.Core.csproj" />
-      <ProjectReference Include="..\LillyQuest.Engine\LillyQuest.Engine.csproj" />
+        <ProjectReference Include="..\LillyQuest.Core\LillyQuest.Core.csproj"/>
+        <ProjectReference Include="..\LillyQuest.Engine\LillyQuest.Engine.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.102">
-        <PrivateAssets>all</PrivateAssets>
-        <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
-      </PackageReference>
-      <PackageReference Include="GoRogue" Version="3.0.0-beta11-debug" />
+        <PackageReference Update="Microsoft.CodeAnalysis.NetAnalyzers" Version="10.0.102">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+        </PackageReference>
+        <PackageReference Include="GoRogue" Version="3.0.0-beta11-debug"/>
     </ItemGroup>
 
 </Project>

@@ -691,10 +691,10 @@ public static class LuaDocumentationGenerator
             var luaFieldAttr = property.GetCustomAttribute<LuaFieldAttribute>();
 
             // Use original property name for built-in types (XNA), apply resolver for custom types
-            var displayName = luaFieldAttr?.Name
-                              ?? (type.Namespace?.StartsWith("Microsoft.Xna.Framework", StringComparison.Ordinal) == true
-                                      ? propertyName
-                                      : _nameResolver(propertyName));
+            var displayName = luaFieldAttr?.Name ??
+                              (type.Namespace?.StartsWith("Microsoft.Xna.Framework", StringComparison.Ordinal) == true
+                                   ? propertyName
+                                   : _nameResolver(propertyName));
 
             _classesBuilder.AppendLine(
                 CultureInfo.InvariantCulture,

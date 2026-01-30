@@ -15,9 +15,46 @@ public interface ILillyQuestPlugin
     PluginInfo PluginInfo { get; }
 
     /// <summary>
+    /// Returns a list of directories the plugin needs created.
+    /// </summary>
+    /// <returns></returns>
+    string[]? DirectoriesToCreate();
+
+    /// <summary>
     /// Returns the bootstrap script function name to execute on load.
     /// </summary>
     string? GetScriptOnLoadFunctionName();
+
+    /// <summary>
+    /// Provides directory configurations for global and plugin-specific roots.
+    /// </summary>
+    /// <param name="global">The global directories configuration.</param>
+    /// <param name="plugin">The plugin-specific directories configuration.</param>
+    void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin);
+
+    /// <summary>
+    /// Called when the engine is fully initialized but before the window is visible.
+    /// Use this for non-rendering setup tasks.
+    /// </summary>
+    /// <param name="container">The DI container.</param>
+    async Task OnEngineReady(IContainer container)
+    {
+        await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Called when the bootstrap is loading resources. The LogScreen is displayed during this phase
+    /// showing all historical logs. Plugins should log their loading progress here.
+    /// </summary>
+    /// <param name="container">The DI container.</param>
+    Task OnLoadResources(IContainer container);
+
+    /// <summary>
+    /// Called after the window is created and rendering is available.
+    /// Use this for graphics resource setup.
+    /// </summary>
+    /// <param name="container">The DI container.</param>
+    Task OnReadyToRender(IContainer container);
 
     /// <summary>
     /// Called when the engine is ready for plugin initialization.
@@ -33,44 +70,7 @@ public interface ILillyQuestPlugin
     void RegisterServices(IContainer container);
 
     /// <summary>
-    ///  Returns a list of directories the plugin needs created.
-    /// </summary>
-    /// <returns></returns>
-    string[]? DirectoriesToCreate();
-
-    /// <summary>
-    /// Provides directory configurations for global and plugin-specific roots.
-    /// </summary>
-    /// <param name="global">The global directories configuration.</param>
-    /// <param name="plugin">The plugin-specific directories configuration.</param>
-    void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin);
-
-    /// <summary>
     /// Called when the engine is shutting down.
     /// </summary>
     void Shutdown();
-
-    /// <summary>
-    /// Called when the engine is fully initialized but before the window is visible.
-    /// Use this for non-rendering setup tasks.
-    /// </summary>
-    /// <param name="container">The DI container.</param>
-    async Task OnEngineReady(IContainer container)
-    {
-        await Task.CompletedTask;
-    }
-
-    /// <summary>
-    /// Called after the window is created and rendering is available.
-    /// Use this for graphics resource setup.
-    /// </summary>
-    /// <param name="container">The DI container.</param>
-    Task OnReadyToRender(IContainer container);
-
-    /// <summary>
-    /// Called when the bootstrap is loading resources. The LogScreen is displayed during this phase
-    /// showing all historical logs. Plugins should log their loading progress here.
-    /// </summary>
-    /// <param name="container">The DI container.</param>
-    Task OnLoadResources(IContainer container);
 }

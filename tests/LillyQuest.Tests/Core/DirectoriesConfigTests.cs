@@ -150,6 +150,18 @@ public class DirectoriesConfigTests
     }
 
     [Test]
+    public void GetPath_WithNestedPath_UsesLowercaseSegments()
+    {
+        var config = new DirectoriesConfig(_testRootDirectory, Array.Empty<string>());
+        var customPath = $"Assets{Path.DirectorySeparatorChar}Textures";
+
+        var path = config.GetPath(customPath);
+
+        var expectedPath = Path.Combine(_testRootDirectory, "assets", "textures");
+        Assert.That(path, Is.EqualTo(expectedPath));
+    }
+
+    [Test]
     public void GetPath_WithNullString_ReturnsRoot()
     {
         var config = new DirectoriesConfig(_testRootDirectory, Array.Empty<string>());
@@ -170,18 +182,6 @@ public class DirectoriesConfigTests
 
         Assert.That(path, Contains.Substring("custom"));
         Assert.That(path, Contains.Substring("subfolder"));
-    }
-
-    [Test]
-    public void GetPath_WithNestedPath_UsesLowercaseSegments()
-    {
-        var config = new DirectoriesConfig(_testRootDirectory, Array.Empty<string>());
-        var customPath = $"Assets{Path.DirectorySeparatorChar}Textures";
-
-        var path = config.GetPath(customPath);
-
-        var expectedPath = Path.Combine(_testRootDirectory, "assets", "textures");
-        Assert.That(path, Is.EqualTo(expectedPath));
     }
 
     [Test]
@@ -258,28 +258,6 @@ public class DirectoriesConfigTests
         Assert.That(config.Root, Is.EqualTo(_testRootDirectory));
     }
 
-    [SetUp]
-    public void Setup()
-    {
-        // Create a unique temporary directory for each test
-        _testRootDirectory = Path.Combine(Path.GetTempPath(), $"LillyQuestTest_{Guid.NewGuid()}");
-
-        if (Directory.Exists(_testRootDirectory))
-        {
-            Directory.Delete(_testRootDirectory, true);
-        }
-    }
-
-    [Test]
-    public void ToString_ReturnsRootDirectory()
-    {
-        var config = new DirectoriesConfig(_testRootDirectory, "Assets");
-
-        var result = config.ToString();
-
-        Assert.That(result, Is.EqualTo(_testRootDirectory));
-    }
-
     [Test]
     public void SearchFiles_WithDirectoryType_ReturnsMetadata()
     {
@@ -333,5 +311,27 @@ public class DirectoriesConfigTests
 
         Assert.That(results.Count, Is.EqualTo(1));
         Assert.That(results[0].Path, Is.EqualTo(filePath));
+    }
+
+    [SetUp]
+    public void Setup()
+    {
+        // Create a unique temporary directory for each test
+        _testRootDirectory = Path.Combine(Path.GetTempPath(), $"LillyQuestTest_{Guid.NewGuid()}");
+
+        if (Directory.Exists(_testRootDirectory))
+        {
+            Directory.Delete(_testRootDirectory, true);
+        }
+    }
+
+    [Test]
+    public void ToString_ReturnsRootDirectory()
+    {
+        var config = new DirectoriesConfig(_testRootDirectory, "Assets");
+
+        var result = config.ToString();
+
+        Assert.That(result, Is.EqualTo(_testRootDirectory));
     }
 }

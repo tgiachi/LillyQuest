@@ -1,5 +1,4 @@
 using System.Numerics;
-using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Interfaces.Services;
@@ -15,8 +14,23 @@ public sealed class ParticlePixelRenderer : IParticlePixelRenderer
     private readonly ParticleSystem _particleSystem;
 
     public ParticlePixelRenderer(ParticleSystem particleSystem)
+        => _particleSystem = particleSystem;
+
+    public static Vector2 ComputeParticleScreenPosition(
+        Vector2 particlePosition,
+        Vector2 tileSize,
+        float tileRenderScale,
+        float layerRenderScale,
+        Vector2 viewTileOffset,
+        Vector2 viewPixelOffset,
+        Vector2 layerPixelOffset
+    )
     {
-        _particleSystem = particleSystem;
+        var scaledTileSize = tileSize * tileRenderScale * layerRenderScale;
+        var viewOffsetPx = viewTileOffset * scaledTileSize + viewPixelOffset;
+        var particlePx = particlePosition * scaledTileSize;
+
+        return particlePx - viewOffsetPx + layerPixelOffset;
     }
 
     public void Render(SpriteBatch spriteBatch, TilesetSurfaceScreen screen, int layerIndex)
@@ -46,6 +60,7 @@ public sealed class ParticlePixelRenderer : IParticlePixelRenderer
         var tileRenderScale = screen.TileRenderScale;
 
         var rendered = 0;
+
         foreach (var particle in _particleSystem.GetVisibleParticles())
         {
             if (particle.TileId < 0 || particle.TileId >= tileset.TileCount)
@@ -106,22 +121,7 @@ public sealed class ParticlePixelRenderer : IParticlePixelRenderer
     private static LyColor ApplyFade(LyColor color, float factor)
     {
         var alpha = (byte)Math.Clamp(color.A * factor, 0f, 255f);
-        return color.WithAlpha(alpha);
-    }
 
-    public static Vector2 ComputeParticleScreenPosition(
-        Vector2 particlePosition,
-        Vector2 tileSize,
-        float tileRenderScale,
-        float layerRenderScale,
-        Vector2 viewTileOffset,
-        Vector2 viewPixelOffset,
-        Vector2 layerPixelOffset
-    )
-    {
-        var scaledTileSize = tileSize * tileRenderScale * layerRenderScale;
-        var viewOffsetPx = viewTileOffset * scaledTileSize + viewPixelOffset;
-        var particlePx = particlePosition * scaledTileSize;
-        return particlePx - viewOffsetPx + layerPixelOffset;
+        return color.WithAlpha(alpha);
     }
 }

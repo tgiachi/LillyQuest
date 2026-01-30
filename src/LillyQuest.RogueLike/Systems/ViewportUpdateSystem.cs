@@ -4,24 +4,71 @@ using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.RogueLike.Components;
+using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
 using SadRogue.Primitives;
 
 namespace LillyQuest.RogueLike.Systems;
 
-public readonly record struct TileViewportBounds(int MinX, int MinY, int MaxX, int MaxY);
-
-public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity, IMapAwareSystem
+public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity, IMapAwareSystem, IMapHandler
 {
     private readonly int _layerIndex;
     private readonly Dictionary<LyQuestMap, ViewportUpdateState> _states = new();
+    private TilesetSurfaceScreen? _screen;
+    private MapRenderSystem? _renderSystem;
 
     public ViewportUpdateSystem(int layerIndex)
     {
         _layerIndex = layerIndex;
         Name = nameof(ViewportUpdateSystem);
     }
+
+    private sealed record ViewportUpdateState(
+        LyQuestMap Map,
+        TilesetSurfaceScreen Screen,
+        MapRenderSystem RenderSystem
+    );
+
+    public void Configure(TilesetSurfaceScreen screen, MapRenderSystem renderSystem)
+    {
+        _screen = screen;
+        _renderSystem = renderSystem;
+    }
+
+    public static TileViewportBounds GetViewportBounds(TilesetSurfaceScreen screen, int layerIndex)
+    {
+        var offset = screen.GetLayerViewTileOffset(layerIndex);
+        var minX = (int)MathF.Floor(offset.X);
+        var minY = (int)MathF.Floor(offset.Y);
+        var maxX = minX + (int)screen.TileViewSize.X - 1;
+        var maxY = minY + (int)screen.TileViewSize.Y - 1;
+
+        return new(minX, minY, maxX, maxY);
+    }
+
+    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap)
+    {
+        if (oldMap != null)
+        {
+            UnregisterMap(oldMap);
+        }
+
+        OnMapRegistered(newMap);
+    }
+
+    public void OnMapRegistered(LyQuestMap map)
+    {
+        if (_screen == null || _renderSystem == null)
+        {
+            throw new InvalidOperationException("ViewportUpdateSystem.Configure must be called before registering a map.");
+        }
+
+        RegisterMap(map, _screen, _renderSystem);
+    }
+
+    public void OnMapUnregistered(LyQuestMap map)
+        => UnregisterMap(map);
 
     public void RegisterMap(LyQuestMap map, TilesetSurfaceScreen screen, MapRenderSystem renderSystem)
     {
@@ -36,17 +83,6 @@ public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity, IMapAw
     public void UnregisterMap(LyQuestMap map)
     {
         _states.Remove(map);
-    }
-
-    public static TileViewportBounds GetViewportBounds(TilesetSurfaceScreen screen, int layerIndex)
-    {
-        var offset = screen.GetLayerViewTileOffset(layerIndex);
-        var minX = (int)MathF.Floor(offset.X);
-        var minY = (int)MathF.Floor(offset.Y);
-        var maxX = minX + (int)screen.TileViewSize.X - 1;
-        var maxY = minY + (int)screen.TileViewSize.Y - 1;
-
-        return new(minX, minY, maxX, maxY);
     }
 
     public void Update(GameTime gameTime)
@@ -64,11 +100,13 @@ public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity, IMapAw
                 for (var x = minX; x <= maxX; x++)
                 {
                     var position = new Point(x, y);
+
                     foreach (var obj in state.Map.GetObjectsAt(position))
                     {
                         if (obj is IGameObject gameObject)
                         {
                             var animationComponent = gameObject.GoRogueComponents.GetFirstOrDefault<AnimationComponent>();
+
                             if (animationComponent != null && animationComponent.Update(gameTime))
                             {
                                 state.RenderSystem.MarkDirtyForTile(state.Map, x, y);
@@ -79,10 +117,4 @@ public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity, IMapAw
             }
         }
     }
-
-    private sealed record ViewportUpdateState(
-        LyQuestMap Map,
-        TilesetSurfaceScreen Screen,
-        MapRenderSystem RenderSystem
-    );
 }

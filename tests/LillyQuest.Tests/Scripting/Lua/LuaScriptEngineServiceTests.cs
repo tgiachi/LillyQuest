@@ -1,11 +1,7 @@
-using System;
-using System.IO;
 using DryIoc;
 using LillyQuest.Core.Data.Directories;
 using LillyQuest.Scripting.Lua.Data.Config;
 using LillyQuest.Scripting.Lua.Services;
-using MoonSharp.Interpreter;
-using NUnit.Framework;
 
 namespace LillyQuest.Tests.Scripting.Lua;
 
@@ -33,6 +29,6 @@ public class LuaScriptEngineServiceTests
         var result = service.LuaScript.DoString("return require('foo')");
         Assert.That(result.String, Is.EqualTo("plugin"));
 
-        Directory.Delete(root, recursive: true);
+        Directory.Delete(root, true);
     }
 }

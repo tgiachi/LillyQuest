@@ -14,9 +14,7 @@ public class ItemService : IDataLoaderReceiver
     private readonly Dictionary<string, ItemDefinitionJson> _itemsById = new();
 
     public ItemService(LootTableService lootTableService)
-    {
-        _lootTableService = lootTableService;
-    }
+        => _lootTableService = lootTableService;
 
     public void ClearData()
     {

@@ -9,50 +9,6 @@ namespace LillyQuest.Tests.Engine.UI;
 
 public class UIProgressBarTests
 {
-    [Test]
-    public void ProgressBar_Clamps_Value_To_Min_Max()
-    {
-        var bar = new UIProgressBar(new FakeNineSliceManager(), new FakeTextureManager())
-        {
-            Min = 0f,
-            Max = 100f,
-            Value = 150f,
-            Size = new(100, 10)
-        };
-
-        Assert.That(bar.NormalizedValue, Is.EqualTo(1f));
-    }
-
-    [Test]
-    public void ProgressBar_Computes_Fill_For_Vertical_BottomUp()
-    {
-        var bar = new UIProgressBar(new FakeNineSliceManager(), new FakeTextureManager())
-        {
-            Min = 0f,
-            Max = 1f,
-            Value = 0.5f,
-            Orientation = ProgressOrientation.Vertical,
-            Size = new(20, 100)
-        };
-
-        Assert.That(bar.GetFillSize(), Is.EqualTo(new Vector2(20, 50)));
-        Assert.That(bar.GetFillOrigin().Y, Is.EqualTo(bar.GetWorldPosition().Y + 50));
-    }
-
-    [Test]
-    public void ProgressBar_Text_Shows_Percent_When_Enabled()
-    {
-        var bar = new UIProgressBar(new FakeNineSliceManager(), new FakeTextureManager())
-        {
-            Min = 0f,
-            Max = 1f,
-            Value = 0.75f,
-            ShowText = true
-        };
-
-        Assert.That(bar.GetDisplayText(), Is.EqualTo("75%"));
-    }
-
     private sealed class FakeNineSliceManager : INineSliceAssetManager
     {
         public NineSliceDefinition GetNineSlice(string key)
@@ -151,5 +107,49 @@ public class UIProgressBarTests
 
         public void UnloadTexture(string assetName)
             => throw new NotSupportedException();
+    }
+
+    [Test]
+    public void ProgressBar_Clamps_Value_To_Min_Max()
+    {
+        var bar = new UIProgressBar(new FakeNineSliceManager(), new FakeTextureManager())
+        {
+            Min = 0f,
+            Max = 100f,
+            Value = 150f,
+            Size = new(100, 10)
+        };
+
+        Assert.That(bar.NormalizedValue, Is.EqualTo(1f));
+    }
+
+    [Test]
+    public void ProgressBar_Computes_Fill_For_Vertical_BottomUp()
+    {
+        var bar = new UIProgressBar(new FakeNineSliceManager(), new FakeTextureManager())
+        {
+            Min = 0f,
+            Max = 1f,
+            Value = 0.5f,
+            Orientation = ProgressOrientation.Vertical,
+            Size = new(20, 100)
+        };
+
+        Assert.That(bar.GetFillSize(), Is.EqualTo(new Vector2(20, 50)));
+        Assert.That(bar.GetFillOrigin().Y, Is.EqualTo(bar.GetWorldPosition().Y + 50));
+    }
+
+    [Test]
+    public void ProgressBar_Text_Shows_Percent_When_Enabled()
+    {
+        var bar = new UIProgressBar(new FakeNineSliceManager(), new FakeTextureManager())
+        {
+            Min = 0f,
+            Max = 1f,
+            Value = 0.75f,
+            ShowText = true
+        };
+
+        Assert.That(bar.GetDisplayText(), Is.EqualTo("75%"));
     }
 }

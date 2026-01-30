@@ -115,6 +115,26 @@ public sealed class TurnScheduler
     }
 
     /// <summary>
+    /// Gets all entities ordered by current energy (highest first).
+    /// </summary>
+    public IReadOnlyList<ISchedulerEntity> GetEntitiesByEnergy()
+    {
+        return _entities
+               .OrderByDescending(e => e.Energy)
+               .ThenByDescending(e => e.Speed)
+               .ThenBy(e => e.Id)
+               .ToList();
+    }
+
+    /// <summary>
+    /// Gets the player entity, if present.
+    /// </summary>
+    public ISchedulerEntity? GetPlayer()
+    {
+        return _entities.FirstOrDefault(e => e.IsPlayer);
+    }
+
+    /// <summary>
     /// Processes a single turn: finds the next entity that can act and executes their action.
     /// Call this from your game loop - it handles both AI and player turns.
     /// </summary>
@@ -187,26 +207,6 @@ public sealed class TurnScheduler
         }
 
         return CreateResult(SchedulerState.Processing, readyEntity);
-    }
-
-    /// <summary>
-    /// Gets all entities ordered by current energy (highest first).
-    /// </summary>
-    public IReadOnlyList<ISchedulerEntity> GetEntitiesByEnergy()
-    {
-        return _entities
-               .OrderByDescending(e => e.Energy)
-               .ThenByDescending(e => e.Speed)
-               .ThenBy(e => e.Id)
-               .ToList();
-    }
-
-    /// <summary>
-    /// Gets the player entity, if present.
-    /// </summary>
-    public ISchedulerEntity? GetPlayer()
-    {
-        return _entities.FirstOrDefault(e => e.IsPlayer);
     }
 
     /// <summary>

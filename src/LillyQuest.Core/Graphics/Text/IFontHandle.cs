@@ -6,6 +6,6 @@ namespace LillyQuest.Core.Graphics.Text;
 
 public interface IFontHandle
 {
-    Vector2 MeasureText(string text);
     void DrawText(SpriteBatch spriteBatch, string text, Vector2 position, LyColor color, float depth = 0f);
+    Vector2 MeasureText(string text);
 }

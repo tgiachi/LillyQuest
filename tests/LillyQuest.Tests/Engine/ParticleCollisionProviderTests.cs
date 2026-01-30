@@ -5,18 +5,25 @@ namespace LillyQuest.Tests.Engine;
 
 public class ParticleCollisionProviderTests
 {
-    [Test]
-    public void IsBlocked_WithCoordinates_ReturnsTrueForBlockedTile()
+    private class FakeCollisionProvider : IParticleCollisionProvider
     {
-        // Arrange
-        var provider = new FakeCollisionProvider();
-        provider.SetBlocked(5, 5, isBlocked: true);
+        private readonly Dictionary<(int X, int Y), bool> _blockedTiles = new();
 
-        // Act
-        var result = provider.IsBlocked(5, 5);
+        public bool IsBlocked(int x, int y)
+            => _blockedTiles.TryGetValue((x, y), out var blocked) && blocked;
 
-        // Assert
-        Assert.That(result, Is.True);
+        public bool IsBlocked(Vector2 worldPosition)
+        {
+            var x = (int)worldPosition.X;
+            var y = (int)worldPosition.Y;
+
+            return IsBlocked(x, y);
+        }
+
+        public void SetBlocked(int x, int y, bool isBlocked)
+        {
+            _blockedTiles[(x, y)] = isBlocked;
+        }
     }
 
     [Test]
@@ -24,7 +31,7 @@ public class ParticleCollisionProviderTests
     {
         // Arrange
         var provider = new FakeCollisionProvider();
-        provider.SetBlocked(5, 5, isBlocked: false);
+        provider.SetBlocked(5, 5, false);
 
         // Act
         var result = provider.IsBlocked(5, 5);
@@ -34,14 +41,14 @@ public class ParticleCollisionProviderTests
     }
 
     [Test]
-    public void IsBlocked_WithVector2_ReturnsTrueForBlockedTile()
+    public void IsBlocked_WithCoordinates_ReturnsTrueForBlockedTile()
     {
         // Arrange
         var provider = new FakeCollisionProvider();
-        provider.SetBlocked(10, 20, isBlocked: true);
+        provider.SetBlocked(5, 5, true);
 
         // Act
-        var result = provider.IsBlocked(new Vector2(10.5f, 20.3f));
+        var result = provider.IsBlocked(5, 5);
 
         // Assert
         Assert.That(result, Is.True);
@@ -52,35 +59,26 @@ public class ParticleCollisionProviderTests
     {
         // Arrange
         var provider = new FakeCollisionProvider();
-        provider.SetBlocked(10, 20, isBlocked: false);
+        provider.SetBlocked(10, 20, false);
 
         // Act
-        var result = provider.IsBlocked(new Vector2(10.5f, 20.3f));
+        var result = provider.IsBlocked(new(10.5f, 20.3f));
 
         // Assert
         Assert.That(result, Is.False);
     }
 
-    private class FakeCollisionProvider : IParticleCollisionProvider
+    [Test]
+    public void IsBlocked_WithVector2_ReturnsTrueForBlockedTile()
     {
-        private readonly Dictionary<(int X, int Y), bool> _blockedTiles = new();
+        // Arrange
+        var provider = new FakeCollisionProvider();
+        provider.SetBlocked(10, 20, true);
 
-        public void SetBlocked(int x, int y, bool isBlocked)
-        {
-            _blockedTiles[(x, y)] = isBlocked;
-        }
+        // Act
+        var result = provider.IsBlocked(new(10.5f, 20.3f));
 
-        public bool IsBlocked(int x, int y)
-        {
-            return _blockedTiles.TryGetValue((x, y), out var blocked) && blocked;
-        }
-
-        public bool IsBlocked(Vector2 worldPosition)
-        {
-            var x = (int)worldPosition.X;
-            var y = (int)worldPosition.Y;
-            return IsBlocked(x, y);
-        }
+        // Assert
+        Assert.That(result, Is.True);
     }
 }
-

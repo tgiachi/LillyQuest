@@ -13,9 +13,7 @@ public class LootTableService : IDataLoaderReceiver
     private readonly Dictionary<string, LootTableDefinitionJson> _lootTablesById = new();
 
     public LootTableService(Lazy<ItemService>? itemService)
-    {
-        _itemService = itemService;
-    }
+        => _itemService = itemService;
 
     public void ClearData()
     {

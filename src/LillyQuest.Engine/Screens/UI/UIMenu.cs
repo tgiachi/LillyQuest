@@ -32,15 +32,6 @@ public sealed class UIMenu : UIScreenControl
     public UIMenu()
         => IsFocusable = true;
 
-    public void SetItems(IEnumerable<MenuItem> items)
-    {
-        _items.Clear();
-        _items.AddRange(items);
-        SelectFirstEnabled();
-        HoveredIndex = -1;
-        PressedIndex = -1;
-    }
-
     public override bool HandleKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
     {
         if (!IsEnabled || !IsVisible || _items.Count == 0)
@@ -51,22 +42,45 @@ public sealed class UIMenu : UIScreenControl
         if (keys.Contains(Key.Up) || keys.Contains(Key.W))
         {
             MoveSelection(-1);
+
             return true;
         }
 
         if (keys.Contains(Key.Down) || keys.Contains(Key.S))
         {
             MoveSelection(1);
+
             return true;
         }
 
         if (keys.Contains(Key.Enter))
         {
             ActivateSelected();
+
             return true;
         }
 
         return false;
+    }
+
+    public override bool HandleMouseDown(Vector2 point)
+    {
+        if (!IsEnabled || !IsVisible)
+        {
+            return false;
+        }
+
+        var index = GetItemIndexAtPoint(point);
+
+        if (index < 0 || !_items[index].IsEnabled)
+        {
+            return false;
+        }
+
+        SelectedIndex = index;
+        PressedIndex = index;
+
+        return true;
     }
 
     public override bool HandleMouseMove(Vector2 point)
@@ -77,6 +91,7 @@ public sealed class UIMenu : UIScreenControl
         }
 
         var index = GetItemIndexAtPoint(point);
+
         if (index != HoveredIndex)
         {
             if (index >= 0 && _items[index].IsEnabled)
@@ -91,25 +106,6 @@ public sealed class UIMenu : UIScreenControl
         }
 
         return index >= 0;
-    }
-
-    public override bool HandleMouseDown(Vector2 point)
-    {
-        if (!IsEnabled || !IsVisible)
-        {
-            return false;
-        }
-
-        var index = GetItemIndexAtPoint(point);
-        if (index < 0 || !_items[index].IsEnabled)
-        {
-            return false;
-        }
-
-        SelectedIndex = index;
-        PressedIndex = index;
-
-        return true;
     }
 
     public override bool HandleMouseUp(Vector2 point)
@@ -155,35 +151,13 @@ public sealed class UIMenu : UIScreenControl
         }
     }
 
-    private void SelectFirstEnabled()
+    public void SetItems(IEnumerable<MenuItem> items)
     {
-        SelectedIndex = _items.FindIndex(item => item.IsEnabled);
-    }
-
-    private void MoveSelection(int direction)
-    {
-        if (_items.Count == 0)
-        {
-            SelectedIndex = -1;
-            return;
-        }
-
-        if (SelectedIndex < 0)
-        {
-            SelectedIndex = _items.FindIndex(item => item.IsEnabled);
-            return;
-        }
-
-        var index = SelectedIndex;
-        for (var i = 0; i < _items.Count; i++)
-        {
-            index = (index + direction + _items.Count) % _items.Count;
-            if (_items[index].IsEnabled)
-            {
-                SelectedIndex = index;
-                return;
-            }
-        }
+        _items.Clear();
+        _items.AddRange(items);
+        SelectFirstEnabled();
+        HoveredIndex = -1;
+        PressedIndex = -1;
     }
 
     private void ActivateSelected()
@@ -194,43 +168,11 @@ public sealed class UIMenu : UIScreenControl
         }
 
         var item = _items[SelectedIndex];
+
         if (item.IsEnabled)
         {
             item.OnSelect?.Invoke();
         }
-    }
-
-    private int GetItemIndexAtPoint(Vector2 point)
-    {
-        var bounds = GetBounds();
-        if (point.X < bounds.Origin.X ||
-            point.X > bounds.Origin.X + bounds.Size.X ||
-            point.Y < bounds.Origin.Y ||
-            point.Y > bounds.Origin.Y + bounds.Size.Y)
-        {
-            return -1;
-        }
-
-        var localY = point.Y - bounds.Origin.Y - Padding.Y;
-        if (localY < 0f)
-        {
-            return -1;
-        }
-
-        var slotHeight = ItemHeight + ItemSpacing;
-        if (slotHeight <= 0f)
-        {
-            return -1;
-        }
-
-        var index = (int)(localY / slotHeight);
-        if (index < 0 || index >= _items.Count)
-        {
-            return -1;
-        }
-
-        var insideItem = localY - index * slotHeight <= ItemHeight;
-        return insideItem ? index : -1;
     }
 
     private LyColor GetItemColor(int index, MenuItem item)
@@ -256,5 +198,79 @@ public sealed class UIMenu : UIScreenControl
         }
 
         return TextColor;
+    }
+
+    private int GetItemIndexAtPoint(Vector2 point)
+    {
+        var bounds = GetBounds();
+
+        if (point.X < bounds.Origin.X ||
+            point.X > bounds.Origin.X + bounds.Size.X ||
+            point.Y < bounds.Origin.Y ||
+            point.Y > bounds.Origin.Y + bounds.Size.Y)
+        {
+            return -1;
+        }
+
+        var localY = point.Y - bounds.Origin.Y - Padding.Y;
+
+        if (localY < 0f)
+        {
+            return -1;
+        }
+
+        var slotHeight = ItemHeight + ItemSpacing;
+
+        if (slotHeight <= 0f)
+        {
+            return -1;
+        }
+
+        var index = (int)(localY / slotHeight);
+
+        if (index < 0 || index >= _items.Count)
+        {
+            return -1;
+        }
+
+        var insideItem = localY - index * slotHeight <= ItemHeight;
+
+        return insideItem ? index : -1;
+    }
+
+    private void MoveSelection(int direction)
+    {
+        if (_items.Count == 0)
+        {
+            SelectedIndex = -1;
+
+            return;
+        }
+
+        if (SelectedIndex < 0)
+        {
+            SelectedIndex = _items.FindIndex(item => item.IsEnabled);
+
+            return;
+        }
+
+        var index = SelectedIndex;
+
+        for (var i = 0; i < _items.Count; i++)
+        {
+            index = (index + direction + _items.Count) % _items.Count;
+
+            if (_items[index].IsEnabled)
+            {
+                SelectedIndex = index;
+
+                return;
+            }
+        }
+    }
+
+    private void SelectFirstEnabled()
+    {
+        SelectedIndex = _items.FindIndex(item => item.IsEnabled);
     }
 }

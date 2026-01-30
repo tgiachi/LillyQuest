@@ -11,7 +11,5 @@ public class ItemGameObject : BaseGameObject
         (int)MapLayer.Items,
         isWalkable,
         isTransparent
-    )
-    {
-    }
+    ) { }
 }

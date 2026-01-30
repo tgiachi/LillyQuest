@@ -1,10 +1,10 @@
 using System.Numerics;
 using LillyQuest.Core.Data.Assets.Tiles;
+using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
-using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Engine;
 using LillyQuest.Engine.Extensions.TilesetSurface;
 using LillyQuest.Engine.Interfaces.Managers;
@@ -53,14 +53,14 @@ public class TilesetSurfaceEditorScene : BaseScene
 
     public override void OnLoad()
     {
-        _uiRoot = new UIRootScreen
+        _uiRoot = new()
         {
             Position = Vector2.Zero,
             Size = new(1600, 900)
         };
 
         // Create the tileset surface screen
-        _screen = new TilesetSurfaceScreen(_tilesetManager)
+        _screen = new(_tilesetManager)
         {
             DefaultTilesetName = "roguelike",
             LayerCount = 2,
@@ -80,8 +80,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             MathF.Max(0f, windowSize.Y - _screen.Position.Y)
         );
 
-        _screen.ApplyTileViewScaleToScreen(availableSize, includeMargins: true);
-
+        _screen.ApplyTileViewScaleToScreen(availableSize);
 
         Log.Logger.Information(
             "TilesetSurfaceScreen state: Size={Size}, TileViewSize={TileViewSize}, Layer0Scale={Scale}",
@@ -364,7 +363,7 @@ public class TilesetSurfaceEditorScene : BaseScene
             MathF.Max(0f, size.Y - _screen.Position.Y)
         );
 
-       // _screen.ApplyTileViewScaleToScreen(availableSize, includeMargins: true);
+        // _screen.ApplyTileViewScaleToScreen(availableSize, includeMargins: true);
 
         // Log.Logger.Information(
         //     "TilesetSurfaceScreen state: Size={Size}, TileViewSize={TileViewSize}, Layer0Scale={Scale}",

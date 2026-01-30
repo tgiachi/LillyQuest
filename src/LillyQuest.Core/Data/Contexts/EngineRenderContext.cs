@@ -29,6 +29,7 @@ public class EngineRenderContext
     /// Calculated as PhysicalWindowSize / DpiScale.
     /// </summary>
     public Vector2 LogicalWindowSize => PhysicalWindowSize / DpiScale;
+
     /// <summary>
     /// Handler used to dispatch fire-and-forget work on the main thread.
     /// </summary>
@@ -45,20 +46,6 @@ public class EngineRenderContext
     public Func<Delegate, object?>? InvokeOnMainThreadFuncHandler { get; set; }
 
     /// <summary>
-    /// Dispatches fire-and-forget work on the main thread.
-    /// </summary>
-    public void PostOnMainThread(Action action)
-    {
-        if (PostOnMainThreadHandler != null)
-        {
-            PostOnMainThreadHandler(action);
-            return;
-        }
-
-        action();
-    }
-
-    /// <summary>
     /// Invokes work on the main thread and blocks until completion.
     /// </summary>
     public void InvokeOnMainThread(Action action)
@@ -66,6 +53,7 @@ public class EngineRenderContext
         if (InvokeOnMainThreadHandler != null)
         {
             InvokeOnMainThreadHandler(action);
+
             return;
         }
 
@@ -80,9 +68,25 @@ public class EngineRenderContext
         if (InvokeOnMainThreadFuncHandler != null)
         {
             var result = InvokeOnMainThreadFuncHandler(func);
+
             return result is T typed ? typed : default!;
         }
 
         return func();
+    }
+
+    /// <summary>
+    /// Dispatches fire-and-forget work on the main thread.
+    /// </summary>
+    public void PostOnMainThread(Action action)
+    {
+        if (PostOnMainThreadHandler != null)
+        {
+            PostOnMainThreadHandler(action);
+
+            return;
+        }
+
+        action();
     }
 }

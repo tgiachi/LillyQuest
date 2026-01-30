@@ -20,6 +20,25 @@ public sealed class UIRootScreen : BaseScreen
     public LyColor ModalBackgroundColor { get; set; } = LyColor.Black;
     public float ModalBackgroundAlpha { get; set; } = 0.5f;
 
+    public void HandleResize(Vector2 newSize)
+    {
+        Size = newSize;
+
+        foreach (var control in Root.Children)
+        {
+            control.ApplyCentering(newSize);
+        }
+    }
+
+    public override bool OnKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => Root.FocusManager.Focused?.HandleKeyPress(modifier, keys) ?? false;
+
+    public override bool OnKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => Root.FocusManager.Focused?.HandleKeyRelease(modifier, keys) ?? false;
+
+    public override bool OnKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => Root.FocusManager.Focused?.HandleKeyRepeat(modifier, keys) ?? false;
+
     public override bool OnMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons)
     {
         var modal = GetTopmostModal();
@@ -109,15 +128,6 @@ public sealed class UIRootScreen : BaseScreen
         return hit?.HandleMouseWheel(new(x, y), delta) ?? false;
     }
 
-    public override bool OnKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
-        => Root.FocusManager.Focused?.HandleKeyPress(modifier, keys) ?? false;
-
-    public override bool OnKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
-        => Root.FocusManager.Focused?.HandleKeyRelease(modifier, keys) ?? false;
-
-    public override bool OnKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
-        => Root.FocusManager.Focused?.HandleKeyRepeat(modifier, keys) ?? false;
-
     public override void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext)
     {
         foreach (var control in Root.Children.OrderBy(c => c.ZIndex))
@@ -138,16 +148,6 @@ public sealed class UIRootScreen : BaseScreen
         foreach (var control in Root.Children)
         {
             control.Update(gameTime);
-        }
-    }
-
-    public void HandleResize(Vector2 newSize)
-    {
-        Size = newSize;
-
-        foreach (var control in Root.Children)
-        {
-            control.ApplyCentering(newSize);
         }
     }
 

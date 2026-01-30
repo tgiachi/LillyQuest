@@ -39,19 +39,9 @@ public interface ISchedulerService
     void AddEntity(ISchedulerEntity entity);
 
     /// <summary>
-    /// Removes an entity from the scheduler.
+    /// Clears all entities from the scheduler.
     /// </summary>
-    void RemoveEntity(ISchedulerEntity entity);
-
-    /// <summary>
-    /// Removes an entity by ID.
-    /// </summary>
-    void RemoveEntity(Guid entityId);
-
-    /// <summary>
-    /// Queues a player action to be executed when it's the player's turn.
-    /// </summary>
-    void EnqueuePlayerAction(ISchedulerAction action);
+    void Clear();
 
     /// <summary>
     /// Clears the pending player action.
@@ -59,10 +49,9 @@ public interface ISchedulerService
     void ClearPendingPlayerAction();
 
     /// <summary>
-    /// Processes turns until player input is needed or scheduler is empty.
+    /// Queues a player action to be executed when it's the player's turn.
     /// </summary>
-    /// <param name="maxIterations">Safety limit to prevent infinite loops.</param>
-    TurnResult ProcessUntilPlayerInput(int maxIterations = 10000);
+    void EnqueuePlayerAction(ISchedulerAction action);
 
     /// <summary>
     /// Gets all entities ordered by current energy.
@@ -75,20 +64,30 @@ public interface ISchedulerService
     ISchedulerEntity? GetPlayer();
 
     /// <summary>
-    /// Resets all entity energy and tick counter.
-    /// </summary>
-    void Reset();
-
-    /// <summary>
-    /// Clears all entities from the scheduler.
-    /// </summary>
-    void Clear();
-
-
-    /// <summary>
     /// Processes a single turn: finds the next entity that can act and executes their action.
     /// Call this from your game loop - it handles both AI and player turns.
     /// </summary>
     /// <returns>Result indicating what happened and if player input is needed.</returns>
     TurnResult ProcessNextTurn();
+
+    /// <summary>
+    /// Processes turns until player input is needed or scheduler is empty.
+    /// </summary>
+    /// <param name="maxIterations">Safety limit to prevent infinite loops.</param>
+    TurnResult ProcessUntilPlayerInput(int maxIterations = 10000);
+
+    /// <summary>
+    /// Removes an entity from the scheduler.
+    /// </summary>
+    void RemoveEntity(ISchedulerEntity entity);
+
+    /// <summary>
+    /// Removes an entity by ID.
+    /// </summary>
+    void RemoveEntity(Guid entityId);
+
+    /// <summary>
+    /// Resets all entity energy and tick counter.
+    /// </summary>
+    void Reset();
 }

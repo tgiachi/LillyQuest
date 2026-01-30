@@ -1,6 +1,5 @@
 using LillyQuest.Core.Primitives;
 using LillyQuest.RogueLike.Components;
-using NUnit.Framework;
 
 namespace LillyQuest.Tests.RogueLike.Components;
 
@@ -12,7 +11,7 @@ public class LightSourceComponentTests
         var start = LyColor.Yellow;
         var end = LyColor.Black;
 
-        var component = new LightSourceComponent(radius: 4, startColor: start, endColor: end);
+        var component = new LightSourceComponent(4, start, end);
 
         Assert.That(component.Radius, Is.EqualTo(4));
         Assert.That(component.StartColor, Is.EqualTo(start));

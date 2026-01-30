@@ -27,6 +27,13 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>, IDisposable
     )
         => _renderContext = renderContext;
 
+    public void Dispose()
+    {
+        _imguiController?.Dispose();
+        _imguiController = null;
+        GC.SuppressFinalize(this);
+    }
+
     public override void Initialize()
     {
         _imguiController = new(
@@ -65,12 +72,5 @@ public class ImGuiSystem : BaseSystem<IIMGuiEntity>, IDisposable
         }
 
         imguiController.Render();
-    }
-
-    public void Dispose()
-    {
-        _imguiController?.Dispose();
-        _imguiController = null;
-        GC.SuppressFinalize(this);
     }
 }

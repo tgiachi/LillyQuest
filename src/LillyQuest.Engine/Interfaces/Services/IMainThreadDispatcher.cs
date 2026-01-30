@@ -21,9 +21,11 @@ public interface IMainThreadDispatcher
     int MaxActionsPerFrame { get; set; }
 
     /// <summary>
-    /// Enqueues a fire-and-forget action to run on the main thread.
+    /// Executes pending work items on the main thread.
     /// </summary>
-    void Post(Action action);
+    /// <param name="maxActions">Max actions to execute, or null to use MaxActionsPerFrame.</param>
+    /// <returns>Number of actions executed.</returns>
+    int ExecutePending(int? maxActions = null);
 
     /// <summary>
     /// Executes an action on the main thread and blocks until completion.
@@ -36,9 +38,7 @@ public interface IMainThreadDispatcher
     T Invoke<T>(Func<T> func);
 
     /// <summary>
-    /// Executes pending work items on the main thread.
+    /// Enqueues a fire-and-forget action to run on the main thread.
     /// </summary>
-    /// <param name="maxActions">Max actions to execute, or null to use MaxActionsPerFrame.</param>
-    /// <returns>Number of actions executed.</returns>
-    int ExecutePending(int? maxActions = null);
+    void Post(Action action);
 }

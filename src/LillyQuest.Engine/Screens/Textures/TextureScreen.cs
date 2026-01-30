@@ -25,6 +25,7 @@ public class TextureScreen : BaseScreen
         }
 
         var textureSize = GetTextureSize();
+
         if (textureSize.X <= 0f || textureSize.Y <= 0f)
         {
             return;
@@ -48,6 +49,13 @@ public class TextureScreen : BaseScreen
         spriteBatch.DisableScissor();
     }
 
+    protected (Vector2 position, Vector2 size) ComputeTexturePlacement(Vector2 textureSize)
+    {
+        var position = (Size - textureSize) * 0.5f;
+
+        return (position, textureSize);
+    }
+
     protected virtual Vector2 GetTextureSize()
     {
         if (!_textureManager.TryGetTexture(TextureName, out var texture))
@@ -55,13 +63,6 @@ public class TextureScreen : BaseScreen
             return Vector2.Zero;
         }
 
-        return new Vector2(texture.Width, texture.Height);
-    }
-
-    protected (Vector2 position, Vector2 size) ComputeTexturePlacement(Vector2 textureSize)
-    {
-        var position = (Size - textureSize) * 0.5f;
-
-        return (position, textureSize);
+        return new(texture.Width, texture.Height);
     }
 }

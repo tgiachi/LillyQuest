@@ -24,12 +24,13 @@ public sealed class ParticleSystem : ISystem
     public uint Order => 145;
     public string Name => "ParticleSystem";
     public SystemQueryType QueryType => SystemQueryType.Updateable;
-    
+
     public int ParticleCount => _particles.Count;
 
     public ParticleSystem(
         IParticleCollisionProvider collisionProvider,
-        IParticleFOVProvider fovProvider)
+        IParticleFOVProvider fovProvider
+    )
     {
         _collisionProvider = collisionProvider;
         _fovProvider = fovProvider;

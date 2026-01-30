@@ -274,11 +274,13 @@ public sealed class SceneTransitionManager : ISceneManager, IDisposable
             {
                 scene.OnInitialize(this);
                 _logger.Debug("Initialized scene '{SceneName}'", scene.Name);
+
                 return scene;
             }
         }
 
         _logger.Error("Scene '{SceneName}' not registered in container", sceneName);
+
         throw new InvalidOperationException($"Scene '{sceneName}' not registered.");
     }
 

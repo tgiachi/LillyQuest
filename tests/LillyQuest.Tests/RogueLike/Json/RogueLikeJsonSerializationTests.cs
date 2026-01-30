@@ -18,6 +18,7 @@ public class RogueLikeJsonSerializationTests
     private static readonly string[] ExpectedFlagsGround = ["ground"];
     private static readonly string[] ExpectedTagsFloor = ["floor"];
     private static readonly string[] ExpectedTagsAnimated = ["animated"];
+
     [Test]
     public void Deserialize_BaseJsonEntity_UsesContext()
     {
@@ -70,39 +71,6 @@ public class RogueLikeJsonSerializationTests
     }
 
     [Test]
-    public void Deserialize_BaseJsonEntity_WithTilesetType_UsesDerivedType()
-    {
-        const string json = """
-                            {
-                              "type": "tileset",
-                              "id": "tileset-1",
-                              "name": "main",
-                              "textureName": "tiles.png",
-                              "tiles": [
-                                {
-                                  "id": "tile-1",
-                                  "tags": ["floor"],
-                                  "symbol": ".",
-                                  "fgColor": "#FFAAAAAA",
-                                  "bgColor": "#FF111111"
-                                }
-                              ]
-                            }
-                            """;
-
-        var entity = JsonUtils.Deserialize<BaseJsonEntity>(json, LillyQuestRogueLikeJsonContext.Default);
-
-        Assert.That(entity, Is.InstanceOf<TilesetDefinitionJson>());
-
-        var tileset = (TilesetDefinitionJson)entity;
-        Assert.That(tileset.Id, Is.EqualTo("tileset-1"));
-        Assert.That(tileset.Name, Is.EqualTo("main"));
-        Assert.That(tileset.TextureName, Is.EqualTo("tiles.png"));
-        Assert.That(tileset.Tiles.Count, Is.EqualTo(1));
-        Assert.That(tileset.Tiles[0].Id, Is.EqualTo("tile-1"));
-    }
-
-    [Test]
     public void Deserialize_BaseJsonEntity_WithTerrainType_UsesDerivedType()
     {
         const string json = """
@@ -133,32 +101,36 @@ public class RogueLikeJsonSerializationTests
     }
 
     [Test]
-    public void Deserialize_TerrainDefinition_UsesContext()
+    public void Deserialize_BaseJsonEntity_WithTilesetType_UsesDerivedType()
     {
         const string json = """
                             {
-                              "id": "terrain-2",
-                              "tags": ["rough"],
-                              "name": "Mud",
-                              "description": "Sticky mud",
-                              "flags": ["ground"],
-                              "movementCost": 3,
-                              "--": "slow"
+                              "type": "tileset",
+                              "id": "tileset-1",
+                              "name": "main",
+                              "textureName": "tiles.png",
+                              "tiles": [
+                                {
+                                  "id": "tile-1",
+                                  "tags": ["floor"],
+                                  "symbol": ".",
+                                  "fgColor": "#FFAAAAAA",
+                                  "bgColor": "#FF111111"
+                                }
+                              ]
                             }
                             """;
 
-        var terrain = JsonUtils.Deserialize<TerrainDefinitionJson>(
-            json,
-            LillyQuestRogueLikeJsonContext.Default
-        );
+        var entity = JsonUtils.Deserialize<BaseJsonEntity>(json, LillyQuestRogueLikeJsonContext.Default);
 
-        Assert.That(terrain.Id, Is.EqualTo("terrain-2"));
-        Assert.That(terrain.Tags, Is.EquivalentTo(ExpectedTagsRough));
-        Assert.That(terrain.Name, Is.EqualTo("Mud"));
-        Assert.That(terrain.Description, Is.EqualTo("Sticky mud"));
-        Assert.That(terrain.Flags, Is.EquivalentTo(ExpectedFlagsGround));
-        Assert.That(terrain.MovementCost, Is.EqualTo(3));
-        Assert.That(terrain.Comment, Is.EqualTo("slow"));
+        Assert.That(entity, Is.InstanceOf<TilesetDefinitionJson>());
+
+        var tileset = (TilesetDefinitionJson)entity;
+        Assert.That(tileset.Id, Is.EqualTo("tileset-1"));
+        Assert.That(tileset.Name, Is.EqualTo("main"));
+        Assert.That(tileset.TextureName, Is.EqualTo("tiles.png"));
+        Assert.That(tileset.Tiles.Count, Is.EqualTo(1));
+        Assert.That(tileset.Tiles[0].Id, Is.EqualTo("tile-1"));
     }
 
     [Test]
@@ -209,61 +181,32 @@ public class RogueLikeJsonSerializationTests
     }
 
     [Test]
-    public void Deserialize_TileDefinition_UsesContext()
+    public void Deserialize_TerrainDefinition_UsesContext()
     {
         const string json = """
                             {
-                              "id": "tile-1",
-                              "tags": ["floor"]
+                              "id": "terrain-2",
+                              "tags": ["rough"],
+                              "name": "Mud",
+                              "description": "Sticky mud",
+                              "flags": ["ground"],
+                              "movementCost": 3,
+                              "--": "slow"
                             }
                             """;
 
-        var tile = JsonUtils.Deserialize<TileDefinition>(
+        var terrain = JsonUtils.Deserialize<TerrainDefinitionJson>(
             json,
             LillyQuestRogueLikeJsonContext.Default
         );
 
-        Assert.That(tile.Id, Is.EqualTo("tile-1"));
-        Assert.That(tile.Tags, Is.EquivalentTo(ExpectedTagsFloor));
-    }
-
-    [Test]
-    public void Deserialize_TilesetDefinition_UsesContext()
-    {
-        const string json = """
-                            {
-                              "name": "tileset",
-                              "textureName": "tiles.png"
-                            }
-                            """;
-
-        var tileset = JsonUtils.Deserialize<TilesetDefinitionJson>(
-            json,
-            LillyQuestRogueLikeJsonContext.Default
-        );
-
-        Assert.That(tileset.Name, Is.EqualTo("tileset"));
-        Assert.That(tileset.TextureName, Is.EqualTo("tiles.png"));
-    }
-
-    [Test]
-    public void Deserialize_TilesetDefinitionList_UsesContext()
-    {
-        const string json = """
-                            [
-                              { "name": "a", "textureName": "a.png" },
-                              { "name": "b", "textureName": "b.png" }
-                            ]
-                            """;
-
-        var tilesets = JsonUtils.Deserialize<List<TilesetDefinitionJson>>(
-            json,
-            LillyQuestRogueLikeJsonContext.Default
-        );
-
-        Assert.That(tilesets.Count, Is.EqualTo(2));
-        Assert.That(tilesets[0].Name, Is.EqualTo("a"));
-        Assert.That(tilesets[1].TextureName, Is.EqualTo("b.png"));
+        Assert.That(terrain.Id, Is.EqualTo("terrain-2"));
+        Assert.That(terrain.Tags, Is.EquivalentTo(ExpectedTagsRough));
+        Assert.That(terrain.Name, Is.EqualTo("Mud"));
+        Assert.That(terrain.Description, Is.EqualTo("Sticky mud"));
+        Assert.That(terrain.Flags, Is.EquivalentTo(ExpectedFlagsGround));
+        Assert.That(terrain.MovementCost, Is.EqualTo(3));
+        Assert.That(terrain.Comment, Is.EqualTo("slow"));
     }
 
     [Test]
@@ -293,6 +236,25 @@ public class RogueLikeJsonSerializationTests
         Assert.That(animation.Frames[0].BgColor, Is.EqualTo("#FF445566"));
         Assert.That(animation.Frames[1].Symbol, Is.EqualTo(","));
         Assert.That(animation.Frames[1].BgColor, Is.Null);
+    }
+
+    [Test]
+    public void Deserialize_TileDefinition_UsesContext()
+    {
+        const string json = """
+                            {
+                              "id": "tile-1",
+                              "tags": ["floor"]
+                            }
+                            """;
+
+        var tile = JsonUtils.Deserialize<TileDefinition>(
+            json,
+            LillyQuestRogueLikeJsonContext.Default
+        );
+
+        Assert.That(tile.Id, Is.EqualTo("tile-1"));
+        Assert.That(tile.Tags, Is.EquivalentTo(ExpectedTagsFloor));
     }
 
     [Test]
@@ -332,6 +294,25 @@ public class RogueLikeJsonSerializationTests
         Assert.That(tile.Animation.Frames.Count, Is.EqualTo(2));
         Assert.That(tile.Animation.Frames[1].Symbol, Is.EqualTo("B"));
         Assert.That(tile.Animation.Frames[1].FgColor, Is.EqualTo("#FF00FF00"));
+    }
+
+    [Test]
+    public void Deserialize_TilesetDefinition_UsesContext()
+    {
+        const string json = """
+                            {
+                              "name": "tileset",
+                              "textureName": "tiles.png"
+                            }
+                            """;
+
+        var tileset = JsonUtils.Deserialize<TilesetDefinitionJson>(
+            json,
+            LillyQuestRogueLikeJsonContext.Default
+        );
+
+        Assert.That(tileset.Name, Is.EqualTo("tileset"));
+        Assert.That(tileset.TextureName, Is.EqualTo("tiles.png"));
     }
 
     [Test]
@@ -380,5 +361,25 @@ public class RogueLikeJsonSerializationTests
         Assert.That(tileset.Tiles[1].Animation, Is.Not.Null);
         Assert.That(tileset.Tiles[1].Animation!.Type, Is.EqualTo(TileAnimationType.Once));
         Assert.That(tileset.Tiles[1].Animation.Frames.Count, Is.EqualTo(2));
+    }
+
+    [Test]
+    public void Deserialize_TilesetDefinitionList_UsesContext()
+    {
+        const string json = """
+                            [
+                              { "name": "a", "textureName": "a.png" },
+                              { "name": "b", "textureName": "b.png" }
+                            ]
+                            """;
+
+        var tilesets = JsonUtils.Deserialize<List<TilesetDefinitionJson>>(
+            json,
+            LillyQuestRogueLikeJsonContext.Default
+        );
+
+        Assert.That(tilesets.Count, Is.EqualTo(2));
+        Assert.That(tilesets[0].Name, Is.EqualTo("a"));
+        Assert.That(tilesets[1].TextureName, Is.EqualTo("b.png"));
     }
 }

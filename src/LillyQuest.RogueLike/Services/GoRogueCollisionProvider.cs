@@ -1,6 +1,5 @@
 using System.Numerics;
 using LillyQuest.Engine.Interfaces.Particles;
-using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Maps;
 using SadRogue.Primitives;
 
@@ -13,24 +12,15 @@ public sealed class GoRogueCollisionProvider : IParticleCollisionProvider
 {
     private LyQuestMap? _map;
 
-    public GoRogueCollisionProvider()
-    {
-    }
-
-    public void SetMap(LyQuestMap map)
-    {
-        _map = map;
-    }
-
     public bool IsBlocked(int x, int y)
     {
         if (_map == null)
         {
             return true; // No map = treat as blocked
         }
-        
+
         var point = new Point(x, y);
-        
+
         // Check if position is out of bounds
         if (x < 0 || y < 0 || x >= _map.Width || y >= _map.Height)
         {
@@ -45,6 +35,12 @@ public sealed class GoRogueCollisionProvider : IParticleCollisionProvider
     {
         var x = (int)worldPosition.X;
         var y = (int)worldPosition.Y;
+
         return IsBlocked(x, y);
+    }
+
+    public void SetMap(LyQuestMap map)
+    {
+        _map = map;
     }
 }

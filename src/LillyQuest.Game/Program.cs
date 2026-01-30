@@ -31,7 +31,7 @@ await ConsoleApp.RunAsync(
             new()
             {
                 IsDebugMode = true,
-                RootDirectory =  rootDirectory,
+                RootDirectory = rootDirectory
             }
         );
 

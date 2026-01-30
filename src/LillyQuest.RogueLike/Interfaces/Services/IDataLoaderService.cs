@@ -4,18 +4,14 @@ namespace LillyQuest.RogueLike.Interfaces.Services;
 
 public interface IDataLoaderService
 {
-    Task LoadDataAsync();
-
-    Task ReloadDataAsync();
-
     Task DispatchDataToReceiversAsync();
 
     List<TBaseJsonEntity> GetEntities<TBaseJsonEntity>() where TBaseJsonEntity : BaseJsonEntity;
+    Task LoadDataAsync();
 
     void RegisterDataReceiver(IDataLoaderReceiver receiver);
 
+    Task ReloadDataAsync();
 
     Task VerifyLoadedDataAsync();
-
-
 }

@@ -189,6 +189,64 @@ public class UIWindow : UIScreenControl
         return true;
     }
 
+    public void RecalculateAutoSize()
+    {
+        var padding = GetContentPadding();
+        var contentOffset = new Vector2(padding.X, padding.Y);
+        var hasChildren = false;
+        var minX = 0f;
+        var minY = 0f;
+        var maxX = 0f;
+        var maxY = 0f;
+
+        foreach (var child in Children)
+        {
+            var localPos = child.Position - contentOffset;
+            var childMinX = localPos.X;
+            var childMinY = localPos.Y;
+            var childMaxX = localPos.X + child.Size.X;
+            var childMaxY = localPos.Y + child.Size.Y;
+
+            if (!hasChildren)
+            {
+                minX = childMinX;
+                minY = childMinY;
+                maxX = childMaxX;
+                maxY = childMaxY;
+                hasChildren = true;
+
+                continue;
+            }
+
+            minX = MathF.Min(minX, childMinX);
+            minY = MathF.Min(minY, childMinY);
+            maxX = MathF.Max(maxX, childMaxX);
+            maxY = MathF.Max(maxY, childMaxY);
+        }
+
+        var contentWidth = 0f;
+        var contentHeight = 0f;
+
+        if (hasChildren)
+        {
+            var minXAdjusted = MathF.Min(0f, minX);
+            var minYAdjusted = MathF.Min(0f, minY);
+            contentWidth = maxX - minXAdjusted;
+            contentHeight = maxY - minYAdjusted;
+        }
+
+        var topPadding = IsTitleBarEnabled ? MathF.Max(TitleBarHeight, padding.Y) : padding.Y;
+        var targetSize = new Vector2(
+            padding.X + contentWidth + padding.Z,
+            topPadding + contentHeight + padding.W
+        );
+
+        Size = new(
+            Math.Clamp(targetSize.X, MinSize.X, MaxSize.X),
+            Math.Clamp(targetSize.Y, MinSize.Y, MaxSize.Y)
+        );
+    }
+
     public void Remove(UIScreenControl control)
     {
         if (control == null)
@@ -235,6 +293,7 @@ public class UIWindow : UIScreenControl
         if (AutoSizeEnabled)
         {
             var signature = CalculateAutoSizeSignature();
+
             if (signature != _autoSizeSignature)
             {
                 RecalculateAutoSize();
@@ -244,6 +303,7 @@ public class UIWindow : UIScreenControl
 
         // Create snapshot to avoid collection modification during iteration
         var snapshot = Children.ToList();
+
         foreach (var child in snapshot)
         {
             child.Update(gameTime);
@@ -255,63 +315,6 @@ public class UIWindow : UIScreenControl
 
     protected virtual Vector4 GetContentPadding()
         => Vector4.Zero;
-
-    public void RecalculateAutoSize()
-    {
-        var padding = GetContentPadding();
-        var contentOffset = new Vector2(padding.X, padding.Y);
-        var hasChildren = false;
-        var minX = 0f;
-        var minY = 0f;
-        var maxX = 0f;
-        var maxY = 0f;
-
-        foreach (var child in Children)
-        {
-            var localPos = child.Position - contentOffset;
-            var childMinX = localPos.X;
-            var childMinY = localPos.Y;
-            var childMaxX = localPos.X + child.Size.X;
-            var childMaxY = localPos.Y + child.Size.Y;
-
-            if (!hasChildren)
-            {
-                minX = childMinX;
-                minY = childMinY;
-                maxX = childMaxX;
-                maxY = childMaxY;
-                hasChildren = true;
-                continue;
-            }
-
-            minX = MathF.Min(minX, childMinX);
-            minY = MathF.Min(minY, childMinY);
-            maxX = MathF.Max(maxX, childMaxX);
-            maxY = MathF.Max(maxY, childMaxY);
-        }
-
-        var contentWidth = 0f;
-        var contentHeight = 0f;
-
-        if (hasChildren)
-        {
-            var minXAdjusted = MathF.Min(0f, minX);
-            var minYAdjusted = MathF.Min(0f, minY);
-            contentWidth = maxX - minXAdjusted;
-            contentHeight = maxY - minYAdjusted;
-        }
-
-        var topPadding = IsTitleBarEnabled ? MathF.Max(TitleBarHeight, padding.Y) : padding.Y;
-        var targetSize = new Vector2(
-            padding.X + contentWidth + padding.Z,
-            topPadding + contentHeight + padding.W
-        );
-
-        Size = new Vector2(
-            Math.Clamp(targetSize.X, MinSize.X, MaxSize.X),
-            Math.Clamp(targetSize.Y, MinSize.Y, MaxSize.Y)
-        );
-    }
 
     protected virtual void RenderBackground(SpriteBatch spriteBatch, EngineRenderContext renderContext)
     {
@@ -348,6 +351,22 @@ public class UIWindow : UIScreenControl
         ClampToParent();
     }
 
+    private int CalculateAutoSizeSignature()
+    {
+        var hash = new HashCode();
+        hash.Add(Children.Count);
+
+        foreach (var child in Children)
+        {
+            hash.Add(child.Position.X);
+            hash.Add(child.Position.Y);
+            hash.Add(child.Size.X);
+            hash.Add(child.Size.Y);
+        }
+
+        return hash.ToHashCode();
+    }
+
     private void ClampToParent()
     {
         if (Parent == null)
@@ -374,21 +393,5 @@ public class UIWindow : UIScreenControl
                point.X <= handleOrigin.X + ResizeHandleSize.X &&
                point.Y >= handleOrigin.Y &&
                point.Y <= handleOrigin.Y + ResizeHandleSize.Y;
-    }
-
-    private int CalculateAutoSizeSignature()
-    {
-        var hash = new HashCode();
-        hash.Add(Children.Count);
-
-        foreach (var child in Children)
-        {
-            hash.Add(child.Position.X);
-            hash.Add(child.Position.Y);
-            hash.Add(child.Size.X);
-            hash.Add(child.Size.Y);
-        }
-
-        return hash.ToHashCode();
     }
 }

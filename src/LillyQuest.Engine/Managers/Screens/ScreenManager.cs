@@ -405,7 +405,6 @@ public sealed class ScreenManager : IScreenManager
         }
     }
 
-
     /// <summary>
     /// Dispatches an input action to all screen entities.
     /// </summary>

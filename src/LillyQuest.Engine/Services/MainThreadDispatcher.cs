@@ -28,57 +28,10 @@ public sealed class MainThreadDispatcher : IMainThreadDispatcher
     public bool IsMainThread => Environment.CurrentManagedThreadId == MainThreadId;
     public int MaxActionsPerFrame { get; set; } = 100;
 
-    public void Post(Action action)
-    {
-        ArgumentNullException.ThrowIfNull(action);
-        _queue.Enqueue(new WorkItem(
-            () =>
-            {
-                action();
-                return null;
-            },
-            null
-        ));
-    }
-
-    public void Invoke(Action action)
-    {
-        ArgumentNullException.ThrowIfNull(action);
-
-        if (IsMainThread)
-        {
-            action();
-            return;
-        }
-
-        Invoke(() =>
-        {
-            action();
-            return true;
-        });
-    }
-
-    public T Invoke<T>(Func<T> func)
-    {
-        ArgumentNullException.ThrowIfNull(func);
-
-        if (IsMainThread)
-        {
-            return func();
-        }
-
-        var completion = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
-        _queue.Enqueue(new WorkItem(() => func(), completion));
-
-        var result = completion.Task.GetAwaiter().GetResult();
-        return result is T typed
-            ? typed
-            : throw new InvalidOperationException("Main thread invocation returned unexpected result.");
-    }
-
     public int ExecutePending(int? maxActions = null)
     {
         var limit = maxActions ?? MaxActionsPerFrame;
+
         if (limit <= 0)
         {
             return 0;
@@ -109,5 +62,61 @@ public sealed class MainThreadDispatcher : IMainThreadDispatcher
         }
 
         return executed;
+    }
+
+    public void Invoke(Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+
+        if (IsMainThread)
+        {
+            action();
+
+            return;
+        }
+
+        Invoke(
+            () =>
+            {
+                action();
+
+                return true;
+            }
+        );
+    }
+
+    public T Invoke<T>(Func<T> func)
+    {
+        ArgumentNullException.ThrowIfNull(func);
+
+        if (IsMainThread)
+        {
+            return func();
+        }
+
+        var completion = new TaskCompletionSource<object?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        _queue.Enqueue(new(() => func(), completion));
+
+        var result = completion.Task.GetAwaiter().GetResult();
+
+        return result is T typed
+                   ? typed
+                   : throw new InvalidOperationException("Main thread invocation returned unexpected result.");
+    }
+
+    public void Post(Action action)
+    {
+        ArgumentNullException.ThrowIfNull(action);
+        _queue.Enqueue(
+            new(
+                () =>
+                {
+                    action();
+
+                    return null;
+                },
+                null
+            )
+        );
     }
 }

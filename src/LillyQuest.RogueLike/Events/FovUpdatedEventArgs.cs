@@ -26,7 +26,8 @@ public sealed class FovUpdatedEventArgs : EventArgs
     public FovUpdatedEventArgs(
         LyQuestMap map,
         IReadOnlySet<Point> previousVisibleTiles,
-        IReadOnlySet<Point> currentVisibleTiles)
+        IReadOnlySet<Point> currentVisibleTiles
+    )
     {
         Map = map;
         PreviousVisibleTiles = previousVisibleTiles;

@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Linq;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
@@ -15,6 +14,9 @@ public class LogScreenTests
     private sealed class FakeFontManager : IFontManager
     {
         public void Dispose() { }
+
+        public IFontHandle GetFontHandle(FontRef fontRef)
+            => new FakeFontHandle();
 
         public bool HasFont(string assetName)
             => false;
@@ -47,9 +49,6 @@ public class LogScreenTests
         public void LoadFont(string assetName, Span<byte> data)
             => throw new NotSupportedException();
 
-        public IFontHandle GetFontHandle(FontRef fontRef)
-            => new FakeFontHandle();
-
         public bool TryGetFontHandle(FontRef fontRef, out IFontHandle handle)
         {
             handle = new FakeFontHandle();
@@ -63,10 +62,10 @@ public class LogScreenTests
 
     private sealed class FakeFontHandle : IFontHandle
     {
+        public void DrawText(SpriteBatch spriteBatch, string text, Vector2 position, LyColor color, float depth = 0f) { }
+
         public Vector2 MeasureText(string text)
             => new(text.Length * 10f, 10f);
-
-        public void DrawText(SpriteBatch spriteBatch, string text, Vector2 position, LyColor color, float depth = 0f) { }
     }
 
     private sealed class TestLogScreen : LogScreen
@@ -75,6 +74,37 @@ public class LogScreenTests
             : base(dispatcher, fontManager) { }
 
         public IReadOnlyList<RenderedLine> Lines => GetLines();
+    }
+
+    [Test]
+    public void Update_Assigns_Level_Color()
+    {
+        var dispatcher = new LogEventDispatcher();
+        var screen = CreateScreen(dispatcher);
+
+        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Warning, "Warn", null));
+
+        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
+
+        Assert.That(screen.Lines.Count, Is.EqualTo(1));
+        Assert.That(screen.Lines[0].Spans[0].Foreground, Is.EqualTo(LogScreen.WarningColor));
+    }
+
+    [Test]
+    public void Update_CarriageReturn_Overwrites_Last_Line()
+    {
+        var dispatcher = new LogEventDispatcher();
+        var screen = CreateScreen(dispatcher);
+        screen.Size = new(240, 60);
+
+        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "Loading 0%", null));
+        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
+
+        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "Loading 10%\r", null));
+        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
+
+        Assert.That(screen.Lines.Count, Is.EqualTo(1));
+        Assert.That(GetLineText(screen.Lines[0]), Is.EqualTo("Loading 10%"));
     }
 
     [Test]
@@ -96,19 +126,33 @@ public class LogScreenTests
     }
 
     [Test]
-    public void Update_Wraps_Long_Words()
+    public void Update_Fatal_Enables_Blink_For_One_Second()
     {
         var dispatcher = new LogEventDispatcher();
         var screen = CreateScreen(dispatcher);
-        screen.Size = new(70, 60);
 
-        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "AAAAAAAAA", null));
+        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Fatal, "Boom", null));
 
-        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
+        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.01)));
 
-        Assert.That(screen.Lines.Count, Is.EqualTo(2));
-        Assert.That(GetLineText(screen.Lines[0]), Is.EqualTo("AAAAA"));
-        Assert.That(GetLineText(screen.Lines[1]), Is.EqualTo("AAAA"));
+        Assert.That(screen.Lines[0].BlinkRemaining, Is.EqualTo(1f).Within(0.05f));
+
+        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(1.1)));
+
+        Assert.That(screen.Lines[0].BlinkRemaining, Is.EqualTo(0f));
+    }
+
+    [Test]
+    public void Update_Renders_Immediately_Without_Typewriter_Delay()
+    {
+        var dispatcher = new LogEventDispatcher();
+        var screen = CreateScreen(dispatcher);
+
+        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "Hello", null));
+        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.01)));
+
+        Assert.That(screen.Lines.Count, Is.EqualTo(1));
+        Assert.That(GetLineText(screen.Lines[0]), Is.EqualTo("Hello"));
     }
 
     [Test]
@@ -132,64 +176,19 @@ public class LogScreenTests
     }
 
     [Test]
-    public void Update_Assigns_Level_Color()
+    public void Update_Wraps_Long_Words()
     {
         var dispatcher = new LogEventDispatcher();
         var screen = CreateScreen(dispatcher);
+        screen.Size = new(70, 60);
 
-        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Warning, "Warn", null));
+        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "AAAAAAAAA", null));
 
         screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
 
-        Assert.That(screen.Lines.Count, Is.EqualTo(1));
-        Assert.That(screen.Lines[0].Spans[0].Foreground, Is.EqualTo(LogScreen.WarningColor));
-    }
-
-    [Test]
-    public void Update_Fatal_Enables_Blink_For_One_Second()
-    {
-        var dispatcher = new LogEventDispatcher();
-        var screen = CreateScreen(dispatcher);
-
-        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Fatal, "Boom", null));
-
-        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.01)));
-
-        Assert.That(screen.Lines[0].BlinkRemaining, Is.EqualTo(1f).Within(0.05f));
-
-        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(1.1)));
-
-        Assert.That(screen.Lines[0].BlinkRemaining, Is.EqualTo(0f));
-    }
-
-    [Test]
-    public void Update_CarriageReturn_Overwrites_Last_Line()
-    {
-        var dispatcher = new LogEventDispatcher();
-        var screen = CreateScreen(dispatcher);
-        screen.Size = new(240, 60);
-
-        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "Loading 0%", null));
-        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
-
-        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "Loading 10%\r", null));
-        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.1)));
-
-        Assert.That(screen.Lines.Count, Is.EqualTo(1));
-        Assert.That(GetLineText(screen.Lines[0]), Is.EqualTo("Loading 10%"));
-    }
-
-    [Test]
-    public void Update_Renders_Immediately_Without_Typewriter_Delay()
-    {
-        var dispatcher = new LogEventDispatcher();
-        var screen = CreateScreen(dispatcher);
-
-        dispatcher.Enqueue(new(DateTimeOffset.UtcNow, LogEventLevel.Information, "Hello", null));
-        screen.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.01)));
-
-        Assert.That(screen.Lines.Count, Is.EqualTo(1));
-        Assert.That(GetLineText(screen.Lines[0]), Is.EqualTo("Hello"));
+        Assert.That(screen.Lines.Count, Is.EqualTo(2));
+        Assert.That(GetLineText(screen.Lines[0]), Is.EqualTo("AAAAA"));
+        Assert.That(GetLineText(screen.Lines[1]), Is.EqualTo("AAAA"));
     }
 
     private static TestLogScreen CreateScreen(ILogEventDispatcher dispatcher)

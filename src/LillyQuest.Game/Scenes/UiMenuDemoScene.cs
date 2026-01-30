@@ -32,8 +32,8 @@ public class UiMenuDemoScene : BaseScene
     public override void OnLoad()
     {
         var initialSize = _renderContext.Window != null
-            ? new Vector2(_renderContext.Window.Size.X, _renderContext.Window.Size.Y)
-            : new Vector2(1280, 720);
+                              ? new(_renderContext.Window.Size.X, _renderContext.Window.Size.Y)
+                              : new Vector2(1280, 720);
 
         _screen = new()
         {

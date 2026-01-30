@@ -6,5 +6,4 @@ public enum MapLayer
     Items,
     Creatures,
     Effects
-
 }

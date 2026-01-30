@@ -5,18 +5,17 @@ using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Extensions.TilesetSurface;
+using LillyQuest.Engine.Interfaces.Screens;
 using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Managers.Screens.Base;
-using LillyQuest.Engine.Types;
 using Silk.NET.Input;
-using Silk.NET.Maths;
 
 namespace LillyQuest.Engine.Screens.TilesetSurface;
 
 /// <summary>
 /// Screen for drawing and editing tileset surfaces with multi-layer support.
 /// </summary>
-public class TilesetSurfaceScreen : BaseScreen
+public class TilesetSurfaceScreen : BaseScreen, ILayoutAwareScreen
 {
     /// <summary>
     /// Fired when the mouse moves over a valid tile.
@@ -71,8 +70,8 @@ public class TilesetSurfaceScreen : BaseScreen
     private readonly ITilesetManager _tilesetManager;
     private readonly TilesetSurface _surface;
 
-    private TilesetSurfaceAnimator? _animator;
-    private TilesetSurfaceInputHandler? _inputHandler;
+    private readonly TilesetSurfaceAnimator? _animator;
+    private readonly TilesetSurfaceInputHandler? _inputHandler;
     private TilesetSurfaceRenderer? _renderer;
     private readonly TilesetSurfaceInputContext _inputContext = new();
     private readonly TilesetSurfaceRenderContext _renderContext = new();
@@ -123,7 +122,7 @@ public class TilesetSurfaceScreen : BaseScreen
         {
             _tileRenderScale = value;
             UpdateScreenSizeFromTileView();
-            UpdateLayerRenderScaleFromTileView(Size, includeMargins: true);
+            UpdateLayerRenderScaleFromTileView(Size, true);
         }
     }
 
@@ -138,72 +137,8 @@ public class TilesetSurfaceScreen : BaseScreen
         {
             _tileViewSize = value;
             UpdateScreenSizeFromTileView();
-            UpdateLayerRenderScaleFromTileView(Size, includeMargins: true);
+            UpdateLayerRenderScaleFromTileView(Size, true);
         }
-    }
-
-    /// <summary>
-    /// Computes a tile view size that fits within the provided screen size.
-    /// </summary>
-    /// <param name="screenSize">Target screen size in logical units.</param>
-    /// <param name="includeMargins">Whether to subtract margins from the available size.</param>
-    public Vector2 ComputeTileViewSizeFromScreen(Vector2 screenSize, bool includeMargins = true)
-    {
-        if (_tileset == null)
-        {
-            return _tileViewSize;
-        }
-
-        var masterTileset = GetMasterTileset();
-        var availableSize = includeMargins
-                                ? new Vector2(
-                                    MathF.Max(0f, screenSize.X - Margin.X - Margin.Z),
-                                    MathF.Max(0f, screenSize.Y - Margin.Y - Margin.W)
-                                )
-                                : screenSize;
-
-        var tileWidth = masterTileset.TileWidth * TileRenderScale;
-        var tileHeight = masterTileset.TileHeight * TileRenderScale;
-
-        var cols = tileWidth > 0 ? MathF.Floor(availableSize.X / tileWidth) : 0f;
-        var rows = tileHeight > 0 ? MathF.Floor(availableSize.Y / tileHeight) : 0f;
-
-        return new Vector2(MathF.Max(1f, cols), MathF.Max(1f, rows));
-    }
-
-    /// <summary>
-    /// Updates the tile view size to fit within the provided screen size.
-    /// </summary>
-    /// <param name="screenSize">Target screen size in logical units.</param>
-    /// <param name="keepScreenSize">Whether to preserve the passed screen size as the screen size.</param>
-    /// <param name="includeMargins">Whether to subtract margins from the available size.</param>
-    public void FitTileViewToScreen(Vector2 screenSize, bool keepScreenSize = true, bool includeMargins = true)
-    {
-        TileViewSize = ComputeTileViewSizeFromScreen(screenSize, includeMargins);
-
-        if (keepScreenSize)
-        {
-            AutoSizeFromTileView = false;
-            Size = screenSize;
-            UpdateLayerRenderScaleFromTileView(screenSize, includeMargins);
-
-            return;
-        }
-
-        AutoSizeFromTileView = true;
-        UpdateScreenSizeFromTileView();
-    }
-
-    /// <summary>
-    /// Updates the screen size and scales layers to match the current tile view size.
-    /// </summary>
-    /// <param name="screenSize">Target screen size in logical units.</param>
-    /// <param name="includeMargins">Whether to subtract margins from the available size.</param>
-    public void ApplyTileViewScaleToScreen(Vector2 screenSize, bool includeMargins = true)
-    {
-        AutoSizeFromTileView = false;
-        Size = screenSize;
-        UpdateLayerRenderScaleFromTileView(screenSize, includeMargins);
     }
 
     public TilesetSurfaceScreen(ITilesetManager tilesetManager)
@@ -222,10 +157,16 @@ public class TilesetSurfaceScreen : BaseScreen
         _inputContext.TileRenderScale = TileRenderScale;
         _inputContext.ScreenPosition = Position;
         _inputContext.Margin = Margin;
-        _inputHandler = new TilesetSurfaceInputHandler(_inputContext);
+        _inputHandler = new(_inputContext);
 
         // Initialize animator early so movements work before OnLoad
-        _animator = new TilesetSurfaceAnimator(_surface);
+        _animator = new(_surface);
+    }
+
+    public void ApplyLayout(Vector2 position, Vector2 size, Vector2 rootSize)
+    {
+        Position = position;
+        ApplyTileViewScaleToScreen(size, includeMargins: true);
     }
 
     /// <summary>
@@ -246,6 +187,18 @@ public class TilesetSurfaceScreen : BaseScreen
     public void AddTileToSurface(int layerIndex, int x, int y, TileRenderData tileData)
     {
         _surface.SetTile(layerIndex, x, y, tileData);
+    }
+
+    /// <summary>
+    /// Updates the screen size and scales layers to match the current tile view size.
+    /// </summary>
+    /// <param name="screenSize">Target screen size in logical units.</param>
+    /// <param name="includeMargins">Whether to subtract margins from the available size.</param>
+    public void ApplyTileViewScaleToScreen(Vector2 screenSize, bool includeMargins = true)
+    {
+        AutoSizeFromTileView = false;
+        Size = screenSize;
+        UpdateLayerRenderScaleFromTileView(screenSize, includeMargins);
     }
 
     public static Vector2 ApplyTileViewSize(
@@ -321,13 +274,33 @@ public class TilesetSurfaceScreen : BaseScreen
         }
     }
 
-    public static Vector2 ComputeScreenSizeFromTileView(
-        Vector2 tileViewSize,
-        int tileWidth,
-        int tileHeight,
-        float tileRenderScale
-    )
-        => tileViewSize.ToScreenSize(tileWidth, tileHeight, tileRenderScale);
+    /// <summary>
+    /// Clears a follower layer's view lock.
+    /// </summary>
+    public void ClearLayerViewLock(int followerIndex)
+    {
+        if (!IsValidLayerIndex(followerIndex))
+        {
+            return;
+        }
+
+        if (!_viewLockMasterByFollower.TryGetValue(followerIndex, out var masterIndex))
+        {
+            return;
+        }
+
+        _viewLockMasterByFollower.Remove(followerIndex);
+
+        if (_viewLockFollowersByMaster.TryGetValue(masterIndex, out var followers))
+        {
+            followers.Remove(followerIndex);
+
+            if (followers.Count == 0)
+            {
+                _viewLockFollowersByMaster.Remove(masterIndex);
+            }
+        }
+    }
 
     public static float ComputeLayerRenderScaleForTileView(
         Vector2 tileViewSize,
@@ -345,7 +318,7 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         var availableSize = includeMargins
-                                ? new Vector2(
+                                ? new(
                                     MathF.Max(0f, screenSize.X - margin.X - margin.Z),
                                     MathF.Max(0f, screenSize.Y - margin.Y - margin.W)
                                 )
@@ -362,6 +335,43 @@ public class TilesetSurfaceScreen : BaseScreen
         return MathF.Max(widthScale, heightScale);
     }
 
+    public static Vector2 ComputeScreenSizeFromTileView(
+        Vector2 tileViewSize,
+        int tileWidth,
+        int tileHeight,
+        float tileRenderScale
+    )
+        => tileViewSize.ToScreenSize(tileWidth, tileHeight, tileRenderScale);
+
+    /// <summary>
+    /// Computes a tile view size that fits within the provided screen size.
+    /// </summary>
+    /// <param name="screenSize">Target screen size in logical units.</param>
+    /// <param name="includeMargins">Whether to subtract margins from the available size.</param>
+    public Vector2 ComputeTileViewSizeFromScreen(Vector2 screenSize, bool includeMargins = true)
+    {
+        if (_tileset == null)
+        {
+            return _tileViewSize;
+        }
+
+        var masterTileset = GetMasterTileset();
+        var availableSize = includeMargins
+                                ? new(
+                                    MathF.Max(0f, screenSize.X - Margin.X - Margin.Z),
+                                    MathF.Max(0f, screenSize.Y - Margin.Y - Margin.W)
+                                )
+                                : screenSize;
+
+        var tileWidth = masterTileset.TileWidth * TileRenderScale;
+        var tileHeight = masterTileset.TileHeight * TileRenderScale;
+
+        var cols = tileWidth > 0 ? MathF.Floor(availableSize.X / tileWidth) : 0f;
+        var rows = tileHeight > 0 ? MathF.Floor(availableSize.Y / tileHeight) : 0f;
+
+        return new(MathF.Max(1f, cols), MathF.Max(1f, rows));
+    }
+
     /// <summary>
     /// Enqueues a tile movement for the specified layer.
     /// </summary>
@@ -373,6 +383,29 @@ public class TilesetSurfaceScreen : BaseScreen
         bool bounce = false
     )
         => _animator?.EnqueueMove(layerIndex, source, destination, durationSeconds, bounce) ?? false;
+
+    /// <summary>
+    /// Updates the tile view size to fit within the provided screen size.
+    /// </summary>
+    /// <param name="screenSize">Target screen size in logical units.</param>
+    /// <param name="keepScreenSize">Whether to preserve the passed screen size as the screen size.</param>
+    /// <param name="includeMargins">Whether to subtract margins from the available size.</param>
+    public void FitTileViewToScreen(Vector2 screenSize, bool keepScreenSize = true, bool includeMargins = true)
+    {
+        TileViewSize = ComputeTileViewSizeFromScreen(screenSize, includeMargins);
+
+        if (keepScreenSize)
+        {
+            AutoSizeFromTileView = false;
+            Size = screenSize;
+            UpdateLayerRenderScaleFromTileView(screenSize, includeMargins);
+
+            return;
+        }
+
+        AutoSizeFromTileView = true;
+        UpdateScreenSizeFromTileView();
+    }
 
     /// <summary>
     /// Gets the active movements for a specific layer.
@@ -443,10 +476,19 @@ public class TilesetSurfaceScreen : BaseScreen
         return string.IsNullOrEmpty(layer.TilesetName) ? DefaultTilesetName : layer.TilesetName;
     }
 
-    public bool TryGetLayerTileset(int layerIndex, out Tileset tileset)
+    /// <summary>
+    /// Gets the master layer index for a follower, or null if not locked.
+    /// </summary>
+    public int? GetLayerViewLockMaster(int followerIndex)
     {
-        tileset = GetLayerTileset(layerIndex);
-        return tileset != null;
+        if (!IsValidLayerIndex(followerIndex))
+        {
+            return null;
+        }
+
+        return _viewLockMasterByFollower.TryGetValue(followerIndex, out var masterIndex)
+                   ? masterIndex
+                   : null;
     }
 
     /// <summary>
@@ -458,21 +500,6 @@ public class TilesetSurfaceScreen : BaseScreen
         => TryGetLayerViewOffsets(layerIndex, out _, out var pixelOffset)
                ? pixelOffset
                : Vector2.Zero;
-
-    /// <summary>
-    /// Gets the target view offset for a specific layer in tile coordinates.
-    /// </summary>
-    /// <param name="layerIndex">Layer index.</param>
-    /// <returns>Target view offset in tile coordinates.</returns>
-    public Vector2 GetLayerViewTileTarget(int layerIndex)
-    {
-        if (!IsValidLayerIndex(layerIndex))
-        {
-            return Vector2.Zero;
-        }
-
-        return _surface.Layers[layerIndex].ViewTileOffsetTarget;
-    }
 
     /// <summary>
     /// Gets the target view offset for a specific layer in pixels.
@@ -498,6 +525,21 @@ public class TilesetSurfaceScreen : BaseScreen
         => TryGetLayerViewOffsets(layerIndex, out var tileOffset, out _)
                ? tileOffset
                : Vector2.Zero;
+
+    /// <summary>
+    /// Gets the target view offset for a specific layer in tile coordinates.
+    /// </summary>
+    /// <param name="layerIndex">Layer index.</param>
+    /// <returns>Target view offset in tile coordinates.</returns>
+    public Vector2 GetLayerViewTileTarget(int layerIndex)
+    {
+        if (!IsValidLayerIndex(layerIndex))
+        {
+            return Vector2.Zero;
+        }
+
+        return _surface.Layers[layerIndex].ViewTileOffsetTarget;
+    }
 
     /// <summary>
     /// Gets the interpolated tile position for a movement based on its elapsed time.
@@ -532,7 +574,7 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         UpdateScreenSizeFromTileView();
-        UpdateLayerRenderScaleFromTileView(Size, includeMargins: true);
+        UpdateLayerRenderScaleFromTileView(Size, true);
 
         // Update contexts with current values after tileset is loaded
         _inputContext.TileRenderScale = TileRenderScale;
@@ -545,21 +587,9 @@ public class TilesetSurfaceScreen : BaseScreen
         _renderContext.Margin = Margin;
 
         // Initialize renderer (requires tileset to be loaded)
-        _renderer = new TilesetSurfaceRenderer(_surface, _renderContext, GetLayerTileset);
+        _renderer = new(_surface, _renderContext, GetLayerTileset);
 
         base.OnLoad();
-    }
-
-    /// <summary>
-    /// Clears event handlers to prevent memory leaks when the screen is unloaded.
-    /// </summary>
-    public override void OnUnload()
-    {
-        TileMouseMove = null;
-        TileMouseMoveAllLayers = null;
-        TileMouseDown = null;
-        TileMouseWheel = null;
-        base.OnUnload();
     }
 
     public override bool OnMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons)
@@ -637,6 +667,18 @@ public class TilesetSurfaceScreen : BaseScreen
     }
 
     /// <summary>
+    /// Clears event handlers to prevent memory leaks when the screen is unloaded.
+    /// </summary>
+    public override void OnUnload()
+    {
+        TileMouseMove = null;
+        TileMouseMoveAllLayers = null;
+        TileMouseDown = null;
+        TileMouseWheel = null;
+        base.OnUnload();
+    }
+
+    /// <summary>
     /// Advances active tile movements and places tiles when complete.
     /// </summary>
     public void ProcessMovements(GameTime gameTime)
@@ -651,9 +693,6 @@ public class TilesetSurfaceScreen : BaseScreen
 
         _renderer.Render(spriteBatch, _animator, RenderParticleOverlay);
     }
-
-    private void RenderParticleOverlay(SpriteBatch spriteBatch)
-        => ParticlePixelRenderer?.Render(spriteBatch, this, ParticleLayerIndex);
 
     /// <summary>
     /// Sets an input tile size override for the specified layer.
@@ -766,7 +805,58 @@ public class TilesetSurfaceScreen : BaseScreen
 
         _surface.Layers[layerIndex].TilesetName = tilesetName;
         UpdateScreenSizeFromTileView();
-        UpdateLayerRenderScaleFromTileView(Size, includeMargins: true);
+        UpdateLayerRenderScaleFromTileView(Size, true);
+    }
+
+    /// <summary>
+    /// Locks a follower layer's view targets to a master layer.
+    /// </summary>
+    public void SetLayerViewLock(int masterIndex, int followerIndex)
+    {
+        if (masterIndex == followerIndex)
+        {
+            return;
+        }
+
+        if (!IsValidLayerIndex(masterIndex) || !IsValidLayerIndex(followerIndex))
+        {
+            return;
+        }
+
+        if (_viewLockMasterByFollower.ContainsKey(masterIndex))
+        {
+            return;
+        }
+
+        if (_viewLockFollowersByMaster.TryGetValue(followerIndex, out var existingFollowers) &&
+            existingFollowers.Count > 0)
+        {
+            return;
+        }
+
+        if (_viewLockMasterByFollower.TryGetValue(followerIndex, out var oldMaster))
+        {
+            if (_viewLockFollowersByMaster.TryGetValue(oldMaster, out var oldFollowers))
+            {
+                oldFollowers.Remove(followerIndex);
+
+                if (oldFollowers.Count == 0)
+                {
+                    _viewLockFollowersByMaster.Remove(oldMaster);
+                }
+            }
+        }
+
+        _viewLockMasterByFollower[followerIndex] = masterIndex;
+
+        if (!_viewLockFollowersByMaster.TryGetValue(masterIndex, out var followers))
+        {
+            followers = new();
+            _viewLockFollowersByMaster[masterIndex] = followers;
+        }
+
+        followers.Add(followerIndex);
+        SyncViewFromMaster(masterIndex, followerIndex);
     }
 
     /// <summary>
@@ -856,100 +946,6 @@ public class TilesetSurfaceScreen : BaseScreen
     }
 
     /// <summary>
-    /// Locks a follower layer's view targets to a master layer.
-    /// </summary>
-    public void SetLayerViewLock(int masterIndex, int followerIndex)
-    {
-        if (masterIndex == followerIndex)
-        {
-            return;
-        }
-
-        if (!IsValidLayerIndex(masterIndex) || !IsValidLayerIndex(followerIndex))
-        {
-            return;
-        }
-
-        if (_viewLockMasterByFollower.ContainsKey(masterIndex))
-        {
-            return;
-        }
-
-        if (_viewLockFollowersByMaster.TryGetValue(followerIndex, out var existingFollowers) &&
-            existingFollowers.Count > 0)
-        {
-            return;
-        }
-
-        if (_viewLockMasterByFollower.TryGetValue(followerIndex, out var oldMaster))
-        {
-            if (_viewLockFollowersByMaster.TryGetValue(oldMaster, out var oldFollowers))
-            {
-                oldFollowers.Remove(followerIndex);
-
-                if (oldFollowers.Count == 0)
-                {
-                    _viewLockFollowersByMaster.Remove(oldMaster);
-                }
-            }
-        }
-
-        _viewLockMasterByFollower[followerIndex] = masterIndex;
-
-        if (!_viewLockFollowersByMaster.TryGetValue(masterIndex, out var followers))
-        {
-            followers = new HashSet<int>();
-            _viewLockFollowersByMaster[masterIndex] = followers;
-        }
-
-        followers.Add(followerIndex);
-        SyncViewFromMaster(masterIndex, followerIndex);
-    }
-
-    /// <summary>
-    /// Clears a follower layer's view lock.
-    /// </summary>
-    public void ClearLayerViewLock(int followerIndex)
-    {
-        if (!IsValidLayerIndex(followerIndex))
-        {
-            return;
-        }
-
-        if (!_viewLockMasterByFollower.TryGetValue(followerIndex, out var masterIndex))
-        {
-            return;
-        }
-
-        _viewLockMasterByFollower.Remove(followerIndex);
-
-        if (_viewLockFollowersByMaster.TryGetValue(masterIndex, out var followers))
-        {
-            followers.Remove(followerIndex);
-
-            if (followers.Count == 0)
-            {
-                _viewLockFollowersByMaster.Remove(masterIndex);
-            }
-        }
-    }
-
-    /// <summary>
-    /// Gets the master layer index for a follower, or null if not locked.
-    /// </summary>
-    public int? GetLayerViewLockMaster(int followerIndex)
-    {
-        if (!IsValidLayerIndex(followerIndex))
-        {
-            return null;
-        }
-
-        return _viewLockMasterByFollower.TryGetValue(followerIndex, out var masterIndex)
-                   ? masterIndex
-                   : null;
-    }
-
-    /// <summary>
     /// Toggles visibility of a layer.
     /// </summary>
     public void ToggleLayerVisibility(int layerIndex)
@@ -1029,6 +1025,13 @@ public class TilesetSurfaceScreen : BaseScreen
         return true;
     }
 
+    public bool TryGetLayerTileset(int layerIndex, out Tileset tileset)
+    {
+        tileset = GetLayerTileset(layerIndex);
+
+        return tileset != null;
+    }
+
     /// <summary>
     /// Gets the view offsets for a specific layer.
     /// </summary>
@@ -1097,7 +1100,8 @@ public class TilesetSurfaceScreen : BaseScreen
     /// </summary>
     private (int x, int y) GetInputTileCoordinates(int layerIndex, int mouseX, int mouseY)
     {
-        if (_inputHandler == null || !TryGetLayerInputTileInfo(layerIndex, out var tileWidth, out var tileHeight, out var layerOffset))
+        if (_inputHandler == null ||
+            !TryGetLayerInputTileInfo(layerIndex, out var tileWidth, out var tileHeight, out var layerOffset))
         {
             return (0, 0);
         }
@@ -1161,6 +1165,78 @@ public class TilesetSurfaceScreen : BaseScreen
         }
 
         return _tileset;
+    }
+
+    private bool IsValidLayerIndex(int layerIndex)
+        => layerIndex >= 0 && layerIndex < _surface.Layers.Count;
+
+    private void PropagateViewTargets(int masterIndex)
+    {
+        if (!_viewLockFollowersByMaster.TryGetValue(masterIndex, out var followers))
+        {
+            return;
+        }
+
+        foreach (var followerIndex in followers)
+        {
+            if (!IsValidLayerIndex(followerIndex))
+            {
+                continue;
+            }
+
+            SyncViewFromMaster(masterIndex, followerIndex);
+        }
+    }
+
+    private void RenderParticleOverlay(SpriteBatch spriteBatch)
+        => ParticlePixelRenderer?.Render(spriteBatch, this, ParticleLayerIndex);
+
+    private void SyncViewFromMaster(int masterIndex, int followerIndex)
+    {
+        if (!IsValidLayerIndex(masterIndex) || !IsValidLayerIndex(followerIndex))
+        {
+            return;
+        }
+
+        var master = _surface.Layers[masterIndex];
+        var follower = _surface.Layers[followerIndex];
+        follower.ViewTileOffset = master.ViewTileOffset;
+        follower.ViewPixelOffset = master.ViewPixelOffset;
+        follower.ViewTileOffsetTarget = master.ViewTileOffsetTarget;
+        follower.ViewPixelOffsetTarget = master.ViewPixelOffsetTarget;
+    }
+
+    private void UpdateLayerRenderScaleFromTileView(Vector2 screenSize, bool includeMargins)
+    {
+        if (_surface.Layers.Count == 0)
+        {
+            return;
+        }
+
+        for (var i = 0; i < _surface.Layers.Count; i++)
+        {
+            if (!TryGetLayerInputTileInfo(i, out var tileWidth, out var tileHeight, out _))
+            {
+                continue;
+            }
+
+            var scale = ComputeLayerRenderScaleForTileView(
+                _tileViewSize,
+                screenSize,
+                tileWidth,
+                tileHeight,
+                _tileRenderScale,
+                Margin,
+                includeMargins
+            );
+
+            if (scale <= 0f)
+            {
+                continue;
+            }
+
+            SetLayerRenderScale(i, scale);
+        }
     }
 
     // private void RandomizeSelectedLayer()
@@ -1241,39 +1317,6 @@ public class TilesetSurfaceScreen : BaseScreen
         );
     }
 
-    private void UpdateLayerRenderScaleFromTileView(Vector2 screenSize, bool includeMargins)
-    {
-        if (_surface.Layers.Count == 0)
-        {
-            return;
-        }
-
-        for (var i = 0; i < _surface.Layers.Count; i++)
-        {
-            if (!TryGetLayerInputTileInfo(i, out var tileWidth, out var tileHeight, out _))
-            {
-                continue;
-            }
-
-            var scale = ComputeLayerRenderScaleForTileView(
-                _tileViewSize,
-                screenSize,
-                tileWidth,
-                tileHeight,
-                _tileRenderScale,
-                Margin,
-                includeMargins
-            );
-
-            if (scale <= 0f)
-            {
-                continue;
-            }
-
-            SetLayerRenderScale(i, scale);
-        }
-    }
-
     private void UpdateViewSmoothing(GameTime gameTime)
     {
         if (gameTime.Elapsed.TotalSeconds <= 0)
@@ -1340,40 +1383,4 @@ public class TilesetSurfaceScreen : BaseScreen
             }
         }
     }
-
-    private void PropagateViewTargets(int masterIndex)
-    {
-        if (!_viewLockFollowersByMaster.TryGetValue(masterIndex, out var followers))
-        {
-            return;
-        }
-
-        foreach (var followerIndex in followers)
-        {
-            if (!IsValidLayerIndex(followerIndex))
-            {
-                continue;
-            }
-
-            SyncViewFromMaster(masterIndex, followerIndex);
-        }
-    }
-
-    private void SyncViewFromMaster(int masterIndex, int followerIndex)
-    {
-        if (!IsValidLayerIndex(masterIndex) || !IsValidLayerIndex(followerIndex))
-        {
-            return;
-        }
-
-        var master = _surface.Layers[masterIndex];
-        var follower = _surface.Layers[followerIndex];
-        follower.ViewTileOffset = master.ViewTileOffset;
-        follower.ViewPixelOffset = master.ViewPixelOffset;
-        follower.ViewTileOffsetTarget = master.ViewTileOffsetTarget;
-        follower.ViewPixelOffsetTarget = master.ViewPixelOffsetTarget;
-    }
-
-    private bool IsValidLayerIndex(int layerIndex)
-        => layerIndex >= 0 && layerIndex < _surface.Layers.Count;
 }

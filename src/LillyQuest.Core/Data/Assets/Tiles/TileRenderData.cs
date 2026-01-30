@@ -64,9 +64,6 @@ public struct TileRenderData
         return new(originX, originY, sizeX, sizeY);
     }
 
-    public override string ToString()
-        => $"Tile {TileIndex}: BG={BackgroundColor} FG={ForegroundColor} Flip={Flip}";
-
     /// <summary>
     /// Returns a darkened version of this tile by the specified factor.
     /// </summary>
@@ -78,4 +75,7 @@ public struct TileRenderData
             BackgroundColor.Darken(factor),
             Flip
         );
+
+    public override string ToString()
+        => $"Tile {TileIndex}: BG={BackgroundColor} FG={ForegroundColor} Flip={Flip}";
 }

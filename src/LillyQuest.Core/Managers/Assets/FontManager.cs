@@ -54,49 +54,9 @@ public class FontManager : IFontManager
         return fontRef.Kind switch
         {
             FontKind.TrueType => new TrueTypeFontHandle(GetFont(fontRef.Name, fontRef.Size)),
-            FontKind.Bitmap => new BitmapFontHandle(GetBitmapFont(fontRef.Name), fontRef.Size),
-            _ => throw new NotSupportedException($"Unsupported font kind: {fontRef.Kind}")
+            FontKind.Bitmap   => new BitmapFontHandle(GetBitmapFont(fontRef.Name), fontRef.Size),
+            _                 => throw new NotSupportedException($"Unsupported font kind: {fontRef.Kind}")
         };
-    }
-
-    public bool TryGetFontHandle(FontRef fontRef, out IFontHandle handle)
-    {
-        try
-        {
-            handle = GetFontHandle(fontRef);
-            return true;
-        }
-        catch
-        {
-            handle = null!;
-            return false;
-        }
-    }
-
-    private BitmapFont GetBitmapFont(string assetName)
-        => _bitmapFonts.TryGetValue(assetName, out var font)
-               ? font
-               : throw new KeyNotFoundException($"Bitmap font not found: {assetName}");
-
-    private DynamicSpriteFont GetFont(string assetName, int size)
-    {
-        var key = $"{assetName}_{size}";
-
-        if (_loadedFonts.TryGetValue(key, out var font))
-        {
-            return font;
-        }
-
-        var generatedFont = _fonts.GetValueOrDefault(assetName)?.GetFont(size);
-
-        if (generatedFont != null)
-        {
-            _loadedFonts[key] = generatedFont;
-
-            return generatedFont;
-        }
-
-        throw new KeyNotFoundException($"Font not found: {assetName} with size {size}");
     }
 
     public bool HasFont(string assetName)
@@ -232,6 +192,22 @@ public class FontManager : IFontManager
         _logger.Information("Font {FontName} loaded successfully", name);
     }
 
+    public bool TryGetFontHandle(FontRef fontRef, out IFontHandle handle)
+    {
+        try
+        {
+            handle = GetFontHandle(fontRef);
+
+            return true;
+        }
+        catch
+        {
+            handle = null!;
+
+            return false;
+        }
+    }
+
     public void UnloadFont(string assetName)
     {
         if (_fonts.Remove(assetName, out var fontSystem))
@@ -253,5 +229,31 @@ public class FontManager : IFontManager
         {
             _logger.Warning("Font {FontName} not found for unloading", assetName);
         }
+    }
+
+    private BitmapFont GetBitmapFont(string assetName)
+        => _bitmapFonts.TryGetValue(assetName, out var font)
+               ? font
+               : throw new KeyNotFoundException($"Bitmap font not found: {assetName}");
+
+    private DynamicSpriteFont GetFont(string assetName, int size)
+    {
+        var key = $"{assetName}_{size}";
+
+        if (_loadedFonts.TryGetValue(key, out var font))
+        {
+            return font;
+        }
+
+        var generatedFont = _fonts.GetValueOrDefault(assetName)?.GetFont(size);
+
+        if (generatedFont != null)
+        {
+            _loadedFonts[key] = generatedFont;
+
+            return generatedFont;
+        }
+
+        throw new KeyNotFoundException($"Font not found: {assetName} with size {size}");
     }
 }

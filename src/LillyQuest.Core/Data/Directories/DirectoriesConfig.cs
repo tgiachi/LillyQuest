@@ -87,13 +87,6 @@ public class DirectoriesConfig
         return path;
     }
 
-    /// <summary>
-    /// Returns a string representation of the root directory.
-    /// </summary>
-    /// <returns>The root directory path.</returns>
-    public override string ToString()
-        => Root;
-
     public IReadOnlyList<DirectorySearchResult> SearchFiles(DirectoryType scope, string extension)
         => SearchFiles(GetPath(scope), extension);
 
@@ -121,7 +114,7 @@ public class DirectoriesConfig
                 var info = new FileInfo(file);
                 var name = Path.GetFileName(file);
                 var ext = Path.GetExtension(file).ToLowerInvariant();
-                results.Add(new DirectorySearchResult(file, name, ext, info.Length, info.LastWriteTimeUtc));
+                results.Add(new(file, name, ext, info.Length, info.LastWriteTimeUtc));
             }
             catch (IOException)
             {
@@ -135,6 +128,13 @@ public class DirectoriesConfig
 
         return results;
     }
+
+    /// <summary>
+    /// Returns a string representation of the root directory.
+    /// </summary>
+    /// <returns>The root directory path.</returns>
+    public override string ToString()
+        => Root;
 
     /// <summary>
     /// Initializes the directories configuration.

@@ -48,25 +48,6 @@ public sealed class UIProgressBar : UIScreenControl
         }
     }
 
-    public Vector2 GetFillSize()
-    {
-        var t = NormalizedValue;
-
-        return Orientation == ProgressOrientation.Vertical
-            ? new Vector2(Size.X, Size.Y * t)
-            : new Vector2(Size.X * t, Size.Y);
-    }
-
-    public Vector2 GetFillOrigin()
-    {
-        var world = GetWorldPosition();
-        var fillSize = GetFillSize();
-
-        return Orientation == ProgressOrientation.Vertical
-            ? new Vector2(world.X, world.Y + (Size.Y - fillSize.Y))
-            : world;
-    }
-
     public string GetDisplayText()
     {
         if (!ShowText)
@@ -77,6 +58,25 @@ public sealed class UIProgressBar : UIScreenControl
         var percent = (int)MathF.Round(NormalizedValue * 100f);
 
         return $"{percent}%";
+    }
+
+    public Vector2 GetFillOrigin()
+    {
+        var world = GetWorldPosition();
+        var fillSize = GetFillSize();
+
+        return Orientation == ProgressOrientation.Vertical
+                   ? new(world.X, world.Y + (Size.Y - fillSize.Y))
+                   : world;
+    }
+
+    public Vector2 GetFillSize()
+    {
+        var t = NormalizedValue;
+
+        return Orientation == ProgressOrientation.Vertical
+                   ? new(Size.X, Size.Y * t)
+                   : new Vector2(Size.X * t, Size.Y);
     }
 
     public override void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext)
@@ -104,12 +104,14 @@ public sealed class UIProgressBar : UIScreenControl
         DrawNineSlice(spriteBatch, texture, slice, GetWorldPosition(), Size, BackgroundTint);
 
         var fillSize = GetFillSize();
+
         if (fillSize.X > 0f && fillSize.Y > 0f)
         {
             DrawNineSlice(spriteBatch, texture, slice, GetFillOrigin(), fillSize, ProgressTint);
         }
 
         var text = GetDisplayText();
+
         if (!string.IsNullOrWhiteSpace(text))
         {
             var textSize = spriteBatch.MeasureText(Font, text);
@@ -162,7 +164,14 @@ public sealed class UIProgressBar : UIScreenControl
             tint
         );
 
-        DrawTiled(spriteBatch, texture, new(position.X + leftWidth, position.Y), new(centerWidth, topHeight), slice.Top, tint);
+        DrawTiled(
+            spriteBatch,
+            texture,
+            new(position.X + leftWidth, position.Y),
+            new(centerWidth, topHeight),
+            slice.Top,
+            tint
+        );
         DrawTiled(
             spriteBatch,
             texture,
@@ -171,7 +180,14 @@ public sealed class UIProgressBar : UIScreenControl
             slice.Bottom,
             tint
         );
-        DrawTiled(spriteBatch, texture, new(position.X, position.Y + topHeight), new(leftWidth, centerHeight), slice.Left, tint);
+        DrawTiled(
+            spriteBatch,
+            texture,
+            new(position.X, position.Y + topHeight),
+            new(leftWidth, centerHeight),
+            slice.Left,
+            tint
+        );
         DrawTiled(
             spriteBatch,
             texture,

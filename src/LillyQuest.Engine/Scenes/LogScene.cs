@@ -1,6 +1,5 @@
 using System.Numerics;
 using LillyQuest.Core.Data.Contexts;
-using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Interfaces.Managers;
@@ -40,10 +39,10 @@ public class LogScene : BaseScene
 
     public override void OnLoad()
     {
-        _logScreen = new LogScreen(_logDispatcher, _fontManager)
+        _logScreen = new(_logDispatcher, _fontManager)
         {
             Position = Vector2.Zero,
-            Size = new Vector2(_engineRenderContext.Window.Size.X, _engineRenderContext.Window.Size.Y),
+            Size = new(_engineRenderContext.Window.Size.X, _engineRenderContext.Window.Size.Y),
             Margin = new(10, 10, 10, 10),
             BackgroundColor = LyColor.Black,
             BackgroundAlpha = 0.9f
@@ -61,6 +60,14 @@ public class LogScene : BaseScene
         }
 
         Unsubscribe();
+    }
+
+    private void OnWindowResize(Vector2 size)
+    {
+        if (_logScreen != null)
+        {
+            _logScreen.Size = size;
+        }
     }
 
     private void Subscribe()
@@ -83,13 +90,5 @@ public class LogScene : BaseScene
 
         _bootstrap.WindowResize -= OnWindowResize;
         _subscribed = false;
-    }
-
-    private void OnWindowResize(Vector2 size)
-    {
-        if (_logScreen != null)
-        {
-            _logScreen.Size = size;
-        }
     }
 }

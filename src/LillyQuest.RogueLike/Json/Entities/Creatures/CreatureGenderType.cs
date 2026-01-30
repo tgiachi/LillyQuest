@@ -4,5 +4,5 @@ public enum CreatureGenderType
 {
     Male,
     Female,
-    Animal,
+    Animal
 }

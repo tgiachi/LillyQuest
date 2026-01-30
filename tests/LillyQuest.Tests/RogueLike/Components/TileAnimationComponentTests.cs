@@ -7,29 +7,13 @@ namespace LillyQuest.Tests.RogueLike.Components;
 
 public class TileAnimationComponentTests
 {
-    private static TileAnimation CreateTestAnimation(TileAnimationType type, int frameCount = 3, int durationMs = 100)
+    [Test]
+    public void Animation_Property_ReturnsOriginalAnimation()
     {
-        var frames = new List<TileAnimationFrame>();
-        for (int i = 0; i < frameCount; i++)
-        {
-            frames.Add(new TileAnimationFrame
-            {
-                Symbol = ((char)('A' + i)).ToString(),
-                FgColor = $"color{i}"
-            });
-        }
+        var animation = CreateTestAnimation(TileAnimationType.Loop);
+        var component = new TileAnimationComponent(animation);
 
-        return new TileAnimation
-        {
-            Type = type,
-            Frames = frames,
-            FrameDurationMs = durationMs
-        };
-    }
-
-    private static GameTime CreateGameTime(double elapsedMs)
-    {
-        return new GameTime(TimeSpan.Zero, TimeSpan.FromMilliseconds(elapsedMs));
+        Assert.That(component.Animation, Is.SameAs(animation));
     }
 
     [Test]
@@ -43,32 +27,9 @@ public class TileAnimationComponentTests
     }
 
     [Test]
-    public void Update_DoesNotAdvanceBeforeDuration()
-    {
-        var animation = CreateTestAnimation(TileAnimationType.Loop, durationMs: 100);
-        var component = new TileAnimationComponent(animation);
-
-        component.Update(CreateGameTime(50));
-
-        Assert.That(component.CurrentFrameIndex, Is.EqualTo(0));
-    }
-
-    [Test]
-    public void Update_AdvancesFrameAfterDuration()
-    {
-        var animation = CreateTestAnimation(TileAnimationType.Loop, durationMs: 100);
-        var component = new TileAnimationComponent(animation);
-
-        component.Update(CreateGameTime(100));
-
-        Assert.That(component.CurrentFrameIndex, Is.EqualTo(1));
-        Assert.That(component.CurrentFrame.Symbol, Is.EqualTo("B"));
-    }
-
-    [Test]
     public void Loop_WrapsAroundToFirstFrame()
     {
-        var animation = CreateTestAnimation(TileAnimationType.Loop, frameCount: 3, durationMs: 100);
+        var animation = CreateTestAnimation(TileAnimationType.Loop, 3, 100);
         var component = new TileAnimationComponent(animation);
 
         component.Update(CreateGameTime(100)); // Frame 1
@@ -79,9 +40,39 @@ public class TileAnimationComponentTests
     }
 
     [Test]
+    public void Once_IsFinishedIsFalseUntilComplete()
+    {
+        var animation = CreateTestAnimation(TileAnimationType.Once, 3, 100);
+        var component = new TileAnimationComponent(animation);
+
+        Assert.That(component.IsFinished, Is.False);
+
+        component.Update(CreateGameTime(100));
+        Assert.That(component.IsFinished, Is.False);
+
+        component.Update(CreateGameTime(100));
+        Assert.That(component.IsFinished, Is.True);
+    }
+
+    [Test]
+    public void Once_StopsAtLastFrame()
+    {
+        var animation = CreateTestAnimation(TileAnimationType.Once, 3, 100);
+        var component = new TileAnimationComponent(animation);
+
+        component.Update(CreateGameTime(100)); // 1
+        component.Update(CreateGameTime(100)); // 2
+        component.Update(CreateGameTime(100)); // Still 2
+        component.Update(CreateGameTime(100)); // Still 2
+
+        Assert.That(component.CurrentFrameIndex, Is.EqualTo(2));
+        Assert.That(component.IsFinished, Is.True);
+    }
+
+    [Test]
     public void PingPong_ReversesAtEnd()
     {
-        var animation = CreateTestAnimation(TileAnimationType.PingPong, frameCount: 3, durationMs: 100);
+        var animation = CreateTestAnimation(TileAnimationType.PingPong, 3, 100);
         var component = new TileAnimationComponent(animation);
 
         // 0 -> 1 -> 2 -> 1 -> 0 -> 1
@@ -95,46 +86,16 @@ public class TileAnimationComponentTests
     }
 
     [Test]
-    public void Once_StopsAtLastFrame()
-    {
-        var animation = CreateTestAnimation(TileAnimationType.Once, frameCount: 3, durationMs: 100);
-        var component = new TileAnimationComponent(animation);
-
-        component.Update(CreateGameTime(100)); // 1
-        component.Update(CreateGameTime(100)); // 2
-        component.Update(CreateGameTime(100)); // Still 2
-        component.Update(CreateGameTime(100)); // Still 2
-
-        Assert.That(component.CurrentFrameIndex, Is.EqualTo(2));
-        Assert.That(component.IsFinished, Is.True);
-    }
-
-    [Test]
-    public void Once_IsFinishedIsFalseUntilComplete()
-    {
-        var animation = CreateTestAnimation(TileAnimationType.Once, frameCount: 3, durationMs: 100);
-        var component = new TileAnimationComponent(animation);
-
-        Assert.That(component.IsFinished, Is.False);
-
-        component.Update(CreateGameTime(100));
-        Assert.That(component.IsFinished, Is.False);
-
-        component.Update(CreateGameTime(100));
-        Assert.That(component.IsFinished, Is.True);
-    }
-
-    [Test]
     public void Random_SelectsRandomFrame()
     {
-        var animation = CreateTestAnimation(TileAnimationType.Random, frameCount: 5, durationMs: 100);
+        var animation = CreateTestAnimation(TileAnimationType.Random, 5, 100);
         var rng = new Random(42);
         var component = new TileAnimationComponent(animation, rng);
 
         var seenFrames = new HashSet<int>();
 
         // Update many times and collect different frames
-        for (int i = 0; i < 20; i++)
+        for (var i = 0; i < 20; i++)
         {
             component.Update(CreateGameTime(100));
             seenFrames.Add(component.CurrentFrameIndex);
@@ -142,6 +103,21 @@ public class TileAnimationComponentTests
 
         // Should have seen multiple different frames
         Assert.That(seenFrames.Count, Is.GreaterThan(1));
+    }
+
+    [Test]
+    public void Reset_ClearsIsFinished()
+    {
+        var animation = CreateTestAnimation(TileAnimationType.Once, 2);
+        var component = new TileAnimationComponent(animation);
+
+        component.Update(CreateGameTime(100)); // Finish animation
+
+        Assert.That(component.IsFinished, Is.True);
+
+        component.Reset();
+
+        Assert.That(component.IsFinished, Is.False);
     }
 
     [Test]
@@ -156,21 +132,6 @@ public class TileAnimationComponentTests
         component.Reset();
 
         Assert.That(component.CurrentFrameIndex, Is.EqualTo(0));
-    }
-
-    [Test]
-    public void Reset_ClearsIsFinished()
-    {
-        var animation = CreateTestAnimation(TileAnimationType.Once, frameCount: 2, durationMs: 100);
-        var component = new TileAnimationComponent(animation);
-
-        component.Update(CreateGameTime(100)); // Finish animation
-
-        Assert.That(component.IsFinished, Is.True);
-
-        component.Reset();
-
-        Assert.That(component.IsFinished, Is.False);
     }
 
     [Test]
@@ -191,6 +152,29 @@ public class TileAnimationComponentTests
     }
 
     [Test]
+    public void Update_AdvancesFrameAfterDuration()
+    {
+        var animation = CreateTestAnimation(TileAnimationType.Loop, durationMs: 100);
+        var component = new TileAnimationComponent(animation);
+
+        component.Update(CreateGameTime(100));
+
+        Assert.That(component.CurrentFrameIndex, Is.EqualTo(1));
+        Assert.That(component.CurrentFrame.Symbol, Is.EqualTo("B"));
+    }
+
+    [Test]
+    public void Update_DoesNotAdvanceBeforeDuration()
+    {
+        var animation = CreateTestAnimation(TileAnimationType.Loop, durationMs: 100);
+        var component = new TileAnimationComponent(animation);
+
+        component.Update(CreateGameTime(50));
+
+        Assert.That(component.CurrentFrameIndex, Is.EqualTo(0));
+    }
+
+    [Test]
     public void Update_ReturnsTrue_WhenFrameChanges()
     {
         var animation = CreateTestAnimation(TileAnimationType.Loop, durationMs: 100);
@@ -203,12 +187,29 @@ public class TileAnimationComponentTests
         Assert.That(result2, Is.True);
     }
 
-    [Test]
-    public void Animation_Property_ReturnsOriginalAnimation()
-    {
-        var animation = CreateTestAnimation(TileAnimationType.Loop);
-        var component = new TileAnimationComponent(animation);
+    private static GameTime CreateGameTime(double elapsedMs)
+        => new(TimeSpan.Zero, TimeSpan.FromMilliseconds(elapsedMs));
 
-        Assert.That(component.Animation, Is.SameAs(animation));
+    private static TileAnimation CreateTestAnimation(TileAnimationType type, int frameCount = 3, int durationMs = 100)
+    {
+        var frames = new List<TileAnimationFrame>();
+
+        for (var i = 0; i < frameCount; i++)
+        {
+            frames.Add(
+                new()
+                {
+                    Symbol = ((char)('A' + i)).ToString(),
+                    FgColor = $"color{i}"
+                }
+            );
+        }
+
+        return new()
+        {
+            Type = type,
+            Frames = frames,
+            FrameDurationMs = durationMs
+        };
     }
 }

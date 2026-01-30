@@ -1,8 +1,4 @@
-using System;
-using System.IO;
 using LillyQuest.Scripting.Lua.Loaders;
-using MoonSharp.Interpreter;
-using NUnit.Framework;
 
 namespace LillyQuest.Tests.Scripting.Lua;
 
@@ -25,9 +21,9 @@ public class LuaScriptLoaderTests
         var exists = loader.ScriptFileExists("foo");
         Assert.That(exists, Is.True);
 
-        var content = loader.LoadFile("foo", new Table(new Script())) as string;
+        var content = loader.LoadFile("foo", new(new())) as string;
         Assert.That(content, Does.Contain("plugin"));
 
-        Directory.Delete(root, recursive: true);
+        Directory.Delete(root, true);
     }
 }

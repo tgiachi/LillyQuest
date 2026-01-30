@@ -27,9 +27,63 @@ public class UiWidgetsDemoScene : BaseScene
         _textureManager = textureManager;
     }
 
+    private sealed class UiWidgetsDemoController : UIScreenControl
+    {
+        private const float LabelSwitchInterval = 1.5f;
+        private const float LabelCharWidth = 8f;
+        private const float LabelLineHeight = 16f;
+
+        private readonly UIProgressBar _horizontalBar;
+        private readonly UIProgressBar _verticalBar;
+        private readonly UILabel _autoSizeLabel;
+
+        private readonly string[] _labelTexts =
+        [
+            "Short",
+            "A bit longer text",
+            "This is a much longer label for autosize"
+        ];
+
+        private float _elapsed;
+        private float _labelTimer;
+        private int _labelIndex;
+
+        public UiWidgetsDemoController(UIProgressBar horizontalBar, UIProgressBar verticalBar, UILabel autoSizeLabel)
+        {
+            _horizontalBar = horizontalBar;
+            _verticalBar = verticalBar;
+            _autoSizeLabel = autoSizeLabel;
+            UpdateLabelText(_labelTexts[0]);
+        }
+
+        public override void Update(GameTime gameTime)
+        {
+            _elapsed += (float)gameTime.Elapsed.TotalSeconds;
+            var t = (MathF.Sin(_elapsed) + 1f) * 0.5f;
+            _horizontalBar.Value = _horizontalBar.Min + t * (_horizontalBar.Max - _horizontalBar.Min);
+            _verticalBar.Value = _verticalBar.Min + (1f - t) * (_verticalBar.Max - _verticalBar.Min);
+
+            _labelTimer += (float)gameTime.Elapsed.TotalSeconds;
+
+            if (_labelTimer >= LabelSwitchInterval)
+            {
+                _labelTimer = 0f;
+                _labelIndex = (_labelIndex + 1) % _labelTexts.Length;
+                UpdateLabelText(_labelTexts[_labelIndex]);
+            }
+        }
+
+        private void UpdateLabelText(string text)
+        {
+            _autoSizeLabel.Text = text;
+            var width = MathF.Max(1f, text.Length * LabelCharWidth);
+            _autoSizeLabel.Size = new(width, LabelLineHeight);
+        }
+    }
+
     public override void OnLoad()
     {
-        _screen = new UIRootScreen
+        _screen = new()
         {
             Position = Vector2.Zero,
             Size = new(1280, 720)
@@ -99,58 +153,6 @@ public class UiWidgetsDemoScene : BaseScene
         {
             _screenManager.PopScreen(_screen);
             _screen = null;
-        }
-    }
-
-    private sealed class UiWidgetsDemoController : UIScreenControl
-    {
-        private const float LabelSwitchInterval = 1.5f;
-        private const float LabelCharWidth = 8f;
-        private const float LabelLineHeight = 16f;
-
-        private readonly UIProgressBar _horizontalBar;
-        private readonly UIProgressBar _verticalBar;
-        private readonly UILabel _autoSizeLabel;
-        private readonly string[] _labelTexts =
-        [
-            "Short",
-            "A bit longer text",
-            "This is a much longer label for autosize"
-        ];
-
-        private float _elapsed;
-        private float _labelTimer;
-        private int _labelIndex;
-
-        public UiWidgetsDemoController(UIProgressBar horizontalBar, UIProgressBar verticalBar, UILabel autoSizeLabel)
-        {
-            _horizontalBar = horizontalBar;
-            _verticalBar = verticalBar;
-            _autoSizeLabel = autoSizeLabel;
-            UpdateLabelText(_labelTexts[0]);
-        }
-
-        public override void Update(GameTime gameTime)
-        {
-            _elapsed += (float)gameTime.Elapsed.TotalSeconds;
-            var t = (MathF.Sin(_elapsed) + 1f) * 0.5f;
-            _horizontalBar.Value = _horizontalBar.Min + t * (_horizontalBar.Max - _horizontalBar.Min);
-            _verticalBar.Value = _verticalBar.Min + (1f - t) * (_verticalBar.Max - _verticalBar.Min);
-
-            _labelTimer += (float)gameTime.Elapsed.TotalSeconds;
-            if (_labelTimer >= LabelSwitchInterval)
-            {
-                _labelTimer = 0f;
-                _labelIndex = (_labelIndex + 1) % _labelTexts.Length;
-                UpdateLabelText(_labelTexts[_labelIndex]);
-            }
-        }
-
-        private void UpdateLabelText(string text)
-        {
-            _autoSizeLabel.Text = text;
-            var width = MathF.Max(1f, text.Length * LabelCharWidth);
-            _autoSizeLabel.Size = new(width, LabelLineHeight);
         }
     }
 }

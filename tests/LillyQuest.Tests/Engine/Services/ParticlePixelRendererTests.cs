@@ -1,6 +1,5 @@
 using System.Numerics;
 using LillyQuest.Engine.Services.Rendering;
-using NUnit.Framework;
 
 namespace LillyQuest.Tests.Engine.Services;
 

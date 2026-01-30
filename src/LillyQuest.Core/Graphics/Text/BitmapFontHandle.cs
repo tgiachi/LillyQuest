@@ -15,6 +15,9 @@ public sealed class BitmapFontHandle : IFontHandle
         _size = size;
     }
 
+    public void DrawText(SpriteBatch spriteBatch, string text, Vector2 position, LyColor color, float depth = 0f)
+        => spriteBatch.DrawTextBitmap(_font, text, position, _size, color, depth);
+
     public Vector2 MeasureText(string text)
     {
         var glyphHeight = _size > 0 ? _size : _font.TileHeight;
@@ -39,6 +42,7 @@ public sealed class BitmapFontHandle : IFontHandle
                 maxWidth = MathF.Max(maxWidth, lineWidth);
                 lineWidth = 0f;
                 lines++;
+
                 continue;
             }
 
@@ -48,9 +52,6 @@ public sealed class BitmapFontHandle : IFontHandle
         maxWidth = MathF.Max(maxWidth, lineWidth);
         var totalHeight = lines * glyphHeight + (lines - 1) * spacingY;
 
-        return new Vector2(maxWidth, totalHeight);
+        return new(maxWidth, totalHeight);
     }
-
-    public void DrawText(SpriteBatch spriteBatch, string text, Vector2 position, LyColor color, float depth = 0f)
-        => spriteBatch.DrawTextBitmap(_font, text, position, _size, color, depth);
 }

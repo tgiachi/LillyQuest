@@ -8,7 +8,7 @@ public class TileAnimationFrame
     /// <summary>
     /// Gets or sets the symbol (character) to display for this animation frame.
     /// </summary>
-    public string Symbol { get; set;  }
+    public string Symbol { get; set; }
 
     /// <summary>
     /// Gets or sets the foreground color for this frame, or null to use the default color.
@@ -19,5 +19,4 @@ public class TileAnimationFrame
     /// Gets or sets the background color for this frame, or null to use the default color.
     /// </summary>
     public string? BgColor { get; set; }
-
 }

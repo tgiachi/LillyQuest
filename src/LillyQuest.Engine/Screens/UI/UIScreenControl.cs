@@ -49,6 +49,19 @@ public class UIScreenControl
         _children.Add(control);
     }
 
+    public void Center()
+    {
+        KeepCentered = true;
+        var referenceSize = Parent?.Size ?? Vector2.Zero;
+        Position = GetCenteredPosition(referenceSize);
+    }
+
+    public void CenterIn(Vector2 referenceSize)
+    {
+        KeepCentered = true;
+        Position = GetCenteredPosition(referenceSize);
+    }
+
     /// <summary>
     /// Gets the bounds of the control in world space.
     /// </summary>
@@ -79,6 +92,15 @@ public class UIScreenControl
 
         return parentPosition + anchorOffset + Position;
     }
+
+    public virtual bool HandleKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => OnKeyPress?.Invoke(modifier, keys) ?? false;
+
+    public virtual bool HandleKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => OnKeyRelease?.Invoke(modifier, keys) ?? false;
+
+    public virtual bool HandleKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => OnKeyRepeat?.Invoke(modifier, keys) ?? false;
 
     /// <summary>
     /// Handles mouse down for this control.
@@ -116,15 +138,6 @@ public class UIScreenControl
     public virtual bool HandleMouseWheel(Vector2 point, float delta)
         => OnMouseWheel?.Invoke(point, delta) ?? false;
 
-    public virtual bool HandleKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
-        => OnKeyPress?.Invoke(modifier, keys) ?? false;
-
-    public virtual bool HandleKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
-        => OnKeyRelease?.Invoke(modifier, keys) ?? false;
-
-    public virtual bool HandleKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
-        => OnKeyRepeat?.Invoke(modifier, keys) ?? false;
-
     public void RemoveChild(UIScreenControl control)
     {
         if (control == null)
@@ -149,19 +162,6 @@ public class UIScreenControl
     /// Updates the control.
     /// </summary>
     public virtual void Update(GameTime gameTime) { }
-
-    public void Center()
-    {
-        KeepCentered = true;
-        var referenceSize = Parent?.Size ?? Vector2.Zero;
-        Position = GetCenteredPosition(referenceSize);
-    }
-
-    public void CenterIn(Vector2 referenceSize)
-    {
-        KeepCentered = true;
-        Position = GetCenteredPosition(referenceSize);
-    }
 
     internal void ApplyCentering(Vector2 rootSize)
     {

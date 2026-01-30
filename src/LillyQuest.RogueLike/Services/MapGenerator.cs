@@ -4,9 +4,8 @@ using LillyQuest.RogueLike.Components;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Maps;
-using LillyQuest.RogueLike.Maps.Tiles;
 using LillyQuest.RogueLike.Services.Loaders;
-using SadRogue.Primitives;
+using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives.GridViews;
 using Serilog;
 
@@ -19,16 +18,13 @@ public class MapGenerator : IMapGenerator
     private readonly TerrainService _terrainService;
 
     public MapGenerator(TerrainService terrainService)
-    {
-        _terrainService = terrainService;
-    }
+        => _terrainService = terrainService;
 
     public async Task<LyQuestMap> GenerateMapAsync()
     {
         var map = new LyQuestMap(300, 300)
         {
-            Name = "Test Map",
-            Level = 1
+            Name = "Test Map"
         };
         var generator = new Generator(300, 300);
         var floorId = "floor";
@@ -55,7 +51,7 @@ public class MapGenerator : IMapGenerator
             {
                 terrainGameObject.IsWalkable = isFloor;
                 terrainGameObject.IsTransparent = isFloor;
-                terrainGameObject.Tile = new VisualTile(
+                terrainGameObject.Tile = new(
                     terrain.Id,
                     terrain.TileSymbol,
                     terrain.TileFgColor,
@@ -72,36 +68,114 @@ public class MapGenerator : IMapGenerator
 
         var player = new CreatureGameObject(freePosition)
         {
-            Tile = new VisualTile("player", "@", LyColor.White, LyColor.Transparent)
+            Tile = new("player", "@", LyColor.White, LyColor.Transparent)
         };
 
-        var simpleTorch = new ItemGameObject(new Point(10, 10))
+        var simpleTorch = new ItemGameObject(new(10, 10))
         {
-            Tile = new VisualTile("torch", "t", LyColor.Yellow, LyColor.Transparent)
+            Tile = new("torch", "t", LyColor.Yellow, LyColor.Transparent)
         };
         simpleTorch.GoRogueComponents.Add(
             new LightSourceComponent(
-                radius: 4,
-                startColor: LyColor.Yellow,
-                endColor: LyColor.Black
+                4,
+                LyColor.Yellow,
+                LyColor.Black
             )
         );
         simpleTorch.GoRogueComponents.Add(
             new LightBackgroundComponent(
-                startBackground: LyColor.Orange,
-                endBackground: LyColor.Transparent
+                LyColor.Orange,
+                LyColor.Transparent
             )
         );
         simpleTorch.GoRogueComponents.Add(
             new AnimationComponent(
-                intervalSeconds: 1.0,
-                onAnimationTrigger: () => simpleTorch.Tile.Symbol = simpleTorch.Tile.Symbol == "T" ? "t" : "T"
+                1.0,
+                () => simpleTorch.Tile.Symbol = simpleTorch.Tile.Symbol == "T" ? "t" : "T"
+            )
+        );
+
+        var flickerTorch = new ItemGameObject(new(8, 6))
+        {
+            Tile = new("torch", "t", LyColor.Yellow, LyColor.Transparent)
+        };
+        flickerTorch.GoRogueComponents.Add(
+            new LightSourceComponent(
+                4,
+                LyColor.Yellow,
+                LyColor.Black
+            )
+        );
+        flickerTorch.GoRogueComponents.Add(
+            new LightBackgroundComponent(
+                LyColor.Orange,
+                LyColor.Transparent
+            )
+        );
+        flickerTorch.GoRogueComponents.Add(
+            new LightFlickerComponent(
+                LightFlickerMode.Deterministic,
+                0.4f,
+                1f,
+                6f,
+                86
             )
         );
 
         map.AddEntity(player);
         map.AddEntity(simpleTorch);
+        map.AddEntity(flickerTorch);
+
+        _logger.Information("Map generated");
 
         return map;
     }
+
+    public async Task<LyQuestMap> GenerateDungeonMapAsync(int width, int height, int roomCount)
+    {
+        var map = new LyQuestMap(width, height)
+        {
+            Name = "Test Map"
+        };
+        var generator = new Generator(width, height);
+        var floorId = "floor";
+        var wallId = "wall";
+
+        generator.ConfigAndGenerateSafe(
+            g =>
+            {
+                g.AddSteps(DefaultAlgorithms.BasicRandomRoomsMapSteps(maxRooms:40));
+            }
+        );
+
+        generator.Generate();
+
+        var wallFloorValues = generator.Context.GetFirst<ISettableGridView<bool>>("WallFloor");
+
+        foreach (var pos in wallFloorValues.Positions())
+        {
+            var isFloor = wallFloorValues[pos];
+            var terrainId = wallFloorValues[pos] ? floorId : wallId;
+            var terrainGameObject = new TerrainGameObject(pos);
+
+            if (_terrainService.TryGetTerrain(terrainId, out var terrain))
+            {
+                terrainGameObject.IsWalkable = isFloor;
+                terrainGameObject.IsTransparent = isFloor;
+                terrainGameObject.Tile = new(
+                    terrain.Id,
+                    terrain.TileSymbol,
+                    terrain.TileFgColor,
+                    terrain.TileBgColor
+                );
+
+                map.SetTerrain(terrainGameObject);
+            }
+        }
+
+        return map;
+    }
+
+
+
 }

@@ -3,7 +3,6 @@ using LillyQuest.Core.Utils;
 using LillyQuest.Engine.Data.Input;
 using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Services;
-using LillyQuest.Engine.Types;
 using Silk.NET.Input;
 
 namespace LillyQuest.Tests.Engine;
@@ -29,6 +28,7 @@ public class ShortcutServiceTests
             }
 
             action();
+
             return true;
         }
 
@@ -53,6 +53,33 @@ public class ShortcutServiceTests
 
         private static string NormalizeActionName(string actionName)
             => StringUtils.ToUpperSnakeCase(actionName);
+    }
+
+    [Test]
+    public void HandleKeyRelease_ResetsRepeatThrottle()
+    {
+        var actionService = new StubActionService();
+        var shortcutService = new ShortcutService(actionService);
+        var executeCount = 0;
+
+        shortcutService.RegisterShortcut(
+            "move",
+            () => executeCount++,
+            InputContextType.Gameplay,
+            "w",
+            ShortcutTriggerType.Repeat,
+            1000 // Long delay
+        );
+
+        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
+        Assert.That(executeCount, Is.EqualTo(1));
+
+        // Release the key - should reset throttle
+        shortcutService.HandleKeyRelease(KeyModifierType.None, new[] { Key.W });
+
+        // New press+repeat should execute immediately
+        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
+        Assert.That(executeCount, Is.EqualTo(2));
     }
 
     [Test]
@@ -88,7 +115,17 @@ public class ShortcutServiceTests
 
         shortcutService.RegisterShortcut(
             "move",
-            () => { if (pressCount == 0) pressCount++; else releaseCount++; },
+            () =>
+            {
+                if (pressCount == 0)
+                {
+                    pressCount++;
+                }
+                else
+                {
+                    releaseCount++;
+                }
+            },
             InputContextType.Gameplay,
             "w",
             ShortcutTriggerType.Press | ShortcutTriggerType.Release
@@ -99,6 +136,28 @@ public class ShortcutServiceTests
 
         shortcutService.HandleKeyRelease(KeyModifierType.None, new[] { Key.W });
         Assert.That(releaseCount, Is.EqualTo(1));
+    }
+
+    [Test]
+    public void RegisterShortcut_WithPressAndRepeat_BothTrigger()
+    {
+        var actionService = new StubActionService();
+        var shortcutService = new ShortcutService(actionService);
+        var executeCount = 0;
+
+        shortcutService.RegisterShortcut(
+            "move",
+            () => executeCount++,
+            InputContextType.Gameplay,
+            "w",
+            ShortcutTriggerType.Press | ShortcutTriggerType.Repeat
+        );
+
+        shortcutService.HandleKeyPress(KeyModifierType.None, new[] { Key.W });
+        Assert.That(executeCount, Is.EqualTo(1));
+
+        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
+        Assert.That(executeCount, Is.EqualTo(2));
     }
 
     [Test]
@@ -114,7 +173,7 @@ public class ShortcutServiceTests
             InputContextType.Gameplay,
             "w",
             ShortcutTriggerType.Repeat,
-            repeatDelayMs: 100
+            100
         );
 
         // First repeat should execute
@@ -144,7 +203,7 @@ public class ShortcutServiceTests
             InputContextType.Gameplay,
             "w",
             ShortcutTriggerType.Repeat,
-            repeatDelayMs: 0
+            0
         );
 
         shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
@@ -152,54 +211,5 @@ public class ShortcutServiceTests
         shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
 
         Assert.That(executeCount, Is.EqualTo(3));
-    }
-
-    [Test]
-    public void RegisterShortcut_WithPressAndRepeat_BothTrigger()
-    {
-        var actionService = new StubActionService();
-        var shortcutService = new ShortcutService(actionService);
-        var executeCount = 0;
-
-        shortcutService.RegisterShortcut(
-            "move",
-            () => executeCount++,
-            InputContextType.Gameplay,
-            "w",
-            ShortcutTriggerType.Press | ShortcutTriggerType.Repeat
-        );
-
-        shortcutService.HandleKeyPress(KeyModifierType.None, new[] { Key.W });
-        Assert.That(executeCount, Is.EqualTo(1));
-
-        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
-        Assert.That(executeCount, Is.EqualTo(2));
-    }
-
-    [Test]
-    public void HandleKeyRelease_ResetsRepeatThrottle()
-    {
-        var actionService = new StubActionService();
-        var shortcutService = new ShortcutService(actionService);
-        var executeCount = 0;
-
-        shortcutService.RegisterShortcut(
-            "move",
-            () => executeCount++,
-            InputContextType.Gameplay,
-            "w",
-            ShortcutTriggerType.Repeat,
-            repeatDelayMs: 1000  // Long delay
-        );
-
-        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
-        Assert.That(executeCount, Is.EqualTo(1));
-
-        // Release the key - should reset throttle
-        shortcutService.HandleKeyRelease(KeyModifierType.None, new[] { Key.W });
-
-        // New press+repeat should execute immediately
-        shortcutService.HandleKeyRepeat(KeyModifierType.None, new[] { Key.W });
-        Assert.That(executeCount, Is.EqualTo(2));
     }
 }

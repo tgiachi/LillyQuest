@@ -1,8 +1,7 @@
+using LillyQuest.Core.Extensions.Directories;
 using MoonSharp.Interpreter;
 using MoonSharp.Interpreter.Loaders;
 using Serilog;
-using System.Linq;
-using LillyQuest.Core.Extensions.Directories;
 
 namespace LillyQuest.Scripting.Lua.Loaders;
 
@@ -23,7 +22,7 @@ public class LuaScriptLoader : ScriptLoaderBase
     {
         ArgumentNullException.ThrowIfNull(rootDirectory);
 
-        _scriptsDirectories = new List<string> { Path.GetFullPath(rootDirectory) };
+        _scriptsDirectories = new() { Path.GetFullPath(rootDirectory) };
 
         // Configure default module search paths
         ModulePaths =
@@ -42,20 +41,19 @@ public class LuaScriptLoader : ScriptLoaderBase
     /// </summary>
     /// <param name="searchDirectories">Ordered list of directories to search.</param>
     public LuaScriptLoader(IReadOnlyList<string> searchDirectories)
-        : this(searchDirectories, true)
-    {
-    }
+        : this(searchDirectories, true) { }
 
     private LuaScriptLoader(IReadOnlyList<string> searchDirectories, bool _)
     {
         ArgumentNullException.ThrowIfNull(searchDirectories);
+
         if (searchDirectories.Count == 0)
         {
             throw new ArgumentException("Search directories cannot be empty.", nameof(searchDirectories));
         }
 
         _scriptsDirectories = searchDirectories.Where(d => !string.IsNullOrWhiteSpace(d))
-                                               .Select( d => Path.GetFullPath(d.ResolvePathAndEnvs()).ResolvePathAndEnvs() )
+                                               .Select(d => Path.GetFullPath(d.ResolvePathAndEnvs()).ResolvePathAndEnvs())
                                                .Distinct(StringComparer.OrdinalIgnoreCase)
                                                .ToList();
 
