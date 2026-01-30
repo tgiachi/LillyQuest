@@ -433,6 +433,8 @@ public class LillyQuestBootstrap : IDisposable
         _container.Register<IActionService, ActionService>(Reuse.Singleton);
         _container.Register<IShortcutService, ShortcutService>(Reuse.Singleton);
         _container.Register<IJobScheduler, JobScheduler>(Reuse.Singleton);
+
+
         _container.Register<IMainThreadDispatcher, MainThreadDispatcher>(Reuse.Singleton);
 
         BindMainThreadDispatcher();
@@ -472,6 +474,7 @@ public class LillyQuestBootstrap : IDisposable
             systemManager.RegisterSystem(system);
         }
 
+        _container.Resolve<IJobScheduler>().Start(5);
         systemManager.InitializeAllSystems();
 
         _container.RegisterLuaUserData<Vector2>();

@@ -26,6 +26,8 @@ public class RogueScene : BaseScene
     private readonly IMapGenerator _mapGenerator;
     private readonly ITilesetManager _tilesetManager;
 
+    private readonly IWorldManager _worldManager;
+
     private readonly IShortcutService _shortcutService;
     private readonly IActionService _actionService;
     private readonly IParticleCollisionProvider _particleCollisionProvider;
@@ -57,7 +59,8 @@ public class RogueScene : BaseScene
         IParticleCollisionProvider particleCollisionProvider,
         IParticleFOVProvider particleFOVProvider,
         IParticlePixelRenderer particlePixelRenderer,
-        ISystemManager systemManager
+        ISystemManager systemManager,
+        IWorldManager worldManager
     ) : base("RogueScene")
     {
         _screenManager = screenManager;
@@ -70,6 +73,7 @@ public class RogueScene : BaseScene
         _particleFOVProvider = particleFOVProvider;
         _particlePixelRenderer = particlePixelRenderer;
         _systemManager = systemManager;
+        _worldManager = worldManager;
 
         if (_systemManager != null && _particleSystem != null)
         {

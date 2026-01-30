@@ -28,7 +28,6 @@ public class MapGenerator : IMapGenerator
         var map = new LyQuestMap(300, 300)
         {
             Name = "Test Map",
-            Level = 1
         };
         var generator = new Generator(300, 300);
         var floorId = "floor";
@@ -101,6 +100,8 @@ public class MapGenerator : IMapGenerator
 
         map.AddEntity(player);
         map.AddEntity(simpleTorch);
+
+        _logger.Information("Map generated");
 
         return map;
     }

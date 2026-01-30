@@ -1,3 +1,4 @@
+using System.Numerics;
 using GoRogue.GameFramework;
 using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
@@ -10,10 +11,10 @@ namespace LillyQuest.RogueLike.Maps;
 /// </summary>
 public class LyQuestMap : Map
 {
-
+    public Guid Id { get; set; } = Guid.NewGuid();
     public string Name { get; set; }
 
-    public int Level { get; set; }
+    public Vector3 Position { get; set; }
 
     public LyQuestMap(int width, int height) : base(
         width,

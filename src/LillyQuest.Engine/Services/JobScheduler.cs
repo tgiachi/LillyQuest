@@ -12,7 +12,7 @@ public sealed class JobScheduler : IJobScheduler, IDisposable
     private bool _running;
     private bool _stopped;
 
-    public void Start(int workerCount)
+    public void Start(int workerCount = 5)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(workerCount);
 

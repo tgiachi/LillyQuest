@@ -65,6 +65,9 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         container.Register<IParticleCollisionProvider, GoRogueCollisionProvider>(Reuse.Singleton);
         container.Register<IParticleFOVProvider, GoRogueFOVProvider>(Reuse.Singleton);
         container.Register<IParticlePixelRenderer, ParticlePixelRenderer>(Reuse.Singleton);
+
+        container.Register<IWorldManager, WorldManager>(Reuse.Singleton);
+
         container.Register<ParticleSystem>(Reuse.Singleton);
 
         foreach (var receiverType in _dataReceiverTypes)
@@ -123,7 +126,11 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         await dataLoader.VerifyLoadedDataAsync();
 
         var mapGenerator = container.Resolve<IMapGenerator>();
+        var worldManager = container.Resolve<IWorldManager>();
         await mapGenerator.GenerateMapAsync();
+        await worldManager.GenerateMapAsync();
+
+
 
         // var renderContext = container.Resolve<EngineRenderContext>();
         //

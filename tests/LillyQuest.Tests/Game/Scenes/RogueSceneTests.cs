@@ -1,21 +1,21 @@
-using System.Linq;
 using LillyQuest.Core.Data.Assets.Tiles;
+using LillyQuest.Core.Data.Contexts;
+using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
 using LillyQuest.Engine.Data.Input;
-using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Screens;
+using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Game.Scenes;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Maps.Tiles;
 using LillyQuest.RogueLike.Systems;
-using LillyQuest.RogueLike.Types;
-using NUnit.Framework;
 using SadRogue.Primitives;
+using Silk.NET.Input;
 
 namespace LillyQuest.Tests.Game.Scenes;
 
@@ -30,7 +30,7 @@ public class RogueSceneTests
         var tilesetManager = new FakeTilesetManager();
         var shortcutService = new FakeShortcutService();
         var actionService = new FakeActionService();
-        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!);
+        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, null!);
 
         scene.OnLoad();
 
@@ -48,7 +48,7 @@ public class RogueSceneTests
         var tilesetManager = new FakeTilesetManager();
         var shortcutService = new FakeShortcutService();
         var actionService = new FakeActionService();
-        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!);
+        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, null!);
 
         scene.OnLoad();
 
@@ -103,22 +103,22 @@ public class RogueSceneTests
         public IReadOnlyList<IScreen> ScreenStack => _screenStack;
         public IScreen? RootScreen => _screenStack.Count > 0 ? _screenStack[0] : null;
 
-        public bool DispatchKeyPress(KeyModifierType modifier, IReadOnlyList<Silk.NET.Input.Key> keys)
+        public bool DispatchKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
             => false;
 
-        public bool DispatchKeyRelease(KeyModifierType modifier, IReadOnlyList<Silk.NET.Input.Key> keys)
+        public bool DispatchKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys)
             => false;
 
-        public bool DispatchKeyRepeat(KeyModifierType modifier, IReadOnlyList<Silk.NET.Input.Key> keys)
+        public bool DispatchKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
             => false;
 
-        public bool DispatchMouseDown(int x, int y, IReadOnlyList<Silk.NET.Input.MouseButton> buttons)
+        public bool DispatchMouseDown(int x, int y, IReadOnlyList<MouseButton> buttons)
             => false;
 
         public bool DispatchMouseMove(int x, int y)
             => false;
 
-        public bool DispatchMouseUp(int x, int y, IReadOnlyList<Silk.NET.Input.MouseButton> buttons)
+        public bool DispatchMouseUp(int x, int y, IReadOnlyList<MouseButton> buttons)
             => false;
 
         public bool DispatchMouseWheel(int x, int y, float delta)
@@ -146,7 +146,7 @@ public class RogueSceneTests
         public void RemoveScreen(IScreen screen)
             => _screenStack.Remove(screen);
 
-        public void Render(LillyQuest.Core.Graphics.Rendering2D.SpriteBatch spriteBatch, LillyQuest.Core.Data.Contexts.EngineRenderContext renderContext) { }
+        public void Render(SpriteBatch spriteBatch, EngineRenderContext renderContext) { }
 
         public void SetRootScreen(IScreen? screen)
         {
@@ -194,11 +194,11 @@ public class RogueSceneTests
         public InputContextType GetCurrentContext()
             => InputContextType.Global;
 
-        public void HandleKeyPress(KeyModifierType modifier, IReadOnlyList<Silk.NET.Input.Key> keys) { }
+        public void HandleKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys) { }
 
-        public void HandleKeyRelease(KeyModifierType modifier, IReadOnlyList<Silk.NET.Input.Key> keys) { }
+        public void HandleKeyRelease(KeyModifierType modifier, IReadOnlyList<Key> keys) { }
 
-        public void HandleKeyRepeat(KeyModifierType modifier, IReadOnlyList<Silk.NET.Input.Key> keys) { }
+        public void HandleKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys) { }
 
         public bool PopContext()
             => false;
