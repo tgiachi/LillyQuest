@@ -4,7 +4,7 @@ namespace LillyQuest.RogueLike.Interfaces.Services;
 
 public interface IWorldManager
 {
-    delegate void OnCurrentMapChangedHandler(LyQuestMap newMap);
+    delegate void OnCurrentMapChangedHandler(LyQuestMap? oldMap, LyQuestMap newMap);
 
     event OnCurrentMapChangedHandler OnCurrentMapChanged;
 
@@ -12,6 +12,9 @@ public interface IWorldManager
 
     LyQuestMap OverworldMap { get; set; }
 
+    void RegisterMapHandler(IMapHandler handler);
+
+    void UnregisterMapHandler(IMapHandler handler);
 
     Task GenerateMapAsync();
 
