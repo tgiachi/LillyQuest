@@ -181,12 +181,19 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
         {
             if (obj is CreatureGameObject creature)
             {
-                return new(
+                var tile = new TileRenderData(
                     creature.Tile.Symbol[0],
                     creature.Tile.ForegroundColor,
                     creature.Tile.BackgroundColor,
                     creature.Tile.Flip
                 );
+
+                if (fovSystem != null)
+                {
+                    tile = tile.Darken(fovSystem.GetVisibilityFalloff(map, position));
+                }
+
+                return tile;
             }
         }
 
@@ -224,7 +231,12 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
             return new(-1, LyColor.White);
         }
 
-        return !isVisible && isExplored ? tile.Darken(0.5f) : tile;
+        if (!isVisible && isExplored)
+        {
+            return tile.Darken(0.5f);
+        }
+
+        return tile.Darken(fovSystem.GetVisibilityFalloff(map, position));
     }
 
     private static TileRenderData BuildItemTile(
@@ -245,12 +257,19 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
         {
             if (obj is ItemGameObject item)
             {
-                return new(
+                var tile = new TileRenderData(
                     item.Tile.Symbol[0],
                     item.Tile.ForegroundColor,
                     item.Tile.BackgroundColor,
                     item.Tile.Flip
                 );
+
+                if (fovSystem != null)
+                {
+                    tile = tile.Darken(fovSystem.GetVisibilityFalloff(map, position));
+                }
+
+                return tile;
             }
         }
 

@@ -149,6 +149,43 @@ public class MapRenderSystemTests
         Assert.That(surface.GetTile((int)MapLayer.Items, 1, 1).TileIndex, Is.EqualTo('t'));
     }
 
+    [Test]
+    public void Update_WithFovFalloff_DarkensVisibleItemTile()
+    {
+        var system = new MapRenderSystem(chunkSize: 4);
+        var map = new LyQuestMap(12, 12);
+        var surface = BuildTestSurface();
+        var fovSystem = new FovSystem(fovRadius: 5);
+        fovSystem.RegisterMap(map);
+        var floorTile = new VisualTile("floor", ".", LyColor.Black, LyColor.White);
+
+        for (var y = 0; y < map.Height; y++)
+        {
+            for (var x = 0; x < map.Width; x++)
+            {
+                map.SetTerrain(new TerrainGameObject(new Point(x, y), isWalkable: true, isTransparent: true)
+                {
+                    Tile = floorTile
+                });
+            }
+        }
+
+        var item = new ItemGameObject(new Point(6, 11))
+        {
+            Tile = new VisualTile("torch", "t", LyColor.Yellow, LyColor.Black)
+        };
+        map.AddEntity(item);
+
+        fovSystem.UpdateFov(map, new Point(6, 6));
+        system.RegisterMap(map, surface, fovSystem);
+
+        system.MarkDirtyForTile(map, 6, 11);
+        system.Update(new GameTime());
+
+        var rendered = surface.GetTile((int)MapLayer.Items, 6, 11);
+        Assert.That(rendered.ForegroundColor, Is.Not.EqualTo(item.Tile.ForegroundColor));
+    }
+
     private static LyQuestMap BuildSmallTestMap()
     {
         var map = new LyQuestMap(4, 4);
