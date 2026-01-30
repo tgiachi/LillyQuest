@@ -7,6 +7,7 @@ using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Particles;
 using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Managers.Scenes.Base;
+using LillyQuest.Engine.Screens.Layout;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.Engine.Screens.UI;
 using LillyQuest.Engine.Systems;
@@ -38,6 +39,7 @@ public class RogueScene : BaseScene
 
     private UIRootScreen? _uiRoot;
     private TilesetSurfaceScreen? _screen;
+    private PercentageLayoutScreen? _layoutScreen;
     private CreatureGameObject? _player;
     private MapRenderSystem? _mapRenderSystem;
     private LightOverlaySystem? _lightOverlaySystem;
@@ -88,17 +90,10 @@ public class RogueScene : BaseScene
         {
             DefaultTilesetName = "alloy",
             LayerCount = Enum.GetNames<MapLayer>().Length,
-            Position = new(100, 30),
+            Position = Vector2.Zero,
             TileRenderScale = 1f,
             TileViewSize = new(80, 30)
         };
-
-        var windowSize = new Vector2(1280, 720);
-
-        var availableSize = new Vector2(
-            MathF.Max(0f, windowSize.X - _screen.Position.X),
-            MathF.Max(0f, windowSize.Y - _screen.Position.Y)
-        );
 
         _screen.InitializeLayers(_screen.LayerCount);
 
@@ -110,7 +105,8 @@ public class RogueScene : BaseScene
         _screen.SetLayerViewLock(0, 3);
         _screen.SetLayerViewLock(0, 4);
 
-        _screen.ApplyTileViewScaleToScreen(availableSize);
+        _layoutScreen = new PercentageLayoutScreen();
+        _layoutScreen.Add(_screen, xPercent: 0f, yPercent: 0f, widthPercent: 0.8f, heightPercent: 0.7f);
 
         // _screen.SetLayerTileset(0, "alloy");
         // _screen.SetLayerTileset(1, "alloy");
@@ -307,7 +303,7 @@ public class RogueScene : BaseScene
 
         _screen.SetLayerViewSmoothing(0, true);
 
-        _screenManager.PushScreen(_screen);
+        _screenManager.PushScreen(_layoutScreen);
 
         _screenManager.PushScreen(_uiRoot);
         base.OnLoad();
@@ -332,11 +328,13 @@ public class RogueScene : BaseScene
 
         _worldManager.OnCurrentMapChanged -= HandleCurrentMapChanged;
 
-        if (_screen != null)
+        if (_layoutScreen != null)
         {
-            _screenManager.PopScreen(_screen);
-            _screen = null;
+            _screenManager.PopScreen(_layoutScreen);
+            _layoutScreen = null;
         }
+
+        _screen = null;
 
         if (_uiRoot != null)
         {

@@ -81,7 +81,7 @@ public abstract class BaseScreen : IScreen
     /// Gets screen entities that implement IInputConsumer.
     /// Used by InputSystem for hierarchical input dispatch.
     /// </summary>
-    public IReadOnlyList<IInputConsumer>? GetChildren()
+    public virtual IReadOnlyList<IInputConsumer>? GetChildren()
     {
         var consumers = _entities.OfType<IInputConsumer>().ToList();
 

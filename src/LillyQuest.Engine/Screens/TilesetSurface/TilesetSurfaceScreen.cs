@@ -5,6 +5,7 @@ using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Extensions.TilesetSurface;
+using LillyQuest.Engine.Interfaces.Screens;
 using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Managers.Screens.Base;
 using Silk.NET.Input;
@@ -14,7 +15,7 @@ namespace LillyQuest.Engine.Screens.TilesetSurface;
 /// <summary>
 /// Screen for drawing and editing tileset surfaces with multi-layer support.
 /// </summary>
-public class TilesetSurfaceScreen : BaseScreen
+public class TilesetSurfaceScreen : BaseScreen, ILayoutAwareScreen
 {
     /// <summary>
     /// Fired when the mouse moves over a valid tile.
@@ -160,6 +161,12 @@ public class TilesetSurfaceScreen : BaseScreen
 
         // Initialize animator early so movements work before OnLoad
         _animator = new(_surface);
+    }
+
+    public void ApplyLayout(Vector2 position, Vector2 size, Vector2 rootSize)
+    {
+        Position = position;
+        ApplyTileViewScaleToScreen(size, includeMargins: true);
     }
 
     /// <summary>
