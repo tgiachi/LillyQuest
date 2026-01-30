@@ -21,6 +21,7 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
     private readonly int _chunkSize;
     private readonly Dictionary<LyQuestMap, MapState> _states = new();
     private readonly Dictionary<LyQuestMap, FovSystem?> _fovSystems = new();
+    private readonly Dictionary<LyQuestMap, List<ItemGameObject>> _cachedLightSources = new();
     private TilesetSurfaceScreen? _screen;
     private FovSystem? _fovSystem;
     private readonly Dictionary<ItemGameObject, float> _flickerFactors = new();
@@ -119,6 +120,7 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
 
         _states.Remove(map);
         _fovSystems.Remove(map);
+        _cachedLightSources.Remove(map);
 
         _flickerFactors.Clear();
         _effectiveRadii.Clear();
@@ -249,9 +251,14 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
             return 1f - intensity + 2f * intensity * value;
         }
 
+        // Use deterministic noise instead of creating Random() every frame
+        // This avoids allocation overhead while maintaining pseudo-random appearance
         var bucket = (int)Math.Floor(baseTime);
-        var random = new Random(HashCode.Combine(seed, bucket));
-        var valueRandom = (float)random.NextDouble();
+        var combinedSeed = unchecked(seed * 73856093 ^ bucket * 19349663);
+
+        // Simple LCG (Linear Congruential Generator) for deterministic pseudo-randomness
+        var lcg = unchecked((combinedSeed * 1103515245 + 12345) & 0x7fffffff);
+        var valueRandom = (float)lcg / 0x7fffffff;
 
         return 1f - intensity + 2f * intensity * valueRandom;
     }
@@ -271,22 +278,18 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
 
     private void MarkAllLightSourcesDirty(LyQuestMap map)
     {
-        foreach (var layer in map.Entities.Layers)
+        // Use cached light sources instead of iterating all entities every time
+        if (!_cachedLightSources.TryGetValue(map, out var lightSources))
         {
-            foreach (var entity in layer.Items)
+            return;
+        }
+
+        foreach (var item in lightSources)
+        {
+            var light = item.GoRogueComponents.GetFirstOrDefault<LightSourceComponent>();
+
+            if (light != null)
             {
-                if (entity is not ItemGameObject item)
-                {
-                    continue;
-                }
-
-                var light = item.GoRogueComponents.GetFirstOrDefault<LightSourceComponent>();
-
-                if (light == null)
-                {
-                    continue;
-                }
-
                 MarkDirtyForRadius(map, item.Position, light.Radius);
             }
         }
@@ -339,6 +342,7 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
         foreach (var state in _states.Values)
         {
             var map = state.Map;
+            var lightSources = new List<ItemGameObject>();
 
             foreach (var layer in map.Entities.Layers)
             {
@@ -355,6 +359,9 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
                     {
                         continue;
                     }
+
+                    // Cache this light source for future FOV updates
+                    lightSources.Add(item);
 
                     var flicker = item.GoRogueComponents.GetFirstOrDefault<LightFlickerComponent>();
 
@@ -384,6 +391,9 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
                     MarkDirtyForRadius(map, item.Position, maxRadius);
                 }
             }
+
+            // Update cache of light sources for this map
+            _cachedLightSources[map] = lightSources;
         }
     }
 }

@@ -24,11 +24,20 @@ public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity, IMapAw
         Name = nameof(ViewportUpdateSystem);
     }
 
-    private sealed record ViewportUpdateState(
-        LyQuestMap Map,
-        TilesetSurfaceScreen Screen,
-        MapRenderSystem RenderSystem
-    );
+    private sealed class ViewportUpdateState
+    {
+        public LyQuestMap Map { get; }
+        public TilesetSurfaceScreen Screen { get; }
+        public MapRenderSystem RenderSystem { get; }
+        public TileViewportBounds? LastBounds { get; set; }
+
+        public ViewportUpdateState(LyQuestMap map, TilesetSurfaceScreen screen, MapRenderSystem renderSystem)
+        {
+            Map = map;
+            Screen = screen;
+            RenderSystem = renderSystem;
+        }
+    }
 
     public void Configure(TilesetSurfaceScreen screen, MapRenderSystem renderSystem)
     {
@@ -90,6 +99,15 @@ public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity, IMapAw
         foreach (var state in _states.Values)
         {
             var bounds = GetViewportBounds(state.Screen, _layerIndex);
+
+            // Early exit if viewport hasn't changed
+            if (state.LastBounds == bounds)
+            {
+                continue;
+            }
+
+            state.LastBounds = bounds;
+
             var minX = Math.Max(0, bounds.MinX);
             var minY = Math.Max(0, bounds.MinY);
             var maxX = Math.Min(state.Map.Width - 1, bounds.MaxX);
