@@ -36,6 +36,7 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem
         public HashSet<Point> CurrentVisibleTiles { get; } = new();
         public HashSet<Point> ExploredTiles { get; } = new();
         public Dictionary<Point, TileMemory> TileMemory { get; } = new();
+        public Dictionary<Point, float> VisibilityFalloff { get; } = new();
         public Point LastViewerPosition { get; set; } = new(-1, -1);
 
         public FovState(LyQuestMap map, RecursiveShadowcastingFOV fov)
@@ -80,6 +81,14 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem
     /// </summary>
     public bool IsVisible(LyQuestMap map, Point position)
         => _states.TryGetValue(map, out var state) && state.CurrentVisibleTiles.Contains(position);
+
+    /// <summary>
+    /// Get the visibility falloff factor for a visible tile. Returns 1 for full intensity.
+    /// </summary>
+    public float GetVisibilityFalloff(LyQuestMap map, Point position)
+        => _states.TryGetValue(map, out var state) && state.VisibilityFalloff.TryGetValue(position, out var falloff)
+               ? falloff
+               : 1f;
 
     /// <summary>
     /// Store visual information about a tile for fog of war display.
@@ -144,10 +153,17 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem
 
         // Update current visible tiles
         state.CurrentVisibleTiles.Clear();
+        state.VisibilityFalloff.Clear();
 
         foreach (var pos in state.Fov.CurrentFOV)
         {
             state.CurrentVisibleTiles.Add(pos);
+        }
+
+        foreach (var pos in state.CurrentVisibleTiles)
+        {
+            var distance = Distance.Euclidean.Calculate(viewerPosition, pos);
+            state.VisibilityFalloff[pos] = CalculateFalloff(distance, _fovRadius);
         }
 
         // Mark all visible tiles as explored
@@ -160,5 +176,25 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem
 
         // Raise event to notify listeners
         FovUpdated?.Invoke(this, new(map, previousVisibleTiles, state.CurrentVisibleTiles));
+    }
+
+    private static float CalculateFalloff(double distance, int radius)
+    {
+        if (distance <= radius - 3)
+        {
+            return 1f;
+        }
+
+        if (distance <= radius - 2)
+        {
+            return 0.75f;
+        }
+
+        if (distance <= radius - 1)
+        {
+            return 0.5f;
+        }
+
+        return 0.25f;
     }
 }
