@@ -280,7 +280,7 @@ public class RogueScene : BaseScene
         _fovSystem = new();
         _worldManager.RegisterMapHandler(_fovSystem);
         AddEntity(_fovSystem);
-        _mapRenderSystem = new(16);
+        _mapRenderSystem = new(16, new MapTileBuilder());
         _mapRenderSystem.Configure(_screen, _fovSystem);
         _worldManager.RegisterMapHandler(_mapRenderSystem);
         AddEntity(_mapRenderSystem);

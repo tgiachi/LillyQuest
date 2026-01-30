@@ -4,6 +4,7 @@ using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.RogueLike.Components;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Maps;
+using LillyQuest.RogueLike.Services;
 using LillyQuest.RogueLike.Systems;
 
 namespace LillyQuest.Tests.Game.Systems;
@@ -63,7 +64,7 @@ public class ViewportAnimationUpdateSystemTests
         screen.TileViewSize = new(4, 4);
         screen.SetLayerViewTileOffset(0, new(0, 0));
 
-        var renderSystem = new MapRenderSystem(4);
+        var renderSystem = new MapRenderSystem(4, new MapTileBuilder());
         renderSystem.Configure(screen, null);
         renderSystem.OnMapRegistered(map);
 

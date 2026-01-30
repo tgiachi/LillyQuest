@@ -4,7 +4,6 @@ using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.RogueLike.Events;
-using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.GameObjects.Base;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Interfaces.Systems;
@@ -19,15 +18,17 @@ namespace LillyQuest.RogueLike.Systems;
 public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSystem, IMapHandler
 {
     private readonly int _chunkSize;
+    private readonly IMapTileBuilder _tileBuilder;
     private readonly Dictionary<LyQuestMap, MapRenderState> _states = new();
     private TilesetSurfaceScreen? _screen;
     private FovSystem? _fovSystem;
 
-    public MapRenderSystem(int chunkSize)
+    public MapRenderSystem(int chunkSize, IMapTileBuilder tileBuilder)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(chunkSize);
 
         _chunkSize = chunkSize;
+        _tileBuilder = tileBuilder ?? throw new ArgumentNullException(nameof(tileBuilder));
         Name = nameof(MapRenderSystem);
     }
 
@@ -175,118 +176,6 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
         }
     }
 
-    private static TileRenderData BuildCreatureTile(
-        LyQuestMap map,
-        FovSystem? fovSystem,
-        Point position
-    )
-    {
-        var renderCreature = fovSystem == null || fovSystem.IsVisible(map, position);
-        var empty = new TileRenderData(-1, LyColor.White);
-
-        if (!renderCreature)
-        {
-            return empty;
-        }
-
-        foreach (var obj in map.GetObjectsAt(position))
-        {
-            if (obj is CreatureGameObject creature)
-            {
-                var tile = new TileRenderData(
-                    creature.Tile.Symbol[0],
-                    creature.Tile.ForegroundColor,
-                    creature.Tile.BackgroundColor,
-                    creature.Tile.Flip
-                );
-
-                if (fovSystem != null)
-                {
-                    tile = tile.Darken(fovSystem.GetVisibilityFalloff(map, position));
-                }
-
-                return tile;
-            }
-        }
-
-        return empty;
-    }
-
-    private static TileRenderData BuildItemTile(
-        LyQuestMap map,
-        FovSystem? fovSystem,
-        Point position
-    )
-    {
-        var renderItem = fovSystem == null || fovSystem.IsVisible(map, position);
-        var empty = new TileRenderData(-1, LyColor.White);
-
-        if (!renderItem)
-        {
-            return empty;
-        }
-
-        foreach (var obj in map.GetObjectsAt(position))
-        {
-            if (obj is ItemGameObject item)
-            {
-                var tile = new TileRenderData(
-                    item.Tile.Symbol[0],
-                    item.Tile.ForegroundColor,
-                    item.Tile.BackgroundColor,
-                    item.Tile.Flip
-                );
-
-                if (fovSystem != null)
-                {
-                    tile = tile.Darken(fovSystem.GetVisibilityFalloff(map, position));
-                }
-
-                return tile;
-            }
-        }
-
-        return empty;
-    }
-
-    private static TileRenderData BuildTerrainTile(
-        LyQuestMap map,
-        FovSystem? fovSystem,
-        Point position
-    )
-    {
-        var tile = new TileRenderData(-1, LyColor.White);
-
-        if (map.GetTerrainAt(position) is TerrainGameObject terrain)
-        {
-            tile = new(
-                terrain.Tile.Symbol[0],
-                terrain.Tile.ForegroundColor,
-                terrain.Tile.BackgroundColor,
-                terrain.Tile.Flip
-            );
-        }
-
-        if (fovSystem == null)
-        {
-            return tile;
-        }
-
-        var isVisible = fovSystem.IsVisible(map, position);
-        var isExplored = fovSystem.IsExplored(map, position);
-
-        if (!isExplored)
-        {
-            return new(-1, LyColor.White);
-        }
-
-        if (!isVisible && isExplored)
-        {
-            return tile.Darken(0.5f);
-        }
-
-        return tile.Darken(fovSystem.GetVisibilityFalloff(map, position));
-    }
 
     private void OnFovUpdated(object? sender, FovUpdatedEventArgs e)
     {
@@ -323,13 +212,13 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
             for (var x = startX; x < endX; x++)
             {
                 var position = new Point(x, y);
-                var tile = BuildTerrainTile(map, fovSystem, position);
+                var tile = _tileBuilder.BuildTerrainTile(map, fovSystem, position);
                 surface.AddTileToSurface((int)MapLayer.Terrain, x, y, tile);
 
-                var creatureTile = BuildCreatureTile(map, fovSystem, position);
+                var creatureTile = _tileBuilder.BuildCreatureTile(map, fovSystem, position);
                 surface.AddTileToSurface((int)MapLayer.Creatures, x, y, creatureTile);
 
-                var itemTile = BuildItemTile(map, fovSystem, position);
+                var itemTile = _tileBuilder.BuildItemTile(map, fovSystem, position);
                 surface.AddTileToSurface((int)MapLayer.Items, x, y, itemTile);
             }
         }

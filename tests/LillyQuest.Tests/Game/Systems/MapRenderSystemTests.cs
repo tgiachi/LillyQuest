@@ -6,6 +6,7 @@ using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Maps.Tiles;
 using LillyQuest.RogueLike.Rendering;
+using LillyQuest.RogueLike.Services;
 using LillyQuest.RogueLike.Systems;
 using LillyQuest.RogueLike.Types;
 
@@ -46,7 +47,7 @@ public class MapRenderSystemTests
     [Test]
     public void ChangingEntityTile_MarksChunkDirty()
     {
-        var system = new MapRenderSystem(4);
+        var system = new MapRenderSystem(4, new MapTileBuilder());
         var map = new LyQuestMap(8, 8);
         var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
         var creature = new CreatureGameObject(new(1, 1))
@@ -69,7 +70,7 @@ public class MapRenderSystemTests
     [Test]
     public void ChangingTerrainTile_MarksChunkDirty()
     {
-        var system = new MapRenderSystem(4);
+        var system = new MapRenderSystem(4, new MapTileBuilder());
         var map = new LyQuestMap(8, 8);
         var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
         var terrain = new TerrainGameObject(new(2, 2))
@@ -92,7 +93,7 @@ public class MapRenderSystemTests
     [Test]
     public void OnObjectMoved_MarksOldAndNewChunksDirty()
     {
-        var system = new MapRenderSystem(16);
+        var system = new MapRenderSystem(16, new MapTileBuilder());
         var map = new LyQuestMap(32, 32);
         var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
 
@@ -109,7 +110,7 @@ public class MapRenderSystemTests
     [Test]
     public void ReassigningSameTerrainTileReference_DoesNotMarkDirty()
     {
-        var system = new MapRenderSystem(4);
+        var system = new MapRenderSystem(4, new MapTileBuilder());
         var map = new LyQuestMap(8, 8);
         var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
         var tile = new VisualTile("floor", ".", LyColor.Black, LyColor.White);
@@ -132,7 +133,7 @@ public class MapRenderSystemTests
     [Test]
     public void RegisterMap_InitializesDirtyTracker()
     {
-        var system = new MapRenderSystem(16);
+        var system = new MapRenderSystem(16, new MapTileBuilder());
         var map = new LyQuestMap(32, 32);
         var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
         var fovSystem = new FovSystem();
@@ -146,7 +147,7 @@ public class MapRenderSystemTests
     [Test]
     public void Update_RebuildsDirtyChunks()
     {
-        var system = new MapRenderSystem(4);
+        var system = new MapRenderSystem(4, new MapTileBuilder());
         var map = BuildSmallTestMap();
         var surface = BuildTestSurface();
 
@@ -164,7 +165,7 @@ public class MapRenderSystemTests
     [Test]
     public void Update_RendersItemLayerTile()
     {
-        var system = new MapRenderSystem(4);
+        var system = new MapRenderSystem(4, new MapTileBuilder());
         var map = BuildSmallTestMap();
         var surface = BuildTestSurface();
         var item = new ItemGameObject(new(1, 1))
@@ -187,7 +188,7 @@ public class MapRenderSystemTests
     [Test]
     public void Update_WithFovFalloff_DarkensVisibleItemTile()
     {
-        var system = new MapRenderSystem(4);
+        var system = new MapRenderSystem(4, new MapTileBuilder());
         var map = new LyQuestMap(12, 12);
         var surface = BuildTestSurface();
         var fovSystem = new FovSystem(5);
