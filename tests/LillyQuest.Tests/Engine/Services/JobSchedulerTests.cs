@@ -5,6 +5,20 @@ namespace LillyQuest.Tests.Engine.Services;
 public class JobSchedulerTests
 {
     [Test]
+    public async Task Dispose_WhenCalled_PreventsFurtherEnqueue()
+    {
+        // Arrange
+        var sut = new JobScheduler();
+        sut.Start(1);
+
+        // Act
+        sut.Dispose();
+
+        // Assert
+        Assert.Throws<InvalidOperationException>(() => sut.Enqueue(() => { }));
+    }
+
+    [Test]
     public async Task Enqueue_BeforeStart_ExecutesAfterStart()
     {
         // Arrange
@@ -13,7 +27,7 @@ public class JobSchedulerTests
 
         // Act
         sut.Enqueue(() => tcs.SetResult(true));
-        sut.Start(workerCount: 1);
+        sut.Start(1);
 
         // Assert
         var completed = await Task.WhenAny(tcs.Task, Task.Delay(500));
@@ -25,24 +39,10 @@ public class JobSchedulerTests
     {
         // Arrange
         var sut = new JobScheduler();
-        sut.Start(workerCount: 1);
+        sut.Start(1);
         await sut.StopAsync();
 
         // Act + Assert
-        Assert.Throws<InvalidOperationException>(() => sut.Enqueue(() => { }));
-    }
-
-    [Test]
-    public async Task Dispose_WhenCalled_PreventsFurtherEnqueue()
-    {
-        // Arrange
-        var sut = new JobScheduler();
-        sut.Start(workerCount: 1);
-
-        // Act
-        sut.Dispose();
-
-        // Assert
         Assert.Throws<InvalidOperationException>(() => sut.Enqueue(() => { }));
     }
 }

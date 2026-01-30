@@ -32,18 +32,6 @@ public sealed class UITextBox : UIScreenControl
     public float VerticalPadding { get; set; } = 1f;
     public int CursorIndex { get; set; }
 
-    public static float ComputeNineSliceAxisScale(float desiredScale, float availableSize, float startSize, float endSize)
-    {
-        var minSize = (startSize + endSize) * desiredScale;
-
-        if (availableSize <= 0f || minSize <= 0f)
-        {
-            return desiredScale;
-        }
-
-        return availableSize < minSize ? (availableSize / (startSize + endSize)) : desiredScale;
-    }
-
     public UITextBox(INineSliceAssetManager nineSliceManager, ITextureManager textureManager)
     {
         _nineSliceManager = nineSliceManager;
@@ -58,13 +46,19 @@ public sealed class UITextBox : UIScreenControl
             return;
         }
 
-        Size = new(Size.X, measured.Y + (VerticalPadding * 2f));
+        Size = new(Size.X, measured.Y + VerticalPadding * 2f);
     }
 
-    public void HandleTextInput(char c)
+    public static float ComputeNineSliceAxisScale(float desiredScale, float availableSize, float startSize, float endSize)
     {
-        Text = Text.Insert(CursorIndex, c.ToString());
-        CursorIndex = Math.Clamp(CursorIndex + 1, 0, Text.Length);
+        var minSize = (startSize + endSize) * desiredScale;
+
+        if (availableSize <= 0f || minSize <= 0f)
+        {
+            return desiredScale;
+        }
+
+        return availableSize < minSize ? availableSize / (startSize + endSize) : desiredScale;
     }
 
     public void HandleBackspace()
@@ -77,6 +71,12 @@ public sealed class UITextBox : UIScreenControl
         Text = Text.Remove(CursorIndex - 1, 1);
         CursorIndex = Math.Clamp(CursorIndex - 1, 0, Text.Length);
     }
+
+    public override bool HandleKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => HandleKeys(modifier, keys);
+
+    public override bool HandleKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
+        => HandleKeys(modifier, keys);
 
     public override bool HandleMouseDown(Vector2 point)
     {
@@ -94,14 +94,10 @@ public sealed class UITextBox : UIScreenControl
         return inside;
     }
 
-    public override bool HandleKeyPress(KeyModifierType modifier, IReadOnlyList<Key> keys)
+    public void HandleTextInput(char c)
     {
-        return HandleKeys(modifier, keys);
-    }
-
-    public override bool HandleKeyRepeat(KeyModifierType modifier, IReadOnlyList<Key> keys)
-    {
-        return HandleKeys(modifier, keys);
+        Text = Text.Insert(CursorIndex, c.ToString());
+        CursorIndex = Math.Clamp(CursorIndex + 1, 0, Text.Length);
     }
 
     public override void Render(SpriteBatch? spriteBatch, EngineRenderContext? renderContext)
@@ -167,73 +163,6 @@ public sealed class UITextBox : UIScreenControl
                 0f
             );
         }
-    }
-
-    private bool HandleKeys(KeyModifierType modifier, IReadOnlyList<Key> keys)
-    {
-        var handled = false;
-        var isShift = modifier.HasFlag(KeyModifierType.Shift);
-
-        foreach (var key in keys)
-        {
-            switch (key)
-            {
-                case Key.Left:
-                    CursorIndex = Math.Max(0, CursorIndex - 1);
-                    handled = true;
-
-                    break;
-                case Key.Right:
-                    CursorIndex = Math.Min(Text.Length, CursorIndex + 1);
-                    handled = true;
-
-                    break;
-                case Key.Backspace:
-                    HandleBackspace();
-                    handled = true;
-
-                    break;
-                default:
-                    if (TryGetCharacter(key, isShift, out var character))
-                    {
-                        HandleTextInput(character);
-                        handled = true;
-                    }
-
-                    break;
-            }
-        }
-
-        return handled;
-    }
-
-    private static bool TryGetCharacter(Key key, bool isShift, out char character)
-    {
-        character = default;
-
-        if (key is >= Key.A and <= Key.Z)
-        {
-            character = (char)('a' + (key - Key.A));
-            character = isShift ? char.ToUpperInvariant(character) : character;
-
-            return true;
-        }
-
-        if (key is >= Key.Number0 and <= Key.Number9)
-        {
-            character = (char)('0' + (key - Key.Number0));
-
-            return true;
-        }
-
-        if (key == Key.Space)
-        {
-            character = ' ';
-
-            return true;
-        }
-
-        return false;
     }
 
     private void DrawNineSlice(
@@ -334,7 +263,6 @@ public sealed class UITextBox : UIScreenControl
             scaleX,
             scaleY
         );
-
     }
 
     private void DrawSlice(
@@ -403,6 +331,44 @@ public sealed class UITextBox : UIScreenControl
         }
     }
 
+    private bool HandleKeys(KeyModifierType modifier, IReadOnlyList<Key> keys)
+    {
+        var handled = false;
+        var isShift = modifier.HasFlag(KeyModifierType.Shift);
+
+        foreach (var key in keys)
+        {
+            switch (key)
+            {
+                case Key.Left:
+                    CursorIndex = Math.Max(0, CursorIndex - 1);
+                    handled = true;
+
+                    break;
+                case Key.Right:
+                    CursorIndex = Math.Min(Text.Length, CursorIndex + 1);
+                    handled = true;
+
+                    break;
+                case Key.Backspace:
+                    HandleBackspace();
+                    handled = true;
+
+                    break;
+                default:
+                    if (TryGetCharacter(key, isShift, out var character))
+                    {
+                        HandleTextInput(character);
+                        handled = true;
+                    }
+
+                    break;
+            }
+        }
+
+        return handled;
+    }
+
     private static Rectangle<float> ToUvRect(Texture2D texture, Rectangle<int> sourceRect, float uScale, float vScale)
     {
         var u = (float)sourceRect.Origin.X / texture.Width;
@@ -411,5 +377,34 @@ public sealed class UITextBox : UIScreenControl
         var height = sourceRect.Size.Y * vScale / texture.Height;
 
         return new(u, v, width, height);
+    }
+
+    private static bool TryGetCharacter(Key key, bool isShift, out char character)
+    {
+        character = default;
+
+        if (key is >= Key.A and <= Key.Z)
+        {
+            character = (char)('a' + (key - Key.A));
+            character = isShift ? char.ToUpperInvariant(character) : character;
+
+            return true;
+        }
+
+        if (key is >= Key.Number0 and <= Key.Number9)
+        {
+            character = (char)('0' + (key - Key.Number0));
+
+            return true;
+        }
+
+        if (key == Key.Space)
+        {
+            character = ' ';
+
+            return true;
+        }
+
+        return false;
     }
 }

@@ -1,4 +1,3 @@
-using LillyQuest.RogueLike.Json.Entities.Base;
 using LillyQuest.RogueLike.Json.Entities.Prefabs;
 using LillyQuest.RogueLike.Services.Loaders;
 
@@ -6,151 +5,23 @@ namespace LillyQuest.Tests.RogueLike.Services;
 
 public class MapPrefabServiceTests
 {
-    private static MapPrefabService CreateService()
-    {
-        var colorService = new ColorService();
-        var tileSetService = new TileSetService(colorService);
-        var terrainService = new TerrainService(tileSetService);
-        var lootTableService = new LootTableService((Lazy<ItemService>?)null);
-        var itemService = new ItemService(lootTableService);
-        var creatureService = new CreatureService();
-        return new MapPrefabService(terrainService, itemService, creatureService);
-    }
-
-    [Test]
-    public async Task TryGetPrefab_ReturnsPrefabById()
-    {
-        var service = CreateService();
-        await service.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new MapPrefabDefinitionJson
-            {
-                Id = "test_room",
-                Category = "dungeon",
-                Subcategory = "room",
-                Content = new List<string> { "###", "#.#", "###" },
-                Palette = new Dictionary<string, MapPaletteEntry>
-                {
-                    ["#"] = new MapPaletteEntry { Terrain = "wall" },
-                    ["."] = new MapPaletteEntry { Terrain = "floor" }
-                }
-            }
-        });
-
-        var success = service.TryGetPrefab("test_room", out var prefab);
-
-        Assert.That(success, Is.True);
-        Assert.That(prefab.Id, Is.EqualTo("test_room"));
-    }
-
-    [Test]
-    public async Task TryGetPrefab_ReturnsFalseWhenMissing()
-    {
-        var service = CreateService();
-        await service.LoadDataAsync(new List<BaseJsonEntity>());
-
-        var success = service.TryGetPrefab("missing", out var prefab);
-
-        Assert.That(success, Is.False);
-        Assert.That(prefab, Is.Null);
-    }
-
-    [Test]
-    public async Task GetRandomPrefab_ByCategory_ReturnsMatch()
-    {
-        var service = CreateService();
-        await service.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new MapPrefabDefinitionJson
-            {
-                Id = "dungeon_room",
-                Category = "dungeon",
-                Subcategory = "room",
-                Content = new List<string> { "###" },
-                Palette = new Dictionary<string, MapPaletteEntry>()
-            },
-            new MapPrefabDefinitionJson
-            {
-                Id = "cave_corridor",
-                Category = "cave",
-                Subcategory = "corridor",
-                Content = new List<string> { "..." },
-                Palette = new Dictionary<string, MapPaletteEntry>()
-            }
-        });
-
-        var prefab = service.GetRandomPrefab("dungeon", null, new Random(42));
-
-        Assert.That(prefab, Is.Not.Null);
-        Assert.That(prefab!.Category, Is.EqualTo("dungeon"));
-    }
-
-    [Test]
-    public async Task GetRandomPrefab_ByCategoryAndSubcategory_ReturnsMatch()
-    {
-        var service = CreateService();
-        await service.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new MapPrefabDefinitionJson
-            {
-                Id = "dungeon_room_small",
-                Category = "dungeon",
-                Subcategory = "room",
-                Content = new List<string> { "###" },
-                Palette = new Dictionary<string, MapPaletteEntry>()
-            },
-            new MapPrefabDefinitionJson
-            {
-                Id = "dungeon_corridor",
-                Category = "dungeon",
-                Subcategory = "corridor",
-                Content = new List<string> { "..." },
-                Palette = new Dictionary<string, MapPaletteEntry>()
-            }
-        });
-
-        var prefab = service.GetRandomPrefab("dungeon", "room", new Random(42));
-
-        Assert.That(prefab, Is.Not.Null);
-        Assert.That(prefab!.Subcategory, Is.EqualTo("room"));
-    }
-
-    [Test]
-    public async Task GetRandomPrefab_NoMatches_ReturnsNull()
-    {
-        var service = CreateService();
-        await service.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new MapPrefabDefinitionJson
-            {
-                Id = "dungeon_room",
-                Category = "dungeon",
-                Subcategory = "room",
-                Content = new List<string> { "###" },
-                Palette = new Dictionary<string, MapPaletteEntry>()
-            }
-        });
-
-        var prefab = service.GetRandomPrefab("cave", null, new Random(42));
-
-        Assert.That(prefab, Is.Null);
-    }
-
     [Test]
     public async Task ClearData_RemovesAllPrefabs()
     {
         var service = CreateService();
-        await service.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new MapPrefabDefinitionJson
+        await service.LoadDataAsync(
+            new()
             {
-                Id = "test_prefab",
-                Category = "dungeon",
-                Subcategory = "room",
-                Content = new List<string> { "###" },
-                Palette = new Dictionary<string, MapPaletteEntry>()
+                new MapPrefabDefinitionJson
+                {
+                    Id = "test_prefab",
+                    Category = "dungeon",
+                    Subcategory = "room",
+                    Content = new() { "###" },
+                    Palette = new()
+                }
             }
-        });
+        );
 
         service.ClearData();
 
@@ -170,24 +41,153 @@ public class MapPrefabServiceTests
     }
 
     [Test]
+    public async Task GetRandomPrefab_ByCategory_ReturnsMatch()
+    {
+        var service = CreateService();
+        await service.LoadDataAsync(
+            new()
+            {
+                new MapPrefabDefinitionJson
+                {
+                    Id = "dungeon_room",
+                    Category = "dungeon",
+                    Subcategory = "room",
+                    Content = new() { "###" },
+                    Palette = new()
+                },
+                new MapPrefabDefinitionJson
+                {
+                    Id = "cave_corridor",
+                    Category = "cave",
+                    Subcategory = "corridor",
+                    Content = new() { "..." },
+                    Palette = new()
+                }
+            }
+        );
+
+        var prefab = service.GetRandomPrefab("dungeon", null, new(42));
+
+        Assert.That(prefab, Is.Not.Null);
+        Assert.That(prefab!.Category, Is.EqualTo("dungeon"));
+    }
+
+    [Test]
+    public async Task GetRandomPrefab_ByCategoryAndSubcategory_ReturnsMatch()
+    {
+        var service = CreateService();
+        await service.LoadDataAsync(
+            new()
+            {
+                new MapPrefabDefinitionJson
+                {
+                    Id = "dungeon_room_small",
+                    Category = "dungeon",
+                    Subcategory = "room",
+                    Content = new() { "###" },
+                    Palette = new()
+                },
+                new MapPrefabDefinitionJson
+                {
+                    Id = "dungeon_corridor",
+                    Category = "dungeon",
+                    Subcategory = "corridor",
+                    Content = new() { "..." },
+                    Palette = new()
+                }
+            }
+        );
+
+        var prefab = service.GetRandomPrefab("dungeon", "room", new(42));
+
+        Assert.That(prefab, Is.Not.Null);
+        Assert.That(prefab!.Subcategory, Is.EqualTo("room"));
+    }
+
+    [Test]
+    public async Task GetRandomPrefab_NoMatches_ReturnsNull()
+    {
+        var service = CreateService();
+        await service.LoadDataAsync(
+            new()
+            {
+                new MapPrefabDefinitionJson
+                {
+                    Id = "dungeon_room",
+                    Category = "dungeon",
+                    Subcategory = "room",
+                    Content = new() { "###" },
+                    Palette = new()
+                }
+            }
+        );
+
+        var prefab = service.GetRandomPrefab("cave", null, new(42));
+
+        Assert.That(prefab, Is.Null);
+    }
+
+    [Test]
+    public async Task TryGetPrefab_ReturnsFalseWhenMissing()
+    {
+        var service = CreateService();
+        await service.LoadDataAsync(new());
+
+        var success = service.TryGetPrefab("missing", out var prefab);
+
+        Assert.That(success, Is.False);
+        Assert.That(prefab, Is.Null);
+    }
+
+    [Test]
+    public async Task TryGetPrefab_ReturnsPrefabById()
+    {
+        var service = CreateService();
+        await service.LoadDataAsync(
+            new()
+            {
+                new MapPrefabDefinitionJson
+                {
+                    Id = "test_room",
+                    Category = "dungeon",
+                    Subcategory = "room",
+                    Content = new() { "###", "#.#", "###" },
+                    Palette = new()
+                    {
+                        ["#"] = new() { Terrain = "wall" },
+                        ["."] = new() { Terrain = "floor" }
+                    }
+                }
+            }
+        );
+
+        var success = service.TryGetPrefab("test_room", out var prefab);
+
+        Assert.That(success, Is.True);
+        Assert.That(prefab.Id, Is.EqualTo("test_room"));
+    }
+
+    [Test]
     public async Task VerifyLoadedData_ReturnsTrueForValidData()
     {
         var service = CreateService();
-        await service.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new MapPrefabDefinitionJson
+        await service.LoadDataAsync(
+            new()
             {
-                Id = "test_room",
-                Category = "dungeon",
-                Subcategory = "room",
-                Content = new List<string> { "###", "#.#", "###" },
-                Palette = new Dictionary<string, MapPaletteEntry>
+                new MapPrefabDefinitionJson
                 {
-                    ["#"] = new MapPaletteEntry { Terrain = "terrain/*" },
-                    ["."] = new MapPaletteEntry { Terrain = "terrain/floor" }
+                    Id = "test_room",
+                    Category = "dungeon",
+                    Subcategory = "room",
+                    Content = new() { "###", "#.#", "###" },
+                    Palette = new()
+                    {
+                        ["#"] = new() { Terrain = "terrain/*" },
+                        ["."] = new() { Terrain = "terrain/floor" }
+                    }
                 }
             }
-        });
+        );
 
         var result = service.VerifyLoadedData();
 
@@ -198,59 +198,19 @@ public class MapPrefabServiceTests
     public async Task VerifyLoadedData_ThrowsWhenContentEmpty()
     {
         var service = CreateService();
-        await service.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new MapPrefabDefinitionJson
+        await service.LoadDataAsync(
+            new()
             {
-                Id = "empty_prefab",
-                Category = "dungeon",
-                Subcategory = "room",
-                Content = new List<string>(),
-                Palette = new Dictionary<string, MapPaletteEntry>()
-            }
-        });
-
-        Assert.Throws<InvalidOperationException>(() => service.VerifyLoadedData());
-    }
-
-    [Test]
-    public async Task VerifyLoadedData_ThrowsWhenPaletteMissing()
-    {
-        var service = CreateService();
-        await service.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new MapPrefabDefinitionJson
-            {
-                Id = "no_palette",
-                Category = "dungeon",
-                Subcategory = "room",
-                Content = new List<string> { "###" },
-                Palette = null!
-            }
-        });
-
-        Assert.Throws<InvalidOperationException>(() => service.VerifyLoadedData());
-    }
-
-    [Test]
-    public async Task VerifyLoadedData_ThrowsWhenTerrainNotFound()
-    {
-        var service = CreateService();
-
-        await service.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new MapPrefabDefinitionJson
-            {
-                Id = "test_prefab",
-                Category = "dungeon",
-                Subcategory = "room",
-                Content = new List<string> { "#" },
-                Palette = new Dictionary<string, MapPaletteEntry>
+                new MapPrefabDefinitionJson
                 {
-                    ["#"] = new MapPaletteEntry { Terrain = "missing_terrain" }
+                    Id = "empty_prefab",
+                    Category = "dungeon",
+                    Subcategory = "room",
+                    Content = new(),
+                    Palette = new()
                 }
             }
-        });
+        );
 
         Assert.Throws<InvalidOperationException>(() => service.VerifyLoadedData());
     }
@@ -260,20 +220,22 @@ public class MapPrefabServiceTests
     {
         var service = CreateService();
 
-        await service.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new MapPrefabDefinitionJson
+        await service.LoadDataAsync(
+            new()
             {
-                Id = "test_prefab",
-                Category = "dungeon",
-                Subcategory = "room",
-                Content = new List<string> { "#" },
-                Palette = new Dictionary<string, MapPaletteEntry>
+                new MapPrefabDefinitionJson
                 {
-                    ["#"] = new MapPaletteEntry { Creature = "missing_creature" }
+                    Id = "test_prefab",
+                    Category = "dungeon",
+                    Subcategory = "room",
+                    Content = new() { "#" },
+                    Palette = new()
+                    {
+                        ["#"] = new() { Creature = "missing_creature" }
+                    }
                 }
             }
-        });
+        );
 
         Assert.Throws<InvalidOperationException>(() => service.VerifyLoadedData());
     }
@@ -283,21 +245,81 @@ public class MapPrefabServiceTests
     {
         var service = CreateService();
 
-        await service.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new MapPrefabDefinitionJson
+        await service.LoadDataAsync(
+            new()
             {
-                Id = "test_prefab",
-                Category = "dungeon",
-                Subcategory = "room",
-                Content = new List<string> { "#" },
-                Palette = new Dictionary<string, MapPaletteEntry>
+                new MapPrefabDefinitionJson
                 {
-                    ["#"] = new MapPaletteEntry { Item = "missing_item" }
+                    Id = "test_prefab",
+                    Category = "dungeon",
+                    Subcategory = "room",
+                    Content = new() { "#" },
+                    Palette = new()
+                    {
+                        ["#"] = new() { Item = "missing_item" }
+                    }
                 }
             }
-        });
+        );
 
         Assert.Throws<InvalidOperationException>(() => service.VerifyLoadedData());
+    }
+
+    [Test]
+    public async Task VerifyLoadedData_ThrowsWhenPaletteMissing()
+    {
+        var service = CreateService();
+        await service.LoadDataAsync(
+            new()
+            {
+                new MapPrefabDefinitionJson
+                {
+                    Id = "no_palette",
+                    Category = "dungeon",
+                    Subcategory = "room",
+                    Content = new() { "###" },
+                    Palette = null!
+                }
+            }
+        );
+
+        Assert.Throws<InvalidOperationException>(() => service.VerifyLoadedData());
+    }
+
+    [Test]
+    public async Task VerifyLoadedData_ThrowsWhenTerrainNotFound()
+    {
+        var service = CreateService();
+
+        await service.LoadDataAsync(
+            new()
+            {
+                new MapPrefabDefinitionJson
+                {
+                    Id = "test_prefab",
+                    Category = "dungeon",
+                    Subcategory = "room",
+                    Content = new() { "#" },
+                    Palette = new()
+                    {
+                        ["#"] = new() { Terrain = "missing_terrain" }
+                    }
+                }
+            }
+        );
+
+        Assert.Throws<InvalidOperationException>(() => service.VerifyLoadedData());
+    }
+
+    private static MapPrefabService CreateService()
+    {
+        var colorService = new ColorService();
+        var tileSetService = new TileSetService(colorService);
+        var terrainService = new TerrainService(tileSetService);
+        var lootTableService = new LootTableService(null);
+        var itemService = new ItemService(lootTableService);
+        var creatureService = new CreatureService();
+
+        return new(terrainService, itemService, creatureService);
     }
 }

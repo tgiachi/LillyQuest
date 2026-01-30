@@ -57,47 +57,6 @@ public static class AssetManagerExtensions
         manager.LoadFont(assetName, data);
     }
 
-    /// <param name="manager">The texture manager instance</param>
-    /// <summary>
-    /// Loads a texture from an embedded resource.
-    /// </summary>
-    /// <param name="manager">The texture manager instance</param>
-    /// <param name="assetName">Unique name for the texture asset</param>
-    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Textures/player.png")</param>
-    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
-    public static void LoadTextureFromEmbeddedResource(
-        this ITextureManager manager,
-        string assetName,
-        string resourcePath,
-        Assembly? assembly = null
-    )
-    {
-        assembly ??= Assembly.GetCallingAssembly();
-        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
-        manager.LoadTextureFromPng(assetName, data);
-    }
-
-    /// <summary>
-    /// Loads a texture from an embedded resource with chroma key support.
-    /// </summary>
-    /// <param name="manager">The texture manager instance</param>
-    /// <param name="assetName">Unique name for the texture asset</param>
-    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Textures/sprite.png")</param>
-    /// <param name="tolerance">Color tolerance for magenta detection (0-255)</param>
-    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
-    public static void LoadTextureFromEmbeddedResourceWithChromaKey(
-        this ITextureManager manager,
-        string assetName,
-        string resourcePath,
-        byte tolerance = 0,
-        Assembly? assembly = null
-    )
-    {
-        assembly ??= Assembly.GetCallingAssembly();
-        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
-        manager.LoadTextureFromPngWithChromaKey(assetName, data, tolerance);
-    }
-
     /// <summary>
     /// Loads a music track from an embedded resource.
     /// </summary>
@@ -190,6 +149,47 @@ public static class AssetManagerExtensions
         assembly ??= Assembly.GetCallingAssembly();
         var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
         manager.LoadSoundFromBuffer(soundName, data);
+    }
+
+    /// <param name="manager">The texture manager instance</param>
+    /// <summary>
+    /// Loads a texture from an embedded resource.
+    /// </summary>
+    /// <param name="manager">The texture manager instance</param>
+    /// <param name="assetName">Unique name for the texture asset</param>
+    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Textures/player.png")</param>
+    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
+    public static void LoadTextureFromEmbeddedResource(
+        this ITextureManager manager,
+        string assetName,
+        string resourcePath,
+        Assembly? assembly = null
+    )
+    {
+        assembly ??= Assembly.GetCallingAssembly();
+        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
+        manager.LoadTextureFromPng(assetName, data);
+    }
+
+    /// <summary>
+    /// Loads a texture from an embedded resource with chroma key support.
+    /// </summary>
+    /// <param name="manager">The texture manager instance</param>
+    /// <param name="assetName">Unique name for the texture asset</param>
+    /// <param name="resourcePath">Path to the embedded resource (e.g., "Assets/Textures/sprite.png")</param>
+    /// <param name="tolerance">Color tolerance for magenta detection (0-255)</param>
+    /// <param name="assembly">The assembly containing the embedded resource. If null, uses the calling assembly</param>
+    public static void LoadTextureFromEmbeddedResourceWithChromaKey(
+        this ITextureManager manager,
+        string assetName,
+        string resourcePath,
+        byte tolerance = 0,
+        Assembly? assembly = null
+    )
+    {
+        assembly ??= Assembly.GetCallingAssembly();
+        var data = ResourceUtils.GetEmbeddedResourceContent(resourcePath, assembly);
+        manager.LoadTextureFromPngWithChromaKey(assetName, data, tolerance);
     }
 
     /// <summary>

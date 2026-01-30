@@ -1,4 +1,3 @@
-using DryIoc;
 using Serilog;
 
 namespace LillyQuest.Engine.Bootstrap;
@@ -16,6 +15,11 @@ public sealed class AsyncResourceLoader : IAsyncResourceLoader
     /// Gets whether resources are currently being loaded.
     /// </summary>
     public bool IsLoading { get; private set; }
+
+    /// <summary>
+    /// Checks if loading is complete. Non-blocking.
+    /// </summary>
+    public bool IsLoadingComplete => _loadingTask?.IsCompleted ?? true;
 
     /// <summary>
     /// Starts an async resource loading operation without blocking the render loop.
@@ -66,9 +70,4 @@ public sealed class AsyncResourceLoader : IAsyncResourceLoader
             await _loadingTask;
         }
     }
-
-    /// <summary>
-    /// Checks if loading is complete. Non-blocking.
-    /// </summary>
-    public bool IsLoadingComplete => _loadingTask?.IsCompleted ?? true;
 }

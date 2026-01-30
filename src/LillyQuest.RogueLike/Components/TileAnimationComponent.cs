@@ -48,6 +48,17 @@ public sealed class TileAnimationComponent
     }
 
     /// <summary>
+    /// Resets the animation to the first frame.
+    /// </summary>
+    public void Reset()
+    {
+        CurrentFrameIndex = 0;
+        _accumulatedTimeMs = 0;
+        _direction = 1;
+        IsFinished = false;
+    }
+
+    /// <summary>
     /// Updates the animation based on elapsed time.
     /// </summary>
     /// <param name="gameTime">The current game time.</param>
@@ -71,17 +82,6 @@ public sealed class TileAnimationComponent
         return AdvanceFrame();
     }
 
-    /// <summary>
-    /// Resets the animation to the first frame.
-    /// </summary>
-    public void Reset()
-    {
-        CurrentFrameIndex = 0;
-        _accumulatedTimeMs = 0;
-        _direction = 1;
-        IsFinished = false;
-    }
-
     private bool AdvanceFrame()
     {
         var previousIndex = CurrentFrameIndex;
@@ -90,26 +90,31 @@ public sealed class TileAnimationComponent
         {
             case TileAnimationType.Loop:
                 CurrentFrameIndex = (CurrentFrameIndex + 1) % Animation.Frames.Count;
+
                 break;
 
             case TileAnimationType.PingPong:
                 AdvancePingPong();
+
                 break;
 
             case TileAnimationType.Random:
                 CurrentFrameIndex = _rng.Next(Animation.Frames.Count);
+
                 break;
 
             case TileAnimationType.Once:
                 if (CurrentFrameIndex < Animation.Frames.Count - 1)
                 {
                     CurrentFrameIndex++;
+
                     // Mark as finished when we reach the last frame
                     if (CurrentFrameIndex == Animation.Frames.Count - 1)
                     {
                         IsFinished = true;
                     }
                 }
+
                 break;
         }
 

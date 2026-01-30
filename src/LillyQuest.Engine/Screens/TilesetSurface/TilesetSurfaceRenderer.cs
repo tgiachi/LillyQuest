@@ -85,6 +85,59 @@ internal sealed class TilesetSurfaceRenderer
         spriteBatch.DisableScissor();
     }
 
+    private static void RenderActiveMovements(
+        SpriteBatch spriteBatch,
+        TileLayer layer,
+        Tileset tileset,
+        float scaledTileWidth,
+        float scaledTileHeight,
+        Vector2 viewOffsetPx,
+        Vector2 layerOffset
+    )
+    {
+        var activeMovements = layer.Movements.Active;
+
+        for (var i = 0; i < activeMovements.Count; i++)
+        {
+            var movement = activeMovements[i];
+            var tileData = movement.TileData;
+
+            if (tileData.TileIndex < 0 || tileData.TileIndex >= tileset.TileCount)
+            {
+                continue;
+            }
+
+            var tile = tileset.GetTile(tileData.TileIndex);
+            var uvX = (float)tile.SourceRect.Origin.X / tileset.Texture.Width;
+            var uvY = (float)tile.SourceRect.Origin.Y / tileset.Texture.Height;
+            var uvWidth = (float)tile.SourceRect.Size.X / tileset.Texture.Width;
+            var uvHeight = (float)tile.SourceRect.Size.Y / tileset.Texture.Height;
+
+            var sourceRect = new Rectangle<float>(uvX, uvY, uvWidth, uvHeight);
+            sourceRect = TileRenderData.ApplyFlip(sourceRect, tileData.Flip);
+
+            var color = tileData.ForegroundColor.WithAlpha((byte)(tileData.ForegroundColor.A * layer.Opacity));
+            var tilePosition = TilesetSurfaceAnimator.GetMovementTilePosition(movement);
+            var pixelPosition = new Vector2(
+                                    tilePosition.X * scaledTileWidth,
+                                    tilePosition.Y * scaledTileHeight
+                                ) -
+                                viewOffsetPx +
+                                layerOffset;
+
+            spriteBatch.Draw(
+                tileset.Texture,
+                pixelPosition,
+                new(scaledTileWidth, scaledTileHeight),
+                color,
+                0f,
+                Vector2.Zero,
+                sourceRect,
+                0f
+            );
+        }
+    }
+
     private void RenderLayer(SpriteBatch spriteBatch, TileLayer layer, int layerIndex, TilesetSurfaceAnimator animator)
     {
         var tileset = _getTileset(layerIndex);
@@ -110,9 +163,14 @@ internal sealed class TilesetSurfaceRenderer
         var visibleHeight = _context.ScreenSize.Y - _context.Margin.Y - _context.Margin.W;
 
         var (minTileX, minTileY, maxTileX, maxTileY) = CalculateVisibleTileRange(
-            visibleX, visibleY, visibleWidth, visibleHeight,
-            scaledTileWidth, scaledTileHeight,
-            _surface.Width, _surface.Height
+            visibleX,
+            visibleY,
+            visibleWidth,
+            visibleHeight,
+            scaledTileWidth,
+            scaledTileHeight,
+            _surface.Width,
+            _surface.Height
         );
 
         if (minTileX >= maxTileX || minTileY >= maxTileY)
@@ -120,17 +178,45 @@ internal sealed class TilesetSurfaceRenderer
             return;
         }
 
-        RenderTileBackgrounds(spriteBatch, layer, minTileX, minTileY, maxTileX, maxTileY, scaledTileWidth, scaledTileHeight, viewOffsetPx, layerOffset);
-        RenderTileForegrounds(spriteBatch, layer, tileset, minTileX, minTileY, maxTileX, maxTileY, scaledTileWidth, scaledTileHeight, viewOffsetPx, layerOffset);
+        RenderTileBackgrounds(
+            spriteBatch,
+            layer,
+            minTileX,
+            minTileY,
+            maxTileX,
+            maxTileY,
+            scaledTileWidth,
+            scaledTileHeight,
+            viewOffsetPx,
+            layerOffset
+        );
+        RenderTileForegrounds(
+            spriteBatch,
+            layer,
+            tileset,
+            minTileX,
+            minTileY,
+            maxTileX,
+            maxTileY,
+            scaledTileWidth,
+            scaledTileHeight,
+            viewOffsetPx,
+            layerOffset
+        );
         RenderActiveMovements(spriteBatch, layer, tileset, scaledTileWidth, scaledTileHeight, viewOffsetPx, layerOffset);
     }
 
     private void RenderTileBackgrounds(
         SpriteBatch spriteBatch,
         TileLayer layer,
-        int minTileX, int minTileY, int maxTileX, int maxTileY,
-        float scaledTileWidth, float scaledTileHeight,
-        Vector2 viewOffsetPx, Vector2 layerOffset
+        int minTileX,
+        int minTileY,
+        int maxTileX,
+        int maxTileY,
+        float scaledTileWidth,
+        float scaledTileHeight,
+        Vector2 viewOffsetPx,
+        Vector2 layerOffset
     )
     {
         foreach (var (chunkX, chunkY, chunk) in layer.EnumerateChunksInRange(minTileX, minTileY, maxTileX - 1, maxTileY - 1))
@@ -164,9 +250,14 @@ internal sealed class TilesetSurfaceRenderer
         SpriteBatch spriteBatch,
         TileLayer layer,
         Tileset tileset,
-        int minTileX, int minTileY, int maxTileX, int maxTileY,
-        float scaledTileWidth, float scaledTileHeight,
-        Vector2 viewOffsetPx, Vector2 layerOffset
+        int minTileX,
+        int minTileY,
+        int maxTileX,
+        int maxTileY,
+        float scaledTileWidth,
+        float scaledTileHeight,
+        Vector2 viewOffsetPx,
+        Vector2 layerOffset
     )
     {
         foreach (var (chunkX, chunkY, chunk) in layer.EnumerateChunksInRange(minTileX, minTileY, maxTileX - 1, maxTileY - 1))
@@ -213,57 +304,6 @@ internal sealed class TilesetSurfaceRenderer
                     );
                 }
             }
-        }
-    }
-
-    private static void RenderActiveMovements(
-        SpriteBatch spriteBatch,
-        TileLayer layer,
-        Tileset tileset,
-        float scaledTileWidth, float scaledTileHeight,
-        Vector2 viewOffsetPx, Vector2 layerOffset
-    )
-    {
-        var activeMovements = layer.Movements.Active;
-
-        for (var i = 0; i < activeMovements.Count; i++)
-        {
-            var movement = activeMovements[i];
-            var tileData = movement.TileData;
-
-            if (tileData.TileIndex < 0 || tileData.TileIndex >= tileset.TileCount)
-            {
-                continue;
-            }
-
-            var tile = tileset.GetTile(tileData.TileIndex);
-            var uvX = (float)tile.SourceRect.Origin.X / tileset.Texture.Width;
-            var uvY = (float)tile.SourceRect.Origin.Y / tileset.Texture.Height;
-            var uvWidth = (float)tile.SourceRect.Size.X / tileset.Texture.Width;
-            var uvHeight = (float)tile.SourceRect.Size.Y / tileset.Texture.Height;
-
-            var sourceRect = new Rectangle<float>(uvX, uvY, uvWidth, uvHeight);
-            sourceRect = TileRenderData.ApplyFlip(sourceRect, tileData.Flip);
-
-            var color = tileData.ForegroundColor.WithAlpha((byte)(tileData.ForegroundColor.A * layer.Opacity));
-            var tilePosition = TilesetSurfaceAnimator.GetMovementTilePosition(movement);
-            var pixelPosition = new Vector2(
-                                    tilePosition.X * scaledTileWidth,
-                                    tilePosition.Y * scaledTileHeight
-                                ) -
-                                viewOffsetPx +
-                                layerOffset;
-
-            spriteBatch.Draw(
-                tileset.Texture,
-                pixelPosition,
-                new(scaledTileWidth, scaledTileHeight),
-                color,
-                0f,
-                Vector2.Zero,
-                sourceRect,
-                0f
-            );
         }
     }
 }

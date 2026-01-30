@@ -3,7 +3,6 @@ using LillyQuest.Core.Data.Assets;
 using LillyQuest.Core.Graphics.OpenGL.Resources;
 using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
-using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Screens.UI;
 using Silk.NET.Maths;
 
@@ -11,6 +10,106 @@ namespace LillyQuest.Tests.Engine.UI;
 
 public class UIWindowTests
 {
+    private sealed class FakeNineSliceManager : INineSliceAssetManager
+    {
+        public NineSliceDefinition GetNineSlice(string key)
+            => throw new NotSupportedException();
+
+        public TexturePatch GetTexturePatch(string textureName, string elementName)
+            => throw new NotSupportedException();
+
+        public void LoadNineSlice(
+            string key,
+            string textureName,
+            string filePath,
+            Rectangle<int> sourceRect,
+            Vector4D<float> margins
+        )
+            => throw new NotSupportedException();
+
+        public void LoadNineSlice(
+            string key,
+            string textureName,
+            Span<byte> data,
+            uint width,
+            uint height,
+            Rectangle<int> sourceRect,
+            Vector4D<float> margins
+        )
+            => throw new NotSupportedException();
+
+        public void LoadNineSliceFromPng(
+            string key,
+            string textureName,
+            Span<byte> pngData,
+            Rectangle<int> sourceRect,
+            Vector4D<float> margins
+        )
+            => throw new NotSupportedException();
+
+        public void RegisterNineSlice(string key, string textureName, Rectangle<int> sourceRect, Vector4D<float> margins)
+            => throw new NotSupportedException();
+
+        public void RegisterTexturePatches(string textureName, IReadOnlyList<TexturePatchDefinition> patches)
+            => throw new NotSupportedException();
+
+        public bool TryGetNineSlice(string key, out NineSliceDefinition definition)
+        {
+            definition = default;
+
+            return false;
+        }
+
+        public bool TryGetTexturePatch(string textureName, string elementName, out TexturePatch patch)
+        {
+            patch = default;
+
+            return false;
+        }
+    }
+
+    private sealed class FakeTextureManager : ITextureManager
+    {
+        public Texture2D DefaultWhiteTexture => throw new NotSupportedException();
+        public Texture2D DefaultBlackTexture => throw new NotSupportedException();
+
+        public void Dispose() { }
+
+        public IReadOnlyDictionary<string, Texture2D> GetAllTextures()
+            => throw new NotSupportedException();
+
+        public Texture2D GetTexture(string assetName)
+            => throw new NotSupportedException();
+
+        public bool HasTexture(string assetName)
+            => false;
+
+        public void LoadTexture(string assetName, string filePath)
+            => throw new NotSupportedException();
+
+        public void LoadTexture(string assetName, Span<byte> data, uint width, uint height)
+            => throw new NotSupportedException();
+
+        public void LoadTextureFromPng(string assetName, Span<byte> pngData)
+            => throw new NotSupportedException();
+
+        public void LoadTextureFromPngWithChromaKey(string assetName, Span<byte> pngData, byte tolerance = 0)
+            => throw new NotSupportedException();
+
+        public void LoadTextureWithChromaKey(string assetName, string filePath, byte tolerance = 0)
+            => throw new NotSupportedException();
+
+        public bool TryGetTexture(string assetName, out Texture2D texture)
+        {
+            texture = null!;
+
+            return false;
+        }
+
+        public void UnloadTexture(string assetName)
+            => throw new NotSupportedException();
+    }
+
     [Test]
     public void Add_Uses_Base_Children()
     {
@@ -21,6 +120,21 @@ public class UIWindowTests
 
         Assert.That(window.Children.Count, Is.EqualTo(1));
         Assert.That(window.Children[0], Is.EqualTo(child));
+    }
+
+    [Test]
+    public void AutoSizeEnabled_Reacts_To_Child_Resize_On_Update()
+    {
+        var window = new UIWindow { AutoSizeEnabled = true, IsTitleBarEnabled = false };
+        var child = new UIScreenControl { Position = new(0, 0), Size = new(10, 10) };
+        window.Add(child);
+
+        window.Update(new(TimeSpan.Zero, TimeSpan.Zero));
+        Assert.That(window.Size, Is.EqualTo(new Vector2(10, 10)));
+
+        child.Size = new(20, 15);
+        window.Update(new(TimeSpan.Zero, TimeSpan.Zero));
+        Assert.That(window.Size, Is.EqualTo(new Vector2(20, 15)));
     }
 
     [Test]
@@ -173,6 +287,26 @@ public class UIWindowTests
     }
 
     [Test]
+    public void RecalculateAutoSize_Includes_TitleBar_And_ContentMargin()
+    {
+        var window = new UINinePatchWindow(new FakeNineSliceManager(), new FakeTextureManager())
+        {
+            AutoSizeEnabled = true,
+            IsTitleBarEnabled = true,
+            TitleBarHeight = 20f,
+            ContentMargin = new(10f, 8f, 6f, 4f)
+        };
+
+        var child = new UIScreenControl { Position = new(0, 0), Size = new(100, 40) };
+        window.Add(child);
+
+        window.RecalculateAutoSize();
+
+        Assert.That(window.Size.X, Is.EqualTo(10f + 100f + 6f));
+        Assert.That(window.Size.Y, Is.EqualTo(20f + 40f + 4f));
+    }
+
+    [Test]
     public void Resize_Clamps_To_Min_And_Max_Size()
     {
         var window = new UIWindow
@@ -256,140 +390,5 @@ public class UIWindowTests
         };
 
         Assert.That(window.TitleFont, Is.EqualTo(new FontRef("alloy", 18, FontKind.TrueType)));
-    }
-
-    [Test]
-    public void RecalculateAutoSize_Includes_TitleBar_And_ContentMargin()
-    {
-        var window = new UINinePatchWindow(new FakeNineSliceManager(), new FakeTextureManager())
-        {
-            AutoSizeEnabled = true,
-            IsTitleBarEnabled = true,
-            TitleBarHeight = 20f,
-            ContentMargin = new(10f, 8f, 6f, 4f)
-        };
-
-        var child = new UIScreenControl { Position = new(0, 0), Size = new(100, 40) };
-        window.Add(child);
-
-        window.RecalculateAutoSize();
-
-        Assert.That(window.Size.X, Is.EqualTo(10f + 100f + 6f));
-        Assert.That(window.Size.Y, Is.EqualTo(20f + 40f + 4f));
-    }
-
-    [Test]
-    public void AutoSizeEnabled_Reacts_To_Child_Resize_On_Update()
-    {
-        var window = new UIWindow { AutoSizeEnabled = true, IsTitleBarEnabled = false };
-        var child = new UIScreenControl { Position = new(0, 0), Size = new(10, 10) };
-        window.Add(child);
-
-        window.Update(new GameTime(TimeSpan.Zero, TimeSpan.Zero));
-        Assert.That(window.Size, Is.EqualTo(new Vector2(10, 10)));
-
-        child.Size = new(20, 15);
-        window.Update(new GameTime(TimeSpan.Zero, TimeSpan.Zero));
-        Assert.That(window.Size, Is.EqualTo(new Vector2(20, 15)));
-    }
-
-    private sealed class FakeNineSliceManager : INineSliceAssetManager
-    {
-        public NineSliceDefinition GetNineSlice(string key)
-            => throw new NotSupportedException();
-
-        public TexturePatch GetTexturePatch(string textureName, string elementName)
-            => throw new NotSupportedException();
-
-        public void LoadNineSlice(
-            string key,
-            string textureName,
-            string filePath,
-            Rectangle<int> sourceRect,
-            Vector4D<float> margins
-        )
-            => throw new NotSupportedException();
-
-        public void LoadNineSlice(
-            string key,
-            string textureName,
-            Span<byte> data,
-            uint width,
-            uint height,
-            Rectangle<int> sourceRect,
-            Vector4D<float> margins
-        )
-            => throw new NotSupportedException();
-
-        public void LoadNineSliceFromPng(
-            string key,
-            string textureName,
-            Span<byte> pngData,
-            Rectangle<int> sourceRect,
-            Vector4D<float> margins
-        )
-            => throw new NotSupportedException();
-
-        public void RegisterNineSlice(string key, string textureName, Rectangle<int> sourceRect, Vector4D<float> margins)
-            => throw new NotSupportedException();
-
-        public void RegisterTexturePatches(string textureName, IReadOnlyList<TexturePatchDefinition> patches)
-            => throw new NotSupportedException();
-
-        public bool TryGetNineSlice(string key, out NineSliceDefinition definition)
-        {
-            definition = default;
-
-            return false;
-        }
-
-        public bool TryGetTexturePatch(string textureName, string elementName, out TexturePatch patch)
-        {
-            patch = default;
-
-            return false;
-        }
-    }
-
-    private sealed class FakeTextureManager : ITextureManager
-    {
-        public Texture2D DefaultWhiteTexture => throw new NotSupportedException();
-        public Texture2D DefaultBlackTexture => throw new NotSupportedException();
-
-        public void Dispose() { }
-
-        public IReadOnlyDictionary<string, Texture2D> GetAllTextures()
-            => throw new NotSupportedException();
-
-        public Texture2D GetTexture(string assetName)
-            => throw new NotSupportedException();
-
-        public bool HasTexture(string assetName)
-            => false;
-
-        public void LoadTexture(string assetName, string filePath)
-            => throw new NotSupportedException();
-
-        public void LoadTexture(string assetName, Span<byte> data, uint width, uint height)
-            => throw new NotSupportedException();
-
-        public void LoadTextureFromPng(string assetName, Span<byte> pngData)
-            => throw new NotSupportedException();
-
-        public void LoadTextureFromPngWithChromaKey(string assetName, Span<byte> pngData, byte tolerance = 0)
-            => throw new NotSupportedException();
-
-        public void LoadTextureWithChromaKey(string assetName, string filePath, byte tolerance = 0)
-            => throw new NotSupportedException();
-
-        public bool TryGetTexture(string assetName, out Texture2D texture)
-        {
-            texture = null!;
-
-            return false;
-        }
-
-        public void UnloadTexture(string assetName)
-            => throw new NotSupportedException();
     }
 }

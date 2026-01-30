@@ -10,13 +10,13 @@ using LillyQuest.RogueLike.Json.Entities.Tiles;
 namespace LillyQuest.RogueLike.Json.Entities.Base;
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "type"),
- JsonDerivedType(typeof(ColorSchemaDefintionJson), typeDiscriminator: "color_schema"),
- JsonDerivedType(typeof(TilesetDefinitionJson), typeDiscriminator: "tileset"),
- JsonDerivedType(typeof(TerrainDefinitionJson), typeDiscriminator: "terrain"),
- JsonDerivedType(typeof(CreatureDefinitionJson), typeDiscriminator: "creature"),
- JsonDerivedType(typeof(NameDefinitionJson), typeDiscriminator: "name"),
- JsonDerivedType(typeof(ItemDefinitionJson), typeDiscriminator: "item"),
- JsonDerivedType(typeof(LootTableDefinitionJson), typeDiscriminator: "loot_table")
+ JsonDerivedType(typeof(ColorSchemaDefintionJson), "color_schema"),
+ JsonDerivedType(typeof(TilesetDefinitionJson), "tileset"),
+ JsonDerivedType(typeof(TerrainDefinitionJson), "terrain"),
+ JsonDerivedType(typeof(CreatureDefinitionJson), "creature"),
+ JsonDerivedType(typeof(NameDefinitionJson), "name"),
+ JsonDerivedType(typeof(ItemDefinitionJson), "item"),
+ JsonDerivedType(typeof(LootTableDefinitionJson), "loot_table")
 ]
 public class BaseJsonEntity
 {

@@ -31,6 +31,13 @@ public class Render2dSystem : BaseSystem<IRenderableEntity>, IDisposable
         _fontManager = fontManager;
     }
 
+    public void Dispose()
+    {
+        _spriteBatch?.Dispose();
+        _spriteBatch = null;
+        GC.SuppressFinalize(this);
+    }
+
     public override void Initialize()
     {
         _spriteBatch = new(_renderContext, _shaderManager, _fontManager, textureManager: _textureManager);
@@ -52,12 +59,5 @@ public class Render2dSystem : BaseSystem<IRenderableEntity>, IDisposable
         }
 
         spriteBatch.End();
-    }
-
-    public void Dispose()
-    {
-        _spriteBatch?.Dispose();
-        _spriteBatch = null;
-        GC.SuppressFinalize(this);
     }
 }

@@ -15,7 +15,8 @@ public sealed class LightFlickerComponent
         float intensity,
         float radiusJitter,
         float frequencyHz,
-        int? seed = null)
+        int? seed = null
+    )
     {
         Mode = mode;
         Intensity = intensity;

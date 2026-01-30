@@ -1,5 +1,4 @@
 using System.Numerics;
-using LillyQuest.Core.Data.Assets.Tiles;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Engine.Types;
 
@@ -13,9 +12,7 @@ internal sealed class TilesetSurfaceAnimator
     private readonly TilesetSurface _surface;
 
     public TilesetSurfaceAnimator(TilesetSurface surface)
-    {
-        _surface = surface;
-    }
+        => _surface = surface;
 
     /// <summary>
     /// Enqueues a tile movement for the specified layer.
@@ -170,6 +167,7 @@ internal sealed class TilesetSurfaceAnimator
                     {
                         movement.State = TileMovementState.Returning;
                         movement.ElapsedSeconds = 0f;
+
                         continue;
                     }
 
@@ -184,6 +182,7 @@ internal sealed class TilesetSurfaceAnimator
                     );
                     movement.State = TileMovementState.Completed;
                     active.RemoveAt(i);
+
                     continue;
                 }
 

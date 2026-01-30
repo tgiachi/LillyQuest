@@ -204,19 +204,6 @@ public class TilesetSurfaceTextExtensionsTests
     }
 
     [Test]
-    public void DrawTextPixel_WithLayerIndex_WritesToSpecifiedLayer()
-    {
-        var screen = new TilesetSurfaceScreen(new StubTilesetManager());
-        screen.InitializeLayers(2);
-        screen.SetLayerInputTileSizeOverride(1, new Vector2(10, 10));
-
-        screen.DrawTextPixel(1, "C", 15, 5, LyColor.White);
-
-        Assert.That(screen.GetTile(1, 1, 0).TileIndex, Is.EqualTo(67));
-        Assert.That(screen.GetTile(0, 1, 0).TileIndex, Is.EqualTo(-1));
-    }
-
-    [Test]
     public void DrawTextPixel_UsesLayerRenderScale()
     {
         var screen = new TilesetSurfaceScreen(new StubTilesetManager());
@@ -228,6 +215,19 @@ public class TilesetSurfaceTextExtensionsTests
 
         Assert.That(screen.GetTile(1, 1, 1).TileIndex, Is.EqualTo(65));
         Assert.That(screen.GetTile(1, 2, 2).TileIndex, Is.EqualTo(-1));
+    }
+
+    [Test]
+    public void DrawTextPixel_WithLayerIndex_WritesToSpecifiedLayer()
+    {
+        var screen = new TilesetSurfaceScreen(new StubTilesetManager());
+        screen.InitializeLayers(2);
+        screen.SetLayerInputTileSizeOverride(1, new Vector2(10, 10));
+
+        screen.DrawTextPixel(1, "C", 15, 5, LyColor.White);
+
+        Assert.That(screen.GetTile(1, 1, 0).TileIndex, Is.EqualTo(67));
+        Assert.That(screen.GetTile(0, 1, 0).TileIndex, Is.EqualTo(-1));
     }
 
     [Test]

@@ -12,10 +12,9 @@ public interface IWorldManager
 
     LyQuestMap OverworldMap { get; set; }
 
+    Task GenerateMapAsync();
+
     void RegisterMapHandler(IMapHandler handler);
 
     void UnregisterMapHandler(IMapHandler handler);
-
-    Task GenerateMapAsync();
-
 }

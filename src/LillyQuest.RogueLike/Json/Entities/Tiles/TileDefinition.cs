@@ -10,7 +10,7 @@ public class TileDefinition : BaseJsonEntity
     /// <summary>
     /// Gets or sets the symbol (character) that represents this tile visually.
     /// </summary>
-    public string Symbol { get; set;  }
+    public string Symbol { get; set; }
 
     /// <summary>
     /// Gets or sets the foreground color of this tile.

@@ -43,8 +43,10 @@ public sealed class MapRendererService : IMapRendererService
 
         foreach (var position in region.Positions())
         {
-            if (position.X < 0 || position.X >= map.Width ||
-                position.Y < 0 || position.Y >= map.Height)
+            if (position.X < 0 ||
+                position.X >= map.Width ||
+                position.Y < 0 ||
+                position.Y >= map.Height)
             {
                 continue;
             }
@@ -59,13 +61,28 @@ public sealed class MapRendererService : IMapRendererService
         ArgumentNullException.ThrowIfNull(map);
         ArgumentNullException.ThrowIfNull(surface);
 
-        if (position.X < 0 || position.X >= map.Width ||
-            position.Y < 0 || position.Y >= map.Height)
+        if (position.X < 0 ||
+            position.X >= map.Width ||
+            position.Y < 0 ||
+            position.Y >= map.Height)
         {
             return;
         }
 
         RenderTileAt(map, surface, position);
+    }
+
+    private static void CenterOnPlayer(LyQuestMap map, TilesetSurfaceScreen surface)
+    {
+        var creatureLayer = map.Entities.GetLayer((int)MapLayer.Creatures);
+
+        if (creatureLayer.Count == 0)
+        {
+            return;
+        }
+
+        var player = creatureLayer.First();
+        surface.CenterViewOnTile(TerrainLayer, player.Position.X, player.Position.Y);
     }
 
     private static void RenderAllTiles(LyQuestMap map, TilesetSurfaceScreen surface)
@@ -108,6 +125,7 @@ public sealed class MapRendererService : IMapRendererService
                             creature.Tile.ForegroundColor
                         )
                     );
+
                     break;
 
                 case ItemGameObject item:
@@ -121,21 +139,9 @@ public sealed class MapRendererService : IMapRendererService
                             item.Tile.BackgroundColor
                         )
                     );
+
                     break;
             }
         }
-    }
-
-    private static void CenterOnPlayer(LyQuestMap map, TilesetSurfaceScreen surface)
-    {
-        var creatureLayer = map.Entities.GetLayer((int)MapLayer.Creatures);
-
-        if (creatureLayer.Count == 0)
-        {
-            return;
-        }
-
-        var player = creatureLayer.First();
-        surface.CenterViewOnTile(TerrainLayer, player.Position.X, player.Position.Y);
     }
 }

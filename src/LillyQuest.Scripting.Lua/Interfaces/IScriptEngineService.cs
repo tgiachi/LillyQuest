@@ -45,12 +45,6 @@ public interface IScriptEngineService
     void AddInitScript(string script);
 
     /// <summary>
-    /// Adds a directory to the Lua script search paths.
-    /// </summary>
-    /// <param name="path">Directory path to search for scripts.</param>
-    void AddSearchDirectory(string path);
-
-    /// <summary>
     /// Adds a manual module function that can be called from scripts.
     /// </summary>
     /// <param name="moduleName">The name of the module.</param>
@@ -77,6 +71,12 @@ public interface IScriptEngineService
     /// </summary>
     /// <param name="type">The type to register as a script module.</param>
     void AddScriptModule(Type type);
+
+    /// <summary>
+    /// Adds a directory to the Lua script search paths.
+    /// </summary>
+    /// <param name="path">Directory path to search for scripts.</param>
+    void AddSearchDirectory(string path);
 
     /// <summary>
     /// Clears the script cache

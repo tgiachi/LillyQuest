@@ -14,8 +14,24 @@ public sealed class GoRogueFOVProvider : IParticleFOVProvider
     private FovSystem? _fovSystem;
     private LyQuestMap? _map;
 
-    public GoRogueFOVProvider()
+    public bool IsVisible(int x, int y)
     {
+        if (_map == null || _fovSystem == null)
+        {
+            return true; // No map/fov system = treat all as visible
+        }
+
+        var point = new Point(x, y);
+
+        return _fovSystem.IsVisible(_map, point);
+    }
+
+    public bool IsVisible(Vector2 worldPosition)
+    {
+        var x = (int)worldPosition.X;
+        var y = (int)worldPosition.Y;
+
+        return IsVisible(x, y);
     }
 
     public void SetFovSystem(FovSystem fovSystem)
@@ -26,23 +42,5 @@ public sealed class GoRogueFOVProvider : IParticleFOVProvider
     public void SetMap(LyQuestMap map)
     {
         _map = map;
-    }
-
-    public bool IsVisible(int x, int y)
-    {
-        if (_map == null || _fovSystem == null)
-        {
-            return true; // No map/fov system = treat all as visible
-        }
-        
-        var point = new Point(x, y);
-        return _fovSystem.IsVisible(_map, point);
-    }
-
-    public bool IsVisible(Vector2 worldPosition)
-    {
-        var x = (int)worldPosition.X;
-        var y = (int)worldPosition.Y;
-        return IsVisible(x, y);
     }
 }

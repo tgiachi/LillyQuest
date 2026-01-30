@@ -18,41 +18,7 @@ public class DataLoaderService : IDataLoaderService
     private readonly DataLoaderConfig _config;
 
     public DataLoaderService(DataLoaderConfig config)
-    {
-        _config = config;
-    }
-
-    public async Task LoadDataAsync()
-    {
-        var dataFiles = _config.PluginDirectory.SearchFiles("data", ".json");
-
-        foreach (var dataFile in dataFiles)
-        {
-            _logger.Information("Loading data file: {DataFile} size: {Size}", dataFile.Name, dataFile.SizeBytes.Bytes());
-            await LoadDataFile(dataFile.Path);
-        }
-    }
-
-    public Task ReloadDataAsync()
-    {
-        _loadedEntities.Clear();
-
-        return LoadDataAsync();
-    }
-
-    public async Task VerifyLoadedDataAsync()
-    {
-        foreach (var receiverEntry in _loadedReceivers)
-        {
-            var receivers = receiverEntry.Value;
-
-            foreach (var receiver in receivers)
-            {
-                _logger.Information("Verifying loaded data for receiver: {Receiver}", receiver.GetType().Name);
-                receiver.VerifyLoadedData();
-            }
-        }
-    }
+        => _config = config;
 
     public async Task DispatchDataToReceiversAsync()
     {
@@ -61,7 +27,7 @@ public class DataLoaderService : IDataLoaderService
             var type = receiverEntry.Key;
             var receivers = receiverEntry.Value;
 
-            if (_loadedEntities.TryGetValue(type, out List<BaseJsonEntity>? entities))
+            if (_loadedEntities.TryGetValue(type, out var entities))
             {
                 foreach (var receiver in receivers)
                 {
@@ -87,11 +53,22 @@ public class DataLoaderService : IDataLoaderService
                ? _loadedEntities[typeof(TBaseJsonEntity)].Cast<TBaseJsonEntity>().ToList()
                : [];
 
+    public async Task LoadDataAsync()
+    {
+        var dataFiles = _config.PluginDirectory.SearchFiles("data", ".json");
+
+        foreach (var dataFile in dataFiles)
+        {
+            _logger.Information("Loading data file: {DataFile} size: {Size}", dataFile.Name, dataFile.SizeBytes.Bytes());
+            await LoadDataFile(dataFile.Path);
+        }
+    }
+
     public void RegisterDataReceiver(IDataLoaderReceiver receiver)
     {
         foreach (var type in receiver.GetLoadTypes())
         {
-            if (!_loadedReceivers.TryGetValue(type, out List<IDataLoaderReceiver>? value))
+            if (!_loadedReceivers.TryGetValue(type, out var value))
             {
                 value = [];
                 _loadedReceivers[type] = value;
@@ -99,6 +76,27 @@ public class DataLoaderService : IDataLoaderService
 
             _logger.Information("Registering data receiver: {Receiver}", receiver.GetType().Name);
             value.Add(receiver);
+        }
+    }
+
+    public Task ReloadDataAsync()
+    {
+        _loadedEntities.Clear();
+
+        return LoadDataAsync();
+    }
+
+    public async Task VerifyLoadedDataAsync()
+    {
+        foreach (var receiverEntry in _loadedReceivers)
+        {
+            var receivers = receiverEntry.Value;
+
+            foreach (var receiver in receivers)
+            {
+                _logger.Information("Verifying loaded data for receiver: {Receiver}", receiver.GetType().Name);
+                receiver.VerifyLoadedData();
+            }
         }
     }
 

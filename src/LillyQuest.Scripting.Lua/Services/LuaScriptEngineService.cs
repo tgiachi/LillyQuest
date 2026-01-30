@@ -183,11 +183,6 @@ public class LuaScriptEngineService : IScriptEngineService, IDisposable
         _initScripts.Add(script);
     }
 
-    public void AddSearchDirectory(string path)
-    {
-        _scriptLoader.AddSearchDirectory(path);
-    }
-
     /// <summary>
     /// Adds a manual module function that can be called from Lua scripts with a callback.
     /// </summary>
@@ -276,6 +271,11 @@ public class LuaScriptEngineService : IScriptEngineService, IDisposable
     {
         ArgumentNullException.ThrowIfNull(type);
         _scriptModules.Add(new(type));
+    }
+
+    public void AddSearchDirectory(string path)
+    {
+        _scriptLoader.AddSearchDirectory(path);
     }
 
     /// <summary>
@@ -1019,7 +1019,7 @@ public class LuaScriptEngineService : IScriptEngineService, IDisposable
 
     private Script CreateOptimizedEngine()
     {
-        _scriptLoader = new LuaScriptLoader(new[] { _engineConfig.ScriptsDirectory });
+        _scriptLoader = new(new[] { _engineConfig.ScriptsDirectory });
         var script = new Script
         {
             Options =

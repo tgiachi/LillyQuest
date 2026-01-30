@@ -4,6 +4,5 @@ namespace LillyQuest.RogueLike.Interfaces.Services;
 
 public interface IMapGenerator
 {
-
     Task<LyQuestMap> GenerateMapAsync();
 }

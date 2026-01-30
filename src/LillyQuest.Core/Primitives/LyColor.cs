@@ -179,6 +179,18 @@ public readonly struct LyColor : IEquatable<LyColor>
     public static LyColor Yellow => FromArgb(255, 255, 255, 0);
     public static LyColor YellowGreen => FromArgb(255, 154, 205, 50);
 
+    /// <summary>
+    /// Returns a darkened version of this color by the specified factor.
+    /// </summary>
+    /// <param name="factor">Factor between 0.0 (black) and 1.0 (unchanged).</param>
+    public LyColor Darken(float factor)
+        => new(
+            A,
+            (byte)(R * factor),
+            (byte)(G * factor),
+            (byte)(B * factor)
+        );
+
     public bool Equals(LyColor other)
         => A == other.A && R == other.R && G == other.G && B == other.B;
 
@@ -227,6 +239,19 @@ public readonly struct LyColor : IEquatable<LyColor>
     public override int GetHashCode()
         => HashCode.Combine(A, R, G, B);
 
+    /// <summary>
+    /// Linearly interpolates between this color and another color.
+    /// </summary>
+    /// <param name="other">The target color.</param>
+    /// <param name="t">Interpolation factor between 0.0 (this color) and 1.0 (other color).</param>
+    public LyColor Lerp(LyColor other, float t)
+        => new(
+            (byte)(A + (other.A - A) * t),
+            (byte)(R + (other.R - R) * t),
+            (byte)(G + (other.G - G) * t),
+            (byte)(B + (other.B - B) * t)
+        );
+
     public static bool operator ==(LyColor left, LyColor right)
         => left.Equals(right);
 
@@ -244,31 +269,6 @@ public readonly struct LyColor : IEquatable<LyColor>
 
     public LyColor WithAlpha(byte a)
         => new(a, R, G, B);
-
-    /// <summary>
-    /// Returns a darkened version of this color by the specified factor.
-    /// </summary>
-    /// <param name="factor">Factor between 0.0 (black) and 1.0 (unchanged).</param>
-    public LyColor Darken(float factor)
-        => new(
-            A,
-            (byte)(R * factor),
-            (byte)(G * factor),
-            (byte)(B * factor)
-        );
-
-    /// <summary>
-    /// Linearly interpolates between this color and another color.
-    /// </summary>
-    /// <param name="other">The target color.</param>
-    /// <param name="t">Interpolation factor between 0.0 (this color) and 1.0 (other color).</param>
-    public LyColor Lerp(LyColor other, float t)
-        => new(
-            (byte)(A + (other.A - A) * t),
-            (byte)(R + (other.R - R) * t),
-            (byte)(G + (other.G - G) * t),
-            (byte)(B + (other.B - B) * t)
-        );
 
     private static byte ToByte(int value, string paramName)
     {

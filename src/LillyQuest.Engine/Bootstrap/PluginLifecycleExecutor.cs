@@ -13,9 +13,7 @@ public sealed class PluginLifecycleExecutor
     private readonly IReadOnlyList<ILillyQuestPlugin> _plugins;
 
     public PluginLifecycleExecutor(IReadOnlyList<ILillyQuestPlugin> plugins)
-    {
-        _plugins = plugins;
-    }
+        => _plugins = plugins;
 
     /// <summary>
     /// Executes OnEngineReady on all plugins in sequence.
@@ -26,19 +24,19 @@ public sealed class PluginLifecycleExecutor
     }
 
     /// <summary>
-    /// Executes OnReadyToRender on all plugins in sequence.
-    /// </summary>
-    public async Task ExecuteOnReadyToRender(IContainer container)
-    {
-        await ExecutePhase("OnReadyToRender", async plugin => await plugin.OnReadyToRender(container));
-    }
-
-    /// <summary>
     /// Executes OnLoadResources on all plugins in sequence.
     /// </summary>
     public async Task ExecuteOnLoadResources(IContainer container)
     {
         await ExecutePhase("OnLoadResources", async plugin => await plugin.OnLoadResources(container));
+    }
+
+    /// <summary>
+    /// Executes OnReadyToRender on all plugins in sequence.
+    /// </summary>
+    public async Task ExecuteOnReadyToRender(IContainer container)
+    {
+        await ExecutePhase("OnReadyToRender", async plugin => await plugin.OnReadyToRender(container));
     }
 
     private async Task ExecutePhase(string phaseName, Func<ILillyQuestPlugin, Task> hookMethod)
@@ -54,6 +52,7 @@ public sealed class PluginLifecycleExecutor
             catch (Exception ex)
             {
                 _logger.Fatal(ex, $"✗ {phaseName} failed for plugin {plugin.PluginInfo.Id}");
+
                 throw;
             }
         }

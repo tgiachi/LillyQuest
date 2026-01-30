@@ -1,12 +1,10 @@
 using System.Numerics;
-using LillyQuest.Engine;
-using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Contexts;
 using LillyQuest.Core.Graphics.Rendering2D;
 using LillyQuest.Core.Graphics.Text;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
-using LillyQuest.Engine.Interfaces.Screens;
+using LillyQuest.Engine;
 using LillyQuest.Engine.Logging;
 using LillyQuest.Engine.Managers.Screens;
 using LillyQuest.Engine.Scenes;
@@ -22,6 +20,9 @@ public class LogSceneTests
     private sealed class FakeFontManager : IFontManager
     {
         public void Dispose() { }
+
+        public IFontHandle GetFontHandle(FontRef fontRef)
+            => new FakeFontHandle();
 
         public bool HasFont(string assetName)
             => false;
@@ -54,9 +55,6 @@ public class LogSceneTests
         public void LoadFont(string assetName, Span<byte> data)
             => throw new NotSupportedException();
 
-        public IFontHandle GetFontHandle(FontRef fontRef)
-            => new FakeFontHandle();
-
         public bool TryGetFontHandle(FontRef fontRef, out IFontHandle handle)
         {
             handle = new FakeFontHandle();
@@ -70,10 +68,10 @@ public class LogSceneTests
 
     private sealed class FakeFontHandle : IFontHandle
     {
+        public void DrawText(SpriteBatch spriteBatch, string text, Vector2 position, LyColor color, float depth = 0f) { }
+
         public Vector2 MeasureText(string text)
             => new(text.Length * 10f, 10f);
-
-        public void DrawText(SpriteBatch spriteBatch, string text, Vector2 position, LyColor color, float depth = 0f) { }
     }
 
     [Test]
@@ -102,17 +100,23 @@ public class LogSceneTests
         Assert.That(screenManager.ScreenStack.Count, Is.EqualTo(0));
     }
 
-    private static LogScene CreateScene()
-        => new(new ScreenManager(), new LogEventDispatcher(), new FakeFontManager(), CreateBootstrap(), CreateEngineRenderContext());
-
     private static LillyQuestBootstrap CreateBootstrap()
-        => new(new LillyQuestEngineConfig());
+        => new(new());
 
     private static EngineRenderContext CreateEngineRenderContext()
     {
         var window = Substitute.For<IWindow>();
         window.Size.Returns(new Vector2D<int>(800, 600));
-        return new EngineRenderContext { Window = window };
+
+        return new() { Window = window };
     }
 
+    private static LogScene CreateScene()
+        => new(
+            new ScreenManager(),
+            new LogEventDispatcher(),
+            new FakeFontManager(),
+            CreateBootstrap(),
+            CreateEngineRenderContext()
+        );
 }

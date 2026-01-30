@@ -1,6 +1,5 @@
 using LillyQuest.Core.Primitives;
 using LillyQuest.RogueLike.Components;
-using NUnit.Framework;
 
 namespace LillyQuest.Tests.RogueLike.Components;
 
@@ -12,7 +11,7 @@ public class LightBackgroundComponentTests
         var start = LyColor.Orange;
         var end = LyColor.Transparent;
 
-        var component = new LightBackgroundComponent(startBackground: start, endBackground: end);
+        var component = new LightBackgroundComponent(start, end);
 
         Assert.That(component.StartBackground, Is.EqualTo(start));
         Assert.That(component.EndBackground, Is.EqualTo(end));

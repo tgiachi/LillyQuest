@@ -12,6 +12,40 @@ public sealed class JobScheduler : IJobScheduler, IDisposable
     private bool _running;
     private bool _stopped;
 
+    public void Dispose()
+    {
+        StopAsync().GetAwaiter().GetResult();
+        _cts?.Dispose();
+        _signal.Dispose();
+    }
+
+    public void Enqueue(Action job)
+    {
+        ArgumentNullException.ThrowIfNull(job);
+
+        Enqueue(
+            () =>
+            {
+                job();
+
+                return Task.CompletedTask;
+            }
+        );
+    }
+
+    public void Enqueue(Func<Task> job)
+    {
+        ArgumentNullException.ThrowIfNull(job);
+
+        if (_stopped)
+        {
+            throw new InvalidOperationException("Job scheduler has been stopped.");
+        }
+
+        _jobs.Enqueue(job);
+        _signal.Release();
+    }
+
     public void Start(int workerCount = 5)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(workerCount);
@@ -33,31 +67,6 @@ public sealed class JobScheduler : IJobScheduler, IDisposable
         {
             _workers.Add(Task.Run(() => WorkerLoop(_cts.Token), _cts.Token));
         }
-    }
-
-    public void Enqueue(Action job)
-    {
-        ArgumentNullException.ThrowIfNull(job);
-
-        Enqueue(() =>
-                {
-                    job();
-                    return Task.CompletedTask;
-                }
-        );
-    }
-
-    public void Enqueue(Func<Task> job)
-    {
-        ArgumentNullException.ThrowIfNull(job);
-
-        if (_stopped)
-        {
-            throw new InvalidOperationException("Job scheduler has been stopped.");
-        }
-
-        _jobs.Enqueue(job);
-        _signal.Release();
     }
 
     public async Task StopAsync()
@@ -86,16 +95,7 @@ public sealed class JobScheduler : IJobScheduler, IDisposable
         {
             await Task.WhenAll(_workers);
         }
-        catch (OperationCanceledException)
-        {
-        }
-    }
-
-    public void Dispose()
-    {
-        StopAsync().GetAwaiter().GetResult();
-        _cts?.Dispose();
-        _signal.Dispose();
+        catch (OperationCanceledException) { }
     }
 
     private async Task WorkerLoop(CancellationToken cancellationToken)

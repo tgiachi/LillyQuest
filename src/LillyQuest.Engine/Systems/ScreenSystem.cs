@@ -37,6 +37,13 @@ public class ScreenSystem : ISystem, IDisposable
         _textureManager = textureManager;
     }
 
+    public void Dispose()
+    {
+        _spriteBatch?.Dispose();
+        _spriteBatch = null;
+        GC.SuppressFinalize(this);
+    }
+
     public void Initialize()
     {
         _spriteBatch = new(_renderContext, _shaderManager, _fontManager, textureManager: _textureManager);
@@ -50,12 +57,5 @@ public class ScreenSystem : ISystem, IDisposable
         _screenManager.Render(spriteBatch, _renderContext);
 
         spriteBatch.End();
-    }
-
-    public void Dispose()
-    {
-        _spriteBatch?.Dispose();
-        _spriteBatch = null;
-        GC.SuppressFinalize(this);
     }
 }

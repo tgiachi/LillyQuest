@@ -3,8 +3,8 @@ using LillyQuest.Core.Data.Directories;
 using LillyQuest.Core.Data.Plugins;
 using LillyQuest.Core.Json;
 using LillyQuest.Engine.Interfaces.Particles;
-using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Interfaces.Plugins;
+using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Services.Rendering;
 using LillyQuest.Engine.Systems;
 using LillyQuest.RogueLike.Data.Configs;
@@ -30,56 +30,24 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         typeof(TileSetService),
         typeof(TerrainService),
         typeof(NameService),
-        typeof(CreatureService),
+        typeof(CreatureService)
     ];
 
     public PluginInfo PluginInfo
-        => new PluginInfo(
+        => new(
             "com.github.tgiachi.lillyquest.roguelike",
             "LillyQuest RogueLike Plugin",
             "0.5.0",
             "squid",
             "Adds RogueLike specific features to LillyQuest Engine",
-            "roguelike.lua",
-            []
+            "roguelike.lua"
         );
-
-    public string? GetScriptOnLoadFunctionName()
-        => string.Empty;
-
-    public void RegisterServices(IContainer container)
-    {
-        JsonUtils.RegisterJsonContext(LillyQuestRogueLikeJsonContext.Default);
-
-        _container = container;
-
-        container.Register<IDataLoaderService, DataLoaderService>();
-        container.Register<IMapGenerator, MapGenerator>();
-
-        // Register services with circular dependency using Lazy<T>
-        container.Register<ItemService>(Reuse.Singleton);
-        container.Register<LootTableService>(Reuse.Singleton);
-
-        // Register particle system and providers
-        // Note: Providers require SetMap() to be called after map creation in scene
-        container.Register<IParticleCollisionProvider, GoRogueCollisionProvider>(Reuse.Singleton);
-        container.Register<IParticleFOVProvider, GoRogueFOVProvider>(Reuse.Singleton);
-        container.Register<IParticlePixelRenderer, ParticlePixelRenderer>(Reuse.Singleton);
-
-        container.Register<IWorldManager, WorldManager>(Reuse.Singleton);
-
-        container.Register<ParticleSystem>(Reuse.Singleton);
-
-        foreach (var receiverType in _dataReceiverTypes)
-        {
-            _logger.Debug("Registering receiver type: {ReceiverType}", receiverType);
-
-            _container.Register(receiverType, Reuse.Singleton);
-        }
-    }
 
     public string[] DirectoriesToCreate()
         => ["data"];
+
+    public string? GetScriptOnLoadFunctionName()
+        => string.Empty;
 
     public void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin)
     {
@@ -92,10 +60,6 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
 
         _logger.Information("Plugin Directories Configuration: {Root}", plugin.Root);
     }
-
-    public void Shutdown() { }
-
-    public async Task OnReadyToRender(IContainer container) { }
 
     public async Task OnLoadResources(IContainer container)
     {
@@ -130,8 +94,6 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         await mapGenerator.GenerateMapAsync();
         await worldManager.GenerateMapAsync();
 
-
-
         // var renderContext = container.Resolve<EngineRenderContext>();
         //
         // for (var progress = 0; progress <= 100; progress += Random.Shared.Next(0, 4))
@@ -153,4 +115,39 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         // Log.Information("\n");
         // await Task.Delay(1000);
     }
+
+    public async Task OnReadyToRender(IContainer container) { }
+
+    public void RegisterServices(IContainer container)
+    {
+        JsonUtils.RegisterJsonContext(LillyQuestRogueLikeJsonContext.Default);
+
+        _container = container;
+
+        container.Register<IDataLoaderService, DataLoaderService>();
+        container.Register<IMapGenerator, MapGenerator>();
+
+        // Register services with circular dependency using Lazy<T>
+        container.Register<ItemService>(Reuse.Singleton);
+        container.Register<LootTableService>(Reuse.Singleton);
+
+        // Register particle system and providers
+        // Note: Providers require SetMap() to be called after map creation in scene
+        container.Register<IParticleCollisionProvider, GoRogueCollisionProvider>(Reuse.Singleton);
+        container.Register<IParticleFOVProvider, GoRogueFOVProvider>(Reuse.Singleton);
+        container.Register<IParticlePixelRenderer, ParticlePixelRenderer>(Reuse.Singleton);
+
+        container.Register<IWorldManager, WorldManager>(Reuse.Singleton);
+
+        container.Register<ParticleSystem>(Reuse.Singleton);
+
+        foreach (var receiverType in _dataReceiverTypes)
+        {
+            _logger.Debug("Registering receiver type: {ReceiverType}", receiverType);
+
+            _container.Register(receiverType, Reuse.Singleton);
+        }
+    }
+
+    public void Shutdown() { }
 }

@@ -72,6 +72,14 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem, IMapHandler
                : null;
 
     /// <summary>
+    /// Get the visibility falloff factor for a visible tile. Returns 1 for full intensity.
+    /// </summary>
+    public float GetVisibilityFalloff(LyQuestMap map, Point position)
+        => _states.TryGetValue(map, out var state) && state.VisibilityFalloff.TryGetValue(position, out var falloff)
+               ? falloff
+               : 1f;
+
+    /// <summary>
     /// Check if a position has been explored on the specified map.
     /// </summary>
     public bool IsExplored(LyQuestMap map, Point position)
@@ -84,14 +92,6 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem, IMapHandler
         => _states.TryGetValue(map, out var state) && state.CurrentVisibleTiles.Contains(position);
 
     /// <summary>
-    /// Get the visibility falloff factor for a visible tile. Returns 1 for full intensity.
-    /// </summary>
-    public float GetVisibilityFalloff(LyQuestMap map, Point position)
-        => _states.TryGetValue(map, out var state) && state.VisibilityFalloff.TryGetValue(position, out var falloff)
-               ? falloff
-               : 1f;
-
-    /// <summary>
     /// Store visual information about a tile for fog of war display.
     /// </summary>
     public void MemorizeTile(LyQuestMap map, Point position, char symbol, Color foreground, Color background)
@@ -101,6 +101,22 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem, IMapHandler
             state.TileMemory[position] = new(symbol, foreground, background);
         }
     }
+
+    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap)
+    {
+        if (oldMap != null)
+        {
+            UnregisterMap(oldMap);
+        }
+
+        RegisterMap(newMap);
+    }
+
+    public void OnMapRegistered(LyQuestMap map)
+        => RegisterMap(map);
+
+    public void OnMapUnregistered(LyQuestMap map)
+        => UnregisterMap(map);
 
     public void RegisterMap(LyQuestMap map)
     {
@@ -177,22 +193,6 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem, IMapHandler
 
         // Raise event to notify listeners
         FovUpdated?.Invoke(this, new(map, previousVisibleTiles, state.CurrentVisibleTiles));
-    }
-
-    public void OnMapRegistered(LyQuestMap map)
-        => RegisterMap(map);
-
-    public void OnMapUnregistered(LyQuestMap map)
-        => UnregisterMap(map);
-
-    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap)
-    {
-        if (oldMap != null)
-        {
-            UnregisterMap(oldMap);
-        }
-
-        RegisterMap(newMap);
     }
 
     private static float CalculateFalloff(double distance, int radius)

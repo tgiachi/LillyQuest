@@ -11,7 +11,6 @@ using LillyQuest.Engine.Screens.UI;
 using LillyQuest.Engine.Systems;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
-using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Services;
 using LillyQuest.RogueLike.Systems;
@@ -77,19 +76,19 @@ public class RogueScene : BaseScene
 
     public override void OnLoad()
     {
-        _uiRoot = new UIRootScreen()
+        _uiRoot = new()
         {
             Position = Vector2.Zero,
-            Size = new Vector2(800, 600)
+            Size = new(800, 600)
         };
 
-        _screen = new TilesetSurfaceScreen(_tilesetManager)
+        _screen = new(_tilesetManager)
         {
             DefaultTilesetName = "alloy",
             LayerCount = Enum.GetNames<MapLayer>().Length,
-            Position = new Vector2(100, 30),
+            Position = new(100, 30),
             TileRenderScale = 1f,
-            TileViewSize = new Vector2(80, 30)
+            TileViewSize = new(80, 30)
         };
 
         var windowSize = new Vector2(1280, 720);
@@ -109,7 +108,7 @@ public class RogueScene : BaseScene
         _screen.SetLayerViewLock(0, 3);
         _screen.SetLayerViewLock(0, 4);
 
-        _screen.ApplyTileViewScaleToScreen(availableSize, includeMargins: true);
+        _screen.ApplyTileViewScaleToScreen(availableSize);
 
         // _screen.SetLayerTileset(0, "alloy");
         // _screen.SetLayerTileset(1, "alloy");
@@ -156,14 +155,14 @@ public class RogueScene : BaseScene
                 if (_player != null)
                 {
                     _particleSystem.EmitProjectile(
-                        from: new Vector2(_player.Position.X, _player.Position.Y),
-                        direction: new Vector2(1, 0),
-                        speed: 32f,
-                        tileId: 0,
-                        lifetime: 1.5f,
-                        foregroundColor: LyColor.Orange,
-                        backgroundColor: LyColor.Firebrick,
-                        scale: 18f
+                        new(_player.Position.X, _player.Position.Y),
+                        new(1, 0),
+                        32f,
+                        0,
+                        1.5f,
+                        LyColor.Orange,
+                        LyColor.Firebrick,
+                        18f
                     );
                 }
             }
@@ -178,14 +177,14 @@ public class RogueScene : BaseScene
                 if (_player != null)
                 {
                     _particleSystem.EmitExplosion(
-                        center: new Vector2(_player.Position.X + 2, _player.Position.Y),
-                        tileId: 1,
-                        particleCount: 70,
-                        speed: 26f,
-                        lifetime: 4.2f,
-                        foregroundColor: LyColor.Yellow,
-                        backgroundColor: LyColor.OrangeRed,
-                        scale: 18f
+                        new(_player.Position.X + 2, _player.Position.Y),
+                        1,
+                        70,
+                        26f,
+                        4.2f,
+                        LyColor.Yellow,
+                        LyColor.OrangeRed,
+                        18f
                     );
                 }
             }
@@ -252,14 +251,14 @@ public class RogueScene : BaseScene
                                  {
                                      _screen.CenterViewOnTile(0, x, y);
                                      _particleSystem.EmitProjectile(
-                                         from: new Vector2(x,y),
-                                         direction: new Vector2(1, 0),
-                                         speed: 200f,            // pixels/secondo
-                                         tileId: 0, // ID del tile da renderizzare
-                                         lifetime: 5f,            // secondi
-                                         foregroundColor: LyColor.Orange,
-                                         backgroundColor: LyColor.Firebrick,
-                                         scale: 6f
+                                         new(x, y),
+                                         new(1, 0),
+                                         200f, // pixels/secondo
+                                         0,    // ID del tile da renderizzare
+                                         5f,   // secondi
+                                         LyColor.Orange,
+                                         LyColor.Firebrick,
+                                         6f
                                      );
 
                                      // _screen.CenterViewOnTile(1, x, y);
@@ -267,21 +266,20 @@ public class RogueScene : BaseScene
                                      // _screen.CenterViewOnTile(2, x, y);
                                  };
 
-        _fovSystem = new FovSystem();
+        _fovSystem = new();
         _worldManager.RegisterMapHandler(_fovSystem);
         AddEntity(_fovSystem);
-
-        _mapRenderSystem = new MapRenderSystem(chunkSize: 16);
+        _mapRenderSystem = new(16);
         _mapRenderSystem.Configure(_screen, _fovSystem);
         _worldManager.RegisterMapHandler(_mapRenderSystem);
         AddEntity(_mapRenderSystem);
 
-        _lightOverlaySystem = new LightOverlaySystem(chunkSize: 16);
+        _lightOverlaySystem = new(16);
         _lightOverlaySystem.Configure(_screen, _fovSystem);
         _worldManager.RegisterMapHandler(_lightOverlaySystem);
         AddEntity(_lightOverlaySystem);
 
-        _viewportUpdateSystem = new ViewportUpdateSystem(layerIndex: 0);
+        _viewportUpdateSystem = new(0);
         _viewportUpdateSystem.Configure(_screen, _mapRenderSystem);
         _worldManager.RegisterMapHandler(_viewportUpdateSystem);
         AddEntity(_viewportUpdateSystem);
@@ -342,6 +340,7 @@ public class RogueScene : BaseScene
         (_particleCollisionProvider as GoRogueCollisionProvider)?.SetMap(newMap);
 
         var fovProvider = _particleFOVProvider as GoRogueFOVProvider;
+
         if (fovProvider != null && _fovSystem != null)
         {
             fovProvider.SetFovSystem(_fovSystem);
@@ -361,8 +360,8 @@ public class RogueScene : BaseScene
                                   {
                                       _screen.EnqueueMove(
                                           creature.Layer,
-                                          new Vector2(args.OldPosition.X, args.OldPosition.Y),
-                                          new Vector2(args.NewPosition.X, args.NewPosition.Y),
+                                          new(args.OldPosition.X, args.OldPosition.Y),
+                                          new(args.NewPosition.X, args.NewPosition.Y),
                                           0.1f
                                       );
 

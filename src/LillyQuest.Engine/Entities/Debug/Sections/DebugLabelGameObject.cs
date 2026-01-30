@@ -28,6 +28,6 @@ public class DebugLabelGameObject : GameEntity, IRenderableEntity
         var windowHeight = _renderContext.Window.Size.Y;
         var position = new Vector2(10, windowHeight - 30);
 
-        spriteBatch.DrawText(new FontRef("default_font", 14, FontKind.TrueType), "DEBUG MODE", position, LyColor.Yellow);
+        spriteBatch.DrawText(new("default_font", 14, FontKind.TrueType), "DEBUG MODE", position, LyColor.Yellow);
     }
 }

@@ -4,8 +4,6 @@ using LillyQuest.RogueLike.Json.Entities.Base;
 using LillyQuest.RogueLike.Json.Entities.Colorschemas;
 using LillyQuest.RogueLike.Json.Entities.Terrain;
 using LillyQuest.RogueLike.Json.Entities.Tiles;
-using LillyQuest.RogueLike.Services;
-using System.Linq;
 using LillyQuest.RogueLike.Services.Loaders;
 
 namespace LillyQuest.Tests.RogueLike.Services;
@@ -13,6 +11,146 @@ namespace LillyQuest.Tests.RogueLike.Services;
 public class TerrainServiceTests
 {
     private static readonly string[] ExpectedGroundTerrainIds = ["floor", "dirt"];
+
+    [Test]
+    public async Task GetRandomTerrains_ByCategory_ReturnsRequestedCount()
+    {
+        var terrainService = await CreateTerrainServiceAsync(
+                                 new TerrainDefinitionJson
+                                 {
+                                     Id = "forest_dense",
+                                     Name = "Forest Dense",
+                                     Description = "Dense forest",
+                                     MovementCost = 2,
+                                     Category = "forest",
+                                     Subcategory = "dense"
+                                 },
+                                 new TerrainDefinitionJson
+                                 {
+                                     Id = "forest_edge",
+                                     Name = "Forest Edge",
+                                     Description = "Sparse forest",
+                                     MovementCost = 1,
+                                     Category = "forest",
+                                     Subcategory = "edge"
+                                 },
+                                 new TerrainDefinitionJson
+                                 {
+                                     Id = "desert",
+                                     Name = "Desert",
+                                     Description = "Hot sand",
+                                     MovementCost = 2,
+                                     Category = "desert",
+                                     Subcategory = "sand"
+                                 }
+                             );
+
+        var result = terrainService.GetRandomTerrains("forest", null, 2, new(7));
+
+        Assert.That(result, Has.Count.EqualTo(2));
+        Assert.That(result.All(t => t.Category.Equals("forest", StringComparison.OrdinalIgnoreCase)), Is.True);
+    }
+
+    [Test]
+    public async Task GetRandomTerrains_ByCategoryAndSubcategory_RespectsBothFilters()
+    {
+        var terrainService = await CreateTerrainServiceAsync(
+                                 new TerrainDefinitionJson
+                                 {
+                                     Id = "forest_dense",
+                                     Name = "Forest Dense",
+                                     Description = "Dense forest",
+                                     MovementCost = 2,
+                                     Category = "forest",
+                                     Subcategory = "dense"
+                                 },
+                                 new TerrainDefinitionJson
+                                 {
+                                     Id = "swamp_dense",
+                                     Name = "Swamp Dense",
+                                     Description = "Dense swamp",
+                                     MovementCost = 3,
+                                     Category = "swamp",
+                                     Subcategory = "dense"
+                                 }
+                             );
+
+        var result = terrainService.GetRandomTerrains("forest", "dense", 10, new(3));
+
+        Assert.That(result, Has.Count.EqualTo(1));
+        Assert.That(result[0].Category, Is.EqualTo("forest"));
+        Assert.That(result[0].Subcategory, Is.EqualTo("dense"));
+    }
+
+    [Test]
+    public async Task GetRandomTerrains_ByWildcardSubcategory_UsesContainsMatch()
+    {
+        var terrainService = await CreateTerrainServiceAsync(
+                                 new TerrainDefinitionJson
+                                 {
+                                     Id = "forest_dense",
+                                     Name = "Forest Dense",
+                                     Description = "Dense forest",
+                                     MovementCost = 2,
+                                     Category = "forest",
+                                     Subcategory = "dense"
+                                 },
+                                 new TerrainDefinitionJson
+                                 {
+                                     Id = "forest_thin",
+                                     Name = "Forest Thin",
+                                     Description = "Thin forest",
+                                     MovementCost = 1,
+                                     Category = "forest",
+                                     Subcategory = "thin"
+                                 }
+                             );
+
+        var result = terrainService.GetRandomTerrains("forest", "*en*", 10, new(5));
+
+        Assert.That(result, Has.Count.EqualTo(1));
+        Assert.That(result[0].Subcategory, Is.EqualTo("dense"));
+    }
+
+    [Test]
+    public async Task GetRandomTerrains_WithNoMatches_ReturnsEmpty()
+    {
+        var terrainService = await CreateTerrainServiceAsync(
+                                 new TerrainDefinitionJson
+                                 {
+                                     Id = "forest_dense",
+                                     Name = "Forest Dense",
+                                     Description = "Dense forest",
+                                     MovementCost = 2,
+                                     Category = "forest",
+                                     Subcategory = "dense"
+                                 }
+                             );
+
+        var result = terrainService.GetRandomTerrains("desert", null, 2, new(2));
+
+        Assert.That(result, Is.Empty);
+    }
+
+    [Test]
+    public async Task GetRandomTerrains_WithNonPositiveCount_ReturnsEmpty()
+    {
+        var terrainService = await CreateTerrainServiceAsync(
+                                 new TerrainDefinitionJson
+                                 {
+                                     Id = "forest_dense",
+                                     Name = "Forest Dense",
+                                     Description = "Dense forest",
+                                     MovementCost = 2,
+                                     Category = "forest",
+                                     Subcategory = "dense"
+                                 }
+                             );
+
+        var result = terrainService.GetRandomTerrains("forest", null, 0, new(1));
+
+        Assert.That(result, Is.Empty);
+    }
 
     [Test]
     public void ResolvedTerrainData_StoresAllFields()
@@ -56,44 +194,50 @@ public class TerrainServiceTests
     public async Task TryGetTerrain_ReturnsResolvedTerrain()
     {
         var colorService = new ColorService { DefaultColorSet = "schema" };
-        await colorService.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new ColorSchemaDefintionJson
+        await colorService.LoadDataAsync(
+            new()
             {
-                Id = "schema",
-                Colors = new List<ColorSchemaJson>
+                new ColorSchemaDefintionJson
                 {
-                    new ColorSchemaJson { Id = "fg", Color = new LyColor(0xFF, 0x01, 0x02, 0x03) },
-                    new ColorSchemaJson { Id = "bg", Color = new LyColor(0xFF, 0x10, 0x20, 0x30) }
+                    Id = "schema",
+                    Colors = new()
+                    {
+                        new() { Id = "fg", Color = new(0xFF, 0x01, 0x02, 0x03) },
+                        new() { Id = "bg", Color = new(0xFF, 0x10, 0x20, 0x30) }
+                    }
                 }
             }
-        });
+        );
 
         var tileSetService = new TileSetService(colorService);
-        await tileSetService.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new TilesetDefinitionJson
+        await tileSetService.LoadDataAsync(
+            new()
             {
-                Name = "main",
-                Tiles = new List<TileDefinition>
+                new TilesetDefinitionJson
                 {
-                    new TileDefinition { Id = "floor", Symbol = ".", FgColor = "fg", BgColor = "bg" }
+                    Name = "main",
+                    Tiles = new()
+                    {
+                        new() { Id = "floor", Symbol = ".", FgColor = "fg", BgColor = "bg" }
+                    }
                 }
             }
-        });
+        );
 
         var terrainService = new TerrainService(tileSetService);
-        await terrainService.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new TerrainDefinitionJson
+        await terrainService.LoadDataAsync(
+            new()
             {
-                Id = "floor",
-                Name = "Floor",
-                Description = "Stone floor",
-                Flags = new List<string> { "walkable" },
-                MovementCost = 1
+                new TerrainDefinitionJson
+                {
+                    Id = "floor",
+                    Name = "Floor",
+                    Description = "Stone floor",
+                    Flags = new() { "walkable" },
+                    MovementCost = 1
+                }
             }
-        });
+        );
 
         var success = terrainService.TryGetTerrain("floor", out var terrain);
 
@@ -103,37 +247,24 @@ public class TerrainServiceTests
     }
 
     [Test]
-    public async Task VerifyLoadedData_ThrowsWhenTileMissing()
-    {
-        var terrainService = new TerrainService(new TileSetService(new ColorService()));
-        await terrainService.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new TerrainDefinitionJson { Id = "unknown", Name = "Unknown" }
-        });
-
-        Assert.Throws<InvalidOperationException>(() => terrainService.VerifyLoadedData());
-    }
-
-    [Test]
-    public async Task TryGetTerrainByIdOrTag_ReturnsResolvedTerrainForId()
+    public async Task TryGetTerrainByIdOrTag_ReturnsFalseWhenMissing()
     {
         var terrainService = await CreateTerrainServiceAsync(
-            new TerrainDefinitionJson
-            {
-                Id = "floor",
-                Name = "Floor",
-                Description = "Stone floor",
-                Flags = new List<string> { "walkable" },
-                MovementCost = 1,
-                Tags = new List<string> { "ground" }
-            }
-        );
+                                 new TerrainDefinitionJson
+                                 {
+                                     Id = "floor",
+                                     Name = "Floor",
+                                     Description = "Stone floor",
+                                     Flags = new() { "walkable" },
+                                     MovementCost = 1,
+                                     Tags = new() { "ground" }
+                                 }
+                             );
 
-        var success = terrainService.TryGetTerrainByIdOrTag("floor", out var terrain, out var taggedTerrains);
+        var success = terrainService.TryGetTerrainByIdOrTag("unknown", out var terrain, out var taggedTerrains);
 
-        Assert.That(success, Is.True);
-        Assert.That(terrain, Is.Not.Null);
-        Assert.That(terrain.Id, Is.EqualTo("floor"));
+        Assert.That(success, Is.False);
+        Assert.That(terrain, Is.Null);
         Assert.That(taggedTerrains, Is.Empty);
     }
 
@@ -141,25 +272,25 @@ public class TerrainServiceTests
     public async Task TryGetTerrainByIdOrTag_ReturnsListForTag_CaseInsensitive()
     {
         var terrainService = await CreateTerrainServiceAsync(
-            new TerrainDefinitionJson
-            {
-                Id = "floor",
-                Name = "Floor",
-                Description = "Stone floor",
-                Flags = new List<string> { "walkable" },
-                MovementCost = 1,
-                Tags = new List<string> { "ground", "surface" }
-            },
-            new TerrainDefinitionJson
-            {
-                Id = "dirt",
-                Name = "Dirt",
-                Description = "Dirt floor",
-                Flags = new List<string> { "walkable" },
-                MovementCost = 2,
-                Tags = new List<string> { "Ground" }
-            }
-        );
+                                 new TerrainDefinitionJson
+                                 {
+                                     Id = "floor",
+                                     Name = "Floor",
+                                     Description = "Stone floor",
+                                     Flags = new() { "walkable" },
+                                     MovementCost = 1,
+                                     Tags = new() { "ground", "surface" }
+                                 },
+                                 new TerrainDefinitionJson
+                                 {
+                                     Id = "dirt",
+                                     Name = "Dirt",
+                                     Description = "Dirt floor",
+                                     Flags = new() { "walkable" },
+                                     MovementCost = 2,
+                                     Tags = new() { "Ground" }
+                                 }
+                             );
 
         var success = terrainService.TryGetTerrainByIdOrTag("GROUND", out var terrain, out var taggedTerrains);
 
@@ -170,204 +301,84 @@ public class TerrainServiceTests
     }
 
     [Test]
-    public async Task TryGetTerrainByIdOrTag_ReturnsFalseWhenMissing()
+    public async Task TryGetTerrainByIdOrTag_ReturnsResolvedTerrainForId()
     {
         var terrainService = await CreateTerrainServiceAsync(
-            new TerrainDefinitionJson
-            {
-                Id = "floor",
-                Name = "Floor",
-                Description = "Stone floor",
-                Flags = new List<string> { "walkable" },
-                MovementCost = 1,
-                Tags = new List<string> { "ground" }
-            }
-        );
+                                 new TerrainDefinitionJson
+                                 {
+                                     Id = "floor",
+                                     Name = "Floor",
+                                     Description = "Stone floor",
+                                     Flags = new() { "walkable" },
+                                     MovementCost = 1,
+                                     Tags = new() { "ground" }
+                                 }
+                             );
 
-        var success = terrainService.TryGetTerrainByIdOrTag("unknown", out var terrain, out var taggedTerrains);
+        var success = terrainService.TryGetTerrainByIdOrTag("floor", out var terrain, out var taggedTerrains);
 
-        Assert.That(success, Is.False);
-        Assert.That(terrain, Is.Null);
+        Assert.That(success, Is.True);
+        Assert.That(terrain, Is.Not.Null);
+        Assert.That(terrain.Id, Is.EqualTo("floor"));
         Assert.That(taggedTerrains, Is.Empty);
     }
 
     [Test]
-    public async Task GetRandomTerrains_ByCategory_ReturnsRequestedCount()
+    public async Task VerifyLoadedData_ThrowsWhenTileMissing()
     {
-        var terrainService = await CreateTerrainServiceAsync(
-            new TerrainDefinitionJson
+        var terrainService = new TerrainService(new(new()));
+        await terrainService.LoadDataAsync(
+            new()
             {
-                Id = "forest_dense",
-                Name = "Forest Dense",
-                Description = "Dense forest",
-                MovementCost = 2,
-                Category = "forest",
-                Subcategory = "dense"
-            },
-            new TerrainDefinitionJson
-            {
-                Id = "forest_edge",
-                Name = "Forest Edge",
-                Description = "Sparse forest",
-                MovementCost = 1,
-                Category = "forest",
-                Subcategory = "edge"
-            },
-            new TerrainDefinitionJson
-            {
-                Id = "desert",
-                Name = "Desert",
-                Description = "Hot sand",
-                MovementCost = 2,
-                Category = "desert",
-                Subcategory = "sand"
+                new TerrainDefinitionJson { Id = "unknown", Name = "Unknown" }
             }
         );
 
-        var result = terrainService.GetRandomTerrains("forest", null, 2, new Random(7));
-
-        Assert.That(result, Has.Count.EqualTo(2));
-        Assert.That(result.All(t => t.Category.Equals("forest", StringComparison.OrdinalIgnoreCase)), Is.True);
-    }
-
-    [Test]
-    public async Task GetRandomTerrains_ByCategoryAndSubcategory_RespectsBothFilters()
-    {
-        var terrainService = await CreateTerrainServiceAsync(
-            new TerrainDefinitionJson
-            {
-                Id = "forest_dense",
-                Name = "Forest Dense",
-                Description = "Dense forest",
-                MovementCost = 2,
-                Category = "forest",
-                Subcategory = "dense"
-            },
-            new TerrainDefinitionJson
-            {
-                Id = "swamp_dense",
-                Name = "Swamp Dense",
-                Description = "Dense swamp",
-                MovementCost = 3,
-                Category = "swamp",
-                Subcategory = "dense"
-            }
-        );
-
-        var result = terrainService.GetRandomTerrains("forest", "dense", 10, new Random(3));
-
-        Assert.That(result, Has.Count.EqualTo(1));
-        Assert.That(result[0].Category, Is.EqualTo("forest"));
-        Assert.That(result[0].Subcategory, Is.EqualTo("dense"));
-    }
-
-    [Test]
-    public async Task GetRandomTerrains_ByWildcardSubcategory_UsesContainsMatch()
-    {
-        var terrainService = await CreateTerrainServiceAsync(
-            new TerrainDefinitionJson
-            {
-                Id = "forest_dense",
-                Name = "Forest Dense",
-                Description = "Dense forest",
-                MovementCost = 2,
-                Category = "forest",
-                Subcategory = "dense"
-            },
-            new TerrainDefinitionJson
-            {
-                Id = "forest_thin",
-                Name = "Forest Thin",
-                Description = "Thin forest",
-                MovementCost = 1,
-                Category = "forest",
-                Subcategory = "thin"
-            }
-        );
-
-        var result = terrainService.GetRandomTerrains("forest", "*en*", 10, new Random(5));
-
-        Assert.That(result, Has.Count.EqualTo(1));
-        Assert.That(result[0].Subcategory, Is.EqualTo("dense"));
-    }
-
-    [Test]
-    public async Task GetRandomTerrains_WithNonPositiveCount_ReturnsEmpty()
-    {
-        var terrainService = await CreateTerrainServiceAsync(
-            new TerrainDefinitionJson
-            {
-                Id = "forest_dense",
-                Name = "Forest Dense",
-                Description = "Dense forest",
-                MovementCost = 2,
-                Category = "forest",
-                Subcategory = "dense"
-            }
-        );
-
-        var result = terrainService.GetRandomTerrains("forest", null, 0, new Random(1));
-
-        Assert.That(result, Is.Empty);
-    }
-
-    [Test]
-    public async Task GetRandomTerrains_WithNoMatches_ReturnsEmpty()
-    {
-        var terrainService = await CreateTerrainServiceAsync(
-            new TerrainDefinitionJson
-            {
-                Id = "forest_dense",
-                Name = "Forest Dense",
-                Description = "Dense forest",
-                MovementCost = 2,
-                Category = "forest",
-                Subcategory = "dense"
-            }
-        );
-
-        var result = terrainService.GetRandomTerrains("desert", null, 2, new Random(2));
-
-        Assert.That(result, Is.Empty);
+        Assert.Throws<InvalidOperationException>(() => terrainService.VerifyLoadedData());
     }
 
     private static async Task<TerrainService> CreateTerrainServiceAsync(params TerrainDefinitionJson[] terrains)
     {
         var colorService = new ColorService { DefaultColorSet = "schema" };
-        await colorService.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new ColorSchemaDefintionJson
+        await colorService.LoadDataAsync(
+            new()
             {
-                Id = "schema",
-                Colors = new List<ColorSchemaJson>
+                new ColorSchemaDefintionJson
                 {
-                    new ColorSchemaJson { Id = "fg", Color = new LyColor(0xFF, 0x01, 0x02, 0x03) },
-                    new ColorSchemaJson { Id = "bg", Color = new LyColor(0xFF, 0x10, 0x20, 0x30) }
+                    Id = "schema",
+                    Colors = new()
+                    {
+                        new() { Id = "fg", Color = new(0xFF, 0x01, 0x02, 0x03) },
+                        new() { Id = "bg", Color = new(0xFF, 0x10, 0x20, 0x30) }
+                    }
                 }
             }
-        });
+        );
 
         var tileSetService = new TileSetService(colorService);
-        await tileSetService.LoadDataAsync(new List<BaseJsonEntity>
-        {
-            new TilesetDefinitionJson
+        await tileSetService.LoadDataAsync(
+            new()
             {
-                Name = "main",
-                Tiles = new List<TileDefinition>
+                new TilesetDefinitionJson
                 {
-                    new TileDefinition { Id = "floor", Symbol = ".", FgColor = "fg", BgColor = "bg" },
-                    new TileDefinition { Id = "dirt", Symbol = ",", FgColor = "fg", BgColor = "bg" },
-                    new TileDefinition { Id = "forest_dense", Symbol = "F", FgColor = "fg", BgColor = "bg" },
-                    new TileDefinition { Id = "forest_edge", Symbol = "f", FgColor = "fg", BgColor = "bg" },
-                    new TileDefinition { Id = "forest_thin", Symbol = "t", FgColor = "fg", BgColor = "bg" },
-                    new TileDefinition { Id = "swamp_dense", Symbol = "s", FgColor = "fg", BgColor = "bg" },
-                    new TileDefinition { Id = "desert", Symbol = "d", FgColor = "fg", BgColor = "bg" }
+                    Name = "main",
+                    Tiles = new()
+                    {
+                        new() { Id = "floor", Symbol = ".", FgColor = "fg", BgColor = "bg" },
+                        new() { Id = "dirt", Symbol = ",", FgColor = "fg", BgColor = "bg" },
+                        new() { Id = "forest_dense", Symbol = "F", FgColor = "fg", BgColor = "bg" },
+                        new() { Id = "forest_edge", Symbol = "f", FgColor = "fg", BgColor = "bg" },
+                        new() { Id = "forest_thin", Symbol = "t", FgColor = "fg", BgColor = "bg" },
+                        new() { Id = "swamp_dense", Symbol = "s", FgColor = "fg", BgColor = "bg" },
+                        new() { Id = "desert", Symbol = "d", FgColor = "fg", BgColor = "bg" }
+                    }
                 }
             }
-        });
+        );
 
         var terrainService = new TerrainService(tileSetService);
         await terrainService.LoadDataAsync(terrains.Cast<BaseJsonEntity>().ToList());
+
         return terrainService;
     }
 }

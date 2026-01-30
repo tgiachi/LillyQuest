@@ -7,18 +7,6 @@ namespace LillyQuest.Tests.Engine;
 public class ParticleTests
 {
     [Test]
-    public void Particle_InitializesWithDefaultValues()
-    {
-        // Arrange & Act
-        var particle = new Particle();
-
-        // Assert
-        Assert.That(particle.Position, Is.EqualTo(Vector2.Zero));
-        Assert.That(particle.Velocity, Is.EqualTo(Vector2.Zero));
-        Assert.That(particle.Lifetime, Is.EqualTo(0f));
-    }
-
-    [Test]
     public void Particle_CanBeInitializedWithValues()
     {
         // Arrange
@@ -47,16 +35,6 @@ public class ParticleTests
     }
 
     [Test]
-    public void ParticleBehavior_HasExpectedValues()
-    {
-        // Assert - verify enum values exist
-        Assert.That(ParticleBehavior.Projectile, Is.EqualTo(ParticleBehavior.Projectile));
-        Assert.That(ParticleBehavior.Ambient, Is.EqualTo(ParticleBehavior.Ambient));
-        Assert.That(ParticleBehavior.Explosion, Is.EqualTo(ParticleBehavior.Explosion));
-        Assert.That(ParticleBehavior.Gravity, Is.EqualTo(ParticleBehavior.Gravity));
-    }
-
-    [Test]
     public void Particle_CanSetBehavior()
     {
         // Arrange & Act
@@ -70,14 +48,39 @@ public class ParticleTests
     }
 
     [Test]
-    public void ParticleFlags_HasExpectedValues()
+    public void Particle_CanSetFlags()
+    {
+        // Arrange & Act
+        var particle = new Particle
+        {
+            Flags = ParticleFlags.Die | ParticleFlags.FadeOut
+        };
+
+        // Assert
+        Assert.That(particle.Flags.HasFlag(ParticleFlags.Die), Is.True);
+        Assert.That(particle.Flags.HasFlag(ParticleFlags.FadeOut), Is.True);
+    }
+
+    [Test]
+    public void Particle_InitializesWithDefaultValues()
+    {
+        // Arrange & Act
+        var particle = new Particle();
+
+        // Assert
+        Assert.That(particle.Position, Is.EqualTo(Vector2.Zero));
+        Assert.That(particle.Velocity, Is.EqualTo(Vector2.Zero));
+        Assert.That(particle.Lifetime, Is.EqualTo(0f));
+    }
+
+    [Test]
+    public void ParticleBehavior_HasExpectedValues()
     {
         // Assert - verify enum values exist
-        Assert.That(ParticleFlags.None, Is.EqualTo(ParticleFlags.None));
-        Assert.That(ParticleFlags.Bounce, Is.EqualTo(ParticleFlags.Bounce));
-        Assert.That(ParticleFlags.Die, Is.EqualTo(ParticleFlags.Die));
-        Assert.That(ParticleFlags.FadeOut, Is.EqualTo(ParticleFlags.FadeOut));
-        Assert.That(ParticleFlags.Gravity, Is.EqualTo(ParticleFlags.Gravity));
+        Assert.That(ParticleBehavior.Projectile, Is.EqualTo(ParticleBehavior.Projectile));
+        Assert.That(ParticleBehavior.Ambient, Is.EqualTo(ParticleBehavior.Ambient));
+        Assert.That(ParticleBehavior.Explosion, Is.EqualTo(ParticleBehavior.Explosion));
+        Assert.That(ParticleBehavior.Gravity, Is.EqualTo(ParticleBehavior.Gravity));
     }
 
     [Test]
@@ -93,16 +96,13 @@ public class ParticleTests
     }
 
     [Test]
-    public void Particle_CanSetFlags()
+    public void ParticleFlags_HasExpectedValues()
     {
-        // Arrange & Act
-        var particle = new Particle
-        {
-            Flags = ParticleFlags.Die | ParticleFlags.FadeOut
-        };
-
-        // Assert
-        Assert.That(particle.Flags.HasFlag(ParticleFlags.Die), Is.True);
-        Assert.That(particle.Flags.HasFlag(ParticleFlags.FadeOut), Is.True);
+        // Assert - verify enum values exist
+        Assert.That(ParticleFlags.None, Is.EqualTo(ParticleFlags.None));
+        Assert.That(ParticleFlags.Bounce, Is.EqualTo(ParticleFlags.Bounce));
+        Assert.That(ParticleFlags.Die, Is.EqualTo(ParticleFlags.Die));
+        Assert.That(ParticleFlags.FadeOut, Is.EqualTo(ParticleFlags.FadeOut));
+        Assert.That(ParticleFlags.Gravity, Is.EqualTo(ParticleFlags.Gravity));
     }
 }

@@ -1,3 +1,4 @@
+using System.Reflection;
 using DryIoc;
 using LillyQuest.Core.Data.Configs;
 using LillyQuest.Core.Data.Directories;
@@ -13,15 +14,6 @@ namespace LillyQuest.Tests.Engine.Bootstrap;
 
 public class BootstrapIntegrationTests
 {
-    [SetUp]
-    public void SkipIfHeadless()
-    {
-        if (IsHeadlessEnvironment())
-        {
-            Assert.Ignore("Skipping bootstrap integration tests on headless/CI environment.");
-        }
-    }
-
     private sealed class RecordingScriptEngineService : IScriptEngineService
     {
         public readonly List<string> AddedDirectories = new();
@@ -38,13 +30,14 @@ public class BootstrapIntegrationTests
             remove { }
         }
 
-        public void AddCallback(string name, Action<object[]> callback) => throw new NotImplementedException();
+        public void AddCallback(string name, Action<object[]> callback)
+            => throw new NotImplementedException();
 
-        public void AddConstant(string name, object value) => throw new NotImplementedException();
+        public void AddConstant(string name, object value)
+            => throw new NotImplementedException();
 
-        public void AddInitScript(string script) => throw new NotImplementedException();
-
-        public void AddSearchDirectory(string path) => AddedDirectories.Add(path);
+        public void AddInitScript(string script)
+            => throw new NotImplementedException();
 
         public void AddManualModuleFunction(string moduleName, string functionName, Action<object[]> callback)
             => throw new NotImplementedException();
@@ -56,78 +49,93 @@ public class BootstrapIntegrationTests
         )
             => throw new NotImplementedException();
 
-        public void AddScriptModule(Type type) => throw new NotImplementedException();
+        public void AddScriptModule(Type type)
+            => throw new NotImplementedException();
 
-        public void ClearScriptCache() => throw new NotImplementedException();
+        public void AddSearchDirectory(string path)
+            => AddedDirectories.Add(path);
 
-        public void ExecuteCallback(string name, params object[] args) => throw new NotImplementedException();
+        public void ClearScriptCache()
+            => throw new NotImplementedException();
 
-        public void ExecuteEngineReady() => throw new NotImplementedException();
+        public void ExecuteCallback(string name, params object[] args)
+            => throw new NotImplementedException();
 
-        public ScriptResult ExecuteFunction(string command) => new();
+        public void ExecuteEngineReady()
+            => throw new NotImplementedException();
 
-        public Task<ScriptResult> ExecuteFunctionAsync(string command) => Task.FromResult(new ScriptResult());
+        public ScriptResult ExecuteFunction(string command)
+            => new();
 
-        public void ExecuteFunctionFromBootstrap(string name) => throw new NotImplementedException();
+        public Task<ScriptResult> ExecuteFunctionAsync(string command)
+            => Task.FromResult(new ScriptResult());
 
-        public void ExecuteScript(string script) => throw new NotImplementedException();
+        public void ExecuteFunctionFromBootstrap(string name)
+            => throw new NotImplementedException();
 
-        public void ExecuteScriptFile(string scriptFile) => throw new NotImplementedException();
+        public void ExecuteScript(string script)
+            => throw new NotImplementedException();
 
-        public ScriptExecutionMetrics GetExecutionMetrics() => new();
+        public void ExecuteScriptFile(string scriptFile)
+            => throw new NotImplementedException();
 
-        public void RegisterGlobal(string name, object value) => throw new NotImplementedException();
+        public ScriptExecutionMetrics GetExecutionMetrics()
+            => new();
 
-        public void RegisterGlobalFunction(string name, Delegate func) => throw new NotImplementedException();
+        public void RegisterGlobal(string name, object value)
+            => throw new NotImplementedException();
 
-        public Task StartAsync() => Task.CompletedTask;
+        public void RegisterGlobalFunction(string name, Delegate func)
+            => throw new NotImplementedException();
 
-        public string ToScriptEngineFunctionName(string name) => name;
+        public Task StartAsync()
+            => Task.CompletedTask;
 
-        public bool UnregisterGlobal(string name) => false;
+        public string ToScriptEngineFunctionName(string name)
+            => name;
+
+        public bool UnregisterGlobal(string name)
+            => false;
     }
 
     private sealed class TrackingPlugin : ILillyQuestPlugin
     {
         private readonly List<string> _events;
 
-        public PluginInfo PluginInfo => new(
-            Id: "tracking",
-            Name: "Tracking",
-            Version: "1.0.0",
-            Author: "Test",
-            Description: "",
-            InitScriptName: "",
-            Dependencies: []
-        );
+        public PluginInfo PluginInfo
+            => new(
+                "tracking",
+                "Tracking",
+                "1.0.0",
+                "Test",
+                "",
+                "",
+                []
+            );
 
         public TrackingPlugin(List<string> events)
-        {
-            _events = events;
-        }
-
-        public string? GetScriptOnLoadFunctionName() => null;
-
-        public void RegisterServices(IContainer container)
-        {
-            _events.Add("RegisterServices");
-        }
+            => _events = events;
 
         public string[]? DirectoriesToCreate()
-        {
-            return null;
-        }
+            => null;
+
+        public string? GetScriptOnLoadFunctionName()
+            => null;
 
         public void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin)
         {
             _events.Add("OnDirectories");
         }
 
-        public void Shutdown() { }
-
         public async Task OnEngineReady(IContainer container)
         {
             _events.Add("OnEngineReady");
+            await Task.CompletedTask;
+        }
+
+        public async Task OnLoadResources(IContainer container)
+        {
+            _events.Add("OnLoadResources");
             await Task.CompletedTask;
         }
 
@@ -137,11 +145,12 @@ public class BootstrapIntegrationTests
             await Task.CompletedTask;
         }
 
-        public async Task OnLoadResources(IContainer container)
+        public void RegisterServices(IContainer container)
         {
-            _events.Add("OnLoadResources");
-            await Task.CompletedTask;
+            _events.Add("RegisterServices");
         }
+
+        public void Shutdown() { }
     }
 
     [Test]
@@ -155,6 +164,99 @@ public class BootstrapIntegrationTests
     }
 
     [Test]
+    public void Initialize_RegistersJobSchedulerService()
+    {
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
+        var bootstrap = new LillyQuestBootstrap(config);
+
+        bootstrap.Initialize();
+
+        var containerField = bootstrap.GetType()
+                                      .GetField("_container", BindingFlags.NonPublic | BindingFlags.Instance);
+        var resolvedContainer = containerField?.GetValue(bootstrap) as IContainer;
+        var scheduler = resolvedContainer?.Resolve<IJobScheduler>();
+
+        Assert.That(scheduler, Is.Not.Null);
+    }
+
+    [Test]
+    public void RegisterServices_AddsPluginScriptDirectoryToLuaEngine()
+    {
+        var events = new List<string>();
+        var plugin = new TrackingPlugin(events);
+        var scriptEngine = new RecordingScriptEngineService();
+
+        var root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true, RootDirectory = root };
+        var bootstrap = new LillyQuestBootstrap(config);
+
+        bootstrap.Initialize();
+        bootstrap.RegisterServices(
+            container =>
+            {
+                container.RegisterInstance<IScriptEngineService>(
+                    scriptEngine,
+                    IfAlreadyRegistered.Replace
+                );
+                container.RegisterInstance<ILillyQuestPlugin>(plugin);
+
+                return container;
+            }
+        );
+
+        var pluginScriptsDir = Path.Combine(root, "Plugins", plugin.PluginInfo.Id, "Scripts");
+        var containerField = bootstrap.GetType()
+                                      .GetField("_container", BindingFlags.NonPublic | BindingFlags.Instance);
+        var resolvedContainer = containerField?.GetValue(bootstrap) as IContainer;
+        var resolvedEngine = resolvedContainer?.Resolve<IScriptEngineService>();
+
+        Assert.That(Directory.Exists(pluginScriptsDir), Is.True);
+        Assert.That(resolvedEngine, Is.SameAs(scriptEngine));
+        Assert.That(scriptEngine.AddedDirectories, Does.Contain(pluginScriptsDir));
+
+        if (Directory.Exists(root))
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Test]
+    public void RegisterServices_CallsOnDirectoriesWithPluginRootAndCreatesDirectory()
+    {
+        var events = new List<string>();
+        var plugin = new TrackingPlugin(events);
+
+        var root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true, RootDirectory = root };
+        var bootstrap = new LillyQuestBootstrap(config);
+
+        bootstrap.Initialize();
+        bootstrap.RegisterServices(
+            container =>
+            {
+                container.RegisterInstance<ILillyQuestPlugin>(plugin);
+
+                return container;
+            }
+        );
+
+        var pluginRoot = Path.Combine(root, "Plugins", plugin.PluginInfo.Id);
+
+        Assert.That(events, Does.Contain("OnDirectories"));
+        Assert.That(Directory.Exists(pluginRoot), Is.True);
+
+        Assert.That(
+            events.IndexOf("RegisterServices"),
+            Is.LessThan(events.IndexOf("OnDirectories"))
+        );
+
+        if (Directory.Exists(root))
+        {
+            Directory.Delete(root, true);
+        }
+    }
+
+    [Test]
     public void RegisterServices_DiscoverspluginAndCallsItsRegisterServices()
     {
         var events = new List<string>();
@@ -164,11 +266,14 @@ public class BootstrapIntegrationTests
         var bootstrap = new LillyQuestBootstrap(config);
 
         bootstrap.Initialize();
-        bootstrap.RegisterServices(container =>
-        {
-            container.RegisterInstance<ILillyQuestPlugin>(plugin);
-            return container;
-        });
+        bootstrap.RegisterServices(
+            container =>
+            {
+                container.RegisterInstance<ILillyQuestPlugin>(plugin);
+
+                return container;
+            }
+        );
 
         // Plugin's RegisterServices should have been called during RegisterServices
         Assert.That(events, Does.Contain("RegisterServices"));
@@ -184,98 +289,27 @@ public class BootstrapIntegrationTests
         var bootstrap = new LillyQuestBootstrap(config);
 
         bootstrap.Initialize();
-        bootstrap.RegisterServices(container =>
-        {
-            container.RegisterInstance<ILillyQuestPlugin>(plugin);
-            return container;
-        });
+        bootstrap.RegisterServices(
+            container =>
+            {
+                container.RegisterInstance<ILillyQuestPlugin>(plugin);
+
+                return container;
+            }
+        );
 
         // Verify RegisterServices was called
         var registerIdx = events.IndexOf("RegisterServices");
         Assert.That(registerIdx, Is.GreaterThanOrEqualTo(0), "RegisterServices should be called");
     }
 
-    [Test]
-    public void RegisterServices_AddsPluginScriptDirectoryToLuaEngine()
+    [SetUp]
+    public void SkipIfHeadless()
     {
-        var events = new List<string>();
-        var plugin = new TrackingPlugin(events);
-        var scriptEngine = new RecordingScriptEngineService();
-
-        var root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true, RootDirectory = root };
-        var bootstrap = new LillyQuestBootstrap(config);
-
-        bootstrap.Initialize();
-        bootstrap.RegisterServices(container =>
+        if (IsHeadlessEnvironment())
         {
-            container.RegisterInstance<IScriptEngineService>(
-                scriptEngine,
-                ifAlreadyRegistered: IfAlreadyRegistered.Replace
-            );
-            container.RegisterInstance<ILillyQuestPlugin>(plugin);
-            return container;
-        });
-
-        var pluginScriptsDir = Path.Combine(root, "Plugins", plugin.PluginInfo.Id, "Scripts");
-        var containerField = bootstrap.GetType()
-            .GetField("_container", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var resolvedContainer = containerField?.GetValue(bootstrap) as IContainer;
-        var resolvedEngine = resolvedContainer?.Resolve<IScriptEngineService>();
-
-        Assert.That(Directory.Exists(pluginScriptsDir), Is.True);
-        Assert.That(resolvedEngine, Is.SameAs(scriptEngine));
-        Assert.That(scriptEngine.AddedDirectories, Does.Contain(pluginScriptsDir));
-
-        if (Directory.Exists(root))
-            Directory.Delete(root, recursive: true);
-    }
-
-    [Test]
-    public void Initialize_RegistersJobSchedulerService()
-    {
-        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
-        var bootstrap = new LillyQuestBootstrap(config);
-
-        bootstrap.Initialize();
-
-        var containerField = bootstrap.GetType()
-            .GetField("_container", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var resolvedContainer = containerField?.GetValue(bootstrap) as IContainer;
-        var scheduler = resolvedContainer?.Resolve<IJobScheduler>();
-
-        Assert.That(scheduler, Is.Not.Null);
-    }
-
-    [Test]
-    public void RegisterServices_CallsOnDirectoriesWithPluginRootAndCreatesDirectory()
-    {
-        var events = new List<string>();
-        var plugin = new TrackingPlugin(events);
-
-        var root = Path.Combine(Path.GetTempPath(), Guid.NewGuid().ToString("N"));
-        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true, RootDirectory = root };
-        var bootstrap = new LillyQuestBootstrap(config);
-
-        bootstrap.Initialize();
-        bootstrap.RegisterServices(container =>
-        {
-            container.RegisterInstance<ILillyQuestPlugin>(plugin);
-            return container;
-        });
-
-        var pluginRoot = Path.Combine(root, "Plugins", plugin.PluginInfo.Id);
-
-        Assert.That(events, Does.Contain("OnDirectories"));
-        Assert.That(Directory.Exists(pluginRoot), Is.True);
-
-        Assert.That(
-            events.IndexOf("RegisterServices"),
-            Is.LessThan(events.IndexOf("OnDirectories"))
-        );
-
-        if (Directory.Exists(root))
-            Directory.Delete(root, recursive: true);
+            Assert.Ignore("Skipping bootstrap integration tests on headless/CI environment.");
+        }
     }
 
     private static bool IsHeadlessEnvironment()

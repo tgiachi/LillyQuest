@@ -1,6 +1,5 @@
 using LillyQuest.RogueLike.Components;
 using LillyQuest.RogueLike.Types;
-using NUnit.Framework;
 
 namespace LillyQuest.Tests.RogueLike.Components;
 
@@ -10,11 +9,11 @@ public class LightFlickerComponentTests
     public void Constructor_SetsProperties()
     {
         var component = new LightFlickerComponent(
-            mode: LightFlickerMode.Deterministic,
-            intensity: 0.4f,
-            radiusJitter: 2f,
-            frequencyHz: 6f,
-            seed: 123
+            LightFlickerMode.Deterministic,
+            0.4f,
+            2f,
+            6f,
+            123
         );
 
         Assert.That(component.Mode, Is.EqualTo(LightFlickerMode.Deterministic));

@@ -13,30 +13,37 @@ public class BootstrapOnReadyToRenderTests
     {
         private readonly List<string> _events;
 
-        public PluginInfo PluginInfo => new(
-            Id: "tracking",
-            Name: "Tracking",
-            Version: "1.0.0",
-            Author: "Test",
-            Description: "",
-            InitScriptName: "",
-            Dependencies: []
-        );
+        public PluginInfo PluginInfo
+            => new(
+                "tracking",
+                "Tracking",
+                "1.0.0",
+                "Test",
+                "",
+                "",
+                []
+            );
 
         public TrackingPlugin(List<string> events)
-        {
-            _events = events;
-        }
+            => _events = events;
 
-        public string? GetScriptOnLoadFunctionName() => null;
-        public void RegisterServices(IContainer container) { }
-        public string[]? DirectoriesToCreate() => null;
+        public string[]? DirectoriesToCreate()
+            => null;
+
+        public string? GetScriptOnLoadFunctionName()
+            => null;
+
         public void OnDirectories(DirectoriesConfig globalConfig, DirectoriesConfig plugin) { }
-        public void Shutdown() { }
 
         public async Task OnEngineReady(IContainer container)
         {
             _events.Add("OnEngineReady");
+            await Task.CompletedTask;
+        }
+
+        public async Task OnLoadResources(IContainer container)
+        {
+            _events.Add("OnLoadResources");
             await Task.CompletedTask;
         }
 
@@ -46,11 +53,8 @@ public class BootstrapOnReadyToRenderTests
             await Task.CompletedTask;
         }
 
-        public async Task OnLoadResources(IContainer container)
-        {
-            _events.Add("OnLoadResources");
-            await Task.CompletedTask;
-        }
+        public void RegisterServices(IContainer container) { }
+        public void Shutdown() { }
     }
 
     [Test]

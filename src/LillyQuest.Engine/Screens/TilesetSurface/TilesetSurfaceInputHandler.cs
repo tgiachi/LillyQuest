@@ -10,9 +10,7 @@ internal sealed class TilesetSurfaceInputHandler
     private readonly TilesetSurfaceInputContext _context;
 
     public TilesetSurfaceInputHandler(TilesetSurfaceInputContext context)
-    {
-        _context = context;
-    }
+        => _context = context;
 
     /// <summary>
     /// Converts mouse coordinates to tile coordinates.

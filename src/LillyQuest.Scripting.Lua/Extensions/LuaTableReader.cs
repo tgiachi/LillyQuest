@@ -1,31 +1,13 @@
-using System;
 using MoonSharp.Interpreter;
 
 namespace LillyQuest.Scripting.Lua.Extensions;
 
 public static class LuaTableReader
 {
-    public static string GetString(Table table, string key, string defaultValue = "")
-    {
-        var value = GetValue(table, key);
-        return value.Type == DataType.String ? value.String : defaultValue;
-    }
-
-    public static int GetInt(Table table, string key, int defaultValue = 0)
-    {
-        var value = GetValue(table, key);
-        return value.Type == DataType.Number ? (int)value.Number : defaultValue;
-    }
-
-    public static float GetFloat(Table table, string key, float defaultValue = 0f)
-    {
-        var value = GetValue(table, key);
-        return value.Type == DataType.Number ? (float)value.Number : defaultValue;
-    }
-
     public static bool GetBool(Table table, string key, bool defaultValue = false)
     {
         var value = GetValue(table, key);
+
         return value.Type == DataType.Boolean ? value.Boolean : defaultValue;
     }
 
@@ -35,7 +17,7 @@ public static class LuaTableReader
         var value = GetValue(table, key);
 
         if (value.Type == DataType.String &&
-            Enum.TryParse(value.String, ignoreCase: true, out TEnum parsedByName))
+            Enum.TryParse(value.String, true, out TEnum parsedByName))
         {
             return parsedByName;
         }
@@ -43,6 +25,7 @@ public static class LuaTableReader
         if (value.Type == DataType.Number)
         {
             var numericValue = (int)value.Number;
+
             if (Enum.IsDefined(typeof(TEnum), numericValue))
             {
                 return (TEnum)Enum.ToObject(typeof(TEnum), numericValue);
@@ -50,6 +33,27 @@ public static class LuaTableReader
         }
 
         return defaultValue;
+    }
+
+    public static float GetFloat(Table table, string key, float defaultValue = 0f)
+    {
+        var value = GetValue(table, key);
+
+        return value.Type == DataType.Number ? (float)value.Number : defaultValue;
+    }
+
+    public static int GetInt(Table table, string key, int defaultValue = 0)
+    {
+        var value = GetValue(table, key);
+
+        return value.Type == DataType.Number ? (int)value.Number : defaultValue;
+    }
+
+    public static string GetString(Table table, string key, string defaultValue = "")
+    {
+        var value = GetValue(table, key);
+
+        return value.Type == DataType.String ? value.String : defaultValue;
     }
 
     private static DynValue GetValue(Table table, string key)

@@ -28,6 +28,14 @@ public sealed class AnimationComponent
     }
 
     /// <summary>
+    /// Resets the accumulated time to zero.
+    /// </summary>
+    public void Reset()
+    {
+        _accumulatedTime = 0;
+    }
+
+    /// <summary>
     /// Updates the accumulated time and returns true if the interval was reached.
     /// If a callback is set, it is invoked when the interval is reached.
     /// </summary>
@@ -41,17 +49,10 @@ public sealed class AnimationComponent
         {
             _accumulatedTime -= IntervalSeconds;
             OnAnimationTrigger?.Invoke();
+
             return true;
         }
 
         return false;
-    }
-
-    /// <summary>
-    /// Resets the accumulated time to zero.
-    /// </summary>
-    public void Reset()
-    {
-        _accumulatedTime = 0;
     }
 }

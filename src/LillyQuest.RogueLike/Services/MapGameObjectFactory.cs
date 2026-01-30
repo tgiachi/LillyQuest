@@ -20,12 +20,8 @@ public class MapGameObjectFactory : IMapGameObjectFactory
     }
 
     public CreatureGameObject CreateCreature(string creatureIdOrTag, int x, int y)
-    {
-        return null;
-    }
+        => null;
 
     public TerrainGameObject CreateTerrain(string terrainIdOrTag, int x, int y)
-    {
-        return null;
-    }
+        => null;
 }

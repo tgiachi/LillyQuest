@@ -10,7 +10,7 @@ public class WorldManagerConfig
 
     public WorldManagerConfig()
     {
-        OverworldSize = new Vector2(100, 100);
-        MapSize = new Vector2(100, 100);
+        OverworldSize = new(100, 100);
+        MapSize = new(100, 100);
     }
 }

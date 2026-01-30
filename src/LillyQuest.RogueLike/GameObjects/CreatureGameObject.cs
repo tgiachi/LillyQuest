@@ -11,7 +11,5 @@ public class CreatureGameObject : BaseGameObject
         (int)MapLayer.Creatures,
         isWalkable,
         isTransparent
-    )
-    {
-    }
+    ) { }
 }

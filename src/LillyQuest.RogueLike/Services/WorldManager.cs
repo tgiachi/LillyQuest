@@ -12,7 +12,7 @@ public class WorldManager : IWorldManager
     private readonly IMapGenerator _mapGenerator;
     private readonly IJobScheduler _jobScheduler;
 
-    private readonly Dictionary<string, LyQuestMap> _maps = new Dictionary<string, LyQuestMap>();
+    private readonly Dictionary<string, LyQuestMap> _maps = new();
     private readonly List<IMapHandler> _mapHandlers = new();
 
     private readonly ILogger _logger = Log.ForContext<WorldManager>();
@@ -52,6 +52,22 @@ public class WorldManager : IWorldManager
 
     public LyQuestMap OverworldMap { get; set; }
 
+    public WorldManager(IMapGenerator mapGenerator, IJobScheduler jobScheduler)
+    {
+        _mapGenerator = mapGenerator;
+        _jobScheduler = jobScheduler;
+    }
+
+    public async Task GenerateMapAsync()
+    {
+        _jobScheduler.Enqueue(
+            async () =>
+            {
+                CurrentMap = await _mapGenerator.GenerateMapAsync();
+            }
+        );
+    }
+
     public void RegisterMapHandler(IMapHandler handler)
     {
         if (_mapHandlers.Contains(handler))
@@ -68,21 +84,5 @@ public class WorldManager : IWorldManager
         {
             handler.OnMapUnregistered(_currentMap);
         }
-    }
-
-    public async Task GenerateMapAsync()
-    {
-        _jobScheduler.Enqueue(
-            async () =>
-            {
-                CurrentMap = await _mapGenerator.GenerateMapAsync();
-            }
-        );
-    }
-
-    public WorldManager(IMapGenerator mapGenerator, IJobScheduler jobScheduler)
-    {
-        _mapGenerator = mapGenerator;
-        _jobScheduler = jobScheduler;
     }
 }

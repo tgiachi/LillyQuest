@@ -23,5 +23,5 @@ public enum ParticleBehavior
     /// <summary>
     /// Affected by gravity (falling).
     /// </summary>
-    Gravity,
+    Gravity
 }

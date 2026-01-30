@@ -97,6 +97,7 @@ public static class JsonUtils
         try
         {
             var options = GetJsonSerializerOptions(context);
+
             return JsonSerializer.Deserialize<T>(json, options) ??
                    throw new JsonException($"Deserialization returned null for type {typeof(T).Name}");
         }
@@ -170,6 +171,7 @@ public static class JsonUtils
         try
         {
             var json = File.ReadAllText(normalizedPath);
+
             return JsonSerializer.Deserialize(json, context.GetTypeInfo(typeof(T))) is T typedResult
                        ? typedResult
                        : throw new JsonException($"Deserialization returned null for type {typeof(T).Name}");
@@ -338,7 +340,8 @@ public static class JsonUtils
             _ =>
             {
                 var baseOptions = GetJsonSerializerOptions();
-                return new JsonSerializerOptions(baseOptions)
+
+                return new(baseOptions)
                 {
                     TypeInfoResolver = JsonTypeInfoResolver.Combine(context, baseOptions.TypeInfoResolver)
                 };

@@ -1,7 +1,6 @@
 using LillyQuest.Core.Types;
 using LillyQuest.Engine.Data.Input;
 using Silk.NET.Input;
-using System;
 
 namespace LillyQuest.Engine.Interfaces.Services;
 
@@ -59,7 +58,14 @@ public interface IShortcutService
     /// <param name="trigger">Trigger type (can be combined with flags).</param>
     /// <param name="repeatDelayMs">Minimum delay between repeat triggers in milliseconds (0 = no throttling).</param>
     /// <returns>True when registered.</returns>
-    bool RegisterShortcut(string actionName, Action action, InputContextType context, string shortcut, ShortcutTriggerType trigger, int repeatDelayMs = 0);
+    bool RegisterShortcut(
+        string actionName,
+        Action action,
+        InputContextType context,
+        string shortcut,
+        ShortcutTriggerType trigger,
+        int repeatDelayMs = 0
+    );
 
     /// <summary>
     /// Registers a shortcut for an action.
@@ -70,7 +76,13 @@ public interface IShortcutService
     /// <param name="trigger">Trigger type (can be combined with flags).</param>
     /// <param name="repeatDelayMs">Minimum delay between repeat triggers in milliseconds (0 = no throttling).</param>
     /// <returns>True when registered.</returns>
-    bool RegisterShortcut(string actionName, InputContextType context, string shortcut, ShortcutTriggerType trigger, int repeatDelayMs = 0);
+    bool RegisterShortcut(
+        string actionName,
+        InputContextType context,
+        string shortcut,
+        ShortcutTriggerType trigger,
+        int repeatDelayMs = 0
+    );
 
     /// <summary>
     /// Replaces the current context stack with a single context.

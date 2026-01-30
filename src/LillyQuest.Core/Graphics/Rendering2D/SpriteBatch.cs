@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Text;
 using FontStashSharp;
 using FontStashSharp.Interfaces;
 using LillyQuest.Core.Data.Contexts;
@@ -404,99 +403,6 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     }
 
     /// <summary>
-    /// Draws text using a unified font reference.
-    /// </summary>
-    public float DrawText(FontRef fontRef, string text, Vector2 position, LyColor color, float depth = 0f)
-    {
-        ArgumentNullException.ThrowIfNull(text);
-
-        // Apply current translation
-        position += _currentTranslation;
-
-        var handle = _fontManager.GetFontHandle(fontRef);
-        handle.DrawText(this, text, position, color, depth);
-
-        return 0f;
-    }
-
-    /// <summary>
-    /// Measures text using a unified font reference.
-    /// </summary>
-    public Vector2 MeasureText(FontRef fontRef, string text)
-        => _fontManager.GetFontHandle(fontRef).MeasureText(text);
-
-    internal void DrawTextBitmap(
-        BitmapFont font,
-        string text,
-        Vector2 position,
-        int size,
-        LyColor color,
-        float depth = 0f
-    )
-    {
-        ArgumentNullException.ThrowIfNull(text);
-
-        var fsColor = ToFsColor(color);
-        var glyphHeight = size > 0 ? size : font.TileHeight;
-        var aspect = font.TileWidth / (float)font.TileHeight;
-        var glyphWidth = size > 0 ? glyphHeight * aspect : font.TileWidth;
-        var glyphSize = new Vector2(glyphWidth, glyphHeight);
-
-        var scaleX = glyphSize.X / font.TileWidth;
-        var scaleY = glyphSize.Y / font.TileHeight;
-        var spacingX = font.Spacing * scaleX;
-        var spacingY = font.Spacing * scaleY;
-
-        var cursor = position;
-
-        foreach (var ch in text)
-        {
-            if (ch == '\r')
-            {
-                continue;
-            }
-
-            if (ch == '\n')
-            {
-                cursor.X = position.X;
-                cursor.Y += glyphSize.Y + spacingY;
-
-                continue;
-            }
-
-            if (!font.TryGetGlyphIndex(ch, out var glyphIndex) || glyphIndex < 0 || glyphIndex >= font.GlyphCount)
-            {
-                cursor.X += glyphSize.X + spacingX;
-
-                continue;
-            }
-
-            var column = glyphIndex % font.Columns;
-            var row = glyphIndex / font.Columns;
-
-            var u = column * font.TileWidth / (float)font.Texture.Width;
-            var v = row * font.TileHeight / (float)font.Texture.Height;
-            var uSize = font.TileWidth / (float)font.Texture.Width;
-            var vSize = font.TileHeight / (float)font.Texture.Height;
-
-            var sourceRect = new Rectangle<float>(u, v, uSize, vSize);
-
-            Draw(
-                font.Texture,
-                cursor,
-                glyphSize,
-                fsColor,
-                0f,
-                Vector2.Zero,
-                sourceRect,
-                depth
-            );
-
-            cursor.X += glyphSize.X + spacingX;
-        }
-    }
-
-    /// <summary>
     /// Draws a line between two points using the default white texture.
     /// </summary>
     public void DrawLine(Vector2 start, Vector2 end, LyColor color, float thickness = 5f, float depth = 0f)
@@ -824,6 +730,22 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     }
 
     /// <summary>
+    /// Draws text using a unified font reference.
+    /// </summary>
+    public float DrawText(FontRef fontRef, string text, Vector2 position, LyColor color, float depth = 0f)
+    {
+        ArgumentNullException.ThrowIfNull(text);
+
+        // Apply current translation
+        position += _currentTranslation;
+
+        var handle = _fontManager.GetFontHandle(fontRef);
+        handle.DrawText(this, text, position, color, depth);
+
+        return 0f;
+    }
+
+    /// <summary>
     /// Draw a texture by asset name with basic parameters.
     /// </summary>
     public void DrawTexture(string textureName, Vector2 position, Vector2 size, LyColor color, float depth = 0f)
@@ -970,6 +892,12 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
     }
 
     /// <summary>
+    /// Measures text using a unified font reference.
+    /// </summary>
+    public Vector2 MeasureText(FontRef fontRef, string text)
+        => _fontManager.GetFontHandle(fontRef).MeasureText(text);
+
+    /// <summary>
     /// Pops the most recent translation offset from the translation stack.
     /// Restores the previous translation state.
     /// </summary>
@@ -1057,6 +985,77 @@ public class SpriteBatch : IFontStashRenderer2, IDisposable
         if (_ownsShapeTexture)
         {
             _shapeTexture.Dispose();
+        }
+    }
+
+    internal void DrawTextBitmap(
+        BitmapFont font,
+        string text,
+        Vector2 position,
+        int size,
+        LyColor color,
+        float depth = 0f
+    )
+    {
+        ArgumentNullException.ThrowIfNull(text);
+
+        var fsColor = ToFsColor(color);
+        var glyphHeight = size > 0 ? size : font.TileHeight;
+        var aspect = font.TileWidth / (float)font.TileHeight;
+        var glyphWidth = size > 0 ? glyphHeight * aspect : font.TileWidth;
+        var glyphSize = new Vector2(glyphWidth, glyphHeight);
+
+        var scaleX = glyphSize.X / font.TileWidth;
+        var scaleY = glyphSize.Y / font.TileHeight;
+        var spacingX = font.Spacing * scaleX;
+        var spacingY = font.Spacing * scaleY;
+
+        var cursor = position;
+
+        foreach (var ch in text)
+        {
+            if (ch == '\r')
+            {
+                continue;
+            }
+
+            if (ch == '\n')
+            {
+                cursor.X = position.X;
+                cursor.Y += glyphSize.Y + spacingY;
+
+                continue;
+            }
+
+            if (!font.TryGetGlyphIndex(ch, out var glyphIndex) || glyphIndex < 0 || glyphIndex >= font.GlyphCount)
+            {
+                cursor.X += glyphSize.X + spacingX;
+
+                continue;
+            }
+
+            var column = glyphIndex % font.Columns;
+            var row = glyphIndex / font.Columns;
+
+            var u = column * font.TileWidth / (float)font.Texture.Width;
+            var v = row * font.TileHeight / (float)font.Texture.Height;
+            var uSize = font.TileWidth / (float)font.Texture.Width;
+            var vSize = font.TileHeight / (float)font.Texture.Height;
+
+            var sourceRect = new Rectangle<float>(u, v, uSize, vSize);
+
+            Draw(
+                font.Texture,
+                cursor,
+                glyphSize,
+                fsColor,
+                0f,
+                Vector2.Zero,
+                sourceRect,
+                depth
+            );
+
+            cursor.X += glyphSize.X + spacingX;
         }
     }
 

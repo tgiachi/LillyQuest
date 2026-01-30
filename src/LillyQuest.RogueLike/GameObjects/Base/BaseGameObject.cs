@@ -26,7 +26,6 @@ public class BaseGameObject : GameObject
         }
     }
 
-
     public BaseGameObject(
         Point position,
         int layer,
@@ -34,11 +33,7 @@ public class BaseGameObject : GameObject
         bool isTransparent = true,
         Func<uint>? idGenerator = null,
         IComponentCollection? customComponentCollection = null
-    ) : base(position, layer, isWalkable, isTransparent, idGenerator, customComponentCollection)
-
-    {
-
-    }
+    ) : base(position, layer, isWalkable, isTransparent, idGenerator, customComponentCollection) { }
 
     public BaseGameObject(
         int layer,
@@ -46,9 +41,5 @@ public class BaseGameObject : GameObject
         bool isTransparent = true,
         Func<uint>? idGenerator = null,
         IComponentCollection? customComponentCollection = null
-    ) : base(layer, isWalkable, isTransparent, idGenerator, customComponentCollection)
-    {
-
-    }
-
+    ) : base(layer, isWalkable, isTransparent, idGenerator, customComponentCollection) { }
 }

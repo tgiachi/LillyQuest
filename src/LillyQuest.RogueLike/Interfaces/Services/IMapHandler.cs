@@ -4,7 +4,7 @@ namespace LillyQuest.RogueLike.Interfaces.Services;
 
 public interface IMapHandler
 {
+    void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap);
     void OnMapRegistered(LyQuestMap map);
     void OnMapUnregistered(LyQuestMap map);
-    void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap);
 }

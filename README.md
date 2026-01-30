@@ -97,6 +97,7 @@ Install pre-commit hooks to automatically run tests before each commit:
 ```
 
 This will:
+
 - Run `dotnet test` before each commit
 - Block commits if tests fail
 - Help maintain code quality

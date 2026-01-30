@@ -69,6 +69,7 @@ public sealed class ShortcutService : IShortcutService
             var lookup = new KeyLookup(key, modifier);
 
             List<ShortcutBinding>? bindingsSnapshot;
+
             lock (_lock)
             {
                 if (!_bindingsByKey.TryGetValue(lookup, out var bindings))
@@ -87,6 +88,7 @@ public sealed class ShortcutService : IShortcutService
 
                 // Reset repeat throttle on release
                 var throttleKey = GetThrottleKey(binding);
+
                 lock (_lock)
                 {
                     _lastRepeatTime.Remove(throttleKey);
@@ -186,7 +188,13 @@ public sealed class ShortcutService : IShortcutService
     /// <param name="trigger">Trigger type (can be combined flags).</param>
     /// <param name="repeatDelayMs">Minimum delay between repeat triggers in milliseconds (0 = no throttling).</param>
     /// <returns>True when registered.</returns>
-    public bool RegisterShortcut(string actionName, InputContextType context, string shortcut, ShortcutTriggerType trigger, int repeatDelayMs = 0)
+    public bool RegisterShortcut(
+        string actionName,
+        InputContextType context,
+        string shortcut,
+        ShortcutTriggerType trigger,
+        int repeatDelayMs = 0
+    )
     {
         if (string.IsNullOrWhiteSpace(actionName))
         {
@@ -296,6 +304,9 @@ public sealed class ShortcutService : IShortcutService
         return false;
     }
 
+    private static string GetThrottleKey(ShortcutBinding binding)
+        => $"{binding.Key}:{binding.Modifier}:{binding.ActionName}";
+
     private void HandleKeys(KeyModifierType modifier, IReadOnlyList<Key> keys, ShortcutTriggerType trigger)
     {
         var currentContext = GetCurrentContext();
@@ -306,6 +317,7 @@ public sealed class ShortcutService : IShortcutService
             var lookup = new KeyLookup(key, modifier);
 
             List<ShortcutBinding>? bindingsSnapshot;
+
             lock (_lock)
             {
                 if (!_bindingsByKey.TryGetValue(lookup, out var bindings))
@@ -332,6 +344,7 @@ public sealed class ShortcutService : IShortcutService
                 if (trigger == ShortcutTriggerType.Repeat && binding.RepeatDelayMs > 0)
                 {
                     var throttleKey = GetThrottleKey(binding);
+
                     lock (_lock)
                     {
                         if (_lastRepeatTime.TryGetValue(throttleKey, out var lastTime))
@@ -354,9 +367,6 @@ public sealed class ShortcutService : IShortcutService
             }
         }
     }
-
-    private static string GetThrottleKey(ShortcutBinding binding)
-        => $"{binding.Key}:{binding.Modifier}:{binding.ActionName}";
 
     private static string NormalizeActionName(string actionName)
         => StringUtils.ToUpperSnakeCase(actionName);

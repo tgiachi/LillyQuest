@@ -3,12 +3,60 @@ using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Services;
 using NSubstitute;
-using NUnit.Framework;
 
 namespace LillyQuest.Tests.RogueLike.Services;
 
 public class WorldManagerTests
 {
+    private sealed class ImmediateJobScheduler : IJobScheduler
+    {
+        public void Enqueue(Action job)
+            => job();
+
+        public void Enqueue(Func<Task> job)
+            => job().GetAwaiter().GetResult();
+
+        public void Start(int workerCount) { }
+
+        public Task StopAsync()
+            => Task.CompletedTask;
+    }
+
+    private sealed class FakeMapHandler : IMapHandler
+    {
+        public List<string> Calls { get; } = new();
+
+        public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap)
+            => Calls.Add("change");
+
+        public void OnMapRegistered(LyQuestMap map)
+            => Calls.Add("register");
+
+        public void OnMapUnregistered(LyQuestMap map)
+            => Calls.Add("unregister");
+
+        public void Reset()
+            => Calls.Clear();
+    }
+
+    [Test]
+    public async Task GenerateMapAsync_SetsCurrentMap_AndNotifiesHandlers()
+    {
+        var map = new LyQuestMap(10, 10);
+        var mapGenerator = Substitute.For<IMapGenerator>();
+        mapGenerator.GenerateMapAsync().Returns(Task.FromResult(map));
+        var jobScheduler = new ImmediateJobScheduler();
+        var worldManager = new WorldManager(mapGenerator, jobScheduler);
+        var handler = new FakeMapHandler();
+        worldManager.RegisterMapHandler(handler);
+
+        await worldManager.GenerateMapAsync();
+
+        Assert.That(worldManager.CurrentMap, Is.EqualTo(map));
+        Assert.That(handler.Calls, Does.Contain("register"));
+        Assert.That(handler.Calls, Does.Contain("change"));
+    }
+
     [Test]
     public void SetCurrentMap_NotifiesHandlersInOrder()
     {
@@ -43,7 +91,7 @@ public class WorldManagerTests
         worldManager.RegisterMapHandler(handler);
         worldManager.UnregisterMapHandler(handler);
 
-        worldManager.CurrentMap = new LyQuestMap(10, 10);
+        worldManager.CurrentMap = new(10, 10);
 
         Assert.That(handler.Calls, Is.Empty);
     }
@@ -64,47 +112,5 @@ public class WorldManagerTests
         worldManager.UnregisterMapHandler(handler);
 
         Assert.That(handler.Calls, Is.EqualTo(new[] { "unregister" }));
-    }
-
-    [Test]
-    public async Task GenerateMapAsync_SetsCurrentMap_AndNotifiesHandlers()
-    {
-        var map = new LyQuestMap(10, 10);
-        var mapGenerator = Substitute.For<IMapGenerator>();
-        mapGenerator.GenerateMapAsync().Returns(Task.FromResult(map));
-        var jobScheduler = new ImmediateJobScheduler();
-        var worldManager = new WorldManager(mapGenerator, jobScheduler);
-        var handler = new FakeMapHandler();
-        worldManager.RegisterMapHandler(handler);
-
-        await worldManager.GenerateMapAsync();
-
-        Assert.That(worldManager.CurrentMap, Is.EqualTo(map));
-        Assert.That(handler.Calls, Does.Contain("register"));
-        Assert.That(handler.Calls, Does.Contain("change"));
-    }
-
-    private sealed class ImmediateJobScheduler : IJobScheduler
-    {
-        public void Start(int workerCount)
-        {
-        }
-
-        public Task StopAsync() => Task.CompletedTask;
-
-        public void Enqueue(Action job) => job();
-
-        public void Enqueue(Func<Task> job) => job().GetAwaiter().GetResult();
-    }
-
-    private sealed class FakeMapHandler : IMapHandler
-    {
-        public List<string> Calls { get; } = new();
-
-        public void Reset() => Calls.Clear();
-
-        public void OnMapRegistered(LyQuestMap map) => Calls.Add("register");
-        public void OnMapUnregistered(LyQuestMap map) => Calls.Add("unregister");
-        public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap) => Calls.Add("change");
     }
 }

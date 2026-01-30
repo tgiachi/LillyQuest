@@ -39,6 +39,12 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
         Dictionary<BaseGameObject, Action<BaseGameObject>> TileChangedHandlers
     );
 
+    public void Configure(TilesetSurfaceScreen screen, FovSystem? fovSystem)
+    {
+        _screen = screen;
+        _fovSystem = fovSystem;
+    }
+
     public IReadOnlyCollection<ChunkCoord> GetDirtyChunks(LyQuestMap map)
         => _states.TryGetValue(map, out var state)
                ? state.DirtyTracker.DirtyChunks
@@ -64,6 +70,29 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
         }
     }
 
+    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap)
+    {
+        if (oldMap != null)
+        {
+            UnregisterMap(oldMap);
+        }
+
+        OnMapRegistered(newMap);
+    }
+
+    public void OnMapRegistered(LyQuestMap map)
+    {
+        if (_screen == null)
+        {
+            throw new InvalidOperationException("MapRenderSystem.Configure must be called before registering a map.");
+        }
+
+        RegisterMap(map, _screen, _fovSystem);
+    }
+
+    public void OnMapUnregistered(LyQuestMap map)
+        => UnregisterMap(map);
+
     public void RegisterMap(LyQuestMap map, TilesetSurfaceScreen surface, FovSystem? fovSystem)
     {
         if (_states.ContainsKey(map))
@@ -76,7 +105,7 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
             surface,
             fovSystem,
             new(_chunkSize),
-            new Dictionary<BaseGameObject, Action<BaseGameObject>>()
+            new()
         );
         _states[map] = state;
 
@@ -125,26 +154,6 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
             }
 
             state.TileChangedHandlers.Clear();
-        }
-    }
-
-    private void OnFovUpdated(object? sender, FovUpdatedEventArgs e)
-    {
-        if (!_states.TryGetValue(e.Map, out var state))
-        {
-            return;
-        }
-
-        // Mark previously visible tiles as dirty (they may need to be dimmed)
-        foreach (var position in e.PreviousVisibleTiles)
-        {
-            state.DirtyTracker.MarkDirtyForTile(position.X, position.Y);
-        }
-
-        // Mark currently visible tiles as dirty (they need to be rendered)
-        foreach (var position in e.CurrentVisibleTiles)
-        {
-            state.DirtyTracker.MarkDirtyForTile(position.X, position.Y);
         }
     }
 
@@ -203,6 +212,43 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
         return empty;
     }
 
+    private static TileRenderData BuildItemTile(
+        LyQuestMap map,
+        FovSystem? fovSystem,
+        Point position
+    )
+    {
+        var renderItem = fovSystem == null || fovSystem.IsVisible(map, position);
+        var empty = new TileRenderData(-1, LyColor.White);
+
+        if (!renderItem)
+        {
+            return empty;
+        }
+
+        foreach (var obj in map.GetObjectsAt(position))
+        {
+            if (obj is ItemGameObject item)
+            {
+                var tile = new TileRenderData(
+                    item.Tile.Symbol[0],
+                    item.Tile.ForegroundColor,
+                    item.Tile.BackgroundColor,
+                    item.Tile.Flip
+                );
+
+                if (fovSystem != null)
+                {
+                    tile = tile.Darken(fovSystem.GetVisibilityFalloff(map, position));
+                }
+
+                return tile;
+            }
+        }
+
+        return empty;
+    }
+
     private static TileRenderData BuildTerrainTile(
         LyQuestMap map,
         FovSystem? fovSystem,
@@ -242,41 +288,24 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
         return tile.Darken(fovSystem.GetVisibilityFalloff(map, position));
     }
 
-    private static TileRenderData BuildItemTile(
-        LyQuestMap map,
-        FovSystem? fovSystem,
-        Point position
-    )
+    private void OnFovUpdated(object? sender, FovUpdatedEventArgs e)
     {
-        var renderItem = fovSystem == null || fovSystem.IsVisible(map, position);
-        var empty = new TileRenderData(-1, LyColor.White);
-
-        if (!renderItem)
+        if (!_states.TryGetValue(e.Map, out var state))
         {
-            return empty;
+            return;
         }
 
-        foreach (var obj in map.GetObjectsAt(position))
+        // Mark previously visible tiles as dirty (they may need to be dimmed)
+        foreach (var position in e.PreviousVisibleTiles)
         {
-            if (obj is ItemGameObject item)
-            {
-                var tile = new TileRenderData(
-                    item.Tile.Symbol[0],
-                    item.Tile.ForegroundColor,
-                    item.Tile.BackgroundColor,
-                    item.Tile.Flip
-                );
-
-                if (fovSystem != null)
-                {
-                    tile = tile.Darken(fovSystem.GetVisibilityFalloff(map, position));
-                }
-
-                return tile;
-            }
+            state.DirtyTracker.MarkDirtyForTile(position.X, position.Y);
         }
 
-        return empty;
+        // Mark currently visible tiles as dirty (they need to be rendered)
+        foreach (var position in e.CurrentVisibleTiles)
+        {
+            state.DirtyTracker.MarkDirtyForTile(position.X, position.Y);
+        }
     }
 
     private void RebuildChunk(MapRenderState state, ChunkCoord chunk)
@@ -351,34 +380,5 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
         {
             baseGameObject.VisualTileChanged -= handler;
         }
-    }
-
-    public void Configure(TilesetSurfaceScreen screen, FovSystem? fovSystem)
-    {
-        _screen = screen;
-        _fovSystem = fovSystem;
-    }
-
-    public void OnMapRegistered(LyQuestMap map)
-    {
-        if (_screen == null)
-        {
-            throw new InvalidOperationException("MapRenderSystem.Configure must be called before registering a map.");
-        }
-
-        RegisterMap(map, _screen, _fovSystem);
-    }
-
-    public void OnMapUnregistered(LyQuestMap map)
-        => UnregisterMap(map);
-
-    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap)
-    {
-        if (oldMap != null)
-        {
-            UnregisterMap(oldMap);
-        }
-
-        OnMapRegistered(newMap);
     }
 }
