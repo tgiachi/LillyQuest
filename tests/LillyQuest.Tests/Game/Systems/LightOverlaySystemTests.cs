@@ -132,6 +132,92 @@ public class LightOverlaySystemTests
         Assert.That(background.A, Is.EqualTo(128));
     }
 
+    [Test]
+    public void Update_WithFlickerComponent_ChangesRenderedColor()
+    {
+        var map = new LyQuestMap(10, 10);
+        var surface = new TilesetSurfaceScreen(new FakeTilesetManager())
+        {
+            LayerCount = Enum.GetNames<MapLayer>().Length
+        };
+        surface.InitializeLayers(surface.LayerCount);
+
+        var fovSystem = new FovSystem();
+        fovSystem.RegisterMap(map);
+
+        var terrain = new TerrainGameObject(new Point(5, 5))
+        {
+            Tile = new VisualTile("floor", ".", LyColor.White, LyColor.Black)
+        };
+        map.SetTerrain(terrain);
+
+        var torch = new ItemGameObject(new Point(5, 5))
+        {
+            Tile = new VisualTile("torch", "t", LyColor.Transparent, LyColor.Yellow)
+        };
+        torch.GoRogueComponents.Add(new LightSourceComponent(radius: 3, startColor: LyColor.Yellow, endColor: LyColor.Black));
+        torch.GoRogueComponents.Add(new LightFlickerComponent(
+            mode: LightFlickerMode.Deterministic,
+            intensity: 0.5f,
+            radiusJitter: 0f,
+            frequencyHz: 8f,
+            seed: 42));
+        map.AddEntity(torch);
+
+        fovSystem.UpdateFov(map, torch.Position);
+
+        var system = new LightOverlaySystem(chunkSize: 4);
+        system.RegisterMap(map, surface, fovSystem);
+
+        system.MarkDirtyForRadius(map, center: torch.Position, radius: 3);
+        system.Update(new GameTime(TimeSpan.FromSeconds(0.1), TimeSpan.FromSeconds(0.1)));
+        var first = surface.GetTile((int)MapLayer.Effects, 5, 5).ForegroundColor;
+
+        system.MarkDirtyForRadius(map, center: torch.Position, radius: 3);
+        system.Update(new GameTime(TimeSpan.FromSeconds(0.2), TimeSpan.FromSeconds(0.1)));
+        var second = surface.GetTile((int)MapLayer.Effects, 5, 5).ForegroundColor;
+
+        Assert.That(second, Is.Not.EqualTo(first));
+    }
+
+    [Test]
+    public void MarkDirtyForRadius_WithFlickerRadiusJitter_MarksExpandedRange()
+    {
+        var map = new LyQuestMap(10, 10);
+        var surface = new TilesetSurfaceScreen(new FakeTilesetManager())
+        {
+            LayerCount = Enum.GetNames<MapLayer>().Length
+        };
+        surface.InitializeLayers(surface.LayerCount);
+
+        var terrain = new TerrainGameObject(new Point(5, 5))
+        {
+            Tile = new VisualTile("floor", ".", LyColor.White, LyColor.Black)
+        };
+        map.SetTerrain(terrain);
+
+        var torch = new ItemGameObject(new Point(5, 5))
+        {
+            Tile = new VisualTile("torch", "t", LyColor.Transparent, LyColor.Yellow)
+        };
+        torch.GoRogueComponents.Add(new LightSourceComponent(radius: 2, startColor: LyColor.Yellow, endColor: LyColor.Black));
+        torch.GoRogueComponents.Add(new LightFlickerComponent(
+            mode: LightFlickerMode.Random,
+            intensity: 0.5f,
+            radiusJitter: 2f,
+            frequencyHz: 8f));
+        map.AddEntity(torch);
+
+        var system = new LightOverlaySystem(chunkSize: 4);
+        system.RegisterMap(map, surface, fovSystem: null);
+
+        system.MarkDirtyForRadius(map, center: torch.Position, radius: 4);
+
+        system.Update(new GameTime());
+
+        Assert.That(surface.GetTile((int)MapLayer.Effects, 5, 5).TileIndex, Is.EqualTo('.'));
+    }
+
     private sealed class FakeTilesetManager : ITilesetManager
     {
         public void Dispose() { }
