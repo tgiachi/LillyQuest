@@ -14,6 +14,7 @@ using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Maps.Tiles;
 using LillyQuest.RogueLike.Systems;
+using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
 using Silk.NET.Input;
 
@@ -55,6 +56,52 @@ public class RogueSceneTests
         scene.OnLoad();
 
         Assert.That(scene.GetSceneGameObjects().OfType<ViewportUpdateSystem>().Any(), Is.True);
+    }
+
+    [Test]
+    public void RogueScene_SetsCurrentMapOnWorldManager()
+    {
+        var screenManager = new FakeScreenManager();
+        var map = BuildTestMap();
+        var mapGenerator = new FakeMapGenerator(map);
+        var tilesetManager = new FakeTilesetManager();
+        var shortcutService = new FakeShortcutService();
+        var actionService = new FakeActionService();
+        var worldManager = new FakeWorldManager();
+        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
+
+        scene.OnLoad();
+
+        Assert.That(worldManager.CurrentMap, Is.EqualTo(map));
+    }
+
+    [Test]
+    public void RogueScene_ActionsUseWorldManagerCurrentMap()
+    {
+        var screenManager = new FakeScreenManager();
+        var map1 = BuildTestMap();
+        var map2 = BuildTestMap();
+        var mapGenerator = new FakeMapGenerator(map1);
+        var tilesetManager = new FakeTilesetManager();
+        var shortcutService = new FakeShortcutService();
+        var actionService = new FakeActionService();
+        var worldManager = new FakeWorldManager();
+        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
+
+        scene.OnLoad();
+
+        worldManager.CurrentMap = map2;
+
+        var player1 = map1.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
+        var player2 = map2.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
+
+        Assert.That(player1, Is.Not.Null);
+        Assert.That(player2, Is.Not.Null);
+
+        actionService.Execute("up");
+
+        Assert.That(player1!.Position, Is.EqualTo(new Point(1, 1)));
+        Assert.That(player2!.Position, Is.EqualTo(new Point(1, 0)));
     }
 
     private static LyQuestMap BuildTestMap()

@@ -36,7 +36,6 @@ public class RogueScene : BaseScene
 
     private FovSystem? _fovSystem;
 
-    private LyQuestMap _map = null!;
     private UIRootScreen? _uiRoot;
     private TilesetSurfaceScreen? _screen;
     private CreatureGameObject? _player;
@@ -201,12 +200,13 @@ public class RogueScene : BaseScene
             "up",
             () =>
             {
-                var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
+                var map = _worldManager.CurrentMap;
+                var player = map.Entities.GetLayer((int)MapLayer.Creatures).First();
 
-                if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Up))
+                if (map.GameObjectCanMove(player.Item, player.Position + Direction.Up))
                 {
                     player.Item.Position += Direction.Up;
-                    _fovSystem?.UpdateFov(_map, player.Position);
+                    _fovSystem?.UpdateFov(map, player.Position);
                 }
             }
         );
@@ -214,12 +214,13 @@ public class RogueScene : BaseScene
             "down",
             () =>
             {
-                var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
+                var map = _worldManager.CurrentMap;
+                var player = map.Entities.GetLayer((int)MapLayer.Creatures).First();
 
-                if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Down))
+                if (map.GameObjectCanMove(player.Item, player.Position + Direction.Down))
                 {
                     player.Item.Position += Direction.Down;
-                    _fovSystem?.UpdateFov(_map, player.Position);
+                    _fovSystem?.UpdateFov(map, player.Position);
                 }
             }
         );
@@ -227,12 +228,13 @@ public class RogueScene : BaseScene
             "left",
             () =>
             {
-                var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
+                var map = _worldManager.CurrentMap;
+                var player = map.Entities.GetLayer((int)MapLayer.Creatures).First();
 
-                if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Left))
+                if (map.GameObjectCanMove(player.Item, player.Position + Direction.Left))
                 {
                     player.Item.Position += Direction.Left;
-                    _fovSystem?.UpdateFov(_map, player.Position);
+                    _fovSystem?.UpdateFov(map, player.Position);
                 }
             }
         );
@@ -240,12 +242,13 @@ public class RogueScene : BaseScene
             "right",
             () =>
             {
-                var player = _map.Entities.GetLayer((int)MapLayer.Creatures).First();
+                var map = _worldManager.CurrentMap;
+                var player = map.Entities.GetLayer((int)MapLayer.Creatures).First();
 
-                if (_map.GameObjectCanMove(player.Item, player.Position + Direction.Right))
+                if (map.GameObjectCanMove(player.Item, player.Position + Direction.Right))
                 {
                     player.Item.Position += Direction.Right;
-                    _fovSystem?.UpdateFov(_map, player.Position);
+                    _fovSystem?.UpdateFov(map, player.Position);
                 }
             }
         );
@@ -269,28 +272,28 @@ public class RogueScene : BaseScene
                                      // _screen.CenterViewOnTile(2, x, y);
                                  };
 
-        _map = _mapGenerator.GenerateMapAsync().GetAwaiter().GetResult();
+        var map = _mapGenerator.GenerateMapAsync().GetAwaiter().GetResult();
 
         _fovSystem = new FovSystem();
-        _fovSystem.RegisterMap(_map);
+        _fovSystem.RegisterMap(map);
         AddEntity(_fovSystem);
         _mapAwareSystems.Add(_fovSystem);
 
         // Initialize particle system providers with map and fov system
-        (_particleCollisionProvider as GoRogueCollisionProvider)?.SetMap(_map);
+        (_particleCollisionProvider as GoRogueCollisionProvider)?.SetMap(map);
 
         var fovProvider = _particleFOVProvider as GoRogueFOVProvider;
         if (fovProvider != null && _fovSystem != null)
         {
             fovProvider.SetFovSystem(_fovSystem);
-            fovProvider.SetMap(_map);
+            fovProvider.SetMap(map);
         }
 
-        _player = _map.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
+        _player = map.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
 
         if (_player != null)
         {
-            _fovSystem.UpdateFov(_map, _player.Position);
+            _fovSystem.UpdateFov(map, _player.Position);
         }
 
         _mapRenderSystem = new MapRenderSystem(chunkSize: 16);
@@ -311,9 +314,9 @@ public class RogueScene : BaseScene
         AddEntity(_viewportUpdateSystem);
         _mapAwareSystems.Add(_viewportUpdateSystem);
 
-        _worldManager.CurrentMap = _map;
+        _worldManager.CurrentMap = map;
 
-        _map.ObjectMoved += (sender, args) =>
+        map.ObjectMoved += (sender, args) =>
                             {
                                 if (args.Item is CreatureGameObject creature)
                                 {
@@ -339,12 +342,10 @@ public class RogueScene : BaseScene
     public override void OnUnload()
     {
         // Unregister map from all systems to prevent memory leaks
-        if (_map != null)
+        var map = _worldManager.CurrentMap;
+        foreach (var system in _mapAwareSystems)
         {
-            foreach (var system in _mapAwareSystems)
-            {
-                system.UnregisterMap(_map);
-            }
+            system.UnregisterMap(map);
         }
         _mapAwareSystems.Clear();
 
