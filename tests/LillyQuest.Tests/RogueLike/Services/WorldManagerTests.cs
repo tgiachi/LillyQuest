@@ -49,12 +49,30 @@ public class WorldManagerTests
     }
 
     [Test]
+    public void UnregisterMapHandler_WithCurrentMap_UnregistersCurrentMap()
+    {
+        var mapGenerator = Substitute.For<IMapGenerator>();
+        var jobScheduler = Substitute.For<IJobScheduler>();
+        var worldManager = new WorldManager(mapGenerator, jobScheduler);
+        var handler = new FakeMapHandler();
+        var map = new LyQuestMap(10, 10);
+
+        worldManager.RegisterMapHandler(handler);
+        worldManager.CurrentMap = map;
+        handler.Reset();
+
+        worldManager.UnregisterMapHandler(handler);
+
+        Assert.That(handler.Calls, Is.EqualTo(new[] { "unregister" }));
+    }
+
+    [Test]
     public async Task GenerateMapAsync_SetsCurrentMap_AndNotifiesHandlers()
     {
         var map = new LyQuestMap(10, 10);
         var mapGenerator = Substitute.For<IMapGenerator>();
         mapGenerator.GenerateMapAsync().Returns(Task.FromResult(map));
-        var jobScheduler = Substitute.For<IJobScheduler>();
+        var jobScheduler = new ImmediateJobScheduler();
         var worldManager = new WorldManager(mapGenerator, jobScheduler);
         var handler = new FakeMapHandler();
         worldManager.RegisterMapHandler(handler);
@@ -64,6 +82,19 @@ public class WorldManagerTests
         Assert.That(worldManager.CurrentMap, Is.EqualTo(map));
         Assert.That(handler.Calls, Does.Contain("register"));
         Assert.That(handler.Calls, Does.Contain("change"));
+    }
+
+    private sealed class ImmediateJobScheduler : IJobScheduler
+    {
+        public void Start(int workerCount)
+        {
+        }
+
+        public Task StopAsync() => Task.CompletedTask;
+
+        public void Enqueue(Action job) => job();
+
+        public void Enqueue(Func<Task> job) => job().GetAwaiter().GetResult();
     }
 
     private sealed class FakeMapHandler : IMapHandler

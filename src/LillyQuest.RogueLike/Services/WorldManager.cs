@@ -64,13 +64,20 @@ public class WorldManager : IWorldManager
 
     public void UnregisterMapHandler(IMapHandler handler)
     {
-        _mapHandlers.Remove(handler);
+        if (_mapHandlers.Remove(handler) && _currentMap != null)
+        {
+            handler.OnMapUnregistered(_currentMap);
+        }
     }
 
     public async Task GenerateMapAsync()
     {
-        var map = await _mapGenerator.GenerateMapAsync();
-        CurrentMap = map;
+        _jobScheduler.Enqueue(
+            async () =>
+            {
+                CurrentMap = await _mapGenerator.GenerateMapAsync();
+            }
+        );
     }
 
     public WorldManager(IMapGenerator mapGenerator, IJobScheduler jobScheduler)
