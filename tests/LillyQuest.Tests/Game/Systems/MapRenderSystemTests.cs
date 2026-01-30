@@ -47,16 +47,15 @@ public class MapRenderSystemTests
     [Test]
     public void ChangingEntityTile_MarksChunkDirty()
     {
-        var system = new MapRenderSystem(4, new MapTileBuilder());
-        var map = new LyQuestMap(8, 8);
         var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
+        var system = new MapRenderSystem(4, new MapTileBuilder(), surface, null);
+        var map = new LyQuestMap(8, 8);
         var creature = new CreatureGameObject(new(1, 1))
         {
             Tile = new("creature", "@", LyColor.Black, LyColor.White)
         };
 
         map.AddEntity(creature);
-        system.Configure(surface, null);
         system.OnMapRegistered(map);
 
         Assert.That(system.GetDirtyChunks(map), Is.Empty);
@@ -70,16 +69,15 @@ public class MapRenderSystemTests
     [Test]
     public void ChangingTerrainTile_MarksChunkDirty()
     {
-        var system = new MapRenderSystem(4, new MapTileBuilder());
-        var map = new LyQuestMap(8, 8);
         var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
+        var system = new MapRenderSystem(4, new MapTileBuilder(), surface, null);
+        var map = new LyQuestMap(8, 8);
         var terrain = new TerrainGameObject(new(2, 2))
         {
             Tile = new("floor", ".", LyColor.Black, LyColor.White)
         };
 
         map.SetTerrain(terrain);
-        system.Configure(surface, null);
         system.OnMapRegistered(map);
 
         Assert.That(system.GetDirtyChunks(map), Is.Empty);
@@ -93,11 +91,10 @@ public class MapRenderSystemTests
     [Test]
     public void OnObjectMoved_MarksOldAndNewChunksDirty()
     {
-        var system = new MapRenderSystem(16, new MapTileBuilder());
-        var map = new LyQuestMap(32, 32);
         var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
+        var system = new MapRenderSystem(16, new MapTileBuilder(), surface, null);
+        var map = new LyQuestMap(32, 32);
 
-        system.Configure(surface, null);
         system.OnMapRegistered(map);
 
         system.HandleObjectMoved(map, new(1, 1), new(17, 1));
@@ -110,9 +107,9 @@ public class MapRenderSystemTests
     [Test]
     public void ReassigningSameTerrainTileReference_DoesNotMarkDirty()
     {
-        var system = new MapRenderSystem(4, new MapTileBuilder());
-        var map = new LyQuestMap(8, 8);
         var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
+        var system = new MapRenderSystem(4, new MapTileBuilder(), surface, null);
+        var map = new LyQuestMap(8, 8);
         var tile = new VisualTile("floor", ".", LyColor.Black, LyColor.White);
         var terrain = new TerrainGameObject(new(2, 2))
         {
@@ -120,7 +117,6 @@ public class MapRenderSystemTests
         };
 
         map.SetTerrain(terrain);
-        system.Configure(surface, null);
         system.OnMapRegistered(map);
 
         Assert.That(system.GetDirtyChunks(map), Is.Empty);
@@ -133,12 +129,11 @@ public class MapRenderSystemTests
     [Test]
     public void RegisterMap_InitializesDirtyTracker()
     {
-        var system = new MapRenderSystem(16, new MapTileBuilder());
-        var map = new LyQuestMap(32, 32);
         var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
         var fovSystem = new FovSystem();
+        var system = new MapRenderSystem(16, new MapTileBuilder(), surface, fovSystem);
+        var map = new LyQuestMap(32, 32);
 
-        system.Configure(surface, fovSystem);
         system.OnMapRegistered(map);
 
         Assert.That(system.HasMap(map), Is.True);
@@ -147,11 +142,10 @@ public class MapRenderSystemTests
     [Test]
     public void Update_RebuildsDirtyChunks()
     {
-        var system = new MapRenderSystem(4, new MapTileBuilder());
-        var map = BuildSmallTestMap();
         var surface = BuildTestSurface();
+        var system = new MapRenderSystem(4, new MapTileBuilder(), surface, null);
+        var map = BuildSmallTestMap();
 
-        system.Configure(surface, null);
         system.OnMapRegistered(map);
 
         surface.AddTileToSurface(0, 0, 0, new(-1, LyColor.White));
@@ -165,16 +159,15 @@ public class MapRenderSystemTests
     [Test]
     public void Update_RendersItemLayerTile()
     {
-        var system = new MapRenderSystem(4, new MapTileBuilder());
-        var map = BuildSmallTestMap();
         var surface = BuildTestSurface();
+        var system = new MapRenderSystem(4, new MapTileBuilder(), surface, null);
+        var map = BuildSmallTestMap();
         var item = new ItemGameObject(new(1, 1))
         {
             Tile = new("torch", "t", LyColor.Black, LyColor.Yellow)
         };
 
         map.AddEntity(item);
-        system.Configure(surface, null);
         system.OnMapRegistered(map);
 
         surface.AddTileToSurface((int)MapLayer.Items, 1, 1, new(-1, LyColor.White));
@@ -188,10 +181,10 @@ public class MapRenderSystemTests
     [Test]
     public void Update_WithFovFalloff_DarkensVisibleItemTile()
     {
-        var system = new MapRenderSystem(4, new MapTileBuilder());
-        var map = new LyQuestMap(12, 12);
         var surface = BuildTestSurface();
         var fovSystem = new FovSystem(5);
+        var system = new MapRenderSystem(4, new MapTileBuilder(), surface, fovSystem);
+        var map = new LyQuestMap(12, 12);
         fovSystem.RegisterMap(map);
         var floorTile = new VisualTile("floor", ".", LyColor.Black, LyColor.White);
 
@@ -215,7 +208,6 @@ public class MapRenderSystemTests
         map.AddEntity(item);
 
         fovSystem.UpdateFov(map, new(6, 6));
-        system.Configure(surface, fovSystem);
         system.OnMapRegistered(map);
 
         system.MarkDirtyForTile(map, 6, 11);

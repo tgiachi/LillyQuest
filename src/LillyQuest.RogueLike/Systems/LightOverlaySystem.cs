@@ -22,8 +22,8 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
     private readonly Dictionary<LyQuestMap, MapState> _states = new();
     private readonly Dictionary<LyQuestMap, FovSystem?> _fovSystems = new();
     private readonly Dictionary<LyQuestMap, List<ItemGameObject>> _cachedLightSources = new();
-    private TilesetSurfaceScreen? _screen;
-    private FovSystem? _fovSystem;
+    private readonly TilesetSurfaceScreen _screen;
+    private readonly FovSystem? _fovSystem;
     private readonly Dictionary<LyQuestMap, Dictionary<ItemGameObject, LightState>> _lightStates = new();
 
     private sealed record MapState(
@@ -39,19 +39,17 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
         int LastEffectiveRadius
     );
 
-    public LightOverlaySystem(int chunkSize)
+    public LightOverlaySystem(int chunkSize, TilesetSurfaceScreen screen, FovSystem? fovSystem)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(chunkSize);
+        ArgumentNullException.ThrowIfNull(screen);
 
         _chunkSize = chunkSize;
+        _screen = screen;
+        _fovSystem = fovSystem;
         Name = nameof(LightOverlaySystem);
     }
 
-    public void Configure(TilesetSurfaceScreen screen, FovSystem? fovSystem)
-    {
-        _screen = screen;
-        _fovSystem = fovSystem;
-    }
 
     public void MarkDirtyForRadius(LyQuestMap map, Point center, int radius)
     {
@@ -86,11 +84,6 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
 
     public void OnMapRegistered(LyQuestMap map)
     {
-        if (_screen == null)
-        {
-            throw new InvalidOperationException("LightOverlaySystem.Configure must be called before registering a map.");
-        }
-
         RegisterMap(map, _screen, _fovSystem);
     }
 

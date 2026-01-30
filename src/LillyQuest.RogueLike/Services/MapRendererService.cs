@@ -13,8 +13,6 @@ namespace LillyQuest.RogueLike.Services;
 /// </summary>
 public sealed class MapRendererService : IMapRendererService
 {
-    private const int TerrainLayer = 0;
-
     /// <inheritdoc />
     public void RenderMap(LyQuestMap map, TilesetSurfaceScreen surface)
     {
@@ -32,7 +30,7 @@ public sealed class MapRendererService : IMapRendererService
         ArgumentNullException.ThrowIfNull(surface);
 
         RenderAllTiles(map, surface);
-        surface.CenterViewOnTile(TerrainLayer, centerOn.X, centerOn.Y);
+        surface.CenterViewOnTile((int)MapLayer.Terrain, centerOn.X, centerOn.Y);
     }
 
     /// <inheritdoc />
@@ -82,7 +80,7 @@ public sealed class MapRendererService : IMapRendererService
         }
 
         var player = creatureLayer.First();
-        surface.CenterViewOnTile(TerrainLayer, player.Position.X, player.Position.Y);
+        surface.CenterViewOnTile((int)MapLayer.Terrain, player.Position.X, player.Position.Y);
     }
 
     private static void RenderAllTiles(LyQuestMap map, TilesetSurfaceScreen surface)
@@ -99,7 +97,7 @@ public sealed class MapRendererService : IMapRendererService
         if (map.GetTerrainAt(position) is TerrainGameObject terrain)
         {
             surface.AddTileToSurface(
-                TerrainLayer,
+                (int)MapLayer.Terrain,
                 position.X,
                 position.Y,
                 new(

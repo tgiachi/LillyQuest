@@ -64,12 +64,10 @@ public class ViewportAnimationUpdateSystemTests
         screen.TileViewSize = new(4, 4);
         screen.SetLayerViewTileOffset(0, new(0, 0));
 
-        var renderSystem = new MapRenderSystem(4, new MapTileBuilder());
-        renderSystem.Configure(screen, null);
+        var renderSystem = new MapRenderSystem(4, new MapTileBuilder(), screen, null);
         renderSystem.OnMapRegistered(map);
 
-        var system = new ViewportAnimationUpdateSystem(0);
-        system.Configure(screen, renderSystem);
+        var system = new ViewportAnimationUpdateSystem(0, screen, renderSystem);
         system.OnMapRegistered(map);
 
         var insideUpdateCount = 0;

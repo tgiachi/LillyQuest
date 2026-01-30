@@ -15,12 +15,17 @@ public sealed class ViewportAnimationUpdateSystem : GameEntity, IUpdateableEntit
 {
     private readonly int _layerIndex;
     private readonly Dictionary<LyQuestMap, ViewportUpdateState> _states = new();
-    private TilesetSurfaceScreen? _screen;
-    private MapRenderSystem? _renderSystem;
+    private readonly TilesetSurfaceScreen _screen;
+    private readonly MapRenderSystem _renderSystem;
 
-    public ViewportAnimationUpdateSystem(int layerIndex)
+    public ViewportAnimationUpdateSystem(int layerIndex, TilesetSurfaceScreen screen, MapRenderSystem renderSystem)
     {
+        ArgumentNullException.ThrowIfNull(screen);
+        ArgumentNullException.ThrowIfNull(renderSystem);
+
         _layerIndex = layerIndex;
+        _screen = screen;
+        _renderSystem = renderSystem;
         Name = nameof(ViewportAnimationUpdateSystem);
     }
 
@@ -39,11 +44,6 @@ public sealed class ViewportAnimationUpdateSystem : GameEntity, IUpdateableEntit
         }
     }
 
-    public void Configure(TilesetSurfaceScreen screen, MapRenderSystem renderSystem)
-    {
-        _screen = screen;
-        _renderSystem = renderSystem;
-    }
 
     public static TileViewportBounds GetViewportBounds(TilesetSurfaceScreen screen, int layerIndex)
     {
@@ -68,11 +68,6 @@ public sealed class ViewportAnimationUpdateSystem : GameEntity, IUpdateableEntit
 
     public void OnMapRegistered(LyQuestMap map)
     {
-        if (_screen == null || _renderSystem == null)
-        {
-            throw new InvalidOperationException("ViewportAnimationUpdateSystem.Configure must be called before registering a map.");
-        }
-
         RegisterMap(map, _screen, _renderSystem);
     }
 

@@ -20,15 +20,22 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
     private readonly int _chunkSize;
     private readonly IMapTileBuilder _tileBuilder;
     private readonly Dictionary<LyQuestMap, MapRenderState> _states = new();
-    private TilesetSurfaceScreen? _screen;
-    private FovSystem? _fovSystem;
+    private readonly TilesetSurfaceScreen _screen;
+    private readonly FovSystem? _fovSystem;
 
-    public MapRenderSystem(int chunkSize, IMapTileBuilder tileBuilder)
+    public MapRenderSystem(
+        int chunkSize,
+        IMapTileBuilder tileBuilder,
+        TilesetSurfaceScreen screen,
+        FovSystem? fovSystem)
     {
         ArgumentOutOfRangeException.ThrowIfNegativeOrZero(chunkSize);
+        ArgumentNullException.ThrowIfNull(screen);
 
         _chunkSize = chunkSize;
         _tileBuilder = tileBuilder ?? throw new ArgumentNullException(nameof(tileBuilder));
+        _screen = screen;
+        _fovSystem = fovSystem;
         Name = nameof(MapRenderSystem);
     }
 
@@ -40,11 +47,6 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
         Dictionary<BaseGameObject, Action<BaseGameObject>> TileChangedHandlers
     );
 
-    public void Configure(TilesetSurfaceScreen screen, FovSystem? fovSystem)
-    {
-        _screen = screen;
-        _fovSystem = fovSystem;
-    }
 
     public IReadOnlyCollection<ChunkCoord> GetDirtyChunks(LyQuestMap map)
         => _states.TryGetValue(map, out var state)
@@ -83,11 +85,6 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
 
     public void OnMapRegistered(LyQuestMap map)
     {
-        if (_screen == null)
-        {
-            throw new InvalidOperationException("MapRenderSystem.Configure must be called before registering a map.");
-        }
-
         RegisterMap(map, _screen, _fovSystem);
     }
 

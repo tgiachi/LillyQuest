@@ -97,10 +97,9 @@ public class RogueScene : BaseScene
         _screen.ParticleSystem = _particleSystem;
         _screen.ParticleLayerIndex = (int)MapLayer.Effects;
 
-        _screen.SetLayerViewLock(0, 1);
-        _screen.SetLayerViewLock(0, 2);
-        _screen.SetLayerViewLock(0, 3);
-        _screen.SetLayerViewLock(0, 4);
+        _screen.SetLayerViewLock((int)MapLayer.Terrain, (int)MapLayer.Items);
+        _screen.SetLayerViewLock((int)MapLayer.Terrain, (int)MapLayer.Creatures);
+        _screen.SetLayerViewLock((int)MapLayer.Terrain, (int)MapLayer.Effects);
 
         _layoutScreen = new PercentageLayoutScreen();
         _layoutScreen.Add(_screen, xPercent: 0f, yPercent: 0f, widthPercent: 0.8f, heightPercent: 0.7f);
@@ -108,10 +107,10 @@ public class RogueScene : BaseScene
         // _screen.SetLayerTileset(0, "alloy");
         // _screen.SetLayerTileset(1, "alloy");
 
-        _screen.SetLayerRenderScaleSmoothing(0, true, 0.1f);
-        _screen.SetLayerRenderScaleSmoothing(1, true, 0.1f);
-        _screen.SetLayerRenderScaleSmoothing(2, true, 0.1f);
-        _screen.SetLayerRenderScaleSmoothing(3, true, 0.1f);
+        _screen.SetLayerRenderScaleSmoothing((int)MapLayer.Terrain, true, 0.1f);
+        _screen.SetLayerRenderScaleSmoothing((int)MapLayer.Items, true, 0.1f);
+        _screen.SetLayerRenderScaleSmoothing((int)MapLayer.Creatures, true, 0.1f);
+        _screen.SetLayerRenderScaleSmoothing((int)MapLayer.Effects, true, 0.1f);
 
         _shortcutService.RegisterShortcut(
             "up",
@@ -260,7 +259,7 @@ public class RogueScene : BaseScene
 
         _screen.TileMouseDown += (index, x, y, buttons) =>
                                  {
-                                     _screen.CenterViewOnTile(0, x, y);
+                                     _screen.CenterViewOnTile((int)MapLayer.Terrain, x, y);
                                      _particleSystem.EmitProjectile(
                                          new(x, y),
                                          new(1, 0),
@@ -277,28 +276,30 @@ public class RogueScene : BaseScene
                                      // _screen.CenterViewOnTile(2, x, y);
                                  };
 
+        // FovSystem first
         _fovSystem = new();
         _worldManager.RegisterMapHandler(_fovSystem);
         AddEntity(_fovSystem);
-        _mapRenderSystem = new(16, new MapTileBuilder());
-        _mapRenderSystem.Configure(_screen, _fovSystem);
+
+        // MapRenderSystem with dependencies
+        _mapRenderSystem = new(16, new MapTileBuilder(), _screen, _fovSystem);
         _worldManager.RegisterMapHandler(_mapRenderSystem);
         AddEntity(_mapRenderSystem);
 
-        _lightOverlaySystem = new(16);
-        _lightOverlaySystem.Configure(_screen, _fovSystem);
+        // LightOverlaySystem with dependencies
+        _lightOverlaySystem = new(16, _screen, _fovSystem);
         _worldManager.RegisterMapHandler(_lightOverlaySystem);
         AddEntity(_lightOverlaySystem);
 
-        _viewportUpdateSystem = new ViewportAnimationUpdateSystem(0);
-        _viewportUpdateSystem.Configure(_screen, _mapRenderSystem);
+        // ViewportAnimationUpdateSystem with dependencies
+        _viewportUpdateSystem = new((int)MapLayer.Terrain, _screen, _mapRenderSystem);
         _worldManager.RegisterMapHandler(_viewportUpdateSystem);
         AddEntity(_viewportUpdateSystem);
 
         _worldManager.OnCurrentMapChanged += HandleCurrentMapChanged;
         _worldManager.GenerateMapAsync();
 
-        _screen.SetLayerViewSmoothing(0, true);
+        _screen.SetLayerViewSmoothing((int)MapLayer.Terrain, true);
 
         _screenManager.PushScreen(_layoutScreen);
 
@@ -379,7 +380,7 @@ public class RogueScene : BaseScene
             _player = newMap.Entities.GetLayer((int)MapLayer.Creatures).FirstOrDefault().Item as CreatureGameObject;
         }
 
-        _screen.CenterViewOnTile(0, _player.Position.X, _player.Position.Y);
+        _screen.CenterViewOnTile((int)MapLayer.Terrain, _player.Position.X, _player.Position.Y);
 
         for (var i = 0; i < _screen.LayerCount; i++)
         {
@@ -402,7 +403,7 @@ public class RogueScene : BaseScene
                                           0.1f
                                       );
 
-                                      _screen.CenterViewOnTile(0, args.NewPosition.X, args.NewPosition.Y);
+                                      _screen.CenterViewOnTile((int)MapLayer.Terrain, args.NewPosition.X, args.NewPosition.Y);
                                   }
                               };
     }

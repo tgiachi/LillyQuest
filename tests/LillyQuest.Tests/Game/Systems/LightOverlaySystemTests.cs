@@ -73,8 +73,7 @@ public class LightOverlaySystemTests
         );
         map.AddEntity(torch);
 
-        var system = new LightOverlaySystem(4);
-        system.Configure(surface, null);
+        var system = new LightOverlaySystem(4, surface, null);
         system.OnMapRegistered(map);
 
         system.MarkDirtyForRadius(map, torch.Position, 4);
@@ -113,8 +112,7 @@ public class LightOverlaySystemTests
 
         fovSystem.UpdateFov(map, torch.Position);
 
-        var system = new LightOverlaySystem(4);
-        system.Configure(surface, fovSystem);
+        var system = new LightOverlaySystem(4, surface, fovSystem);
         system.OnMapRegistered(map);
 
         system.MarkDirtyForRadius(map, torch.Position, 3);
@@ -154,8 +152,7 @@ public class LightOverlaySystemTests
 
         fovSystem.UpdateFov(map, torch.Position);
 
-        var system = new LightOverlaySystem(4);
-        system.Configure(surface, fovSystem);
+        var system = new LightOverlaySystem(4, surface, fovSystem);
         system.OnMapRegistered(map);
 
         system.MarkDirtyForRadius(map, torch.Position, 3);
@@ -193,8 +190,7 @@ public class LightOverlaySystemTests
 
         fovSystem.UpdateFov(map, torch.Position);
 
-        var system = new LightOverlaySystem(4);
-        system.Configure(surface, fovSystem);
+        var system = new LightOverlaySystem(4, surface, fovSystem);
         system.OnMapRegistered(map);
 
         system.MarkDirtyForRadius(map, torch.Position, 3);
@@ -241,8 +237,7 @@ public class LightOverlaySystemTests
 
         fovSystem.UpdateFov(map, torch.Position);
 
-        var system = new LightOverlaySystem(4);
-        system.Configure(surface, fovSystem);
+        var system = new LightOverlaySystem(4, surface, fovSystem);
         system.OnMapRegistered(map);
 
         system.MarkDirtyForRadius(map, torch.Position, 3);
