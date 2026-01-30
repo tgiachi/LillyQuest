@@ -19,4 +19,16 @@ public class JobSchedulerTests
         var completed = await Task.WhenAny(tcs.Task, Task.Delay(500));
         Assert.That(completed, Is.EqualTo(tcs.Task));
     }
+
+    [Test]
+    public async Task StopAsync_WhenCalled_PreventsFurtherEnqueue()
+    {
+        // Arrange
+        var sut = new JobScheduler();
+        sut.Start(workerCount: 1);
+        await sut.StopAsync();
+
+        // Act + Assert
+        Assert.Throws<InvalidOperationException>(() => sut.Enqueue(() => { }));
+    }
 }
