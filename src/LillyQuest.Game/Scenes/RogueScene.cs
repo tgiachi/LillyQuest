@@ -366,7 +366,7 @@ public class RogueScene : BaseScene
         var creaturesLayer = newMap.Entities.GetLayer((int)MapLayer.Creatures);
         if (creaturesLayer.Count > 0)
         {
-            _player = creaturesLayer.First().Item as CreatureGameObject;
+            _player = creaturesLayer.FirstOrDefault().Item as CreatureGameObject;
 
             for (var i = 0; i < _screen.LayerCount; i++)
             {
