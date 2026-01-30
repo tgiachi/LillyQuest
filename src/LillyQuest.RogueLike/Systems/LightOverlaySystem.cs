@@ -20,6 +20,10 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
     private readonly int _chunkSize;
     private readonly Dictionary<LyQuestMap, MapState> _states = new();
     private readonly Dictionary<LyQuestMap, FovSystem?> _fovSystems = new();
+    private readonly Dictionary<ItemGameObject, float> _flickerFactors = new();
+    private readonly Dictionary<ItemGameObject, int> _effectiveRadii = new();
+    private readonly Dictionary<ItemGameObject, float> _lastFlickerFactors = new();
+    private readonly Dictionary<ItemGameObject, int> _lastEffectiveRadii = new();
 
     private sealed record MapState(
         LyQuestMap Map,
@@ -62,6 +66,11 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
 
         _states.Remove(map);
         _fovSystems.Remove(map);
+
+        _flickerFactors.Clear();
+        _effectiveRadii.Clear();
+        _lastFlickerFactors.Clear();
+        _lastEffectiveRadii.Clear();
     }
 
     private void OnFovUpdated(object? sender, FovUpdatedEventArgs e)
@@ -120,6 +129,8 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
 
     public void Update(GameTime gameTime)
     {
+        UpdateFlickerStates(gameTime);
+
         foreach (var state in _states.Values)
         {
             if (state.DirtyTracker.DirtyChunks.Count == 0)
@@ -157,7 +168,7 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
         }
     }
 
-    private static TileRenderData BuildLightTile(
+    private TileRenderData BuildLightTile(
         LyQuestMap map,
         FovSystem? fovSystem,
         Point position
@@ -185,19 +196,28 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
                     continue;
                 }
 
+                var flicker = item.GoRogueComponents.GetFirstOrDefault<LightFlickerComponent>();
+                var flickerFactor = flicker != null && _flickerFactors.TryGetValue(item, out var factor)
+                    ? factor
+                    : 1f;
+                var effectiveRadius = flicker != null && _effectiveRadii.TryGetValue(item, out var radius)
+                    ? radius
+                    : light.Radius;
+
                 var distance = Distance.Euclidean.Calculate(item.Position, position);
-                if (distance > light.Radius)
+                if (distance > effectiveRadius)
                 {
                     continue;
                 }
 
-                var t = (float)(distance / light.Radius);
-                var color = light.StartColor.Lerp(light.EndColor, t);
+                var t = (float)(distance / effectiveRadius);
+                var color = ApplyFlickerToColor(light.StartColor, light.EndColor, t, flickerFactor);
                 var background = LyColor.Transparent;
                 var backgroundComponent = item.GoRogueComponents.GetFirstOrDefault<LightBackgroundComponent>();
                 if (backgroundComponent != null)
                 {
                     var baseBackground = backgroundComponent.StartBackground.Lerp(backgroundComponent.EndBackground, t);
+                    baseBackground = ApplyFlickerToBackground(baseBackground, flickerFactor);
                     var targetAlpha = (byte)Math.Clamp((int)(MaxBackgroundAlpha * (1f - t)), 0, MaxBackgroundAlpha);
                     var finalAlpha = baseBackground.A < targetAlpha ? baseBackground.A : targetAlpha;
                     background = baseBackground.WithAlpha(finalAlpha);
@@ -209,6 +229,109 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
 
         return new TileRenderData(-1, LyColor.Transparent);
     }
+
+    private void UpdateFlickerStates(GameTime gameTime)
+    {
+        foreach (var state in _states.Values)
+        {
+            var map = state.Map;
+            foreach (var layer in map.Entities.Layers)
+            {
+                foreach (var entity in layer.Items)
+                {
+                    if (entity is not ItemGameObject item)
+                    {
+                        continue;
+                    }
+
+                    var light = item.GoRogueComponents.GetFirstOrDefault<LightSourceComponent>();
+                    if (light == null)
+                    {
+                        continue;
+                    }
+
+                    var flicker = item.GoRogueComponents.GetFirstOrDefault<LightFlickerComponent>();
+                    if (flicker == null)
+                    {
+                        continue;
+                    }
+
+                    var factor = CalculateFlickerFactor(item, flicker, gameTime.TotalGameTime.TotalSeconds);
+                    var radius = GetEffectiveRadius(light, flicker, factor);
+
+                    if (_lastFlickerFactors.TryGetValue(item, out var lastFactor) &&
+                        _lastEffectiveRadii.TryGetValue(item, out var lastRadius))
+                    {
+                        if (Math.Abs(factor - lastFactor) < 0.0001f && radius == lastRadius)
+                        {
+                            continue;
+                        }
+                    }
+
+                    _flickerFactors[item] = factor;
+                    _effectiveRadii[item] = radius;
+                    _lastFlickerFactors[item] = factor;
+                    _lastEffectiveRadii[item] = radius;
+
+                    var maxRadius = light.Radius + (int)MathF.Ceiling(MathF.Max(0f, flicker.RadiusJitter));
+                    MarkDirtyForRadius(map, item.Position, maxRadius);
+                }
+            }
+        }
+    }
+
+    private static int GetEffectiveRadius(LightSourceComponent light, LightFlickerComponent? flicker, float factor)
+    {
+        if (flicker == null || flicker.RadiusJitter <= 0f)
+        {
+            return light.Radius;
+        }
+
+        var delta = flicker.RadiusJitter * (factor - 1f);
+        var radius = (int)MathF.Round(light.Radius + delta);
+        return Math.Max(1, radius);
+    }
+
+    private static LyColor ApplyFlickerToColor(LyColor start, LyColor end, float t, float factor)
+    {
+        var baseColor = start.Lerp(end, t);
+        var shift = Math.Clamp((factor - 1f) * 0.5f, -0.5f, 0.5f);
+        return shift >= 0f
+            ? baseColor.Lerp(LyColor.White, shift)
+            : baseColor.Lerp(LyColor.Black, -shift);
+    }
+
+    private static LyColor ApplyFlickerToBackground(LyColor baseColor, float factor)
+    {
+        var shift = Math.Clamp((factor - 1f) * 0.5f, -0.5f, 0.5f);
+        return shift >= 0f
+            ? baseColor.Lerp(LyColor.White, shift)
+            : baseColor.Lerp(LyColor.Black, -shift);
+    }
+
+    private static float CalculateFlickerFactor(ItemGameObject item, LightFlickerComponent flicker, double timeSeconds)
+    {
+        var intensity = Math.Clamp(flicker.Intensity, 0f, 1f);
+        if (intensity <= 0f || flicker.FrequencyHz <= 0f)
+        {
+            return 1f;
+        }
+
+        var seed = flicker.Seed ?? item.GetHashCode();
+        var baseTime = timeSeconds * flicker.FrequencyHz;
+
+        if (flicker.Mode == LightFlickerMode.Deterministic)
+        {
+            var value = MathF.Sin((float)(baseTime + seed)) * 0.5f + 0.5f;
+            return 1f - intensity + (2f * intensity * value);
+        }
+
+        var bucket = (int)Math.Floor(baseTime);
+        var random = new Random(HashCode.Combine(seed, bucket));
+        var valueRandom = (float)random.NextDouble();
+        return 1f - intensity + (2f * intensity * valueRandom);
+    }
+
 
     private static int ResolveOverlayTileIndex(LyQuestMap map, Point position)
     {
