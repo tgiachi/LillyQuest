@@ -317,7 +317,6 @@ public class RogueSceneTests
             null!,
             null!,
             null!,
-            null!,
             worldManager
         );
 
@@ -369,7 +368,6 @@ public class RogueSceneTests
             null!,
             null!,
             null!,
-            null!,
             worldManager
         );
 
@@ -393,7 +391,6 @@ public class RogueSceneTests
             tilesetManager,
             shortcutService,
             actionService,
-            null!,
             null!,
             null!,
             null!,
@@ -425,7 +422,6 @@ public class RogueSceneTests
             null!,
             null!,
             null!,
-            null!,
             worldManager
         );
 
@@ -450,7 +446,6 @@ public class RogueSceneTests
             tilesetManager,
             shortcutService,
             actionService,
-            null!,
             null!,
             null!,
             null!,

@@ -8,6 +8,7 @@ using LillyQuest.Engine.Extensions.TilesetSurface;
 using LillyQuest.Engine.Interfaces.Screens;
 using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Engine.Managers.Screens.Base;
+using LillyQuest.Engine.Systems;
 using Silk.NET.Input;
 
 namespace LillyQuest.Engine.Screens.TilesetSurface;
@@ -100,7 +101,7 @@ public class TilesetSurfaceScreen : BaseScreen, ILayoutAwareScreen
     /// </summary>
     public string DefaultTilesetName { get; set; } = "alloy";
 
-    public IParticlePixelRenderer? ParticlePixelRenderer { get; set; }
+    public ParticleSystem? ParticleSystem { get; set; }
     public int ParticleLayerIndex { get; set; } = 3;
 
     private float _tileRenderScale = 1.0f;
@@ -1189,7 +1190,7 @@ public class TilesetSurfaceScreen : BaseScreen, ILayoutAwareScreen
     }
 
     private void RenderParticleOverlay(SpriteBatch spriteBatch)
-        => ParticlePixelRenderer?.Render(spriteBatch, this, ParticleLayerIndex);
+        => ParticleSystem?.Render(spriteBatch, this, ParticleLayerIndex);
 
     private void SyncViewFromMaster(int masterIndex, int followerIndex)
     {
