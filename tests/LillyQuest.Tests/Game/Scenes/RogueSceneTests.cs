@@ -377,7 +377,7 @@ public class RogueSceneTests
     }
 
     [Test]
-    public void RogueScene_RegistersViewportUpdateSystem()
+    public void RogueScene_RegistersViewportAnimationUpdateSystem()
     {
         var screenManager = new FakeScreenManager();
         var map = BuildTestMap();
@@ -400,7 +400,7 @@ public class RogueSceneTests
 
         scene.OnLoad();
 
-        Assert.That(scene.GetSceneGameObjects().OfType<ViewportUpdateSystem>().Any(), Is.True);
+        Assert.That(scene.GetSceneGameObjects().OfType<ViewportAnimationUpdateSystem>().Any(), Is.True);
     }
 
     [Test]

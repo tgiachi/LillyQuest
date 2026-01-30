@@ -42,7 +42,7 @@ public class RogueScene : BaseScene
     private CreatureGameObject? _player;
     private MapRenderSystem? _mapRenderSystem;
     private LightOverlaySystem? _lightOverlaySystem;
-    private ViewportUpdateSystem? _viewportUpdateSystem;
+    private ViewportAnimationUpdateSystem? _viewportUpdateSystem;
     private readonly ParticleSystem _particleSystem;
 
     private readonly ISystemManager _systemManager;
@@ -290,7 +290,7 @@ public class RogueScene : BaseScene
         _worldManager.RegisterMapHandler(_lightOverlaySystem);
         AddEntity(_lightOverlaySystem);
 
-        _viewportUpdateSystem = new(0);
+        _viewportUpdateSystem = new ViewportAnimationUpdateSystem(0);
         _viewportUpdateSystem.Configure(_screen, _mapRenderSystem);
         _worldManager.RegisterMapHandler(_viewportUpdateSystem);
         AddEntity(_viewportUpdateSystem);
@@ -373,7 +373,6 @@ public class RogueScene : BaseScene
             _player.Position = freePosition;
 
             newMap.AddEntity(_player);
-
         }
         else
         {
@@ -386,8 +385,6 @@ public class RogueScene : BaseScene
         {
             _screen.ClearLayer(i);
         }
-
-
 
         if (_player != null && _fovSystem != null)
         {

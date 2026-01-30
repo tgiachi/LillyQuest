@@ -24,15 +24,19 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
     private readonly Dictionary<LyQuestMap, List<ItemGameObject>> _cachedLightSources = new();
     private TilesetSurfaceScreen? _screen;
     private FovSystem? _fovSystem;
-    private readonly Dictionary<ItemGameObject, float> _flickerFactors = new();
-    private readonly Dictionary<ItemGameObject, int> _effectiveRadii = new();
-    private readonly Dictionary<ItemGameObject, float> _lastFlickerFactors = new();
-    private readonly Dictionary<ItemGameObject, int> _lastEffectiveRadii = new();
+    private readonly Dictionary<LyQuestMap, Dictionary<ItemGameObject, LightState>> _lightStates = new();
 
     private sealed record MapState(
         LyQuestMap Map,
         TilesetSurfaceScreen Surface,
         DirtyChunkTracker DirtyTracker
+    );
+
+    private sealed record LightState(
+        float FlickerFactor,
+        int EffectiveRadius,
+        float LastFlickerFactor,
+        int LastEffectiveRadius
     );
 
     public LightOverlaySystem(int chunkSize)
@@ -102,12 +106,22 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
 
         _states[map] = new(map, surface, new(_chunkSize));
         _fovSystems[map] = fovSystem;
+        _lightStates[map] = new();
 
         // Subscribe to FOV updates to mark light sources dirty when visibility changes
         if (fovSystem != null)
         {
             fovSystem.FovUpdated += OnFovUpdated;
         }
+
+        // Subscribe to object removal to clean up light state when items are removed from map
+        map.ObjectRemoved += (sender, args) =>
+        {
+            if (args.Item is ItemGameObject item && _lightStates.TryGetValue(map, out var states))
+            {
+                states.Remove(item);
+            }
+        };
     }
 
     public void UnregisterMap(LyQuestMap map)
@@ -121,11 +135,7 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
         _states.Remove(map);
         _fovSystems.Remove(map);
         _cachedLightSources.Remove(map);
-
-        _flickerFactors.Clear();
-        _effectiveRadii.Clear();
-        _lastFlickerFactors.Clear();
-        _lastEffectiveRadii.Clear();
+        _lightStates.Remove(map);
     }
 
     public void Update(GameTime gameTime)
@@ -179,6 +189,7 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
         }
 
         var overlayTileIndex = ResolveOverlayTileIndex(map, position);
+        var lightStatesForMap = _lightStates.TryGetValue(map, out var states) ? states : new();
 
         foreach (var layer in map.Entities.Layers)
         {
@@ -197,12 +208,11 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
                 }
 
                 var flicker = item.GoRogueComponents.GetFirstOrDefault<LightFlickerComponent>();
-                var flickerFactor = flicker != null && _flickerFactors.TryGetValue(item, out var factor)
-                                        ? factor
-                                        : 1f;
-                var effectiveRadius = flicker != null && _effectiveRadii.TryGetValue(item, out var radius)
-                                          ? radius
-                                          : light.Radius;
+                var lightState = flicker != null && lightStatesForMap.TryGetValue(item, out var state)
+                                     ? state
+                                     : null;
+                var flickerFactor = lightState?.FlickerFactor ?? 1f;
+                var effectiveRadius = lightState?.EffectiveRadius ?? light.Radius;
 
                 var distance = Distance.Euclidean.Calculate(item.Position, position);
 
@@ -343,6 +353,7 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
         {
             var map = state.Map;
             var lightSources = new List<ItemGameObject>();
+            var lightStatesForMap = _lightStates[map];
 
             foreach (var layer in map.Entities.Layers)
             {
@@ -373,19 +384,15 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
                     var factor = CalculateFlickerFactor(item, flicker, gameTime.TotalGameTime.TotalSeconds);
                     var radius = GetEffectiveRadius(light, flicker, factor);
 
-                    if (_lastFlickerFactors.TryGetValue(item, out var lastFactor) &&
-                        _lastEffectiveRadii.TryGetValue(item, out var lastRadius))
+                    if (lightStatesForMap.TryGetValue(item, out var lastState))
                     {
-                        if (Math.Abs(factor - lastFactor) < 0.0001f && radius == lastRadius)
+                        if (Math.Abs(factor - lastState.LastFlickerFactor) < 0.0001f && radius == lastState.LastEffectiveRadius)
                         {
                             continue;
                         }
                     }
 
-                    _flickerFactors[item] = factor;
-                    _effectiveRadii[item] = radius;
-                    _lastFlickerFactors[item] = factor;
-                    _lastEffectiveRadii[item] = radius;
+                    lightStatesForMap[item] = new(factor, radius, factor, radius);
 
                     var maxRadius = light.Radius + (int)MathF.Ceiling(MathF.Max(0f, flicker.RadiusJitter));
                     MarkDirtyForRadius(map, item.Position, maxRadius);

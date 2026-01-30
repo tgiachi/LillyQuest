@@ -8,7 +8,7 @@ using LillyQuest.RogueLike.Systems;
 
 namespace LillyQuest.Tests.Game.Systems;
 
-public class ViewportUpdateSystemTests
+public class ViewportAnimationUpdateSystemTests
 {
     private sealed class FakeTilesetManager : ITilesetManager
     {
@@ -47,7 +47,7 @@ public class ViewportUpdateSystemTests
         screen.TileViewSize = new(10, 6);
         screen.SetLayerViewTileOffset(0, new(3, 4));
 
-        var bounds = ViewportUpdateSystem.GetViewportBounds(screen, 0);
+        var bounds = ViewportAnimationUpdateSystem.GetViewportBounds(screen, 0);
 
         Assert.That(bounds.MinX, Is.EqualTo(3));
         Assert.That(bounds.MinY, Is.EqualTo(4));
@@ -67,7 +67,7 @@ public class ViewportUpdateSystemTests
         renderSystem.Configure(screen, null);
         renderSystem.OnMapRegistered(map);
 
-        var system = new ViewportUpdateSystem(0);
+        var system = new ViewportAnimationUpdateSystem(0);
         system.Configure(screen, renderSystem);
         system.OnMapRegistered(map);
 

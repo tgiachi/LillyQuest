@@ -11,17 +11,17 @@ using SadRogue.Primitives;
 
 namespace LillyQuest.RogueLike.Systems;
 
-public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity, IMapAwareSystem, IMapHandler
+public sealed class ViewportAnimationUpdateSystem : GameEntity, IUpdateableEntity, IMapAwareSystem, IMapHandler
 {
     private readonly int _layerIndex;
     private readonly Dictionary<LyQuestMap, ViewportUpdateState> _states = new();
     private TilesetSurfaceScreen? _screen;
     private MapRenderSystem? _renderSystem;
 
-    public ViewportUpdateSystem(int layerIndex)
+    public ViewportAnimationUpdateSystem(int layerIndex)
     {
         _layerIndex = layerIndex;
-        Name = nameof(ViewportUpdateSystem);
+        Name = nameof(ViewportAnimationUpdateSystem);
     }
 
     private sealed class ViewportUpdateState
@@ -70,7 +70,7 @@ public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity, IMapAw
     {
         if (_screen == null || _renderSystem == null)
         {
-            throw new InvalidOperationException("ViewportUpdateSystem.Configure must be called before registering a map.");
+            throw new InvalidOperationException("ViewportAnimationUpdateSystem.Configure must be called before registering a map.");
         }
 
         RegisterMap(map, _screen, _renderSystem);
