@@ -5,6 +5,7 @@ using LillyQuest.Core.Data.Plugins;
 using LillyQuest.Core.Utils;
 using LillyQuest.Engine;
 using LillyQuest.Engine.Interfaces.Plugins;
+using LillyQuest.Engine.Interfaces.Services;
 using LillyQuest.Scripting.Lua.Data.Scripts;
 using LillyQuest.Scripting.Lua.Interfaces;
 
@@ -228,6 +229,22 @@ public class BootstrapIntegrationTests
 
         if (Directory.Exists(root))
             Directory.Delete(root, recursive: true);
+    }
+
+    [Test]
+    public void Initialize_RegistersJobSchedulerService()
+    {
+        var config = new LillyQuestEngineConfig { IsDebugMode = true, IsHeadless = true };
+        var bootstrap = new LillyQuestBootstrap(config);
+
+        bootstrap.Initialize();
+
+        var containerField = bootstrap.GetType()
+            .GetField("_container", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        var resolvedContainer = containerField?.GetValue(bootstrap) as IContainer;
+        var scheduler = resolvedContainer?.Resolve<IJobScheduler>();
+
+        Assert.That(scheduler, Is.Not.Null);
     }
 
     [Test]

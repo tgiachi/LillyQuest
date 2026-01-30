@@ -432,6 +432,7 @@ public class LillyQuestBootstrap : IDisposable
 
         _container.Register<IActionService, ActionService>(Reuse.Singleton);
         _container.Register<IShortcutService, ShortcutService>(Reuse.Singleton);
+        _container.Register<IJobScheduler, JobScheduler>(Reuse.Singleton);
         _container.Register<IMainThreadDispatcher, MainThreadDispatcher>(Reuse.Singleton);
 
         BindMainThreadDispatcher();
