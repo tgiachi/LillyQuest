@@ -30,7 +30,8 @@ public class RogueSceneTests
         var tilesetManager = new FakeTilesetManager();
         var shortcutService = new FakeShortcutService();
         var actionService = new FakeActionService();
-        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, null!);
+        var worldManager = new FakeWorldManager();
+        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
 
         scene.OnLoad();
 
@@ -48,7 +49,8 @@ public class RogueSceneTests
         var tilesetManager = new FakeTilesetManager();
         var shortcutService = new FakeShortcutService();
         var actionService = new FakeActionService();
-        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, null!);
+        var worldManager = new FakeWorldManager();
+        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
 
         scene.OnLoad();
 
@@ -93,6 +95,60 @@ public class RogueSceneTests
 
         public Task<LyQuestMap> GenerateMapAsync()
             => Task.FromResult(_map);
+    }
+
+    private sealed class FakeWorldManager : IWorldManager
+    {
+        private readonly List<IMapHandler> _handlers = new();
+        private LyQuestMap _currentMap = null!;
+
+        public event IWorldManager.OnCurrentMapChangedHandler? OnCurrentMapChanged;
+
+        public LyQuestMap CurrentMap
+        {
+            get => _currentMap;
+            set
+            {
+                var oldMap = _currentMap;
+                _currentMap = value;
+
+                if (oldMap != null)
+                {
+                    foreach (var handler in _handlers)
+                    {
+                        handler.OnMapUnregistered(oldMap);
+                    }
+                }
+
+                foreach (var handler in _handlers)
+                {
+                    handler.OnMapRegistered(_currentMap);
+                }
+
+                foreach (var handler in _handlers)
+                {
+                    handler.OnCurrentMapChanged(oldMap, _currentMap);
+                }
+
+                OnCurrentMapChanged?.Invoke(oldMap, _currentMap);
+            }
+        }
+
+        public LyQuestMap OverworldMap { get; set; } = null!;
+
+        public void RegisterMapHandler(IMapHandler handler)
+        {
+            if (!_handlers.Contains(handler))
+            {
+                _handlers.Add(handler);
+            }
+        }
+
+        public void UnregisterMapHandler(IMapHandler handler)
+            => _handlers.Remove(handler);
+
+        public Task GenerateMapAsync()
+            => Task.CompletedTask;
     }
 
     private sealed class FakeScreenManager : IScreenManager

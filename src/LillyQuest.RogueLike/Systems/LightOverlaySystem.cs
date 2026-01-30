@@ -6,6 +6,7 @@ using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.RogueLike.Components;
 using LillyQuest.RogueLike.Events;
 using LillyQuest.RogueLike.GameObjects;
+using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Rendering;
@@ -14,12 +15,14 @@ using SadRogue.Primitives;
 
 namespace LillyQuest.RogueLike.Systems;
 
-public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwareSystem
+public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwareSystem, IMapHandler
 {
     private const byte MaxBackgroundAlpha = 128;
     private readonly int _chunkSize;
     private readonly Dictionary<LyQuestMap, MapState> _states = new();
     private readonly Dictionary<LyQuestMap, FovSystem?> _fovSystems = new();
+    private TilesetSurfaceScreen? _screen;
+    private FovSystem? _fovSystem;
     private readonly Dictionary<ItemGameObject, float> _flickerFactors = new();
     private readonly Dictionary<ItemGameObject, int> _effectiveRadii = new();
     private readonly Dictionary<ItemGameObject, float> _lastFlickerFactors = new();
@@ -342,4 +345,25 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
 
         return 0;
     }
+
+    public void Configure(TilesetSurfaceScreen screen, FovSystem? fovSystem)
+    {
+        _screen = screen;
+        _fovSystem = fovSystem;
+    }
+
+    public void OnMapRegistered(LyQuestMap map)
+    {
+        if (_screen == null)
+        {
+            throw new InvalidOperationException("LightOverlaySystem.Configure must be called before registering a map.");
+        }
+
+        RegisterMap(map, _screen, _fovSystem);
+    }
+
+    public void OnMapUnregistered(LyQuestMap map)
+        => UnregisterMap(map);
+
+    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap) { }
 }

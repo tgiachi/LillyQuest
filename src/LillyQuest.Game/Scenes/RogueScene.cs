@@ -294,19 +294,24 @@ public class RogueScene : BaseScene
         }
 
         _mapRenderSystem = new MapRenderSystem(chunkSize: 16);
-        _mapRenderSystem.RegisterMap(_map, _screen, _fovSystem);
+        _mapRenderSystem.Configure(_screen, _fovSystem);
+        _worldManager.RegisterMapHandler(_mapRenderSystem);
         AddEntity(_mapRenderSystem);
         _mapAwareSystems.Add(_mapRenderSystem);
 
         _lightOverlaySystem = new LightOverlaySystem(chunkSize: 16);
-        _lightOverlaySystem.RegisterMap(_map, _screen, _fovSystem);
+        _lightOverlaySystem.Configure(_screen, _fovSystem);
+        _worldManager.RegisterMapHandler(_lightOverlaySystem);
         AddEntity(_lightOverlaySystem);
         _mapAwareSystems.Add(_lightOverlaySystem);
 
         _viewportUpdateSystem = new ViewportUpdateSystem(layerIndex: 0);
-        _viewportUpdateSystem.RegisterMap(_map, _screen, _mapRenderSystem);
+        _viewportUpdateSystem.Configure(_screen, _mapRenderSystem);
+        _worldManager.RegisterMapHandler(_viewportUpdateSystem);
         AddEntity(_viewportUpdateSystem);
         _mapAwareSystems.Add(_viewportUpdateSystem);
+
+        _worldManager.CurrentMap = _map;
 
         _map.ObjectMoved += (sender, args) =>
                             {
@@ -342,6 +347,21 @@ public class RogueScene : BaseScene
             }
         }
         _mapAwareSystems.Clear();
+
+        if (_mapRenderSystem != null)
+        {
+            _worldManager.UnregisterMapHandler(_mapRenderSystem);
+        }
+
+        if (_lightOverlaySystem != null)
+        {
+            _worldManager.UnregisterMapHandler(_lightOverlaySystem);
+        }
+
+        if (_viewportUpdateSystem != null)
+        {
+            _worldManager.UnregisterMapHandler(_viewportUpdateSystem);
+        }
 
         if (_screen != null)
         {

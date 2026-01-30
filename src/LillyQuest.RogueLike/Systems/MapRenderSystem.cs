@@ -6,6 +6,7 @@ using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.RogueLike.Events;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.GameObjects.Base;
+using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Rendering;
@@ -15,10 +16,12 @@ using SadRogue.Primitives.GridViews;
 
 namespace LillyQuest.RogueLike.Systems;
 
-public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSystem
+public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSystem, IMapHandler
 {
     private readonly int _chunkSize;
     private readonly Dictionary<LyQuestMap, MapRenderState> _states = new();
+    private TilesetSurfaceScreen? _screen;
+    private FovSystem? _fovSystem;
 
     public MapRenderSystem(int chunkSize)
     {
@@ -349,4 +352,25 @@ public sealed class MapRenderSystem : GameEntity, IUpdateableEntity, IMapAwareSy
             baseGameObject.VisualTileChanged -= handler;
         }
     }
+
+    public void Configure(TilesetSurfaceScreen screen, FovSystem? fovSystem)
+    {
+        _screen = screen;
+        _fovSystem = fovSystem;
+    }
+
+    public void OnMapRegistered(LyQuestMap map)
+    {
+        if (_screen == null)
+        {
+            throw new InvalidOperationException("MapRenderSystem.Configure must be called before registering a map.");
+        }
+
+        RegisterMap(map, _screen, _fovSystem);
+    }
+
+    public void OnMapUnregistered(LyQuestMap map)
+        => UnregisterMap(map);
+
+    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap) { }
 }

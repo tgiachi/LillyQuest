@@ -37,10 +37,12 @@ public class ViewportUpdateSystemTests
         screen.SetLayerViewTileOffset(0, new Vector2(0, 0));
 
         var renderSystem = new MapRenderSystem(chunkSize: 4);
-        renderSystem.RegisterMap(map, screen, fovSystem: null);
+        renderSystem.Configure(screen, fovSystem: null);
+        renderSystem.OnMapRegistered(map);
 
         var system = new ViewportUpdateSystem(layerIndex: 0);
-        system.RegisterMap(map, screen, renderSystem);
+        system.Configure(screen, renderSystem);
+        system.OnMapRegistered(map);
 
         var insideUpdateCount = 0;
         var outsideUpdateCount = 0;

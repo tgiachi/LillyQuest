@@ -4,6 +4,7 @@ using LillyQuest.Engine.Entities;
 using LillyQuest.Engine.Interfaces.Features;
 using LillyQuest.Engine.Screens.TilesetSurface;
 using LillyQuest.RogueLike.Components;
+using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
 using SadRogue.Primitives;
@@ -12,10 +13,12 @@ namespace LillyQuest.RogueLike.Systems;
 
 public readonly record struct TileViewportBounds(int MinX, int MinY, int MaxX, int MaxY);
 
-public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity, IMapAwareSystem
+public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity, IMapAwareSystem, IMapHandler
 {
     private readonly int _layerIndex;
     private readonly Dictionary<LyQuestMap, ViewportUpdateState> _states = new();
+    private TilesetSurfaceScreen? _screen;
+    private MapRenderSystem? _renderSystem;
 
     public ViewportUpdateSystem(int layerIndex)
     {
@@ -37,6 +40,27 @@ public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity, IMapAw
     {
         _states.Remove(map);
     }
+
+    public void Configure(TilesetSurfaceScreen screen, MapRenderSystem renderSystem)
+    {
+        _screen = screen;
+        _renderSystem = renderSystem;
+    }
+
+    public void OnMapRegistered(LyQuestMap map)
+    {
+        if (_screen == null || _renderSystem == null)
+        {
+            throw new InvalidOperationException("ViewportUpdateSystem.Configure must be called before registering a map.");
+        }
+
+        RegisterMap(map, _screen, _renderSystem);
+    }
+
+    public void OnMapUnregistered(LyQuestMap map)
+        => UnregisterMap(map);
+
+    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap) { }
 
     public static TileViewportBounds GetViewportBounds(TilesetSurfaceScreen screen, int layerIndex)
     {

@@ -44,7 +44,8 @@ public class LightOverlaySystemTests
         fovSystem.UpdateFov(map, torch.Position);
 
         var system = new LightOverlaySystem(chunkSize: 4);
-        system.RegisterMap(map, surface, fovSystem);
+        system.Configure(surface, fovSystem);
+        system.OnMapRegistered(map);
 
         system.MarkDirtyForRadius(map, center: torch.Position, radius: 3);
         system.Update(new GameTime());
@@ -83,7 +84,8 @@ public class LightOverlaySystemTests
         fovSystem.UpdateFov(map, torch.Position);
 
         var system = new LightOverlaySystem(chunkSize: 4);
-        system.RegisterMap(map, surface, fovSystem);
+        system.Configure(surface, fovSystem);
+        system.OnMapRegistered(map);
 
         system.MarkDirtyForRadius(map, center: torch.Position, radius: 3);
         system.Update(new GameTime());
@@ -123,7 +125,8 @@ public class LightOverlaySystemTests
         fovSystem.UpdateFov(map, torch.Position);
 
         var system = new LightOverlaySystem(chunkSize: 4);
-        system.RegisterMap(map, surface, fovSystem);
+        system.Configure(surface, fovSystem);
+        system.OnMapRegistered(map);
 
         system.MarkDirtyForRadius(map, center: torch.Position, radius: 3);
         system.Update(new GameTime());
@@ -167,7 +170,8 @@ public class LightOverlaySystemTests
         fovSystem.UpdateFov(map, torch.Position);
 
         var system = new LightOverlaySystem(chunkSize: 4);
-        system.RegisterMap(map, surface, fovSystem);
+        system.Configure(surface, fovSystem);
+        system.OnMapRegistered(map);
 
         system.MarkDirtyForRadius(map, center: torch.Position, radius: 3);
         system.Update(new GameTime(TimeSpan.FromSeconds(0.1), TimeSpan.FromSeconds(0.1)));
@@ -209,7 +213,8 @@ public class LightOverlaySystemTests
         map.AddEntity(torch);
 
         var system = new LightOverlaySystem(chunkSize: 4);
-        system.RegisterMap(map, surface, fovSystem: null);
+        system.Configure(surface, fovSystem: null);
+        system.OnMapRegistered(map);
 
         system.MarkDirtyForRadius(map, center: torch.Position, radius: 4);
 

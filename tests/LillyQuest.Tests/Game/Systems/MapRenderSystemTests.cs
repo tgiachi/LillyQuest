@@ -23,7 +23,8 @@ public class MapRenderSystemTests
         var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
         var fovSystem = new FovSystem();
 
-        system.RegisterMap(map, surface, fovSystem);
+        system.Configure(surface, fovSystem);
+        system.OnMapRegistered(map);
 
         Assert.That(system.HasMap(map), Is.True);
     }
@@ -35,7 +36,8 @@ public class MapRenderSystemTests
         var map = new LyQuestMap(32, 32);
         var surface = new TilesetSurfaceScreen(new FakeTilesetManager());
 
-        system.RegisterMap(map, surface, fovSystem: null);
+        system.Configure(surface, fovSystem: null);
+        system.OnMapRegistered(map);
 
         system.HandleObjectMoved(map, new Point(1, 1), new Point(17, 1));
 
@@ -51,7 +53,8 @@ public class MapRenderSystemTests
         var map = BuildSmallTestMap();
         var surface = BuildTestSurface();
 
-        system.RegisterMap(map, surface, fovSystem: null);
+        system.Configure(surface, fovSystem: null);
+        system.OnMapRegistered(map);
 
         surface.AddTileToSurface(0, 0, 0, new TileRenderData(-1, LyColor.White));
         system.MarkDirtyForTile(map, 0, 0);
@@ -73,7 +76,8 @@ public class MapRenderSystemTests
         };
 
         map.AddEntity(creature);
-        system.RegisterMap(map, surface, fovSystem: null);
+        system.Configure(surface, fovSystem: null);
+        system.OnMapRegistered(map);
 
         Assert.That(system.GetDirtyChunks(map), Is.Empty);
 
@@ -95,7 +99,8 @@ public class MapRenderSystemTests
         };
 
         map.SetTerrain(terrain);
-        system.RegisterMap(map, surface, fovSystem: null);
+        system.Configure(surface, fovSystem: null);
+        system.OnMapRegistered(map);
 
         Assert.That(system.GetDirtyChunks(map), Is.Empty);
 
@@ -118,7 +123,8 @@ public class MapRenderSystemTests
         };
 
         map.SetTerrain(terrain);
-        system.RegisterMap(map, surface, fovSystem: null);
+        system.Configure(surface, fovSystem: null);
+        system.OnMapRegistered(map);
 
         Assert.That(system.GetDirtyChunks(map), Is.Empty);
 
@@ -139,7 +145,8 @@ public class MapRenderSystemTests
         };
 
         map.AddEntity(item);
-        system.RegisterMap(map, surface, fovSystem: null);
+        system.Configure(surface, fovSystem: null);
+        system.OnMapRegistered(map);
 
         surface.AddTileToSurface((int)MapLayer.Items, 1, 1, new TileRenderData(-1, LyColor.White));
         system.MarkDirtyForTile(map, 1, 1);
@@ -177,7 +184,8 @@ public class MapRenderSystemTests
         map.AddEntity(item);
 
         fovSystem.UpdateFov(map, new Point(6, 6));
-        system.RegisterMap(map, surface, fovSystem);
+        system.Configure(surface, fovSystem);
+        system.OnMapRegistered(map);
 
         system.MarkDirtyForTile(map, 6, 11);
         system.Update(new GameTime());
