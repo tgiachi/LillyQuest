@@ -6,7 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <Authors>tom</Authors>
-        <Version>0.5.0</Version>
+        <Version>0.6.0</Version>
         <Description>LillyQuest Game - Game Application Built with LillyQuest Engine</Description>
         <PackageProjectUrl>https://github.com/tgiachi/LillyQuest/</PackageProjectUrl>
         <RepositoryUrl>https://github.com/tgiachi/LillyQuest/</RepositoryUrl>
@@ -24,16 +24,16 @@
             <PrivateAssets>all</PrivateAssets>
             <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
-        <PackageReference Include="Serilog" Version="4.3.0"/>
-        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1"/>
-        <PackageReference Include="Silk.NET.Input.Common" Version="2.23.0"/>
-        <PackageReference Include="Silk.NET.Input.Glfw" Version="2.23.0"/>
+        <PackageReference Include="Serilog" Version="4.3.0" />
+        <PackageReference Include="Serilog.Sinks.Console" Version="6.1.1" />
+        <PackageReference Include="Silk.NET.Input.Common" Version="2.23.0" />
+        <PackageReference Include="Silk.NET.Input.Glfw" Version="2.23.0" />
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\LillyQuest.Core\LillyQuest.Core.csproj"/>
-        <ProjectReference Include="..\LillyQuest.Engine\LillyQuest.Engine.csproj"/>
-        <ProjectReference Include="..\LillyQuest.RogueLike\LillyQuest.RogueLike.csproj"/>
+        <ProjectReference Include="..\LillyQuest.Core\LillyQuest.Core.csproj" />
+        <ProjectReference Include="..\LillyQuest.Engine\LillyQuest.Engine.csproj" />
+        <ProjectReference Include="..\LillyQuest.RogueLike\LillyQuest.RogueLike.csproj" />
     </ItemGroup>
 
 </Project>

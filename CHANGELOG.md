@@ -3,6 +3,36 @@
 
 All notable changes to this project will be documented in this file. See [versionize](https://github.com/versionize/versionize) for commit guidelines.
 
+<a name="0.6.0"></a>
+## [0.6.0](https://www.github.com/tgiachi/LillyQuest/releases/tag/v0.6.0) (2026-01-30)
+
+### Features
+
+* add dungeon map generation and world map switching ([611cab5](https://www.github.com/tgiachi/LillyQuest/commit/611cab5a7b50c6cf6e65c6c7d3d9a6c1c11ba6b4))
+* add flicker to light overlay ([03b8372](https://www.github.com/tgiachi/LillyQuest/commit/03b83721556f53be93fa87d69f1561eefe2c7b75))
+* add fov visibility falloff ([0c28782](https://www.github.com/tgiachi/LillyQuest/commit/0c287828dd43d63c63b3dd8ea2d97c6b04c66153))
+* add job scheduler service ([1c01650](https://www.github.com/tgiachi/LillyQuest/commit/1c0165063afae8a4613a404350eb2082772cf316))
+* add job scheduler shutdown behavior ([58045db](https://www.github.com/tgiachi/LillyQuest/commit/58045db9981ac63ad3bf9c7c639028e0cb2b7ebf))
+* add light flicker component ([b5d7675](https://www.github.com/tgiachi/LillyQuest/commit/b5d7675d83086d9712fea5e13d99fde31fcccb08))
+* add percentage layout screen ([3da76ec](https://www.github.com/tgiachi/LillyQuest/commit/3da76eca1199bf5260575d37daa2572af0fb13d2))
+* add second torch in map generator ([9d5daf8](https://www.github.com/tgiachi/LillyQuest/commit/9d5daf8914fcc2b13631e2ef4a166c8d9f443ef9))
+* add world manager map handler notifications ([1f26bd3](https://www.github.com/tgiachi/LillyQuest/commit/1f26bd39463f8a1f10ed40c4a04def1e10d251e3))
+* apply fov falloff to map rendering ([1e2319f](https://www.github.com/tgiachi/LillyQuest/commit/1e2319f761fdef560ab1bcd9113b1ee1a45de212))
+* implement world manager service ([2c216ec](https://www.github.com/tgiachi/LillyQuest/commit/2c216ecd01c1f8756958723c6c53759ab03fd97c))
+* let world manager generate current map ([18fe880](https://www.github.com/tgiachi/LillyQuest/commit/18fe8807c7e653725e29eaa5a742f18849b8d6b0))
+* make rogue scene respond to world manager map changes ([c5149b8](https://www.github.com/tgiachi/LillyQuest/commit/c5149b8fbc6408bfc510a779382ba1b10ab91fe5))
+* register job scheduler service ([561610f](https://www.github.com/tgiachi/LillyQuest/commit/561610f80478ea63fae8d8e86336c9ddd67c7557))
+* restore player transfer between maps with updated tests ([ddcf66f](https://www.github.com/tgiachi/LillyQuest/commit/ddcf66f6a52cdae6d4a4654f5deb26784b4396ae))
+* route map registration via world manager ([d2a41e8](https://www.github.com/tgiachi/LillyQuest/commit/d2a41e8d971799eb80c8ffca75777159cf1b1cfe))
+* update map handlers on current map changes ([6ff130d](https://www.github.com/tgiachi/LillyQuest/commit/6ff130d52cb103596d4421a8d9ba54511690709f))
+* use world manager current map in rogue scene ([622d001](https://www.github.com/tgiachi/LillyQuest/commit/622d0019051aba4222b123e065f061d7fbed9d6e))
+
+### Bug Fixes
+
+* dispose job scheduler resources ([1c50813](https://www.github.com/tgiachi/LillyQuest/commit/1c50813ef55e9a4448af3367bf7ae135424335df))
+* prevent player transfer between maps in map switching ([0b4bbc9](https://www.github.com/tgiachi/LillyQuest/commit/0b4bbc9804e53533d1c5ec2d7e21c038fdf85694))
+* remove incorrect player transfer between maps on world manager changes ([bde17e0](https://www.github.com/tgiachi/LillyQuest/commit/bde17e0b02086ce9c5331e60611a8eb687766fb0))
+
 <a name="0.5.0"></a>
 ## [0.5.0](https://www.github.com/tgiachi/LillyQuest/releases/tag/v0.5.0) (2026-01-29)
 
