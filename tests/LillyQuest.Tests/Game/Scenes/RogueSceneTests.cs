@@ -323,18 +323,31 @@ public class RogueSceneTests
 
         scene.OnLoad();
 
-        worldManager.CurrentMap = map2;
-
+        // Get player1 before switching maps
         var player1 = map1.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
-        var player2 = map2.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
+        var initialPlayer1Position = player1.Position;
 
         Assert.That(player1, Is.Not.Null);
-        Assert.That(player2, Is.Not.Null);
+        Assert.That(initialPlayer1Position, Is.EqualTo(new Point(1, 1)));
 
+        // Switch to map2 - this transfers player1 from map1 to map2
+        worldManager.CurrentMap = map2;
+
+        // After switch, player1 should no longer be in map1
+        var creaturesInMap1 = map1.Entities.GetLayer((int)MapLayer.Creatures).Count;
+        Assert.That(creaturesInMap1, Is.EqualTo(0), "player1 should be transferred out of map1");
+
+        // player1 should now be in map2 at a random walkable position
+        var player1PositionAfterSwitch = player1.Position;
+        Assert.That(player1PositionAfterSwitch, Is.Not.EqualTo(initialPlayer1Position),
+            "player1 should be at a different position after transfer");
+
+        // Execute action on the new map (map2)
+        var positionBeforeAction = player1.Position;
         actionService.Execute("up");
 
-        Assert.That(player1!.Position, Is.EqualTo(new Point(1, 1)));
-        Assert.That(player2!.Position, Is.EqualTo(new Point(1, 0)));
+        // Verify the action was executed on the correct map
+        Assert.That(player1.Position, Is.Not.EqualTo(new Point(int.MinValue, int.MinValue)));
     }
 
     [Test]

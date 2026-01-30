@@ -363,21 +363,34 @@ public class RogueScene : BaseScene
             fovProvider.SetMap(newMap);
         }
 
-        var creaturesLayer = newMap.Entities.GetLayer((int)MapLayer.Creatures);
-        if (creaturesLayer.Count > 0)
+        if (oldMap != null)
         {
-            _player = creaturesLayer.FirstOrDefault().Item as CreatureGameObject;
+            _player = oldMap.Entities.GetLayer((int)MapLayer.Creatures).FirstOrDefault().Item as CreatureGameObject;
 
-            for (var i = 0; i < _screen.LayerCount; i++)
-            {
-                _screen.ClearLayer(i);
-            }
+            oldMap.RemoveEntity(_player);
 
-            if (_player != null)
-            {
-                _screen.CenterViewOnTile(0, _player.Position.X, _player.Position.Y);
-            }
+            var freePosition = newMap.WalkabilityView
+                                     .Positions()
+                                     .FirstOrDefault(p => newMap.WalkabilityView[p]);
+
+            _player.Position = freePosition;
+
+            newMap.AddEntity(_player);
+
         }
+        else
+        {
+            _player = newMap.Entities.GetLayer((int)MapLayer.Creatures).FirstOrDefault().Item as CreatureGameObject;
+        }
+
+        _screen.CenterViewOnTile(0, _player.Position.X, _player.Position.Y);
+
+        for (var i = 0; i < _screen.LayerCount; i++)
+        {
+            _screen.ClearLayer(i);
+        }
+
+
 
         if (_player != null && _fovSystem != null)
         {
