@@ -41,4 +41,15 @@ public class FovSystemTests
 
         Assert.That(core, Is.EqualTo(1f));
     }
+
+    [Test]
+    public void OnMapRegistered_RegistersMap()
+    {
+        var map = new LyQuestMap(10, 10);
+        var fovSystem = new FovSystem();
+
+        fovSystem.OnMapRegistered(map);
+
+        Assert.That(fovSystem.IsExplored(map, new Point(0, 0)), Is.False);
+    }
 }

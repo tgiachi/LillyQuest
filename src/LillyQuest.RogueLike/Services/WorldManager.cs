@@ -69,11 +69,8 @@ public class WorldManager : IWorldManager
 
     public async Task GenerateMapAsync()
     {
-        _jobScheduler.Enqueue(
-            () =>
-            {
-                _mapGenerator.GenerateMapAsync();
-            });
+        var map = await _mapGenerator.GenerateMapAsync();
+        CurrentMap = map;
     }
 
     public WorldManager(IMapGenerator mapGenerator, IJobScheduler jobScheduler)

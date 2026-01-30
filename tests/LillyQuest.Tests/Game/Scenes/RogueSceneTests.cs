@@ -31,7 +31,7 @@ public class RogueSceneTests
         var tilesetManager = new FakeTilesetManager();
         var shortcutService = new FakeShortcutService();
         var actionService = new FakeActionService();
-        var worldManager = new FakeWorldManager();
+        var worldManager = new FakeWorldManager(mapGenerator);
         var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
 
         scene.OnLoad();
@@ -50,7 +50,7 @@ public class RogueSceneTests
         var tilesetManager = new FakeTilesetManager();
         var shortcutService = new FakeShortcutService();
         var actionService = new FakeActionService();
-        var worldManager = new FakeWorldManager();
+        var worldManager = new FakeWorldManager(mapGenerator);
         var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
 
         scene.OnLoad();
@@ -67,7 +67,7 @@ public class RogueSceneTests
         var tilesetManager = new FakeTilesetManager();
         var shortcutService = new FakeShortcutService();
         var actionService = new FakeActionService();
-        var worldManager = new FakeWorldManager();
+        var worldManager = new FakeWorldManager(mapGenerator);
         var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
 
         scene.OnLoad();
@@ -85,7 +85,7 @@ public class RogueSceneTests
         var tilesetManager = new FakeTilesetManager();
         var shortcutService = new FakeShortcutService();
         var actionService = new FakeActionService();
-        var worldManager = new FakeWorldManager();
+        var worldManager = new FakeWorldManager(mapGenerator);
         var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
 
         scene.OnLoad();
@@ -148,6 +148,12 @@ public class RogueSceneTests
     {
         private readonly List<IMapHandler> _handlers = new();
         private LyQuestMap _currentMap = null!;
+        private readonly IMapGenerator _mapGenerator;
+
+        public FakeWorldManager(IMapGenerator mapGenerator)
+        {
+            _mapGenerator = mapGenerator;
+        }
 
         public event IWorldManager.OnCurrentMapChangedHandler? OnCurrentMapChanged;
 
@@ -195,7 +201,11 @@ public class RogueSceneTests
             => _handlers.Remove(handler);
 
         public Task GenerateMapAsync()
-            => Task.CompletedTask;
+            => _mapGenerator.GenerateMapAsync().ContinueWith(
+                task =>
+                {
+                    CurrentMap = task.Result;
+                });
     }
 
     private sealed class FakeScreenManager : IScreenManager

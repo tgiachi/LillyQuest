@@ -272,10 +272,11 @@ public class RogueScene : BaseScene
                                      // _screen.CenterViewOnTile(2, x, y);
                                  };
 
-        var map = _mapGenerator.GenerateMapAsync().GetAwaiter().GetResult();
+        _worldManager.GenerateMapAsync().GetAwaiter().GetResult();
+        var map = _worldManager.CurrentMap;
 
         _fovSystem = new FovSystem();
-        _fovSystem.RegisterMap(map);
+        _worldManager.RegisterMapHandler(_fovSystem);
         AddEntity(_fovSystem);
         _mapAwareSystems.Add(_fovSystem);
 

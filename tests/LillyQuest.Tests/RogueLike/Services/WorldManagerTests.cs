@@ -48,6 +48,24 @@ public class WorldManagerTests
         Assert.That(handler.Calls, Is.Empty);
     }
 
+    [Test]
+    public async Task GenerateMapAsync_SetsCurrentMap_AndNotifiesHandlers()
+    {
+        var map = new LyQuestMap(10, 10);
+        var mapGenerator = Substitute.For<IMapGenerator>();
+        mapGenerator.GenerateMapAsync().Returns(Task.FromResult(map));
+        var jobScheduler = Substitute.For<IJobScheduler>();
+        var worldManager = new WorldManager(mapGenerator, jobScheduler);
+        var handler = new FakeMapHandler();
+        worldManager.RegisterMapHandler(handler);
+
+        await worldManager.GenerateMapAsync();
+
+        Assert.That(worldManager.CurrentMap, Is.EqualTo(map));
+        Assert.That(handler.Calls, Does.Contain("register"));
+        Assert.That(handler.Calls, Does.Contain("change"));
+    }
+
     private sealed class FakeMapHandler : IMapHandler
     {
         public List<string> Calls { get; } = new();

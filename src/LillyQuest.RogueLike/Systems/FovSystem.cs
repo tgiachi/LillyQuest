@@ -2,6 +2,7 @@ using GoRogue.FOV;
 using LillyQuest.Engine.Entities;
 using LillyQuest.RogueLike.Data.Tiles;
 using LillyQuest.RogueLike.Events;
+using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Interfaces.Systems;
 using LillyQuest.RogueLike.Maps;
 using SadRogue.Primitives;
@@ -11,7 +12,7 @@ namespace LillyQuest.RogueLike.Systems;
 /// <summary>
 /// System that manages field of view and fog of war using GoRogue's shadowcasting algorithm.
 /// </summary>
-public sealed class FovSystem : GameEntity, IMapAwareSystem
+public sealed class FovSystem : GameEntity, IMapAwareSystem, IMapHandler
 {
     private const int DefaultFovRadius = 10;
 
@@ -177,6 +178,14 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem
         // Raise event to notify listeners
         FovUpdated?.Invoke(this, new(map, previousVisibleTiles, state.CurrentVisibleTiles));
     }
+
+    public void OnMapRegistered(LyQuestMap map)
+        => RegisterMap(map);
+
+    public void OnMapUnregistered(LyQuestMap map)
+        => UnregisterMap(map);
+
+    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap) { }
 
     private static float CalculateFalloff(double distance, int radius)
     {
