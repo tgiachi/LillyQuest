@@ -17,4 +17,6 @@ public interface IWorldManager
     void RegisterMapHandler(IMapHandler handler);
 
     void UnregisterMapHandler(IMapHandler handler);
+
+    void SwitchToMap(string mapId);
 }

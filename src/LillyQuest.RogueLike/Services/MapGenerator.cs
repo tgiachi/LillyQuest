@@ -130,4 +130,52 @@ public class MapGenerator : IMapGenerator
 
         return map;
     }
+
+    public async Task<LyQuestMap> GenerateDungeonMapAsync(int width, int height, int roomCount)
+    {
+        var map = new LyQuestMap(width, height)
+        {
+            Name = "Test Map"
+        };
+        var generator = new Generator(width, height);
+        var floorId = "floor";
+        var wallId = "wall";
+
+        generator.ConfigAndGenerateSafe(
+            g =>
+            {
+                g.AddSteps(DefaultAlgorithms.BasicRandomRoomsMapSteps(maxRooms:40));
+            }
+        );
+
+        generator.Generate();
+
+        var wallFloorValues = generator.Context.GetFirst<ISettableGridView<bool>>("WallFloor");
+
+        foreach (var pos in wallFloorValues.Positions())
+        {
+            var isFloor = wallFloorValues[pos];
+            var terrainId = wallFloorValues[pos] ? floorId : wallId;
+            var terrainGameObject = new TerrainGameObject(pos);
+
+            if (_terrainService.TryGetTerrain(terrainId, out var terrain))
+            {
+                terrainGameObject.IsWalkable = isFloor;
+                terrainGameObject.IsTransparent = isFloor;
+                terrainGameObject.Tile = new(
+                    terrain.Id,
+                    terrain.TileSymbol,
+                    terrain.TileFgColor,
+                    terrain.TileBgColor
+                );
+
+                map.SetTerrain(terrainGameObject);
+            }
+        }
+
+        return map;
+    }
+
+
+
 }

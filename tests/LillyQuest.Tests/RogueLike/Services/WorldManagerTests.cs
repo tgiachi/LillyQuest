@@ -43,8 +43,10 @@ public class WorldManagerTests
     public async Task GenerateMapAsync_SetsCurrentMap_AndNotifiesHandlers()
     {
         var map = new LyQuestMap(10, 10);
+        var dungeonMap = new LyQuestMap(20, 20);
         var mapGenerator = Substitute.For<IMapGenerator>();
         mapGenerator.GenerateMapAsync().Returns(Task.FromResult(map));
+        mapGenerator.GenerateDungeonMapAsync(Arg.Any<int>(), Arg.Any<int>(), Arg.Any<int>()).Returns(Task.FromResult(dungeonMap));
         var jobScheduler = new ImmediateJobScheduler();
         var worldManager = new WorldManager(mapGenerator, jobScheduler);
         var handler = new FakeMapHandler();

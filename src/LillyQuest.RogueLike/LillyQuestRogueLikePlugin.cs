@@ -89,10 +89,10 @@ public class LillyQuestRogueLikePlugin : ILillyQuestPlugin
         _logger.Information("Starting data verification");
         await dataLoader.VerifyLoadedDataAsync();
 
-        var mapGenerator = container.Resolve<IMapGenerator>();
-        var worldManager = container.Resolve<IWorldManager>();
-        await mapGenerator.GenerateMapAsync();
-        await worldManager.GenerateMapAsync();
+        // var mapGenerator = container.Resolve<IMapGenerator>();
+        // var worldManager = container.Resolve<IWorldManager>();
+        // await mapGenerator.GenerateMapAsync();
+        // await worldManager.GenerateMapAsync();
 
         // var renderContext = container.Resolve<EngineRenderContext>();
         //

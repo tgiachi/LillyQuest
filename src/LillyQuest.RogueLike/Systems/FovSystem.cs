@@ -18,6 +18,7 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem, IMapHandler
 
     private readonly int _fovRadius;
     private readonly Dictionary<LyQuestMap, FovState> _states = new();
+    private readonly Dictionary<string, HashSet<Point>> _exploredCache = new();
 
     /// <summary>
     /// Raised when the field of view has been updated.
@@ -126,12 +127,26 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem, IMapHandler
         }
 
         var fov = new RecursiveShadowcastingFOV(map.TransparencyView);
-        _states[map] = new(map, fov);
+        var state = new FovState(map, fov);
+        _states[map] = state;
+
+        var cacheKey = GetCacheKey(map);
+        if (_exploredCache.TryGetValue(cacheKey, out var explored))
+        {
+            foreach (var pos in explored)
+            {
+                state.ExploredTiles.Add(pos);
+            }
+        }
     }
 
     public void UnregisterMap(LyQuestMap map)
     {
-        _states.Remove(map);
+        if (_states.Remove(map, out var state))
+        {
+            var cacheKey = GetCacheKey(map);
+            _exploredCache[cacheKey] = new HashSet<Point>(state.ExploredTiles);
+        }
     }
 
     /// <summary>
@@ -214,4 +229,9 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem, IMapHandler
 
         return 0.25f;
     }
+
+    private static string GetCacheKey(LyQuestMap map)
+        => string.IsNullOrWhiteSpace(map.Name)
+               ? map.Id.ToString()
+               : map.Name;
 }

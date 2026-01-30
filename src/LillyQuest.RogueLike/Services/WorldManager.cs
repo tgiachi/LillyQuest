@@ -19,6 +19,8 @@ public class WorldManager : IWorldManager
 
     private LyQuestMap? _currentMap;
 
+    private bool _isGeneratingMap;
+
     public LyQuestMap CurrentMap
     {
         get => _currentMap!;
@@ -63,9 +65,29 @@ public class WorldManager : IWorldManager
         _jobScheduler.Enqueue(
             async () =>
             {
+                if (_isGeneratingMap)
+                {
+                    _logger.Warning("Map generation is already in progress. Skipping new generation request.");
+
+                    return;
+                }
+
+                _isGeneratingMap = true;
+
                 CurrentMap = await _mapGenerator.GenerateMapAsync();
 
-                
+                CurrentMap.Name = "default_map";
+
+                _maps["default_map"] = CurrentMap;
+
+                var dungeonMap = await _mapGenerator.GenerateDungeonMapAsync(100, 100, 12);
+
+                dungeonMap.Name = "dungeon_map";
+
+                _maps["dungeon_map"] = dungeonMap;
+                _logger.Information("Dungeon map generated and added to world manager.");
+
+                _isGeneratingMap = false;
             }
         );
     }
@@ -85,6 +107,18 @@ public class WorldManager : IWorldManager
         if (_mapHandlers.Remove(handler) && _currentMap != null)
         {
             handler.OnMapUnregistered(_currentMap);
+        }
+    }
+
+    public void SwitchToMap(string mapId)
+    {
+        if (_maps.TryGetValue(mapId, out var map))
+        {
+            CurrentMap = map;
+        }
+        else
+        {
+            _logger.Error("Map with ID {MapId} not found. Cannot switch maps.", mapId);
         }
     }
 }

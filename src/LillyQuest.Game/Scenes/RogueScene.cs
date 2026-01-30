@@ -2,6 +2,7 @@ using System.Numerics;
 using LillyQuest.Core.Interfaces.Assets;
 using LillyQuest.Core.Primitives;
 using LillyQuest.Core.Types;
+using LillyQuest.Engine.Extensions.TilesetSurface;
 using LillyQuest.Engine.Interfaces.Managers;
 using LillyQuest.Engine.Interfaces.Particles;
 using LillyQuest.Engine.Interfaces.Services;
@@ -16,6 +17,7 @@ using LillyQuest.RogueLike.Services;
 using LillyQuest.RogueLike.Systems;
 using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
+using SadRogue.Primitives.GridViews;
 
 namespace LillyQuest.Game.Scenes;
 
@@ -247,6 +249,22 @@ public class RogueScene : BaseScene
             }
         );
 
+        _shortcutService.RegisterShortcut("change_map", InputContextType.Global, "m", ShortcutTriggerType.Press);
+        _actionService.RegisterAction(
+            "change_map",
+            () =>
+            {
+                if (_worldManager.CurrentMap.Name == "default_map")
+                {
+                    _worldManager.SwitchToMap("dungeon_map");
+                }
+                else
+                {
+                    _worldManager.SwitchToMap("default_map");
+                }
+            }
+        );
+
         _screen.TileMouseDown += (index, x, y, buttons) =>
                                  {
                                      _screen.CenterViewOnTile(0, x, y);
@@ -347,7 +365,21 @@ public class RogueScene : BaseScene
             fovProvider.SetMap(newMap);
         }
 
-        _player = newMap.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
+        var creaturesLayer = newMap.Entities.GetLayer((int)MapLayer.Creatures);
+        if (creaturesLayer.Count > 0)
+        {
+            _player = creaturesLayer.First().Item as CreatureGameObject;
+
+            for (var i = 0; i < _screen.LayerCount; i++)
+            {
+                _screen.ClearLayer(i);
+            }
+
+            if (_player != null)
+            {
+                _screen.CenterViewOnTile(0, _player.Position.X, _player.Position.Y);
+            }
+        }
 
         if (_player != null && _fovSystem != null)
         {

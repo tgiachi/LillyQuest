@@ -30,6 +30,11 @@ public class RogueSceneTests
 
         public Task<LyQuestMap> GenerateMapAsync()
             => Task.FromResult(_map);
+
+        public Task<LyQuestMap> GenerateDungeonMapAsync(int width, int height, int roomCount)
+        {
+            return null;
+        }
     }
 
     private sealed class FakeWorldManager : IWorldManager
@@ -110,6 +115,11 @@ public class RogueSceneTests
 
         public void UnregisterMapHandler(IMapHandler handler)
             => _handlers.Remove(handler);
+
+        public void SwitchToMap(string mapId)
+        {
+
+        }
     }
 
     private sealed class FakeScreenManager : IScreenManager
