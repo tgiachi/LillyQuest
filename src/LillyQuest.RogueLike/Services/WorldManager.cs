@@ -64,6 +64,8 @@ public class WorldManager : IWorldManager
             async () =>
             {
                 CurrentMap = await _mapGenerator.GenerateMapAsync();
+
+                
             }
         );
     }
