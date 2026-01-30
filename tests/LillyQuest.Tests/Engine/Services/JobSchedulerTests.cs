@@ -31,4 +31,18 @@ public class JobSchedulerTests
         // Act + Assert
         Assert.Throws<InvalidOperationException>(() => sut.Enqueue(() => { }));
     }
+
+    [Test]
+    public async Task Dispose_WhenCalled_PreventsFurtherEnqueue()
+    {
+        // Arrange
+        var sut = new JobScheduler();
+        sut.Start(workerCount: 1);
+
+        // Act
+        sut.Dispose();
+
+        // Assert
+        Assert.Throws<InvalidOperationException>(() => sut.Enqueue(() => { }));
+    }
 }

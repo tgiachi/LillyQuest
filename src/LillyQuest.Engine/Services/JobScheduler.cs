@@ -3,7 +3,7 @@ using LillyQuest.Engine.Interfaces.Services;
 
 namespace LillyQuest.Engine.Services;
 
-public sealed class JobScheduler : IJobScheduler
+public sealed class JobScheduler : IJobScheduler, IDisposable
 {
     private readonly ConcurrentQueue<Func<Task>> _jobs = new();
     private readonly SemaphoreSlim _signal = new(0);
@@ -89,6 +89,13 @@ public sealed class JobScheduler : IJobScheduler
         catch (OperationCanceledException)
         {
         }
+    }
+
+    public void Dispose()
+    {
+        StopAsync().GetAwaiter().GetResult();
+        _cts?.Dispose();
+        _signal.Dispose();
     }
 
     private async Task WorkerLoop(CancellationToken cancellationToken)
