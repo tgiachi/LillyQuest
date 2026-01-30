@@ -12,6 +12,7 @@ using LillyQuest.Engine.Systems;
 using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Interfaces.Systems;
+using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Services;
 using LillyQuest.RogueLike.Systems;
 using LillyQuest.RogueLike.Types;
@@ -22,7 +23,6 @@ namespace LillyQuest.Game.Scenes;
 public class RogueScene : BaseScene
 {
     private readonly IScreenManager _screenManager;
-    private readonly IMapGenerator _mapGenerator;
     private readonly ITilesetManager _tilesetManager;
 
     private readonly IWorldManager _worldManager;
@@ -41,15 +41,12 @@ public class RogueScene : BaseScene
     private MapRenderSystem? _mapRenderSystem;
     private LightOverlaySystem? _lightOverlaySystem;
     private ViewportUpdateSystem? _viewportUpdateSystem;
-    private readonly List<IMapAwareSystem> _mapAwareSystems = new();
-
     private readonly ParticleSystem _particleSystem;
 
     private readonly ISystemManager _systemManager;
 
     public RogueScene(
         IScreenManager screenManager,
-        IMapGenerator mapGenerator,
         ITilesetManager tilesetManager,
         IShortcutService shortcutService,
         IActionService actionService,
@@ -62,7 +59,6 @@ public class RogueScene : BaseScene
     ) : base("RogueScene")
     {
         _screenManager = screenManager;
-        _mapGenerator = mapGenerator;
         _tilesetManager = tilesetManager;
         _shortcutService = shortcutService;
         _actionService = actionService;
@@ -271,65 +267,27 @@ public class RogueScene : BaseScene
                                      // _screen.CenterViewOnTile(2, x, y);
                                  };
 
-        _worldManager.GenerateMapAsync().GetAwaiter().GetResult();
-        var map = _worldManager.CurrentMap;
-
         _fovSystem = new FovSystem();
         _worldManager.RegisterMapHandler(_fovSystem);
         AddEntity(_fovSystem);
-        _mapAwareSystems.Add(_fovSystem);
-
-        // Initialize particle system providers with map and fov system
-        (_particleCollisionProvider as GoRogueCollisionProvider)?.SetMap(map);
-
-        var fovProvider = _particleFOVProvider as GoRogueFOVProvider;
-        if (fovProvider != null && _fovSystem != null)
-        {
-            fovProvider.SetFovSystem(_fovSystem);
-            fovProvider.SetMap(map);
-        }
-
-        _player = map.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
-
-        if (_player != null)
-        {
-            _fovSystem.UpdateFov(map, _player.Position);
-        }
 
         _mapRenderSystem = new MapRenderSystem(chunkSize: 16);
         _mapRenderSystem.Configure(_screen, _fovSystem);
         _worldManager.RegisterMapHandler(_mapRenderSystem);
         AddEntity(_mapRenderSystem);
-        _mapAwareSystems.Add(_mapRenderSystem);
 
         _lightOverlaySystem = new LightOverlaySystem(chunkSize: 16);
         _lightOverlaySystem.Configure(_screen, _fovSystem);
         _worldManager.RegisterMapHandler(_lightOverlaySystem);
         AddEntity(_lightOverlaySystem);
-        _mapAwareSystems.Add(_lightOverlaySystem);
 
         _viewportUpdateSystem = new ViewportUpdateSystem(layerIndex: 0);
         _viewportUpdateSystem.Configure(_screen, _mapRenderSystem);
         _worldManager.RegisterMapHandler(_viewportUpdateSystem);
         AddEntity(_viewportUpdateSystem);
-        _mapAwareSystems.Add(_viewportUpdateSystem);
 
-        _worldManager.CurrentMap = map;
-
-        map.ObjectMoved += (sender, args) =>
-                            {
-                                if (args.Item is CreatureGameObject creature)
-                                {
-                                    _screen.EnqueueMove(
-                                        creature.Layer,
-                                        new Vector2(args.OldPosition.X, args.OldPosition.Y),
-                                        new Vector2(args.NewPosition.X, args.NewPosition.Y),
-                                        0.1f
-                                    );
-
-                                    _screen.CenterViewOnTile(0, args.NewPosition.X, args.NewPosition.Y);
-                                }
-                            };
+        _worldManager.OnCurrentMapChanged += HandleCurrentMapChanged;
+        _worldManager.GenerateMapAsync();
 
         _screen.SetLayerViewSmoothing(0, true);
 
@@ -341,14 +299,6 @@ public class RogueScene : BaseScene
 
     public override void OnUnload()
     {
-        // Unregister map from all systems to prevent memory leaks
-        var map = _worldManager.CurrentMap;
-        foreach (var system in _mapAwareSystems)
-        {
-            system.UnregisterMap(map);
-        }
-        _mapAwareSystems.Clear();
-
         if (_mapRenderSystem != null)
         {
             _worldManager.UnregisterMapHandler(_mapRenderSystem);
@@ -364,6 +314,8 @@ public class RogueScene : BaseScene
             _worldManager.UnregisterMapHandler(_viewportUpdateSystem);
         }
 
+        _worldManager.OnCurrentMapChanged -= HandleCurrentMapChanged;
+
         if (_screen != null)
         {
             _screenManager.PopScreen(_screen);
@@ -377,5 +329,45 @@ public class RogueScene : BaseScene
         }
 
         base.OnUnload();
+    }
+
+    private void HandleCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap)
+    {
+        if (_screen == null)
+        {
+            return;
+        }
+
+        // Initialize particle system providers with map and fov system
+        (_particleCollisionProvider as GoRogueCollisionProvider)?.SetMap(newMap);
+
+        var fovProvider = _particleFOVProvider as GoRogueFOVProvider;
+        if (fovProvider != null && _fovSystem != null)
+        {
+            fovProvider.SetFovSystem(_fovSystem);
+            fovProvider.SetMap(newMap);
+        }
+
+        _player = newMap.Entities.GetLayer((int)MapLayer.Creatures).First().Item as CreatureGameObject;
+
+        if (_player != null && _fovSystem != null)
+        {
+            _fovSystem.UpdateFov(newMap, _player.Position);
+        }
+
+        newMap.ObjectMoved += (sender, args) =>
+                              {
+                                  if (args.Item is CreatureGameObject creature)
+                                  {
+                                      _screen.EnqueueMove(
+                                          creature.Layer,
+                                          new Vector2(args.OldPosition.X, args.OldPosition.Y),
+                                          new Vector2(args.NewPosition.X, args.NewPosition.Y),
+                                          0.1f
+                                      );
+
+                                      _screen.CenterViewOnTile(0, args.NewPosition.X, args.NewPosition.Y);
+                                  }
+                              };
     }
 }

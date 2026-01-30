@@ -32,7 +32,7 @@ public class RogueSceneTests
         var shortcutService = new FakeShortcutService();
         var actionService = new FakeActionService();
         var worldManager = new FakeWorldManager(mapGenerator);
-        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
+        var scene = new RogueScene(screenManager, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
 
         scene.OnLoad();
 
@@ -51,7 +51,7 @@ public class RogueSceneTests
         var shortcutService = new FakeShortcutService();
         var actionService = new FakeActionService();
         var worldManager = new FakeWorldManager(mapGenerator);
-        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
+        var scene = new RogueScene(screenManager, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
 
         scene.OnLoad();
 
@@ -68,10 +68,11 @@ public class RogueSceneTests
         var shortcutService = new FakeShortcutService();
         var actionService = new FakeActionService();
         var worldManager = new FakeWorldManager(mapGenerator);
-        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
+        var scene = new RogueScene(screenManager, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
 
         scene.OnLoad();
 
+        Assert.That(worldManager.GenerateMapAsyncCalls, Is.EqualTo(1));
         Assert.That(worldManager.CurrentMap, Is.EqualTo(map));
     }
 
@@ -86,7 +87,7 @@ public class RogueSceneTests
         var shortcutService = new FakeShortcutService();
         var actionService = new FakeActionService();
         var worldManager = new FakeWorldManager(mapGenerator);
-        var scene = new RogueScene(screenManager, mapGenerator, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
+        var scene = new RogueScene(screenManager, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
 
         scene.OnLoad();
 
@@ -102,6 +103,23 @@ public class RogueSceneTests
 
         Assert.That(player1!.Position, Is.EqualTo(new Point(1, 1)));
         Assert.That(player2!.Position, Is.EqualTo(new Point(1, 0)));
+    }
+
+    [Test]
+    public void RogueScene_OnLoad_SubscribesToMapChanges()
+    {
+        var screenManager = new FakeScreenManager();
+        var map = BuildTestMap();
+        var mapGenerator = new FakeMapGenerator(map);
+        var tilesetManager = new FakeTilesetManager();
+        var shortcutService = new FakeShortcutService();
+        var actionService = new FakeActionService();
+        var worldManager = new FakeWorldManager(mapGenerator);
+        var scene = new RogueScene(screenManager, tilesetManager, shortcutService, actionService, null!, null!, null!, null!, null!, worldManager);
+
+        scene.OnLoad();
+
+        Assert.That(worldManager.OnCurrentMapChangedSubscribers, Is.EqualTo(1));
     }
 
     private static LyQuestMap BuildTestMap()
@@ -149,13 +167,29 @@ public class RogueSceneTests
         private readonly List<IMapHandler> _handlers = new();
         private LyQuestMap _currentMap = null!;
         private readonly IMapGenerator _mapGenerator;
+        private IWorldManager.OnCurrentMapChangedHandler? _onCurrentMapChanged;
+
+        public int GenerateMapAsyncCalls { get; private set; }
+        public int OnCurrentMapChangedSubscribers { get; private set; }
 
         public FakeWorldManager(IMapGenerator mapGenerator)
         {
             _mapGenerator = mapGenerator;
         }
 
-        public event IWorldManager.OnCurrentMapChangedHandler? OnCurrentMapChanged;
+        public event IWorldManager.OnCurrentMapChangedHandler? OnCurrentMapChanged
+        {
+            add
+            {
+                _onCurrentMapChanged += value;
+                OnCurrentMapChangedSubscribers++;
+            }
+            remove
+            {
+                _onCurrentMapChanged -= value;
+                OnCurrentMapChangedSubscribers--;
+            }
+        }
 
         public LyQuestMap CurrentMap
         {
@@ -183,7 +217,7 @@ public class RogueSceneTests
                     handler.OnCurrentMapChanged(oldMap, _currentMap);
                 }
 
-                OnCurrentMapChanged?.Invoke(oldMap, _currentMap);
+                _onCurrentMapChanged?.Invoke(oldMap, _currentMap);
             }
         }
 
@@ -201,11 +235,12 @@ public class RogueSceneTests
             => _handlers.Remove(handler);
 
         public Task GenerateMapAsync()
-            => _mapGenerator.GenerateMapAsync().ContinueWith(
-                task =>
-                {
-                    CurrentMap = task.Result;
-                });
+        {
+            GenerateMapAsyncCalls++;
+            var map = _mapGenerator.GenerateMapAsync().GetAwaiter().GetResult();
+            CurrentMap = map;
+            return Task.CompletedTask;
+        }
     }
 
     private sealed class FakeScreenManager : IScreenManager
