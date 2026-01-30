@@ -365,5 +365,13 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
     public void OnMapUnregistered(LyQuestMap map)
         => UnregisterMap(map);
 
-    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap) { }
+    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap)
+    {
+        if (oldMap != null)
+        {
+            UnregisterMap(oldMap);
+        }
+
+        OnMapRegistered(newMap);
+    }
 }

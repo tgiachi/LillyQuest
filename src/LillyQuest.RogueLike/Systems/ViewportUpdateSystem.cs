@@ -60,7 +60,15 @@ public sealed class ViewportUpdateSystem : GameEntity, IUpdateableEntity, IMapAw
     public void OnMapUnregistered(LyQuestMap map)
         => UnregisterMap(map);
 
-    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap) { }
+    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap)
+    {
+        if (oldMap != null)
+        {
+            UnregisterMap(oldMap);
+        }
+
+        OnMapRegistered(newMap);
+    }
 
     public static TileViewportBounds GetViewportBounds(TilesetSurfaceScreen screen, int layerIndex)
     {

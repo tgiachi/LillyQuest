@@ -52,4 +52,19 @@ public class FovSystemTests
 
         Assert.That(fovSystem.IsExplored(map, new Point(0, 0)), Is.False);
     }
+
+    [Test]
+    public void OnCurrentMapChanged_RegistersNewMap_AndUnregistersOldMap()
+    {
+        var system = new FovSystem();
+        var oldMap = new LyQuestMap(10, 10);
+        var newMap = new LyQuestMap(10, 10);
+
+        system.OnCurrentMapChanged(null, oldMap);
+        Assert.That(system.IsExplored(oldMap, new Point(0, 0)), Is.False);
+
+        system.OnCurrentMapChanged(oldMap, newMap);
+
+        Assert.That(system.IsExplored(newMap, new Point(0, 0)), Is.False);
+    }
 }

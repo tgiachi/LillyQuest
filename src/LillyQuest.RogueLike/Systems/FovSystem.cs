@@ -185,7 +185,15 @@ public sealed class FovSystem : GameEntity, IMapAwareSystem, IMapHandler
     public void OnMapUnregistered(LyQuestMap map)
         => UnregisterMap(map);
 
-    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap) { }
+    public void OnCurrentMapChanged(LyQuestMap? oldMap, LyQuestMap newMap)
+    {
+        if (oldMap != null)
+        {
+            UnregisterMap(oldMap);
+        }
+
+        RegisterMap(newMap);
+    }
 
     private static float CalculateFalloff(double distance, int radius)
     {
