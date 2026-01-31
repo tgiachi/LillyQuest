@@ -191,6 +191,19 @@ public readonly struct LyColor : IEquatable<LyColor>
             (byte)(B * factor)
         );
 
+    /// <summary>
+    /// Returns a brightened version of this color by the specified factor.
+    /// </summary>
+    /// <param name="factor">Factor where 1.0 is unchanged and values > 1.0 brighten the color.</param>
+    public LyColor Brighten(float factor)
+    {
+        // Lerp toward white based on factor
+        // factor = 1.0 -> no change
+        // factor = 1.5 -> 50% toward white
+        var t = Math.Clamp(factor - 1f, 0f, 1f);
+        return Lerp(White, t);
+    }
+
     public bool Equals(LyColor other)
         => A == other.A && R == other.R && G == other.G && B == other.B;
 

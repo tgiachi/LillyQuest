@@ -4,6 +4,7 @@ using LillyQuest.RogueLike.GameObjects;
 using LillyQuest.RogueLike.Interfaces.Services;
 using LillyQuest.RogueLike.Maps;
 using LillyQuest.RogueLike.Systems;
+using LillyQuest.RogueLike.Types;
 using SadRogue.Primitives;
 
 namespace LillyQuest.RogueLike.Services;
@@ -15,6 +16,9 @@ namespace LillyQuest.RogueLike.Services;
 /// </summary>
 public sealed class MapTileBuilder : IMapTileBuilder
 {
+    private const int TorchRadius = 4;
+    private const float MaxTorchBrightness = 1.4f;
+
     public TileRenderData BuildCreatureTile(LyQuestMap map, FovSystem? fovSystem, Point position)
     {
         var renderCreature = fovSystem == null || fovSystem.IsVisible(map, position);
@@ -113,6 +117,43 @@ public sealed class MapTileBuilder : IMapTileBuilder
             return tile.Darken(0.5f);
         }
 
-        return tile.Darken(fovSystem.GetVisibilityFalloff(map, position));
+        tile = tile.Darken(fovSystem.GetVisibilityFalloff(map, position));
+
+        // Apply torch light effect to non-transparent terrain
+        var terrainAtPosition = map.GetTerrainAt(position);
+        if (terrainAtPosition is not null && !terrainAtPosition.IsTransparent)
+        {
+            var playerEntity = map.Entities.GetLayer((int)MapLayer.Creatures).FirstOrDefault();
+            if (playerEntity != null)
+            {
+                var playerPosition = playerEntity.Position;
+                var distance = Distance.Euclidean.Calculate(playerPosition, position);
+
+                if (distance <= TorchRadius)
+                {
+                    var brightnessMultiplier = CalculateTorchBrightness(distance, TorchRadius, MaxTorchBrightness);
+                    tile = tile.Brighten(brightnessMultiplier);
+                }
+            }
+        }
+
+        return tile;
+    }
+
+    /// <summary>
+    /// Calculate torch brightness based on distance from player.
+    /// </summary>
+    /// <param name="distance">Distance from player to tile.</param>
+    /// <param name="radius">Maximum torch radius.</param>
+    /// <param name="maxBrightness">Maximum brightness multiplier at player position.</param>
+    /// <returns>Brightness factor (1.0 = no change, > 1.0 = brighter).</returns>
+    private static float CalculateTorchBrightness(double distance, int radius, float maxBrightness)
+    {
+        // Linear falloff: brightness decreases linearly with distance
+        // At distance 0 (player position): maxBrightness
+        // At distance radius: 1.0 (no brightening)
+        var normalizedDistance = (float)(distance / radius);
+        var brightnessRange = maxBrightness - 1f;
+        return 1f + brightnessRange * (1f - normalizedDistance);
     }
 }

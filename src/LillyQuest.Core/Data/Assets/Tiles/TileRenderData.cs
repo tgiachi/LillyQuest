@@ -76,6 +76,18 @@ public struct TileRenderData
             Flip
         );
 
+    /// <summary>
+    /// Returns a brightened version of this tile by the specified factor.
+    /// </summary>
+    /// <param name="factor">Factor where 1.0 is unchanged and values > 1.0 brighten the tile.</param>
+    public TileRenderData Brighten(float factor)
+        => new(
+            TileIndex,
+            ForegroundColor.Brighten(factor),
+            BackgroundColor.Brighten(factor),
+            Flip
+        );
+
     public override string ToString()
         => $"Tile {TileIndex}: BG={BackgroundColor} FG={ForegroundColor} Flip={Flip}";
 }
