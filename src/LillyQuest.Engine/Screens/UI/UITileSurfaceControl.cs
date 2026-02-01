@@ -113,9 +113,10 @@ public sealed class UITileSurfaceControl : UIScreenControl
 
     private void SyncSurfaceLayout()
     {
+        EnsureSurfaceLoaded();
+
         if (AutoSizeFromTileView)
         {
-            EnsureSurfaceLoaded();
             Size = Surface.Size;
         }
         else
