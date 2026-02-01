@@ -100,6 +100,37 @@ public class ViewportAnimationUpdateSystemTests
         Assert.That(renderSystem.GetDirtyChunks(map).Count, Is.GreaterThan(0));
     }
 
+    [Test]
+    public void Update_WhenViewportUnchanged_StillUpdatesAnimations()
+    {
+        var map = BuildTestMap();
+        var screen = BuildTestSurface();
+        screen.TileViewSize = new(4, 4);
+        screen.SetLayerViewTileOffset(0, new(0, 0));
+
+        var renderSystem = new MapRenderSystem(4, new MapTileBuilder(), screen, null);
+        renderSystem.OnMapRegistered(map);
+
+        var system = new ViewportAnimationUpdateSystem(0, screen, renderSystem);
+        system.OnMapRegistered(map);
+
+        var updateCount = 0;
+        var inside = new CreatureGameObject(new(1, 1));
+        inside.GoRogueComponents.Add(
+            new AnimationComponent(
+                0.5,
+                () => updateCount++
+            )
+        );
+
+        map.AddEntity(inside);
+
+        system.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.3)));
+        system.Update(new(TimeSpan.Zero, TimeSpan.FromSeconds(0.3)));
+
+        Assert.That(updateCount, Is.EqualTo(1));
+    }
+
     private static LyQuestMap BuildTestMap()
         => new(20, 20);
 

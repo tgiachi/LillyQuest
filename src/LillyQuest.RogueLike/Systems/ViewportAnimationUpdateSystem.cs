@@ -95,12 +95,6 @@ public sealed class ViewportAnimationUpdateSystem : GameEntity, IUpdateableEntit
         {
             var bounds = GetViewportBounds(state.Screen, _layerIndex);
 
-            // Early exit if viewport hasn't changed
-            if (state.LastBounds == bounds)
-            {
-                continue;
-            }
-
             state.LastBounds = bounds;
 
             var minX = Math.Max(0, bounds.MinX);

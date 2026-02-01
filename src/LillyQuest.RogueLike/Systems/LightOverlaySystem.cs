@@ -17,7 +17,6 @@ namespace LillyQuest.RogueLike.Systems;
 
 public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwareSystem, IMapHandler
 {
-    private const byte MaxBackgroundAlpha = 128;
     private readonly int _chunkSize;
     private readonly Dictionary<LyQuestMap, MapState> _states = new();
     private readonly Dictionary<LyQuestMap, FovSystem?> _fovSystems = new();
@@ -193,9 +192,9 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
                     continue;
                 }
 
-                var light = item.GoRogueComponents.GetFirstOrDefault<LightSourceComponent>();
+                var torch = item.GoRogueComponents.GetFirstOrDefault<TorchComponent>();
 
-                if (light == null)
+                if (torch == null)
                 {
                     continue;
                 }
@@ -205,7 +204,7 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
                                      ? state
                                      : null;
                 var flickerFactor = lightState?.FlickerFactor ?? 1f;
-                var effectiveRadius = lightState?.EffectiveRadius ?? light.Radius;
+                var effectiveRadius = lightState?.EffectiveRadius ?? torch.Radius;
 
                 var distance = Distance.Euclidean.Calculate(item.Position, position);
 
@@ -215,17 +214,18 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
                 }
 
                 var t = (float)(distance / effectiveRadius);
-                var color = ApplyFlickerToColor(light.StartColor, light.EndColor, t, flickerFactor);
-                var background = LyColor.Transparent;
-                var backgroundComponent = item.GoRogueComponents.GetFirstOrDefault<LightBackgroundComponent>();
+                var t2 = t * t;
+                var color = ApplyFlickerToColor(torch.ForegroundStart, torch.ForegroundEnd, t2, flickerFactor);
+                var background = torch.BackgroundStart.Lerp(torch.BackgroundEnd, t2);
+                background = ApplyFlickerToBackground(background, flickerFactor);
+                var alpha = (byte)Math.Clamp((int)(torch.BackgroundAlpha * (1f - t2)), 0, torch.BackgroundAlpha);
+                background = background.WithAlpha(alpha);
 
-                if (backgroundComponent != null)
+                if (map.GetTerrainAt(position) is TerrainGameObject terrain && !terrain.IsTransparent)
                 {
-                    var baseBackground = backgroundComponent.StartBackground.Lerp(backgroundComponent.EndBackground, t);
-                    baseBackground = ApplyFlickerToBackground(baseBackground, flickerFactor);
-                    var targetAlpha = (byte)Math.Clamp((int)(MaxBackgroundAlpha * (1f - t)), 0, MaxBackgroundAlpha);
-                    var finalAlpha = baseBackground.A < targetAlpha ? baseBackground.A : targetAlpha;
-                    background = baseBackground.WithAlpha(finalAlpha);
+                    color = color.Lerp(terrain.Tile.ForegroundColor, 0.5f);
+                    var terrainBackground = terrain.Tile.BackgroundColor ?? LyColor.Transparent;
+                    background = background.Lerp(terrainBackground, 0.5f);
                 }
 
                 return new(overlayTileIndex, color, background);
@@ -266,15 +266,15 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
         return 1f - intensity + 2f * intensity * valueRandom;
     }
 
-    private static int GetEffectiveRadius(LightSourceComponent light, LightFlickerComponent? flicker, float factor)
+    private static int GetEffectiveRadius(TorchComponent torch, LightFlickerComponent? flicker, float factor)
     {
         if (flicker == null || flicker.RadiusJitter <= 0f)
         {
-            return light.Radius;
+            return torch.Radius;
         }
 
         var delta = flicker.RadiusJitter * (factor - 1f);
-        var radius = (int)MathF.Round(light.Radius + delta);
+        var radius = (int)MathF.Round(torch.Radius + delta);
 
         return Math.Max(1, radius);
     }
@@ -289,11 +289,11 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
 
         foreach (var item in lightSources)
         {
-            var light = item.GoRogueComponents.GetFirstOrDefault<LightSourceComponent>();
+            var torch = item.GoRogueComponents.GetFirstOrDefault<TorchComponent>();
 
-            if (light != null)
+            if (torch != null)
             {
-                MarkDirtyForRadius(map, item.Position, light.Radius);
+                MarkDirtyForRadius(map, item.Position, torch.Radius);
             }
         }
     }
@@ -357,9 +357,9 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
                         continue;
                     }
 
-                    var light = item.GoRogueComponents.GetFirstOrDefault<LightSourceComponent>();
+                    var torch = item.GoRogueComponents.GetFirstOrDefault<TorchComponent>();
 
-                    if (light == null)
+                    if (torch == null)
                     {
                         continue;
                     }
@@ -375,7 +375,7 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
                     }
 
                     var factor = CalculateFlickerFactor(item, flicker, gameTime.TotalGameTime.TotalSeconds);
-                    var radius = GetEffectiveRadius(light, flicker, factor);
+                    var radius = GetEffectiveRadius(torch, flicker, factor);
 
                     if (lightStatesForMap.TryGetValue(item, out var lastState))
                     {
@@ -387,7 +387,7 @@ public sealed class LightOverlaySystem : GameEntity, IUpdateableEntity, IMapAwar
 
                     lightStatesForMap[item] = new(factor, radius, factor, radius);
 
-                    var maxRadius = light.Radius + (int)MathF.Ceiling(MathF.Max(0f, flicker.RadiusJitter));
+                    var maxRadius = torch.Radius + (int)MathF.Ceiling(MathF.Max(0f, flicker.RadiusJitter));
                     MarkDirtyForRadius(map, item.Position, maxRadius);
                 }
             }

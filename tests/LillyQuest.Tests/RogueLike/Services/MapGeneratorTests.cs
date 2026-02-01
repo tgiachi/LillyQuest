@@ -122,7 +122,7 @@ public class MapGeneratorTests
     }
 
     [Test]
-    public async Task GenerateMapAsync_TorchHasLightBackgroundComponent()
+    public async Task GenerateMapAsync_TorchHasTorchComponent()
     {
         var colorService = new ColorService { DefaultColorSet = "schema" };
         await colorService.LoadDataAsync(
@@ -170,11 +170,11 @@ public class MapGeneratorTests
         var torch = map.Entities.GetLayer((int)MapLayer.Items).First().Item as ItemGameObject;
 
         Assert.That(torch, Is.Not.Null);
-        Assert.That(torch!.GoRogueComponents.GetFirstOrDefault<LightBackgroundComponent>(), Is.Not.Null);
+        Assert.That(torch!.GoRogueComponents.GetFirstOrDefault<TorchComponent>(), Is.Not.Null);
     }
 
     [Test]
-    public async Task GenerateMapAsync_TorchHasLightComponent()
+    public async Task GenerateMapAsync_TorchHasTorchComponent_WhenFirstItem()
     {
         var colorService = new ColorService { DefaultColorSet = "schema" };
         await colorService.LoadDataAsync(
@@ -222,6 +222,6 @@ public class MapGeneratorTests
         var torch = map.Entities.GetLayer((int)MapLayer.Items).First().Item as ItemGameObject;
 
         Assert.That(torch, Is.Not.Null);
-        Assert.That(torch!.GoRogueComponents.GetFirstOrDefault<LightSourceComponent>(), Is.Not.Null);
+        Assert.That(torch!.GoRogueComponents.GetFirstOrDefault<TorchComponent>(), Is.Not.Null);
     }
 }

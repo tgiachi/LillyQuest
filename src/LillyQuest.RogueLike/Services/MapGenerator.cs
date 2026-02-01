@@ -76,16 +76,13 @@ public class MapGenerator : IMapGenerator
             Tile = new("torch", "t", LyColor.Yellow, LyColor.Transparent)
         };
         simpleTorch.GoRogueComponents.Add(
-            new LightSourceComponent(
+            new TorchComponent(
                 4,
                 LyColor.Yellow,
-                LyColor.Black
-            )
-        );
-        simpleTorch.GoRogueComponents.Add(
-            new LightBackgroundComponent(
+                LyColor.Black,
                 LyColor.Orange,
-                LyColor.Transparent
+                LyColor.Transparent,
+                204
             )
         );
         simpleTorch.GoRogueComponents.Add(
@@ -100,16 +97,13 @@ public class MapGenerator : IMapGenerator
             Tile = new("torch", "t", LyColor.Yellow, LyColor.Transparent)
         };
         flickerTorch.GoRogueComponents.Add(
-            new LightSourceComponent(
+            new TorchComponent(
                 4,
                 LyColor.Yellow,
-                LyColor.Black
-            )
-        );
-        flickerTorch.GoRogueComponents.Add(
-            new LightBackgroundComponent(
+                LyColor.Black,
                 LyColor.Orange,
-                LyColor.Transparent
+                LyColor.Transparent,
+                204
             )
         );
         flickerTorch.GoRogueComponents.Add(
