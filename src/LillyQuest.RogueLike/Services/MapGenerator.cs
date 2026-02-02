@@ -170,6 +170,8 @@ public class MapGenerator : IMapGenerator
         return map;
     }
 
-
-
+    public Task<LyQuestMap> GenerateMapAsync(int width, int height, MapGeneratorType type)
+    {
+        return null;
+    }
 }

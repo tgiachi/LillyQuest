@@ -35,6 +35,9 @@ public class RogueSceneTests
         {
             return null;
         }
+
+        public Task<LyQuestMap> GenerateMapAsync(int width, int height, MapGeneratorType type)
+            => throw new NotImplementedException();
     }
 
     private sealed class FakeWorldManager : IWorldManager

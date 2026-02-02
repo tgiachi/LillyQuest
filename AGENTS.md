@@ -151,6 +151,7 @@ public void Method_Scenario_Expected()
 - **Nullable**: Enabled, use `?` and `!` explicitly
 - **Sealed**: Use `sealed` on classes not intended for inheritance
 - **Expression body**: For one-liner methods (`=> expr;`)
+- **Types folders**: `*/Types/` is reserved for enums only
 
 ## Common Mistakes
 
